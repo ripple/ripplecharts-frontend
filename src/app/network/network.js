@@ -1,6 +1,5 @@
 angular.module( 'ripplecharts.network', [
   'ui.state',
-  'placeholders',
   'ui.bootstrap'
 ])
 

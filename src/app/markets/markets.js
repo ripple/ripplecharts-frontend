@@ -1,6 +1,5 @@
 angular.module( 'ripplecharts.markets', [
   'ui.state',
-  'placeholders',
   'ui.bootstrap'
 ])
 

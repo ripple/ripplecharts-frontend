@@ -116,12 +116,21 @@ h1, h2, h3, h4 {
 }
 
 .theme span {
-  padding:3px;
+  margin:3px;
+  cursor:pointer;
 }
 
-.theme .selected {
+.theme span:hover {
+  color: #999;
+  border-bottom:3px solid #999;
+}
+
+.theme span.selected {
   color:@rippleBlue;
   font-weight:bold;
+  border-bottom:3px solid @rippleBlue;
+  font-size:12px;
+  line-height:13px;
 }
 
 /* 

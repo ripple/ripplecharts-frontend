@@ -38,24 +38,28 @@
   margin: 0 10px;
   font-size:12px; 
   cursor:pointer;
+  color:#666;
 }
 
 #interval {margin-left:50px}
 #interval a, #chartType a {
   font-size:12px;
+  line-height:13px;
   display: inline-block;
   text-decoration: none;
   color:#666;
-  margin:0 .5em;
+  margin:1px 7px;
 }
 
-#interval a:hover, #chartType a:hover {
+#flip:hover, #interval a:hover, #chartType a:hover {
   color: #999;
+  border-bottom:3px solid #999;
 }
 
 #interval a.selected, #chartType a.selected {
-  color: #3369a8;
+  color: @rippleBlue;
   font-weight:bold;
+  border-bottom:3px solid @rippleBlue;
 }
 
 #chartType {

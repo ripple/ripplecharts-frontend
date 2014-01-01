@@ -22,6 +22,7 @@ module.exports = {
   app_files: {
     js: [  
       'src/**/*.js', 
+      '!src/example.config.js',
       '!src/**/*.spec.js', 
       '!src/assets/**/*.js' 
       ],
