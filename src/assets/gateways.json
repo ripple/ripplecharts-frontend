@@ -1,0 +1,127 @@
+[
+    {
+        "name": "Bitstamp",
+        "accounts": [{
+            "address": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+            "currencies": ["AUD", "BTC", "CHF", "EUR", "GBP", "JPY", "USD"],
+            "hotwallets": ["rrpNnNLKrartuEqfJGpqyDwPj1AFPg9vn1"]
+            }]
+    }, {
+        "name": "RippleChina",
+        "accounts": [{
+            "address": "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA",
+            "currencies": ["CNY"],
+            "hotwallets": ["r45dBj4S3VvMMYXxr9vHX4Z4Ma6ifPMCkK"]
+            }]
+    }, {
+        "name": "rippleCN",
+        "accounts": [{
+            "address": "rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK",
+            "currencies": ["BTC", "CNY"],
+            "hotwallets": ["rNaptDNfFXo1quhKwMaNPf66iwPqA8YLky", "rno91tGDJeRcnM7EMXj8KG9UTyxRGMMz8s"]
+            }]
+    }, {
+        "name": "RippleIsrael",
+        "accounts": [{
+            "address": "rNPRNzBB92BVpAhhZr4iXDTveCgV5Pofm9",
+            "currencies": ["BTC", "ILS"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "SnapSwap",
+        "accounts": [{
+            "address": "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+            "currencies": ["USD"],
+            "hotwallets": ["rUQTpMqAF5jhykj4FExVeXakrZpiKF6cQV", "rhasPLL5GaXzBh5amQkN7Dr1SNF4Whb2ZT"]
+            }]
+    }, {
+        "name": "The Rock Trading",
+        "accounts": [{
+            "address": "rLEsXccBGNR3UPuPu2hUXPjziKC3qKSBun",
+            "currencies": ["BTC", "EUR", "USD"],
+            "hotwallets": ["rUeFPRGNjtcbtezyQKKiDcS1eQyYLQ1gcr"]
+            }]
+    }, {
+        "name": "WeExchange",
+        "accounts": [{
+            "address": "r47RkFi1Ew3LvCNKT6ufw3ZCyj5AJiLHi9",
+            "currencies": ["CAD"],
+            "hotwallets": []
+            }, {
+            "address": "rBcYpuDT1aXNo4jnqczWJTytKGdBGufsre",
+            "currencies": ["AUD"],
+            "hotwallets": []
+            }, {
+            "address": "rpvfJ4mR6QQAeogpXEKnuyGBx8mYCSnYZi",
+            "currencies": ["BTC"],
+            "hotwallets": []
+            }, {
+            "address": "r9vbV3EHvXWjSkeQ6CAcYVPGeq7TuiXY2X",
+            "currencies": ["USD"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "WisePass",
+        "accounts": [{
+            "address": "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
+            "currencies": ["BTC", "GBP", "JPY", "LTC", "NOK", "SEK", "USD"],
+            "hotwallets": ["r9xAQUyqs53QH2PLxe7iFbNbpU2RA9QtZx"]
+            }]
+    }, {
+        "name": "Dividend Rippler",
+        "accounts": [{
+            "address": "rfYv1TXnwgDDK4WQNbFALykYuEBnrR4pDX",
+            "currencies": ["BTC", "LTC", "NMC", "TRC"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "TTBit",
+        "accounts": [{
+            "address": "rGwUWgN5BEg3QGNY3RX2HfYowjUTZdid3E",
+            "currencies": ["DYM"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "RippleUnion",
+        "accounts": [{
+            "address": "r3ADD8kXSUKHd6zTCKfnKT3zV9EZHjzp1S",
+            "currencies": ["CAD"],
+            "hotwallets": []
+            }]
+    },{
+        "name": "chriswen",
+        "accounts": [{
+            "address": "rDihBcUrrfDwUBZWBcuP2z5n47KVLQFNQH",
+            "currencies": ["LTC"],
+            "hotwallets": []
+            }]
+    },{
+        "name": "Ripple Money",
+        "accounts": [{
+            "address": "rkH1aQbL2ajA7HUsx8VQRuL3VaEByHELm",
+            "currencies": ["GBP"],
+            "hotwallets": []
+            }]
+    },{
+        "name": "Justcoin",
+        "accounts": [{
+            "address": "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
+            "currencies": ["LTC", "BTC"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "XRPChina",
+        "accounts": [{
+            "address": "rM8199qFwspxiWNZRChZdZbGN5WrCepVP1",
+            "currencies": ["CNY"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "Peercover",
+        "accounts": [{
+            "address": "ra9eZxMbJrUcgV8ui7aPc161FgrqWScQxV",
+            "currencies": ["USD"],
+            "hotwallets": []
+            }]
+    }
+]

@@ -1,0 +1,21 @@
+{
+  "name": "ripplecharts",
+  "version": "0.0.1",
+  "devDependencies": {
+    "angular": "~1.0.7",
+    "angular-mocks": "~1.0.7",
+    "bootstrap": "~2.3.2",
+    "angular-bootstrap": "~0.3.0",
+    "angular-ui-router": "~0.0.1",
+    "angular-ui-utils": "~0.0.3",
+    "moment": "",
+    "underscore": "",
+    "store": "",
+    "angular-touch": "~1.2.6",
+    "angular-snap": "~1.2.0",
+    "font-awesome": "~4.0.3",
+    "d3": "~3.3.13"
+  },
+  "dependencies": {
+  }
+}

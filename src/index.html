@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title ng-bind="pageTitle">Ripple Charts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- D3 needs this -->
+    <meta charset="utf-8">
+    
+    <!-- social media tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@ripple">
+    <meta name="twitter:title" content="Ripple Charts">
+    <meta name="twitter:description" content="Ripple Network Data Visualization.">
+    <meta name="twitter:creator" content="@ripple">
+    <meta name="twitter:image:src" content="">
+    <meta property="og:title" content="Ripple Charts" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https:/ripplecharts.com" />
+    <meta property="og:image" content="" />
+    <meta property="og:description" content="Ripple Network Data Visualization.">
+
+    <!-- Open Sans from google -->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,700' rel='stylesheet' type='text/css'>
+    
+    <!-- font awesome from BootstrapCDN -->
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
+    <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
+    <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+
+    <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script><% }); %>
+
+  </head>
+  <body ng-controller="AppCtrl" ng-class="theme">
+      
+    <div snap-drawer>
+      <ul class="nav">
+        <li ui-route="/" ng-class="{active:$uiRoute}">
+          <a href="#/" snap-close>Home</a>
+        </li>
+        <li ui-route="/markets" ng-class="{active:$uiRoute}">
+          <a href="#/markets" snap-close>Markets</a>
+        </li>
+        <li ui-route="/network" ng-class="{active:$uiRoute}">
+          <a href="#/network" snap-close>Network</a>
+        </li>
+      </ul>
+    </div snap-drawer>
+
+    <div snap-content class="snap-content">
+      <div class="header">
+        <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
+        <a href="#/" ui-route="/" class="logo">
+          <img src="assets/images/smallLogo.png"/>
+        </a>
+        <div class="theme">
+          <span ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</span>
+          <span ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</span>
+        </div>  
+      </div>
+      
+      <div ui-view="main" ></div>
+      <footer class="footer">
+        <div class="footer-inner"></div>
+        <small><ahref="">v<%= version %></a></small>
+      </div>
+      </footer>
+    </div>    
+  </body>
+</html>

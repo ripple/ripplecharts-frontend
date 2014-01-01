@@ -1,0 +1,197 @@
+
+.chart svg {
+    opacity : 0;	
+}
+
+.chart .background {
+    fill: none;
+    stroke : #999;
+    pointer-events: all;
+    stroke-width:1;
+    shape-rendering: crispEdges;
+}
+
+.chart .loader {
+    width:40px;
+    position:absolute;
+    top:50%;
+    left:50%;	
+    margin-top:-50px;
+    margin-left:-20px;
+}
+
+.chart .axis {
+    fill: #999;
+    shape-rendering: crispEdges;
+}
+
+.chart .axis .title {
+    stroke-width:1;
+    stroke: #bbb;
+    fill: #bbb;
+}
+
+
+.chart .axis path, .chart .axis line {
+    fill: none;
+    stroke: #999;
+    stroke-width: 1;
+}
+
+.chart .axis text {
+    font-size:10px;
+}
+
+.chart .axis.price text, .chart .axis.volume text {
+    font-size:12px;
+}
+
+.chart, #candlestickChart {
+    display: inline-block;
+    position: relative;
+}
+
+.chart path {
+    fill: none;
+    stroke: #3369a8;
+    stroke-width:2;
+}
+
+.chart line {
+    stroke: #999;
+    shape-rendering: crispEdges;
+}
+
+.chart .status {
+    text-align:center;
+    color:#aaa;
+    position:absolute;
+    width:100%;
+    top:30%;
+}
+
+.chart .hover {
+    stroke: #999;
+    stroke-width: 1;
+}
+
+.chart .focus {
+    fill: rgba(255,255,255,.5);
+    stroke: #999;
+}
+
+.chart .focus.dark {
+    fill:#555;
+    stroke: none;
+}
+
+.candlesticks rect {
+    fill: #c33;
+    stroke: #622;
+    stroke-width: 1;
+}
+
+.candlesticks line {
+    stroke: #777;    
+}
+
+.candlesticks .filled rect{    
+}
+
+.candlesticks .up rect {
+    fill: #3c5;
+    stroke: #262;
+}
+
+.candlesticks .up.filled rect{ 
+}
+
+.candlesticks line {
+    stroke-width : 2;	
+}
+
+.chart .volumeBars rect {
+    fill : #ddd;	
+    stroke : #bbb;
+}
+
+.chart .title {
+    font-size:15px;
+}
+
+div.chartDetails {   
+    position: absolute;  
+    top: -20px;
+    right: 60px;         
+    text-align: left;      
+    font-size:14px;   
+    color:#333;      
+}
+
+div.chartDetails span {
+    font-size:12px;
+    color:#999;
+    margin: 0 .25em;
+    display:inline-block;
+}
+
+div.chartDetails b {margin:0 .25em}
+
+div.chartDetails .date {text-align:right; margin-right:20px}
+div.chartDetails .high {color:#090}
+div.chartDetails .low {color:#900}
+div.chartDetails .volume {color:#369}
+
+
+/*
+ * dark theme 
+ */
+
+.dark .chart .background,
+.dark .chart .hover,
+.dark .chart .axis path,
+.dark .chart .axis line {
+  stroke : #404040;
+}
+
+.dark .chart .axis text {
+  fill : #666; 
+  stroke: #666;
+}
+
+.dark .chart .volumeBars rect {
+  stroke:#888;
+  opacity:.4;
+}
+
+.dark .chart .status {
+  color: #666;
+}
+
+.dark .candlesticks line {
+  stroke-width: 1;
+  stroke:#a00;
+}
+
+.dark .candlesticks .filled rect {
+  fill:#a00;
+}
+
+.dark .candlesticks .up line {
+  stroke:#393;  
+}
+.dark .candlesticks .up rect {
+  stroke:#393
+}
+
+.dark .candlesticks .filled.up rect {
+  fill:#393;
+  stroke:#393;
+}
+
+.dark .candlesticks rect {
+  fill:#000;
+  stroke-width:1;
+  stroke:#a00;
+}
+
