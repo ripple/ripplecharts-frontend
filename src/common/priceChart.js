@@ -17,7 +17,7 @@ PriceChart = function (options) {
     
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
-  if (!options.height) options.height = options.width/2;
+  if (!options.height) options.height = options.width/2>400 ? options.width/2 : 400;
  
   function drawChart() {
     div.html("");

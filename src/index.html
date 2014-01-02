@@ -2,7 +2,7 @@
 <html>
   <head>
     <title ng-bind="pageTitle">Ripple Charts</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.75, min-scale=0.75">
 
     <!-- D3 needs this -->
     <meta charset="utf-8">
@@ -61,7 +61,7 @@
         </div>  
       </div>
       
-      <div ui-view="main"></div>
+      <div ui-view="main" style="overflow:hidden;"></div>
       <footer class="footer row">
         <div class="footer-inner"></div>
         <small><ahref="">v<%= version %></a></small>

@@ -20,7 +20,7 @@ angular.element(document).ready(function() {
   })
   
   .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
-    $scope.theme = 'light';
+    $scope.theme = 'dark';
     $scope.snapOptions = {
       disable: 'right'
     }
