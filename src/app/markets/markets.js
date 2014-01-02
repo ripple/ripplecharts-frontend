@@ -108,9 +108,7 @@ angular.module( 'ripplecharts.markets', [
   var priceChart = new PriceChart ({
     id     : "#priceChart",
     url    : API,  
-    type   : chartType.selected,
-    width  : 1000,
-    height : 500
+    type   : chartType.selected
   });   
 
   loaded = true;

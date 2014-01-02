@@ -3,47 +3,67 @@ var OrderBook = function (options) {
   self.offers;
   
   var remote = options.remote; 
-  var chart  = d3.select("#"+options.chartID).attr('class','chart');
-  var width  = 1000,
-    height   = 200,
-    margin   = {top: 5, left: 60, right: 60, bottom: 20},
-    xScale   = d3.scale.linear(),
+  var chart  = d3.select("#"+options.chartID).attr('class','chart'),
+    svg, depth, gEnter, 
+    xAxis, leftAxis, rightAxis,
+    xTitle, leftTitle, rightTitle,
+    hover, focus, centerline, path,
+    status, details, loader;
+    
+  if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
+  if (!options.width)  options.width  = parseInt(chart.style('width'), 10) - options.margin.left - options.margin.right;
+  if (!options.height) options.height = options.width/4;
+      
+  var xScale = d3.scale.linear(),
     yScale   = d3.scale.linear(),
     lineData = [];
     
-  var svg   = chart.selectAll("svg").data([0]);       
-  var depth = svg.enter().append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom) 
-    .on("mousemove", mousemove);
+  //resize on window resize
+ 
+  addResizeEvent(function() {
+    w = parseInt(chart.style('width'), 10);
+    options.width  = w-options.margin.left - options.margin.right;
+    options.height = options.width/4;
+    drawChart(); 
+    redrawChart();
+  }); 
+  
+  function drawChart() {
+    chart.html("");  
+    svg   = chart.selectAll("svg").data([0]);       
+    depth = svg.enter().append("svg")
+      .attr("width", options.width + options.margin.left + options.margin.right)
+      .attr("height", options.height + options.margin.top + options.margin.bottom) 
+      .on("mousemove", mousemove);
 
-  var gEnter = depth.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    gEnter = depth.append("g")
+      .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")")
     
     
-  var xAxis      = gEnter.append("g").attr("class", "x axis");
-  var leftAxis   = gEnter.append("g").attr("class", "y axis");
-  var rightAxis  = gEnter.append("g").attr("class", "y axis");
-  var xTitle     = xAxis.append("text").attr("class", "title").attr("y",-5).attr("x",10);
-  var leftTitle  = leftAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",15).attr("x",-25);
-  var rightTitle = rightAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",-5).attr("x",-25);  
+    xAxis      = gEnter.append("g").attr("class", "x axis");
+    leftAxis   = gEnter.append("g").attr("class", "y axis");
+    rightAxis  = gEnter.append("g").attr("class", "y axis");
+    xTitle     = xAxis.append("text").attr("class", "title").attr("y",-5).attr("x",10);
+    leftTitle  = leftAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",15).attr("x",-25);
+    rightTitle = rightAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",-5).attr("x",-25);  
     
-  var hover      = gEnter.append("line").attr("class", "hover").attr("y2", height).style("opacity",0);   
-  var focus      = gEnter.append("circle").attr("class", "focus dark").attr("r",3).style("opacity",0);
-  var centerline = gEnter.append("line").attr("class", "centerline").attr("y2", height).style("opacity",0);
-  var path       = gEnter.append("path").attr("class","line");
-  var status     = chart.append("h4").attr("class", "status");
+    hover      = gEnter.append("line").attr("class", "hover").attr("y2", options.height).style("opacity",0);   
+    focus      = gEnter.append("circle").attr("class", "focus dark").attr("r",3).style("opacity",0);
+    centerline = gEnter.append("line").attr("class", "centerline").attr("y2", options.height).style("opacity",0);
+    path       = gEnter.append("path").attr("class","line");
+    status     = chart.append("h4").attr("class", "status");
   
-  var details   = chart.append("div")   
-        .attr("class", "chartDetails")               
-        .style("opacity", 0);  
+    details   = chart.append("div")   
+      .attr("class", "chartDetails")               
+      .style("opacity", 0);  
   
-  gEnter.append("rect").attr("class", "background").attr("width", width).attr("height", height);  
+    gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);  
   
-  var loader = chart.append("img")
-    .attr("class", "loader")
-    .attr("src", "assets/images/throbber5.gif")
-    .style("opacity", 0); 
+    loader = chart.append("img")
+      .attr("class", "loader")
+      .attr("src", "assets/images/throbber5.gif")
+      .style("opacity", 0); 
+  }
   
   function setStatus (string) {
     status.html(string).style("opacity",1); 
@@ -198,8 +218,8 @@ var OrderBook = function (options) {
       if (lineData[i].showPrice<min || lineData[i].showPrice>max) lineData.splice(i--,1);  
     }
     
-    xScale.domain(d3.extent(lineData, function(d) { return d.showPrice; })).range([0, width]);
-    yScale.domain([0, d3.max(lineData, function(d) { return d.showSum; })]).range([height, 0]);
+    xScale.domain(d3.extent(lineData, function(d) { return d.showPrice; })).range([0, options.width]);
+    yScale.domain([0, d3.max(lineData, function(d) { return d.showSum; })]).range([options.height, 0]);
     center = xScale((bestBid+bestAsk)/2);
     
     path.datum(lineData)
@@ -225,8 +245,8 @@ var OrderBook = function (options) {
   }
   
   function mousemove () {
-    var tx = Math.max(0, Math.min(width+margin.left, d3.mouse(this)[0])),
-        i = d3.bisect(lineData.map(function(d) { return d.showPrice; }), xScale.invert(tx-margin.left));
+    var tx = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
+        i = d3.bisect(lineData.map(function(d) { return d.showPrice; }), xScale.invert(tx-options.margin.left));
         d = lineData[i];
         
         //prevent 0 sum numbers at best bid/ask from displaying
@@ -243,6 +263,7 @@ var OrderBook = function (options) {
     }
   }
   
+  drawChart();
   var bookTables = d3.select("#"+options.tableID).attr("class","bookTables");
   var bidsTable = bookTables.append("table").attr("class","bidsTable"),
     bidsHead    = bidsTable.append("thead"),

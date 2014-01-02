@@ -10,75 +10,93 @@ PriceChart = function (options) {
     
   self.type = options.type ? options.type : "line";  //default to line  	
 
+  var div = d3.select(options.id).attr("class","chart"),
+    svg, svgEnter, gEnter, gradient, 
+    hover, horizontal, focus, 
+    status, details, loader;
+    
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
-  if (!options.height) options.height = 500;
-  if (!options.width)  options.width  = 1000;
-
-  var div = d3.select(options.id).attr("class","chart");
-  var svg = div.selectAll("svg").data([0])
-  var svgEnter = svg.enter().append("svg")
-    .attr("width", options.width + options.margin.left + options.margin.right)
-    .attr("height", options.height + options.margin.top + options.margin.bottom);   
-
-  svg.append("defs").append("clipPath").attr("id", "clip").append("rect");
-  svg.select("rect").attr("width", options.width).attr("height", options.height);
-
-  var gEnter = svg.append("g")
-    .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
-  gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);
-  gEnter.append("g").attr("class", "volumeBars").attr("clip-path", "url(#clip)");   
-  gEnter.append("g").attr("class", "candlesticks").attr("clip-path", "url(#clip)");
-  gEnter.append("path").attr("class", "line");
-  gEnter.append("g").attr("class", "x axis");
-
-  gEnter.append("g").attr("class", "volume axis")   
-    .append("text").text("Volume")
-    .attr("class", "title")
-    .attr("transform", "rotate(-90)")
-    .attr("y",15).attr("x",-90);
-
-  gEnter.append("g").attr("class", "price axis")
-    .attr("transform", "translate("+options.width+", 0)")
-    .append("text").text("Price")
+  if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
+  if (!options.height) options.height = options.width/2;
+ 
+  function drawChart() {
+    div.html("");
+    svg = div.selectAll("svg").data([0])
+    svgEnter = svg.enter().append("svg")
+      .attr("width", options.width + options.margin.left + options.margin.right)
+      .attr("height", options.height + options.margin.top + options.margin.bottom);   
+  
+    svg.append("defs").append("clipPath").attr("id", "clip").append("rect");
+    svg.select("rect").attr("width", options.width).attr("height", options.height);
+  
+    gEnter = svg.append("g")
+      .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
+    gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);
+    gEnter.append("g").attr("class", "volumeBars").attr("clip-path", "url(#clip)");   
+    gEnter.append("g").attr("class", "candlesticks").attr("clip-path", "url(#clip)");
+    gEnter.append("path").attr("class", "line");
+    gEnter.append("g").attr("class", "x axis");
+  
+    gEnter.append("g").attr("class", "volume axis")   
+      .append("text").text("Volume")
       .attr("class", "title")
       .attr("transform", "rotate(-90)")
-      .attr("y",-10).attr("x",-80);
-        
-  // gradient for volume bars	    
-  var gradient = svg.append("svg:defs")
-    .append("svg:linearGradient")
-    .attr("id", "gradient")
-    .attr("x1", "0%")
-    .attr("y1", "0%")
-    .attr("x2", "0%")
-    .attr("y2", "100%")
-    .attr("spreadMethod", "pad");
-
-  gradient.append("svg:stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#ccc")
-    .attr("stop-opacity", 0.5);
-
-  gradient.append("svg:stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#ddd")
-    .attr("stop-opacity", 0.5);	
-
-  var hover       = gEnter.append("line").attr("class", "hover").attr("y2", options.height);
-  var horizontal  = gEnter.append("line").attr("class", "hover");
-  var focus       = gEnter.append("circle").attr("class", "focus dark").attr("r",3);
-  var status      = div.append("h4").attr("class", "status");
-
-  var details = div.append("div")   
-    .attr("class", "chartDetails")               
-    .style("opacity", 0);      
-
-  var loader = div.append("img")
-    .attr("class", "loader")
-    .attr("src", "assets/images/throbber5.gif")
-    .style("opacity", 0);	
-
-
+      .attr("y",15).attr("x",-90);
+  
+    gEnter.append("g").attr("class", "price axis")
+      .attr("transform", "translate("+options.width+", 0)")
+      .append("text").text("Price")
+        .attr("class", "title")
+        .attr("transform", "rotate(-90)")
+        .attr("y",-10).attr("x",-80);
+          
+    // gradient for volume bars	    
+    gradient = svg.append("svg:defs")
+      .append("svg:linearGradient")
+      .attr("id", "gradient")
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "0%")
+      .attr("y2", "100%")
+      .attr("spreadMethod", "pad");
+  
+    gradient.append("svg:stop")
+      .attr("offset", "0%")
+      .attr("stop-color", "#ccc")
+      .attr("stop-opacity", 0.5);
+  
+    gradient.append("svg:stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#ddd")
+      .attr("stop-opacity", 0.5);	
+  
+    hover       = gEnter.append("line").attr("class", "hover").attr("y2", options.height);
+    horizontal  = gEnter.append("line").attr("class", "hover");
+    focus       = gEnter.append("circle").attr("class", "focus dark").attr("r",3);
+    status      = div.append("h4").attr("class", "status");
+  
+    details = div.append("div")   
+      .attr("class", "chartDetails")               
+      .style("opacity", 0);      
+  
+    loader = div.append("img")
+      .attr("class", "loader")
+      .attr("src", "assets/images/throbber5.gif")
+      .style("opacity", 0);	
+  }
+  
+  drawChart();
+ 
+  //resize on window resize
+  addResizeEvent(function() {
+    w = parseInt(div.style('width'), 10);
+    options.width  = w-options.margin.left - options.margin.right;
+    options.height = options.width/2>400 ? options.width/2 : 400;
+    drawChart(); 
+    drawData();
+  });
+  
+    
   //fade to throber when reloading from history
   this.fadeOut = function () {
     div.selectAll("svg").transition().duration(100).style("opacity", 0.5);
@@ -123,7 +141,7 @@ PriceChart = function (options) {
 
     }, function(data){
       self.lineData = data;
-      drawChart();
+      drawData();
       
     }, function (error){
       console.log(error);
@@ -136,7 +154,7 @@ PriceChart = function (options) {
     if (string) loader.style("opacity",0);
   }
 
-  function drawChart () {	
+  function drawData () {	
     if (!self.lineData || !self.lineData.length) {
       loader.style("opacity",0);
       div.selectAll("svg").transition().style("opacity",0);
@@ -238,11 +256,13 @@ PriceChart = function (options) {
     candleUpdate.select(".high")
       .attr("x1", -candleWidth / 4)
       .attr("x2", candleWidth / 4)
-      .attr("transform", function(d) { return "translate(0," + priceScale(d.high) + ")"; });
+      .attr("y1", function(d) { return priceScale(d.high)})
+      .attr("y2", function(d) { return priceScale(d.high)});
     candleUpdate.select(".low")
       .attr("x1", -candleWidth / 4)
       .attr("x2", candleWidth / 4)
-      .attr("transform", function(d) { return "translate(0," + priceScale(d.low) + ")"; });	
+      .attr("y1", function(d) { return priceScale(d.low)})
+      .attr("y2", function(d) { return priceScale(d.low)});
     d3.transition(candle.exit())
       .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; })
       .style("opacity", 1e-6).remove();

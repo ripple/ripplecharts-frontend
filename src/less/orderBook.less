@@ -1,7 +1,7 @@
 .chart .centerline {stroke:#cde}
 
 .bookTables {
-  width:1000px;
+  width:auto;
   overflow:hidden;
   font-size:14px;
   color:#666;
@@ -10,7 +10,7 @@
 }
 
 .bookTables table {
-  width: 500px;
+  width: 50%;
   text-align:right;
   border-collapse:collapse;
   border:1px solid #ccc;
@@ -51,12 +51,10 @@
 
 .bookTables .bidsTable {
   float:left;
-  border-right-width:2px;
 }
 
 .bookTables .asksTable {
   float:right;
-  border-left-width:2px;
 }
 
 /*
@@ -94,5 +92,13 @@
 }
 
 .dark .bookTables td .insig {
-  color:#404040;
+  color:#444;
+}
+
+@media (max-width: 767px) {
+  
+  .bookTables table {
+    width:100%;
+    float:none !important;
+  }
 }

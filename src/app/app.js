@@ -21,7 +21,10 @@ angular.element(document).ready(function() {
   
   .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
     $scope.theme = 'light';
-  
+    $scope.snapOptions = {
+      disable: 'right'
+    }
+    
     $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
       if ( angular.isDefined( toState.data.pageTitle ) ) {
         $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
@@ -36,4 +39,14 @@ angular.element(document).ready(function() {
     angular.bootstrap(document, ['ripplecharts']);
   });
 });
+
+
+//Global functions
+function addResizeEvent(func) {
+  var oldResize = window.onresize;
+  window.onresize = function () {
+    func();
+    if (typeof oldResize === 'function') oldResize();
+  };
+}
 

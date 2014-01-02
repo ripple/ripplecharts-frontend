@@ -1,7 +1,8 @@
-<div class="markets">
-  <div id="trades" style="display:none">
+<div class="markets row-fluid">
+  <div id="trades" class="span3">
     <div><span id="last-price"></span><span class="symbol-quote"></span></div>
-    <table>
+    <h3>Transaction Feed</h3>
+    <table style="display:none">
       <thead>
         <th>Time</th>
         <th>Amount (<span class="symbol-base"></span>)</th>
@@ -9,17 +10,17 @@
       </thead>
       <tbody></tbody>
     </table>
-  </div>
+  </div>  
   
-  
-  <div class="wrap">
+  <div class="wrap span9">
+    <div id="chartType"></div>
     <div id="currency-pair">
       <div id="base"></div>
       <span id="flip">Flip</span>
       <div id="quote"></div>
     </div>
     
-    <div id="chartType"></div>
+    
     <div id="interval"></div>
     <div id="priceChart"></div>
     <h2>Order Book</h2>

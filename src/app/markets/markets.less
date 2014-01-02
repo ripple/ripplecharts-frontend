@@ -1,15 +1,20 @@
 @import url(priceChart.css);
 @import url(orderBook.css);
 
+#trades {
+  background:rgba(200,220,240,.3);
+  color:#aaa;
+  overflow:hidden;
+}
 
 .wrap {
   text-align:left;
-  display:inline-block;
-  width:1120px;  
+  display:inline-block; 
 }
 
 .markets {
   text-align:center;
+  min-width:480px;
 }
 .markets h2 {
   text-align:center;
@@ -63,8 +68,54 @@
 }
 
 #chartType {
-  display:inline-block;
-  margin:0 2em;
+  float:right;
+  margin:5px 55px 5px 10px;
 }
 
 #bookChart {margin-top:5px}
+
+
+//Responsive tweaks
+.markets .span3 {
+  width: 24.5% !important;
+  margin-left: 1% !important;
+}
+
+.markets .span9 {
+  margin:0 !important
+}
+
+@media (max-width: 979px) {
+  
+  .markets .span3, .markets .span9 {
+    width:100% !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  #currency-pair {
+    width:90%;
+    text-align:center;
+    margin:10px 5%;
+  }
+}
+
+@media (max-width: 600px) {
+  #flip {
+    display:block;
+    width:100%;
+    margin:5px;
+  }
+}
+
+@media (max-width: 1300px) {
+  #interval {
+    margin-bottom:20px;
+  }
+  
+  .chart .chartDetails {
+    right:auto;
+    left:55px;
+  }
+}

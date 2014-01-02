@@ -49,7 +49,7 @@
       </ul>
     </div snap-drawer>
 
-    <div snap-content class="snap-content">
+    <div snap-content class="snap-content" snap-options="snapOptions">
       <div class="header">
         <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
         <a href="#/" ui-route="/" class="logo">
@@ -61,8 +61,8 @@
         </div>  
       </div>
       
-      <div ui-view="main" ></div>
-      <footer class="footer">
+      <div ui-view="main"></div>
+      <footer class="footer row">
         <div class="footer-inner"></div>
         <small><ahref="">v<%= version %></a></small>
       </div>
