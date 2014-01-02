@@ -2,6 +2,8 @@
 var API = ""; 
 
 var Options = {
+  theme: "light",
+  
   ripple : {
     trace         :  true,
     trusted       :  true,
