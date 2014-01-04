@@ -1,13 +1,11 @@
 <div class="markets row-fluid">
-  <div id="trades" class="span3">
-    <div><span id="last-price"></span><span class="symbol-quote"></span></div>
-    <h3>Transaction Feed</h3>
-    <table style="display:none">
-      <thead>
-        <th>Time</th>
-        <th>Amount (<span class="symbol-base"></span>)</th>
-        <th>Price (<span class="symbol-quote"></span>)</th>
-      </thead>
+  <div id="tradeFeed" class="span3">
+    <div class="summary">
+      <span class="lastPrice"></span>
+      <span class="pair"></span>
+    </div>
+    <table>
+      <thead></thead>
       <tbody></tbody>
     </table>
   </div>  
@@ -23,7 +21,6 @@
     
     <div id="interval"></div>
     <div id="priceChart"></div>
-    <h2>Order Book</h2>
     <div id="bookChart"></div>
     <div id="bookTables"></div>
   </div>

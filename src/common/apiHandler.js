@@ -12,6 +12,7 @@ ApiHandler = function (url) {
   this.offersExercised = function (params, load, error) {
     var request = apiRequest("offersExercised");
 
+    console.log(params);
     
     request.post(parseParams(params))
       .on('load', function(xhr){
@@ -19,10 +20,10 @@ ApiHandler = function (url) {
 
         if (response.length>1) {
           response.splice(0,1); //remove first    
-          
+
           data = response.map(function(d) {
             return {
-              time   : moment.utc(d[0]),
+              time   : moment(d[0]),
               open   : d[4],
               close  : d[5],
               high   : d[6],

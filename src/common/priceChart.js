@@ -5,8 +5,9 @@ PriceChart = function (options) {
     volumeScale = d3.scale.linear(),
     xAxis       = d3.svg.axis().scale(xScale),
     volumeAxis  = d3.svg.axis().scale(volumeScale).orient("left").tickFormat(d3.format("s")),
-    priceAxis   = d3.svg.axis().scale(priceScale).orient("right");
-    apiHandler  = new ApiHandler(options.url);
+    priceAxis   = d3.svg.axis().scale(priceScale).orient("right"),
+    apiHandler  = new ApiHandler(options.url),
+    liveFeed;
     
   self.type = options.type ? options.type : "line";  //default to line  	
 
@@ -127,13 +128,20 @@ PriceChart = function (options) {
     self.base     = base;
     self.trade    = trade;
     self.interval = d.interval;
+    self.start    = d.offset(new Date());
+    self.end      = new Date();
+    self.multiple = d.multiple;
+    
+    if (liveFeed) liveFeed.stopListener();
     
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime     : d.offset(new Date()),
-      endTime       : new Date(),
+      startTime     : self.start,
+      endTime       : self.end,
       timeIncrement : d.interval,
-      descending    : true,
+      timeMultiple  : d.multiple,
+      descending    : false,
+      
       "trade[currency]" : trade.currency,
       "trade[issuer]"   : trade.issuer ? trade.issuer : "",
       "base[currency]"  : base.currency,
@@ -141,6 +149,9 @@ PriceChart = function (options) {
 
     }, function(data){
       self.lineData = data;
+      console.log(data);
+      addEmptyCandles();
+      //setLiveFeed();
       drawData();
       
     }, function (error){
@@ -148,12 +159,100 @@ PriceChart = function (options) {
       setStatus(error.text);
     });   
   }
-
+  
   function setStatus (string) {
     status.html(string).style("opacity",1); 
     if (string) loader.style("opacity",0);
   }
 
+  function setLiveFeed () {
+    if (!self.lineData.length) return;
+    var last  = JSON.parse(JSON.stringify(self.lineData[self.lineData.length-1]));
+    last.time = moment(last.time).toArray();
+    var viewOptions = {
+      base  : self.base,
+      trade : self.trade,
+      timeIncrement    : self.interval,
+      timeMultiple     : self.multiple,
+      incompleteApiRow : last
+    }
+    
+    if (liveFeed) liveFeed.updateViewOpts(viewOptions);
+    else liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
+  }
+  
+  this.suspendLiveFeed = function ()
+  {
+    if (liveFeed) liveFeed.stopListener();
+  }
+  
+  function liveUpdate (data) {
+    console.log(data);
+    var last = self.lineData[self.lineData.length-1];
+    var candle = {
+      time   : moment(data.time).local(),
+      volume : data.baseCurrVol ? data.baseCurrVol : 0,
+      vwap   : data.vwavPrice   ? data.vwavPrice   : 0,
+      close  : data.closePrice  ? data.closePrice  : last.close,
+      open   : data.openPrice   ? data.openPrice   : last.close,
+      high   : data.highPrice   ? data.highPrice   : last.close,
+      low    : data.lowPrice    ? data.lowPrice    : last.close
+    }
+    
+    //console.log(last);
+    console.log(candle);
+    console.log(candle.time.format("YYYY-MM-DDTHH:mm:ss.SSSZZ"), new Date());
+    
+    if (last.time.unix()===candle.time.unix()) {
+      last = candle;
+    } else self.lineData.push(candle);
+    self.lineData.shift()
+    drawData();
+    //mousemove();
+  }
+  
+  function addEmptyCandles () {
+    var increment;
+    if      (self.interval=="second") increment = 1;
+    else if (self.interval=="minute") increment = 60;
+    else if (self.interval=="hour")   increment = 60*60;
+    else if (self.interval=="day")   increment = 60*60*24;
+    
+    increment *= self.multiple;
+    console.log(increment);
+/*    
+    self.lineData.push({
+      time   : moment(self.start).local(),
+      volume : null,
+      vwap   : null,
+      close  : null,
+      open   : null,
+      high   : null,
+      low    : null    
+    });
+    
+    self.lineData.unshift({
+      time   : moment(self.end).local(),
+      volume : null,
+      vwap   : null,
+      close  : null,
+      open   : null,
+      high   : null,
+      low    : null    
+    });
+*/   
+/*    
+    time = moment(self.start);
+    end  = moment(self.end);
+    current = self.lineData[0];
+    while (time.unix()<end.unix()) {
+      console.log(current.time.format("YYYY-MM-DDTHH:mm:ss.SSSZZ"));
+      console.log(time.format("YYYY-MM-DDTHH:mm:ss.SSSZZ"));
+      time.add(increment, "seconds");  
+    }
+*/
+  }
+  
   function drawData () {	
     if (!self.lineData || !self.lineData.length) {
       loader.style("opacity",0);
@@ -174,8 +273,22 @@ PriceChart = function (options) {
       .x(function(d) { return xScale(d.time); })
       .y(function(d) { return priceScale(d.close); });
 
-    var candleWidth = options.width/(self.lineData.length*1.15);
+
+    var increment;
+    if      (self.interval=="second") increment = 1;
+    else if (self.interval=="minute") increment = 60;
+    else if (self.interval=="hour")   increment = 60*60;
+    else if (self.interval=="day")    increment = 60*60*24;
+    
+    increment *= self.multiple;
+    var num = (moment(self.end).unix() - moment(self.start).unix())/increment;
+    console.log(num);
+    var candleWidth = options.width/(num*1.3);
     if (candleWidth<4) candleWidth = 4; 
+    console.log(candleWidth);
+    
+    //candleWidth = options.width/(self.lineData.length*1.15);
+    //if (candleWidth<4) candleWidth = 4; 
 
     svg.datum(self.lineData).on("mousemove.hover", mousemove);
 
@@ -193,6 +306,8 @@ PriceChart = function (options) {
     candleEnter.append("line").attr("class", "low");    
     candleEnter.append("rect");	
         
+        console.log(getExtents());
+        console.log(self.lineData[self.lineData.length-1]);
     // Update the x-scale.
     xScale
       .domain(getExtents())
@@ -218,7 +333,7 @@ PriceChart = function (options) {
       .transition()
       .attr("x", function(d){return xScale(d.time)-candleWidth/3})
       .attr("y", function(d){return volumeScale(d.volume)})
-      .attr("width", candleWidth/1.5)
+      .attr("width", candleWidth/1.2)
       .attr("height", function(d){return options.height - volumeScale(d.volume)})
       .style("fill", "url(#gradient)")
         
@@ -285,7 +400,7 @@ PriceChart = function (options) {
 
   function mousemove() {
     var tx = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
-      x    = d3.bisect(self.lineData.map(function(d) { return d.time; }), xScale.invert(tx-options.margin.left)),
+      x    = d3.bisect(self.lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
       d    = self.lineData[x],
       o, h, l, c, v;
 
@@ -331,6 +446,7 @@ PriceChart = function (options) {
   function getExtents () {
     if (self.lineData && self.lineData.length>1) {  //add an extra increment on the right side
       var difference = (self.lineData[1].time - self.lineData[0].time)/1000;
+
       return [
         d3.min(self.lineData, function(d) { return d.time }),
         d3.time.second.offset(d3.max(self.lineData, function(d) { return d.time }), difference)];

@@ -79,7 +79,7 @@ module.exports = {
       'vendor/moment/moment.js',
       'vendor/store/dist/store2.js',
       'vendor/d3/d3.js',
-      'deps/ripple.js',
+      'deps/ripple-0.7.30.js',
       'deps/offersExercisedListener.js'
     ],
     css: [
