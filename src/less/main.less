@@ -89,8 +89,6 @@ h1, h2, h3, h4 {
 .snap-content {
   border-left:1px solid #eee;
   background:#fff; 
-  min-width:480px;
-  height:100%; 
 }
 
 .nav li {
@@ -197,3 +195,9 @@ select {
 @import 'priceChart.less';
 @import 'orderBook.less';
 @import 'tradeFeed.less';
+
+@media (max-width: 480px) {
+  .snap-content {
+    zoom: .75;  //zoom 75% for phones
+  }
+}

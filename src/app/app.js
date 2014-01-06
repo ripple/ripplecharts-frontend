@@ -24,7 +24,10 @@ angular.element(document).ready(function() {
     $scope.snapOptions = {
       disable: 'right'
     }
+    //disable touch drag for desktop devices
+    if (!("ontouchstart" in document.documentElement)) $scope.snapOptions.touchToDrag = false;
     
+        
     $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
       if ( angular.isDefined( toState.data.pageTitle ) ) {
         $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
@@ -49,4 +52,3 @@ function addResizeEvent(func) {
     if (typeof oldResize === 'function') oldResize();
   };
 }
-
