@@ -139,10 +139,9 @@ var ripple =
 	var OrderBook    = require(17).OrderBook;
 	var PathFind     = require(18).PathFind;
 	var RippleError  = require(10).RippleError;
-
 	var utils        = require(12);
-	var config       = require(14);
 	var sjcl         = require(12).sjcl;
+	var config       = require(14);
 
 	/**
 	    Interface to manage the connection to a Ripple server.
@@ -210,13 +209,6 @@ var ripple =
 	  this.state                 = 'offline'; // 'online', 'offline'
 	  this.retry_timer           = void(0);
 	  this.retry                 = void(0);
-
-	  this._load_base            = 256;
-	  this._load_factor          = 256;
-	  this._fee_ref              = 10;
-	  this._fee_base             = 10;
-	  this._reserve_base         = void(0);
-	  this._reserve_inc          = void(0);
 	  this._connection_count     = 0;
 	  this._connected            = false;
 	  this._connection_offset    = 1000 * (typeof opts.connection_offset === 'number' ? opts.connection_offset : 5)
@@ -283,6 +275,7 @@ var ripple =
 
 	  // This is used to remove Node EventEmitter warnings
 	  var maxListeners = opts.maxListeners || opts.max_listeners || 0;
+
 	  this._servers.concat(this).forEach(function(emitter) {
 	    emitter.setMaxListeners(maxListeners);
 	  });
@@ -551,6 +544,10 @@ var ripple =
 	      }
 	      break;
 
+	    case 'serverStatus':
+	      self.emit('server_status', message);
+	      break;
+
 	    case 'transaction':
 	      // To get these events, just subscribe to them. A subscribes and
 	      // unsubscribes will be added as needed.
@@ -604,29 +601,6 @@ var ripple =
 	      this.emit('path_find_all', message);
 	      break;
 
-	    case 'serverStatus':
-	      self.emit('server_status', message);
-
-	      var loadChanged = message.hasOwnProperty('load_base')
-	      && message.hasOwnProperty('load_factor')
-	      && (message.load_base !== self._load_base || message.load_factor !== self._load_factor)
-	      ;
-
-	      if (loadChanged) {
-	        self._load_base   = message.load_base;
-	        self._load_factor = message.load_factor;
-
-	        var obj = {
-	          load_base:    self._load_base,
-	          load_factor:  self._load_factor,
-	          fee_units:    self.feeTxUnit()
-	        }
-
-	        self.emit('load', obj);
-	        self.emit('load_changed', obj);
-	      }
-	      break;
-
 	    // All other messages
 	    default:
 	      this._trace('remote: ' + message.type + ': ', message);
@@ -651,6 +625,11 @@ var ripple =
 	      && (typeof ledger.reserve_base === 'number')
 	      && (typeof ledger.reserve_inc  === 'number')
 	      && (typeof ledger.txn_count    === 'number')
+	};
+
+	Remote.isLoadStatus = function(message) {
+	  return (typeof message.load_base === 'number')
+	      && (typeof message.load_factor === 'number');
 	};
 
 	Remote.prototype.ledgerHash = function() {
@@ -1121,10 +1100,6 @@ var ripple =
 	  return new Request(this, 'submit').callback(callback);
 	};
 
-	//
-	// Higher level functions.
-	//
-
 	/**
 	 * Create a subscribe request with current subscriptions.
 	 *
@@ -1145,15 +1120,17 @@ var ripple =
 
 	  var request = this.requestSubscribe(feeds);
 
-	  request.once('success', function(message) {
+	  function serverSubscribed(message) {
 	    self._stand_alone = !!message.stand_alone;
 	    self._testnet     = !!message.testnet;
 
 	    if (typeof message.random === 'string') {
 	      var rand = message.random.match(/[0-9A-F]{8}/ig);
+
 	      while (rand && rand.length) {
 	        sjcl.random.addEntropy(parseInt(rand.pop(), 16));
 	      }
+
 	      self.emit('random', utils.hexToArray(message.random));
 	    }
 
@@ -1164,22 +1141,14 @@ var ripple =
 	      self.emit('ledger_closed', message);
 	    }
 
-	    // FIXME Use this to estimate fee.
-	    // XXX When we have multiple server support, most of this should be tracked
-	    //     by the Server objects and then aggregated/interpreted by Remote.
-	    self._load_base     = message.load_base || 256;
-	    self._load_factor   = message.load_factor || 256;
-	    self._fee_ref       = message.fee_ref;
-	    self._fee_base      = message.fee_base;
-	    self._reserve_base  = message.reserve_base;
-	    self._reserve_inc   = message.reserve_inc;
-
 	    self.emit('subscribed');
-	  });
+	  };
+
+	  request.once('success', serverSubscribed);
 
 	  self.emit('prepare_subscribe', request);
 
-	  request.callback(callback);
+	  request.callback(callback, 'subscribed');
 
 	  // XXX Could give error events, maybe even time out.
 
@@ -1234,7 +1203,7 @@ var ripple =
 	    return Amount.from_json(message.node.Balance);
 	  };
 
-	  var args    = Array.prototype.concat.apply(['account_balance', responseFilter], arguments);
+	  var args = Array.prototype.concat.apply(['account_balance', responseFilter], arguments);
 	  var request = Remote.accountRootRequest.apply(this, args);
 
 	  return request;
@@ -1246,7 +1215,7 @@ var ripple =
 	    return message.node.Flags;
 	  };
 
-	  var args    = Array.prototype.concat.apply(['account_flags', responseFilter], arguments);
+	  var args = Array.prototype.concat.apply(['account_flags', responseFilter], arguments);
 	  var request = Remote.accountRootRequest.apply(this, args);
 
 	  return request;
@@ -1258,7 +1227,7 @@ var ripple =
 	    return message.node.OwnerCount;
 	  };
 
-	  var args    = Array.prototype.concat.apply(['owner_count', responseFilter], arguments);
+	  var args = Array.prototype.concat.apply(['owner_count', responseFilter], arguments);
 	  var request = Remote.accountRootRequest.apply(this, args);
 
 	  return request;
@@ -1441,7 +1410,8 @@ var ripple =
 
 	  request.rippleState(account, issuer, currency);
 	  request.ledgerChoose(ledger);
-	  request.once('success', function(message) {
+
+	  function rippleState(message) {
 	    var node            = message.node;
 	    var lowLimit        = Amount.from_json(node.LowLimit);
 	    var highLimit       = Amount.from_json(node.HighLimit);
@@ -1463,8 +1433,9 @@ var ripple =
 	      account_quality_out : ( accountHigh ? node.HighQualityOut : node.LowQualityOut),
 	      peer_quality_out    : (!accountHigh ? node.HighQualityOut : node.LowQualityOut),
 	    });
-	  });
+	  };
 
+	  request.once('success', rippleState);
 	  request.callback(callback, 'ripple_state');
 
 	  return request;
@@ -1610,9 +1581,9 @@ var ripple =
 	 *
 	 * @return {Amount} Final fee in XRP for specified number of fee units.
 	 */
+
 	Remote.prototype.feeTx = function(units) {
-	  var fee_unit = this.feeTxUnit();
-	  return Amount.from_json(String(Math.ceil(units * fee_unit)));
+	  return this._getServer().feeTx(units);
 	};
 
 	/**
@@ -1623,16 +1594,9 @@ var ripple =
 	 *
 	 * @return {Number} Recommended amount for one fee unit as float.
 	 */
+
 	Remote.prototype.feeTxUnit = function() {
-	  var fee_unit = this._fee_base / this._fee_ref;
-
-	  // Apply load fees
-	  fee_unit *= this._load_factor / this._load_base;
-
-	  // Apply fee cushion (a safety margin in case fees rise since we were last updated
-	  fee_unit *= this.fee_cushion;
-
-	  return fee_unit;
+	  return this._getServer().feeTxUnit();
 	};
 
 	/**
@@ -1640,16 +1604,9 @@ var ripple =
 	 *
 	 * Returns the base reserve with load fees and safety margin applied.
 	 */
+
 	Remote.prototype.reserve = function(owner_count) {
-	  var reserve_base = Amount.from_json(String(this._reserve_base));
-	  var reserve_inc  = Amount.from_json(String(this._reserve_inc));
-	  var owner_count  = owner_count || 0;
-
-	  if (owner_count < 0) {
-	    throw new Error('Owner count must not be negative.');
-	  }
-
-	  return reserve_base.add(reserve_inc.product_human(owner_count));
+	  return this._getServer().reserve(owner_count);
 	};
 
 	Remote.prototype.ping = function(host, callback) {
@@ -3058,7 +3015,7 @@ var ripple =
 
 	var EventEmitter       = require(26).EventEmitter;
 	var util               = require(27);
-	var extend             = require(31);
+	var extend             = require(34);
 	var Amount             = require(3).Amount;
 	var UInt160            = require(16).UInt160;
 	var TransactionManager = require(19).TransactionManager;
@@ -3373,18 +3330,14 @@ var ripple =
 
 	var EventEmitter     = require(26).EventEmitter;
 	var util             = require(27);
-
 	var sjcl             = require(12).sjcl;
-
 	var Amount           = require(3).Amount;
 	var Currency         = require(3).Currency;
 	var UInt160          = require(3).UInt160;
 	var Seed             = require(20).Seed;
 	var SerializedObject = require(9).SerializedObject;
 	var RippleError      = require(10).RippleError;
-
 	var hashprefixes     = require(21);
-
 	var config           = require(14);
 
 	// A class to implement transactions.
@@ -3415,7 +3368,7 @@ var ripple =
 	  // of all submitted transactionIDs (which can change due to load_factor
 	  // effecting the Fee amount). This should be populated with a transactionID
 	  // any time it goes on the network
-	  this.submittedTxnIDs = []
+	  this.submittedTxnIDs = [ ]
 	};
 
 	util.inherits(Transaction, EventEmitter);
@@ -3506,12 +3459,43 @@ var ripple =
 	};
 
 	/**
-	 * TODO
-	 * Actually do this right
+	 * Returns the number of fee units this transaction will cost.
+	 *
+	 * Each Ripple transaction based on its type and makeup costs a certain number
+	 * of fee units. The fee units are calculated on a per-server basis based on the
+	 * current load on both the network and the server.
+	 *
+	 * @see https://ripple.com/wiki/Transaction_Fee
+	 *
+	 * @return {Number} Number of fee units for this transaction.
 	 */
 
-	Transaction.prototype.getFee = function() {
-	  return Transaction.fees['default'].to_json();
+	Transaction.prototype.getFee =
+	Transaction.prototype.feeUnits = function() {
+	  return Transaction.fee_units['default'];
+	};
+
+	/**
+	 * Get the server whose fee is currently the lowest
+	 */
+
+	Transaction.prototype._getServer = function() {
+	  var self    = this;
+	  var servers = this.remote._servers;
+	  var fee     = Infinity;
+	  var result;
+
+	  for (var i=0; i<servers.length; i++) {
+	    var server = servers[i];
+	    if (!server._connected) continue;
+	    var n = server.computeFee(this);
+	    if (n < fee) {
+	      result = server;
+	      fee = n;
+	    }
+	  }
+
+	  return result;
 	};
 
 	/**
@@ -3521,6 +3505,7 @@ var ripple =
 	 * SigningPubKey, which can be determined by the library based on network
 	 * information and other fields.
 	 */
+
 	Transaction.prototype.complete = function() {
 	  // Try to auto-fill the secret
 	  if (!this._secret) {
@@ -3529,7 +3514,8 @@ var ripple =
 
 	  if (this.remote && typeof this.tx_json.Fee === 'undefined') {
 	    if (this.remote.local_fee || !this.remote.trusted) {
-	      this.tx_json.Fee = this.remote.fee_tx(this.fee_units()).to_json();
+	      this._server = this._getServer();
+	      this.tx_json.Fee = this._server.computeFee(this);
 	    }
 	  }
 
@@ -3552,22 +3538,19 @@ var ripple =
 
 	Transaction.prototype.addSubmittedTxnID = function(hash) {
 	  if (this.submittedTxnIDs.indexOf(hash) === -1) {
-	    this.submittedTxnIDs.push(hash);
+	    this.submittedTxnIDs.unshift(hash);
 	  }
 	};
 
 	Transaction.prototype.findResultInCache = function(cache) {
-	  var cached;
+	  var result;
 
-	  for (var i = this.submittedTxnIDs.length - 1; i >= 0; i--) {
+	  for (var i=0; i<this.submittedTxnIDs.length; i++) {
 	    var hash = this.submittedTxnIDs[i];
-	    cached = cache[hash];
-	    if (cached != null) {
-	      break;
-	    };
-	  };
+	    if (result = cache[hash]) break;
+	  }
 
-	  return cached;
+	  return result;
 	};
 
 	Transaction.prototype.hash = function(prefix, as_uint256) {
@@ -3596,7 +3579,7 @@ var ripple =
 	  // If the hash is the same, we can re-use the previous signature
 	  if (prev_sig && hash === this._previous_signing_hash) {
 	    this.tx_json.TxnSignature = prev_sig;
-	    return;
+	    return this;
 	  }
 
 	  var key  = seed.get_key(this.tx_json.Account);
@@ -3605,6 +3588,8 @@ var ripple =
 
 	  this.tx_json.TxnSignature = hex;
 	  this._previous_signing_hash = hash;
+
+	  return this;
 	};
 
 	//
@@ -3679,6 +3664,7 @@ var ripple =
 	// If the secret is in the config object, it does not need to be provided.
 	Transaction.prototype.secret = function(secret) {
 	  this._secret = secret;
+	  return this;
 	};
 
 	Transaction.prototype.sendMax = function(send_max) {
@@ -3896,7 +3882,9 @@ var ripple =
 	    amount = options.amount;
 	    dst    = options.destination || options.to;
 	    src    = options.source || options.from;
-	    if (options.invoiceID) this.invoiceID(options.invoiceID);
+	    if (options.invoiceID) {
+	      this.invoiceID(options.invoiceID);
+	    }
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -3935,7 +3923,6 @@ var ripple =
 	  this.tx_json.TransactionType = 'TrustSet';
 	  this.tx_json.Account         = UInt160.json_rewrite(src);
 
-	  // Allow limit of 0 through.
 	  if (limit !== void(0)) {
 	    this.tx_json.LimitAmount = Amount.json_rewrite(limit);
 	  }
@@ -3973,21 +3960,6 @@ var ripple =
 	  this.tx_json.PublicKey        = public_key;
 	  this.tx_json.Signature        = signature;
 	  return this;
-	};
-
-	/**
-	 * Returns the number of fee units this transaction will cost.
-	 *
-	 * Each Ripple transaction based on its type and makeup costs a certain number
-	 * of fee units. The fee units are calculated on a per-server basis based on the
-	 * current load on both the network and the server.
-	 *
-	 * @see https://ripple.com/wiki/Transaction_Fee
-	 *
-	 * @return {Number} Number of fee units for this transaction.
-	 */
-	Transaction.prototype.feeUnits = function() {
-	  return Transaction.fee_units['default'];
 	};
 
 	// Submit a transaction to the network.
@@ -4189,7 +4161,7 @@ var ripple =
 
 	var sjcl    = require(12).sjcl;
 	var utils   = require(12);
-	var extend  = require(31);
+	var extend  = require(34);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4363,7 +4335,7 @@ var ripple =
 /***/ 8:
 /***/ function(module, exports, require) {
 
-	var extend  = require(31);
+	var extend  = require(34);
 	var utils   = require(12);
 	var UInt160 = require(16).UInt160;
 	var Amount  = require(3).Amount;
@@ -4531,7 +4503,7 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(11);
-	var extend     = require(31);
+	var extend     = require(34);
 	var stypes     = require(22);
 	var UInt256    = require(23).UInt256;
 	var assert     = require(28);
@@ -4809,7 +4781,7 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	var util   = require(27);
-	var extend = require(31);
+	var extend = require(34);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -4992,10 +4964,11 @@ var ripple =
 /***/ 13:
 /***/ function(module, exports, require) {
 
-	var Amount       = require(3).Amount;
-	var utils        = require(12);
 	var util         = require(27);
 	var EventEmitter = require(26).EventEmitter;
+	var Transaction = require(5).Transaction;
+	var Amount       = require(3).Amount;
+	var utils        = require(12);
 
 	/**
 	 *  @constructor Server
@@ -5289,7 +5262,7 @@ var ripple =
 	  this._setState('offline');
 
 	  // Prevent additional events from this socket
-	  ws.onopen = ws.onerror = ws.onclose = ws.onmessage = function() {};
+	  ws.onopen = ws.onerror = ws.onclose = ws.onmessage = function noOp() {};
 
 	  if (self._shouldConnect) {
 	    this._retryConnect();
@@ -5308,22 +5281,34 @@ var ripple =
 
 	  try { message = JSON.parse(message); } catch(e) { }
 
-	  if (!this.isValidMessage(message)) return;
+	  if (!Server.isValidMessage(message)) return;
 
 	  switch (message.type) {
-	    case 'serverStatus':
-	      // This message is only received when online.
-	      // As we are connected, it is the definitive final state.
-	      this._setState(~(Server._onlineStates.indexOf(message.server_status)) ? 'online' : 'offline');
-	      break;
-
 	    case 'ledgerClosed':
 	      this._lastLedgerClose = Date.now();
 	      this.emit('ledger_closed', message);
 	      break;
 
-	    case 'path_find':
-	      this._remote._trace('server: path_find:', self._opts.url, message);
+	    case 'serverStatus':
+	      // This message is only received when online.
+	      // As we are connected, it is the definitive final state.
+
+	      this._setState(~(Server.onlineStates.indexOf(message.server_status)) ? 'online' : 'offline');
+
+	      if (Server.isLoadStatus(message)) {
+	        self.emit('load', message, self);
+	        self._remote.emit('load', message, self);
+
+	        var loadChanged = ((message.load_base !== self._load_base) ||
+	                           (message.load_factor !== self._load_factor));
+
+	        if (loadChanged) {
+	          self._load_base   = message.load_base;
+	          self._load_factor = message.load_factor;
+	          self.emit('load_changed', message, self);
+	          self._remote.emit('load_changed', message, self);
+	        }
+	      }
 	      break;
 
 	    case 'response':
@@ -5351,6 +5336,11 @@ var ripple =
 	        });
 	      }
 	      break;
+
+	    case 'path_find':
+	      this._remote._trace('server: path_find:', self._opts.url, message);
+	      break;
+
 	  }
 	};
 
@@ -5360,9 +5350,21 @@ var ripple =
 	 * @api private
 	 */
 
-	Server.prototype.isValidMessage = function(message) {
+	Server.isValidMessage = function(message) {
 	  return (typeof message === 'object')
 	      && (typeof message.type === 'string');
+	};
+
+	/**
+	 * Check that received serverStatus message contains
+	 * load status information
+	 *
+	 * @api private
+	 */
+
+	Server.isLoadStatus = function(message) {
+	  return (typeof message.load_base === 'number')
+	      && (typeof message.load_factor === 'number');
 	};
 
 	/**
@@ -5375,6 +5377,14 @@ var ripple =
 	Server.prototype._handleResponseSubscribe = function(message) {
 	  if (~(Server.onlineStates.indexOf(message.server_status))) {
 	    this._setState('online');
+	  }
+	  if (Server.isLoadStatus(message)) {
+	    this._load_base     = message.load_base || 256;
+	    this._load_factor   = message.load_factor || 256;
+	    this._fee_ref       = message.fee_ref;
+	    this._fee_base      = message.fee_base;
+	    this._reserve_base  = message.reserve_base;
+	    this._reserve_inc   = message.reserve_inc;
 	  }
 	};
 
@@ -5431,7 +5441,33 @@ var ripple =
 	};
 
 	Server.prototype._isConnected = function(request) {
-	  return this._connected || (request.message.command === 'subscribe' && this._ws.readyState === 1);
+	  var isSubscribeRequest = request
+	  && request.message.command === 'subscribe'
+	  && this._ws.readyState === 1;
+
+	  return this._connected || (this._ws && isSubscribeRequest);
+	};
+
+	/**
+	 * Calculate transaction fee
+	 *
+	 * @param {Transaction|Number} Fee units for a provided transaction
+	 * @return {Number} Final fee in XRP for specified number of fee units
+	 * @api private
+	 */
+
+	Server.prototype.computeFee = function(transaction) {
+	  var units;
+
+	  if (transaction instanceof Transaction) {
+	    units = transaction.feeUnits();
+	  } else if (typeof transaction === 'number') {
+	    units = transaction;
+	  } else {
+	    throw new Error('Invalid argument');
+	  }
+
+	  return this.feeTx(units).to_json();
 	};
 
 	/**
@@ -5439,8 +5475,10 @@ var ripple =
 	 *
 	 * This takes into account the last known network and local load fees.
 	 *
+	 * @param {Number} Fee units for a provided transaction
 	 * @return {Amount} Final fee in XRP for specified number of fee units.
 	 */
+
 	Server.prototype.feeTx = function(units) {
 	  var fee_unit = this.feeTxUnit();
 	  return Amount.from_json(String(Math.ceil(units * fee_unit)));
@@ -5454,13 +5492,14 @@ var ripple =
 	 *
 	 * @return {Number} Recommended amount for one fee unit as float.
 	 */
+
 	Server.prototype.feeTxUnit = function() {
 	  var fee_unit = this._fee_base / this._fee_ref;
 
 	  // Apply load fees
 	  fee_unit *= this._load_factor / this._load_base;
 
-	  // Apply fee cushion (a safety margin in case fees rise since we were last updated
+	  // Apply fee cushion (a safety margin in case fees rise since we were last updated)
 	  fee_unit *= this._fee_cushion;
 
 	  return fee_unit;
@@ -5471,6 +5510,7 @@ var ripple =
 	 *
 	 * Returns the base reserve with load fees and safety margin applied.
 	 */
+
 	Server.prototype.reserve = function(owner_count) {
 	  var reserve_base = Amount.from_json(String(this._reserve_base));
 	  var reserve_inc  = Amount.from_json(String(this._reserve_inc));
@@ -5495,7 +5535,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = require(31);
+	var extend = require(34);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -5677,11 +5717,11 @@ var ripple =
 	var sjcl    = require(12).sjcl;
 	var utils   = require(12);
 	var config  = require(14);
-	var extend  = require(31);
+	var extend  = require(34);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = require(33).UInt;
+	var UInt = require(31).UInt;
 	var Base = require(7).Base;
 
 	//
@@ -5794,7 +5834,7 @@ var ripple =
 
 	var EventEmitter = require(26).EventEmitter;
 	var util         = require(27);
-	var extend       = require(31);
+	var extend       = require(34);
 	var Amount       = require(3).Amount;
 	var UInt160      = require(16).UInt160;
 	var Currency     = require(6).Currency;
@@ -6079,7 +6119,7 @@ var ripple =
 	var EventEmitter = require(26).EventEmitter;
 	var util         = require(27);
 	var Amount       = require(3).Amount;
-	var extend       = require(31);
+	var extend       = require(34);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -6224,14 +6264,19 @@ var ripple =
 
 	  this._account.on('transaction-outbound', transactionReceived);
 
-	  function adjustFees() {
+	  function adjustFees(loadData, server) {
 	    // ND: note, that `Fee` is a component of a transactionID
 	    self._pending.forEach(function(pending) {
-	      if (self._remote.local_fee && pending.tx_json.Fee) {
+	      var shouldAdjust = pending._server === server
+	      && self._remote.local_fee && pending.tx_json.Fee;
+
+	      if (shouldAdjust) {
 	        var oldFee = pending.tx_json.Fee;
-	        var newFee = self._remote.feeTx(pending.fee_units()).to_json();
+	        var newFee = server.computeFee(pending);
+
 	        pending.tx_json.Fee = newFee;
 	        pending.emit('fee_adjusted', oldFee, newFee);
+
 	        self._remote._trace('transactionmanager: adjusting_fees:', pending.tx_json, oldFee, newFee);
 	      }
 	    });
@@ -6427,6 +6472,9 @@ var ripple =
 	  this._waitLedgers(ledgers, resubmitTransactions);
 	};
 
+	TransactionManager.prototype._selectServer = function() {
+	};
+
 	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
 	  if (ledgers < 1) {
 	    return callback();
@@ -6468,9 +6516,7 @@ var ripple =
 
 	  // ND: We could consider sharing the work with tx_blob when doing
 	  // local_signing
-
 	  tx.addSubmittedTxnID(tx.hash());
-	  // tx._hash = tx.hash();
 
 	  remote._trace('transactionmanager: submit:', tx.tx_json);
 
@@ -6492,7 +6538,7 @@ var ripple =
 	  };
 
 	  function transactionRetry(message) {
-	    if (self._is_no_op(tx)) {
+	    if (TransactionManager._isNoOp(tx)) {
 	      self._resubmit(1, tx);
 	    } else {
 	      self._fillSequence(tx, function() {
@@ -6509,7 +6555,7 @@ var ripple =
 	    // Finalized (e.g. aborted) transactions must stop all activity
 	    if (tx.finalized) return;
 
-	    if (self._is_too_busy(error)) {
+	    if (TransactionManager._isTooBusy(error)) {
 	      self._resubmit(1, tx);
 	    } else {
 	      self._nextSequence--;
@@ -6588,23 +6634,27 @@ var ripple =
 	  return submitRequest;
 	};
 
-	TransactionManager.prototype._is_no_op = function(transaction) {
-	  return transaction.tx_json.TransactionType === 'AccountSet'
-	      && transaction.tx_json.Flags === 0;
+	TransactionManager._isNoOp = function(transaction) {
+	  return (typeof transaction === 'object')
+	      && (typeof transaction.tx_json === 'object')
+	      && (transaction.tx_json.TransactionType === 'AccountSet')
+	      && (transaction.tx_json.Flags === 0);
 	};
 
-	TransactionManager.prototype._is_remote_error = function(error) {
-	  return error && typeof error === 'object'
-	      && error.error === 'remoteError'
-	      && typeof error.remote === 'object'
+	TransactionManager._isRemoteError = function(error) {
+	  return (typeof error === 'object')
+	      && (error.error === 'remoteError')
+	      && (typeof error.remote === 'object')
 	};
 
-	TransactionManager.prototype._is_not_found = function(error) {
-	  return this._is_remote_error(error) && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
+	TransactionManager._isNotFound = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
 	};
 
-	TransactionManager.prototype._is_too_busy = function(error) {
-	  return this._is_remote_error(error) && error.remote.error === 'tooBusy';
+	TransactionManager._isTooBusy = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && error.remote.error === 'tooBusy';
 	};
 
 	/**
@@ -6688,14 +6738,14 @@ var ripple =
 
 	var utils   = require(12);
 	var sjcl    = utils.sjcl;
-	var extend  = require(31);
+	var extend  = require(34);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = require(7).Base;
-	var UInt    = require(33).UInt;
+	var UInt    = require(31).UInt;
 	var UInt256 = require(23).UInt256;
-	var KeyPair = require(34).KeyPair;
+	var KeyPair = require(33).KeyPair;
 
 	var Seed = extend(function () {
 	  // Internal form: NaN or BigInteger
@@ -6844,7 +6894,7 @@ var ripple =
 	 */
 
 	var assert    = require(28);
-	var extend    = require(31);
+	var extend    = require(34);
 	var binformat = require(11);
 	var utils     = require(12);
 	var sjcl      = utils.sjcl;
@@ -7678,11 +7728,11 @@ var ripple =
 	var sjcl    = require(12).sjcl;
 	var utils   = require(12);
 	var config  = require(14);
-	var extend  = require(31);
+	var extend  = require(34);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = require(33).UInt,
+	var UInt = require(31).UInt,
 	    Base = require(7).Base;
 
 	//
@@ -15231,140 +15281,6 @@ var ripple =
 /***/ 31:
 /***/ function(module, exports, require) {
 
-	var hasOwn = Object.prototype.hasOwnProperty;
-	var toString = Object.prototype.toString;
-
-	function isPlainObject(obj) {
-		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
-			return false;
-
-		var has_own_constructor = hasOwn.call(obj, 'constructor');
-		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-		// Not own constructor property must be Object
-		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
-			return false;
-
-		// Own properties are enumerated firstly, so to speed up,
-		// if last one is own, then all properties are own.
-		var key;
-		for ( key in obj ) {}
-
-		return key === undefined || hasOwn.call( obj, key );
-	};
-
-	module.exports = function extend() {
-		var options, name, src, copy, copyIsArray, clone,
-		    target = arguments[0] || {},
-		    i = 1,
-		    length = arguments.length,
-		    deep = false;
-
-		// Handle a deep copy situation
-		if ( typeof target === "boolean" ) {
-			deep = target;
-			target = arguments[1] || {};
-			// skip the boolean and the target
-			i = 2;
-		}
-
-		// Handle case when target is a string or something (possible in deep copy)
-		if ( typeof target !== "object" && typeof target !== "function") {
-			target = {};
-		}
-
-		for ( ; i < length; i++ ) {
-			// Only deal with non-null/undefined values
-			if ( (options = arguments[ i ]) != null ) {
-				// Extend the base object
-				for ( name in options ) {
-					src = target[ name ];
-					copy = options[ name ];
-
-					// Prevent never-ending loop
-					if ( target === copy ) {
-						continue;
-					}
-
-					// Recurse if we're merging plain objects or arrays
-					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-						if ( copyIsArray ) {
-							copyIsArray = false;
-							clone = src && Array.isArray(src) ? src : [];
-
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[ name ] = extend( deep, clone, copy );
-
-					// Don't bring in undefined values
-					} else if ( copy !== undefined ) {
-						target[ name ] = copy;
-					}
-				}
-			}
-		}
-
-		// Return the modified object
-		return target;
-	};
-
-
-/***/ },
-
-/***/ 32:
-/***/ function(module, exports, require) {
-
-	function TransactionQueue() {
-	  this._queue  = [ ];
-	}
-
-	TransactionQueue.prototype.length = function() {
-	  return this._queue.length;
-	};
-
-	TransactionQueue.prototype.getBySubmissions = function(hash) {
-	  var result = false;
-
-	  top:
-	  for (var i=0, tx; tx=this._queue[i]; i++) {
-	    for (var j=0, id; id=tx.submittedTxnIDs[j]; j++) {
-	      if (hash === id) {
-	        result = tx;
-	        break top;
-	      };
-	    }
-	  }
-
-	  return result;
-	};
-
-	// ND: We are just removing the Transaction by identity
-	TransactionQueue.prototype.remove = function(removedTx) {
-	  top:
-	  for (var i = this._queue.length - 1; i >= 0; i--) {
-	    if (this._queue[i] === removedTx) {
-	      this._queue.splice(i, 1);
-	      break top;
-	    };
-	  };
-	};
-
-	[ 'forEach', 'push', 'shift', 'unshift' ].forEach(function(fn) {
-	  TransactionQueue.prototype[fn] = function() {
-	    Array.prototype[fn].apply(this._queue, arguments);
-	  };
-	});
-
-	exports.TransactionQueue = TransactionQueue;
-
-
-/***/ },
-
-/***/ 33:
-/***/ function(module, exports, require) {
-
 	var utils   = require(12);
 	var sjcl    = utils.sjcl;
 	var config  = require(14);
@@ -15610,7 +15526,56 @@ var ripple =
 
 /***/ },
 
-/***/ 34:
+/***/ 32:
+/***/ function(module, exports, require) {
+
+	function TransactionQueue() {
+	  this._queue  = [ ];
+	}
+
+	TransactionQueue.prototype.length = function() {
+	  return this._queue.length;
+	};
+
+	TransactionQueue.prototype.getBySubmissions = function(hash) {
+	  var result = false;
+
+	  top:
+	  for (var i=0, tx; tx=this._queue[i]; i++) {
+	    for (var j=0, id; id=tx.submittedTxnIDs[j]; j++) {
+	      if (hash === id) {
+	        result = tx;
+	        break top;
+	      };
+	    }
+	  }
+
+	  return result;
+	};
+
+	// ND: We are just removing the Transaction by identity
+	TransactionQueue.prototype.remove = function(removedTx) {
+	  top:
+	  for (var i = this._queue.length - 1; i >= 0; i--) {
+	    if (this._queue[i] === removedTx) {
+	      this._queue.splice(i, 1);
+	      break top;
+	    };
+	  };
+	};
+
+	[ 'forEach', 'push', 'shift', 'unshift' ].forEach(function(fn) {
+	  TransactionQueue.prototype[fn] = function() {
+	    Array.prototype[fn].apply(this._queue, arguments);
+	  };
+	});
+
+	exports.TransactionQueue = TransactionQueue;
+
+
+/***/ },
+
+/***/ 33:
 /***/ function(module, exports, require) {
 
 	var sjcl    = require(12).sjcl;
@@ -15710,17 +15675,102 @@ var ripple =
 
 /***/ },
 
+/***/ 34:
+/***/ function(module, exports, require) {
+
+	var hasOwn = Object.prototype.hasOwnProperty;
+	var toString = Object.prototype.toString;
+
+	function isPlainObject(obj) {
+		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
+			return false;
+
+		var has_own_constructor = hasOwn.call(obj, 'constructor');
+		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+		// Not own constructor property must be Object
+		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
+			return false;
+
+		// Own properties are enumerated firstly, so to speed up,
+		// if last one is own, then all properties are own.
+		var key;
+		for ( key in obj ) {}
+
+		return key === undefined || hasOwn.call( obj, key );
+	};
+
+	module.exports = function extend() {
+		var options, name, src, copy, copyIsArray, clone,
+		    target = arguments[0] || {},
+		    i = 1,
+		    length = arguments.length,
+		    deep = false;
+
+		// Handle a deep copy situation
+		if ( typeof target === "boolean" ) {
+			deep = target;
+			target = arguments[1] || {};
+			// skip the boolean and the target
+			i = 2;
+		}
+
+		// Handle case when target is a string or something (possible in deep copy)
+		if ( typeof target !== "object" && typeof target !== "function") {
+			target = {};
+		}
+
+		for ( ; i < length; i++ ) {
+			// Only deal with non-null/undefined values
+			if ( (options = arguments[ i ]) != null ) {
+				// Extend the base object
+				for ( name in options ) {
+					src = target[ name ];
+					copy = options[ name ];
+
+					// Prevent never-ending loop
+					if ( target === copy ) {
+						continue;
+					}
+
+					// Recurse if we're merging plain objects or arrays
+					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
+						if ( copyIsArray ) {
+							copyIsArray = false;
+							clone = src && Array.isArray(src) ? src : [];
+
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[ name ] = extend( deep, clone, copy );
+
+					// Don't bring in undefined values
+					} else if ( copy !== undefined ) {
+						target[ name ] = copy;
+					}
+				}
+			}
+		}
+
+		// Return the modified object
+		return target;
+	};
+
+
+/***/ },
+
 /***/ 35:
 /***/ function(module, exports, require) {
 
 	var sjcl    = require(12).sjcl;
 	var utils   = require(12);
 	var config  = require(14);
-	var extend  = require(31);
+	var extend  = require(34);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = require(33).UInt,
+	var UInt = require(31).UInt,
 	    Base = require(7).Base;
 
 	//

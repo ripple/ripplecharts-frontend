@@ -3,19 +3,47 @@
   color:#666;
   overflow:hidden;
 }
-#tradeFeed .summary {
-  padding:10px;  
+
+#tradeFeed .summary .price {
+  padding:5px;  
 }
 
-#tradeFeed .lastPrice {
+#tradeFeed .price .amount {
   font-size:40px; 
   padding:10px;
   color:#444;
 }
 
-#tradeFeed .pair {
+#tradeFeed .price .pair {
   color:#999;
   font-size:12px;
+}
+
+#tradeFeed .daily {
+  font-size:13px;  
+}
+
+#tradeFeed .daily span {
+  margin:0 5px; 
+  font-weight:bold; 
+  display:inline-block;
+}
+
+#tradeFeed .daily span small {
+  margin:0 2px;
+}
+
+#tradeFeed .daily .high {
+  color:#3a5;
+}
+
+#tradeFeed .daily label {
+  font-size:11px;
+  cursor:default;  
+}
+
+#tradeFeed .daily .low {
+  color:#c00;
 }
 
 #tradeFeed table {
@@ -67,7 +95,7 @@
   color:#aaa;
 }
 
-.dark #tradeFeed .lastPrice {
+.dark #tradeFeed .price .amount {
   color:#ccc;  
 }
 

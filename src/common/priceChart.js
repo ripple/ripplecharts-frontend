@@ -128,8 +128,8 @@ PriceChart = function (options) {
     self.base     = base;
     self.trade    = trade;
     self.interval = d.interval;
-    self.start    = d.offset(new Date());
-    self.end      = new Date();
+    self.start    = moment(d.offset(new Date()));
+    self.end      = moment();
     self.multiple = d.multiple;
     
     if (liveFeed) liveFeed.stopListener();
@@ -150,7 +150,7 @@ PriceChart = function (options) {
     }, function(data){
       self.lineData = data;
       console.log(data);
-      addEmptyCandles();
+      //addEmptyCandles();
       //setLiveFeed();
       drawData();
       
@@ -187,10 +187,10 @@ PriceChart = function (options) {
   }
   
   function liveUpdate (data) {
-    console.log(data);
+    //console.log(data);
     var last = self.lineData[self.lineData.length-1];
     var candle = {
-      time   : moment(data.time).local(),
+      time   : moment(data.time),
       volume : data.baseCurrVol ? data.baseCurrVol : 0,
       vwap   : data.vwavPrice   ? data.vwavPrice   : 0,
       close  : data.closePrice  ? data.closePrice  : last.close,
@@ -206,7 +206,18 @@ PriceChart = function (options) {
     if (last.time.unix()===candle.time.unix()) {
       last = candle;
     } else self.lineData.push(candle);
-    self.lineData.shift()
+    
+    
+    var increment;
+    if      (self.interval=="second") increment = 1;
+    else if (self.interval=="minute") increment = 60;
+    else if (self.interval=="hour")   increment = 60*60;
+    else if (self.interval=="day")    increment = 60*60*24;
+    
+    increment *= self.multiple;
+    //console.log(increment);
+    self.start.add(increment,"seconds");
+    self.end = last.time;
     drawData();
     //mousemove();
   }
@@ -285,7 +296,6 @@ PriceChart = function (options) {
     console.log(num);
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<4) candleWidth = 4; 
-    console.log(candleWidth);
     
     //candleWidth = options.width/(self.lineData.length*1.15);
     //if (candleWidth<4) candleWidth = 4; 
@@ -306,11 +316,9 @@ PriceChart = function (options) {
     candleEnter.append("line").attr("class", "low");    
     candleEnter.append("rect");	
         
-        console.log(getExtents());
-        console.log(self.lineData[self.lineData.length-1]);
     // Update the x-scale.
     xScale
-      .domain(getExtents())
+      .domain([self.start, self.end])
       .range([0, options.width]);
     
     // Update the volume scale.

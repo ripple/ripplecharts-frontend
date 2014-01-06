@@ -23,7 +23,7 @@ ApiHandler = function (url) {
 
           data = response.map(function(d) {
             return {
-              time   : moment(d[0]),
+              time   : moment.utc(d[0]),
               open   : d[4],
               close  : d[5],
               high   : d[6],
