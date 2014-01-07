@@ -77,7 +77,8 @@ h1, h2, h3, h4 {
  */
 .header {
   overflow:hidden;
-  border-bottom:1px solid #eee;
+  height:50px;
+  background:#fff;
 }
 .nav-toggle {
   font-size:25px;
@@ -86,9 +87,16 @@ h1, h2, h3, h4 {
   cursor:pointer;
 }
 
+.snap-drawers {
+  top:50px;
+  border-top:1px solid #eee;
+  background:#fafafa;
+}
 .snap-content {
   border-left:1px solid #eee;
+  border-top:1px solid #eee;
   background:#fff; 
+  top:50px;
 }
 
 .nav li {
@@ -163,23 +171,6 @@ footer {
  * Inputs 
  */
 
-select {
-  width:auto;
-  height:auto;
-  border:1.5px solid @rippleBlue;
-  color: @rippleBlue;
-  background:none;
-  -webkit-appearance:none;
-  padding: 2px 20px 2px 4px;
-  line-height:1em;
-  background-image:url('images/dropdownBlue.png');
-  background-repeat: no-repeat;
-  background-position: 95% 50%;
-  background-size: 13px;
-  font-weight:bold;
-  
-}
-
 
 /**
  * Now that all app-wide styles have been applied, we can load the styles for
@@ -195,6 +186,7 @@ select {
 @import 'priceChart.less';
 @import 'orderBook.less';
 @import 'tradeFeed.less';
+@import 'multimarkets.less';
 
 @media (max-width: 480px) {
   .snap-content {

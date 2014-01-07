@@ -1,10 +1,11 @@
 var Remote,
   Amount,
   moment,
-  gateways,
+  require,
+  module,
   remote;
 
-if (typeof require != 'undefined' && require) {
+if (require) {
 
   /* Loading with Node.js */
   var Remote = require('ripple-lib').Remote,
@@ -98,7 +99,7 @@ function OffersExercisedListener(opts, displayFn) {
   this.interval;
 
   // Wrapper to call the displayFn and update the openTime and closeTime
-  this.runDisplayFn = function() {
+  this.finishedInterval = function() {
     this.storedResults.closeTime = moment().toArray().slice(0,6);
 
     this.displayFn(formatReduceResult(this.storedResults));
@@ -149,18 +150,19 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
   // TODO make this work with formats other than 'json'
   if (listener.viewOpts.incompleteApiRow) {
-    listener.viewOpts.openTime = listener.viewOpts.incompleteApiRow.time || incompleteApiRow.openTime;
+    incompleteApiRow = listener.viewOpts.incompleteApiRow;
+    listener.viewOpts.openTime = incompleteApiRow.time || incompleteApiRow.openTime || incompleteApiRow[0];
 
     listener.storedResults = {
-      openTime: listener.viewOpts.incompleteApiRow.time || incompleteApiRow.openTime,
-      curr1Volume: listener.viewOpts.incompleteApiRow.tradeCurrVol,
-      curr2Volume: listener.viewOpts.incompleteApiRow.baseCurrVol,
-      numTrades: listener.viewOpts.incompleteApiRow.numTrades,
-      open: listener.viewOpts.incompleteApiRow.openPrice,
-      close: listener.viewOpts.incompleteApiRow.closePrice,
-      high: listener.viewOpts.incompleteApiRow.highPrice,
-      low: listener.viewOpts.incompleteApiRow.lowPrice,
-      volumeWeightedAvg: listener.viewOpts.incompleteApiRow.vwavPrice
+      openTime: incompleteApiRow.time || incompleteApiRow.openTime || incompleteApiRow[0],
+      curr1Volume: incompleteApiRow.tradeCurrVol || incompleteApiRow[2],
+      curr2Volume: incompleteApiRow.baseCurrVol || incompleteApiRow[1],
+      numTrades: incompleteApiRow.numTrades || incompleteApiRow[3],
+      open: incompleteApiRow.openPrice || incompleteApiRow[4],
+      close: incompleteApiRow.closePrice || incompleteApiRow[5],
+      high: incompleteApiRow.highPrice || incompleteApiRow[6],
+      low: incompleteApiRow.lowPrice || incompleteApiRow[7],
+      volumeWeightedAvg: incompleteApiRow.vwavPrice || incompleteApiRow[8]
     };
 
   }
@@ -183,6 +185,11 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
       } else {
         listener.storedResults = offersExercisedReduce(null, [reducedTrade, listener.storedResults], true);
       }
+
+      listener.storedResults.closeTime = moment();
+
+      // Call displayFn every time a new trade comes in, as well as after the interval
+      listener.displayFn(listener.storedResults);
       
     });
 
@@ -195,10 +202,10 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
     if (firstIncrementRemainder > 0) {
       setTimeout(function(){
 
-        listener.runDisplayFn();
+        listener.finishedInterval();
 
         listener.interval = setInterval(function(){
-          listener.runDisplayFn();
+          listener.finishedInterval();
         }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());
 
       }, firstIncrementRemainder);
@@ -206,7 +213,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
     } else {
 
       listener.interval = setInterval(function(){
-        listener.runDisplayFn();
+        listener.finishedInterval();
       }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());
 
     }
@@ -591,3 +598,8 @@ function getCurrenciesForGateway( name ) {
   return currencies;
 }
 
+
+
+if (module) {
+  module.exports = OffersExercisedListener;
+}

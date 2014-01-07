@@ -38,7 +38,24 @@ angular.module( 'ripplecharts.main', [
  * And of course we define a controller for our route.
  */
 .controller( 'MainCtrl', function MainController( $scope ) {
-})
-
-;
+  
+  var markets = new MultiMarket ({
+    url   : API+"/offersExercised",  
+    id    : "multimarkets",
+    fixed : true
+  });
+  
+  markets.list([
+    {
+      base  : {currency:"XRP"},
+      trade : {currency:"USD",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}},
+    {
+      base  : {currency:"XRP"},
+      trade : {currency:"CNY",issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}},
+    {
+      base  : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      trade : {currency:"XRP"}}
+    ]);
+    
+});
 

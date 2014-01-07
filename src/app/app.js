@@ -52,3 +52,6 @@ function addResizeEvent(func) {
     if (typeof oldResize === 'function') oldResize();
   };
 }
+
+
+ 
