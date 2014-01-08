@@ -65,9 +65,9 @@ var TransactionFeed = function (options) {
     var last = transactions[0];
     
     var trade = {
-      time   : moment(data.key.slice(2)),
-      amount : data.value[1],
-      price  : data.value[2],
+      time   : moment.utc(data.key.slice(2)),
+      amount : data.value[0],
+      price  : 1/data.value[2],
       type   : ''
     }
     

@@ -2,7 +2,7 @@
   "name": "ripplecharts",
   "version": "0.0.1",
   "devDependencies": {
-    "angular": "~1.2.8",
+    "angular": "~1.2.7",
     "angular-mocks": "~1.0.7",
     "bootstrap": "~2.3.2",
     "angular-bootstrap": "~0.3.0",

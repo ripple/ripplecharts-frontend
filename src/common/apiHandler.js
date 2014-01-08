@@ -22,7 +22,7 @@ ApiHandler = function (url) {
               d = JSON.parse(d);
               return {
                 id     : d.id,
-                time   : moment(d.key.slice(2)),
+                time   : moment.utc(d.key.slice(2)),
                 amount : d.value[1],
                 price  : d.value[2],        
                 type   : ''
