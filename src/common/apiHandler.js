@@ -11,27 +11,51 @@ ApiHandler = function (url) {
   
   this.offersExercised = function (params, load, error) {
     var request = apiRequest("offersExercised");
-
-    console.log(params);
     
     request.post(parseParams(params))
       .on('load', function(xhr){
         var response = JSON.parse(xhr.response), data = [];   
 
         if (response.length>1) {
-          response.splice(0,1); //remove first    
-
-          data = response.map(function(d) {
-            return {
-              time   : moment.utc(d[0]),
-              open   : d[4],
-              close  : d[5],
-              high   : d[6],
-              low    : d[7],
-              vwap   : d[8],
-              volume : d[1]
-            };
-          });
+          if (params.reduce===false) {
+            data = response.map(function(d) {
+              d = JSON.parse(d);
+              return {
+                id     : d.id,
+                time   : moment(d.key.slice(2)),
+                amount : d.value[1],
+                price  : d.value[2],        
+                type   : ''
+              }
+            });
+            
+            var prev = null;
+            for (var i=data.length; i>-1; i--) {
+              if (prev && prev.price>data[i].price)      data[i].type = 'bid';
+              else if (prev && prev.price<data[i].price) data[i].type = 'ask';
+              else if (prev)                             data[i].type = prev.type;
+              prev = data[i];
+            }
+            
+                     
+          } else {
+            response.splice(0,1); //remove first   
+            
+            //remove null row, if we get one 
+            if (response.length==1 && !response[0][1]) response.shift();
+            
+            data = response.map(function(d) {
+              return {
+                time   : moment.utc(d[0]),
+                open   : d[4],
+                close  : d[5],
+                high   : d[6],
+                low    : d[7],
+                vwap   : d[8],
+                volume : d[1]
+              };
+            });
+          }
         }
         
         load(data);

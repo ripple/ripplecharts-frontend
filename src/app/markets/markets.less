@@ -21,7 +21,6 @@
 
 #currency-pair {
   margin:5px 0 5px 55px;
-  display:inline-block; 
 }
 
 #currency-pair select {
@@ -64,7 +63,7 @@
   border-bottom:3px solid transparent;
 }
 
-#interval {margin-left:50px}
+#interval {margin-left:55px; float:left; clear:both}
 #interval a, #chartType a {
   font-size:12px;
   line-height:13px;
@@ -88,13 +87,27 @@
 
 #chartType {
   float:right;
-  margin:5px 55px 5px 10px;
+  margin-right:55px;
+}
+
+.markets .chart {
+  clear:both;
 }
 
 #bookChart {margin-top:15px}
 
+/*
+ * Dark theme
+ * 
+ */
+.dark #currency-pair select {
+  border:2px solid #137;
+}
 
-//Responsive tweaks
+/*
+ * Responsive tweaks 
+ */
+
 .markets .span3 {
   width: 24.5% !important;
   margin-left: 1% !important;
@@ -111,18 +124,25 @@
     margin: 0 !important;
   }
   
+  .markets .span3 {
+    display:table;
+    border-bottom:1px solid rgba(150,150,150,.2); 
+  }
+  
   #tradeFeed {
-    border-bottom:1px solid rgba(100,100,100,.2);  
+    display:table-row;
   }
   
   #tradeFeed .summary {
-    width:50%;
-    float:left;
+    width:50% !important;
+    display:table-cell;
+    vertical-align:top;
+    border-right:1px solid rgba(150,150,150,.2); 
   }
   
-  #tradeFeed table {
-    width:45% !important;
-    float:right;
+  #tradeFeed .table {
+    display:table-cell;
+    vertical-align:top;
   }
   
   #tradeFeed table tr:nth-of-type(n+6) {display: none;}
@@ -137,20 +157,30 @@
 }
 
 @media (max-width: 600px) {
+  
+  
   #flip {
     display:block;
     width:100%;
     margin:5px;
   }
-  
+
+  .markets .span3 {
+    display:block;
+  }
+
+  #tradeFeed {
+    display:block;  
+  } 
+     
   #tradeFeed .summary {
-    width:100%;
-    float:none;
+    width:100% !important;
+    display:block;
+    border:none;
   }
   
-  #tradeFeed table {
-    width:100% !important;
-    float:none;
+  #tradeFeed .table {
+    display:block;
   }
   
   #tradeFeed table tr:nth-of-type(n+4) {display: none;}
@@ -158,11 +188,8 @@
 
 @media (max-width: 1300px) {
   #interval {
-    margin-bottom:20px;
   }
   
   #priceChart .chartDetails {
-    right:auto;
-    left:55px;
   }
 }

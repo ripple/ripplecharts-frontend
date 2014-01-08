@@ -3,7 +3,7 @@ var TransactionFeed = function (options) {
     apiHandler   = new ApiHandler(options.url),
     div          = d3.select('#'+options.id).attr("class","transactions"),
     transactions = [],
-    listener;
+    listener, dailyTimer, high, low, close, volume;
  
   var summary = div.append("div").attr('class', 'summary');
   var price = summary.append("div").attr('class', 'price');
@@ -16,13 +16,21 @@ var TransactionFeed = function (options) {
   daily.append('span').attr('class','volume').html('VOL: --');
   daily.append('label').html('(Last 24 hours)');
   
-  var table = div.append('table');
+  var tableWrap = div.append('div').attr('class','table')
+  var table     = tableWrap.append('table');
   table.append('thead');
   table.append('tbody');
   
+  var status = tableWrap.append("h4").attr('class','status');
+  var loader = tableWrap.append("img")
+      .attr("class", "loader")
+      .attr("src", "assets/images/throbber5.gif")
+      .style("opacity", 0); 
+      
   this.loadPair = function (base, trade) {
     self.base  = base;
     self.trade = trade;
+    high = low = close = volume = 0;
     
     if (listener) listener.updateViewOpts({base:base,trade:trade});
     else listener = new OffersExercisedListener({base:base,trade:trade}, handleTransaction);
@@ -46,8 +54,9 @@ var TransactionFeed = function (options) {
     ];
     
     transactions = [];
-    updateTrades();  //reset the last trade list
-    loadDailyStats();
+    updateTrades();     //reset the last trade list
+    updateDailyStats(); //reset the daily stats
+    loadHistoricalData();
   }
   
   function handleTransaction (data) {
@@ -62,22 +71,27 @@ var TransactionFeed = function (options) {
       type   : ''
     }
     
+    if (last && last.price<trade.price)      trade.type = 'ask';
+    else if (last && last.price>trade.price) trade.type = 'bid';
+    else if (last)                           trade.type = last.type;
+    
     transactions.unshift(trade);  //prepend trade
-    transactions = transactions.slice(0,100);  //keep last 100
+    transactions = transactions.slice(0,50);  //keep last 50
+    
+    if (trade.price>high) high = trade.price;
+    if (trade.price<low)  low  = trade.price;
+    close   = trade.price;
+    volume += trade.amount;
+    
+    updateDailyStats(); 
+    updateTrades();    
     
     console.log(trade);
     console.log(moment(trade.time).format());
-    //console.log(transactions);
-     
-    updateTrades();      
   }
   
   function updateTrades () {
-    var last = transactions[0];
-      lastPrice = last ? last.price : "";
-      
-    price.select(".amount").html(valueFilter(lastPrice));
-    price.select(".pair").html(self.base.currency+"/"+self.trade.currency);
+    status.html(transactions.length ? "" : "no recent trades");
     
     var rows = table.select("tbody").selectAll("tr")
       .data(transactions);
@@ -110,13 +124,12 @@ var TransactionFeed = function (options) {
     return value;        
   }
   
-  function loadDailyStats() {
-    
+  function loadDailyStats () {
     var now  = moment();
     var then = moment().subtract(1, 'days');
      
-    if (self.request) self.request.abort();
-    self.request = apiHandler.offersExercised({
+    if (self.requestDaily) self.requestDaily.abort();
+    self.requestDaily = apiHandler.offersExercised({
       startTime     : then,
       endTime       : now,
       timeIncrement : 'all',
@@ -127,19 +140,63 @@ var TransactionFeed = function (options) {
       "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
 
     }, function(data){
-
-      daily.select(".high").html("<small>H:</small> "+valueFilter(data[0].high));
-      daily.select(".low").html("<small>L:</small> "+valueFilter(data[0].low));
-      daily.select(".volume").html("<small>VOL:</small> "+valueFilter(data[0].volume)+"<small>"+self.base.currency+"</small>");
-      price.select(".amount").html(valueFilter(data[0].close));
-      price.select(".pair").html(self.base.currency+"/"+self.trade.currency);
+      
+      high   = data[0].high;
+      low    = data[0].low;
+      volume = data[0].volume;
+      if (!close) close = data[0].close; //dont overwrite existing
+      updateDailyStats();
       
     }, function (error){
       console.log(error);
-    });   
+    });     
+  }
+  function updateDailyStats () {
+      daily.select(".high").html("<small>H:</small> "+valueFilter(high));
+      daily.select(".low").html("<small>L:</small> "+valueFilter(low));
+      daily.select(".volume").html("<small>VOL:</small> "+valueFilter(volume)+"<small>"+self.base.currency+"</small>");
+      price.select(".amount").html(valueFilter(close));
+      price.select(".pair").html(self.base.currency+"/"+self.trade.currency);
   }
   
-  this.suspendLiveFeed = function () {
+  function loadHistoricalData() {
+    if (dailyTimer) clearInterval(dailyTimer);
+    dailyTimer = setInterval(loadDailyStats, 180000);
+    loadDailyStats();
+   
+    loader.transition().style('opacity',1);
+    status.html("");
+    
+    var now  = moment();
+    var then = moment().subtract(1, 'days');
+        
+//  for now, just use last 24 hours - in the future there should be a
+//  parameter for max returned transactions, so we will set that instead    
+    if (self.request) self.request.abort();
+    self.request = apiHandler.offersExercised({
+      startTime : then,
+      endTime   : now,
+      reduce    : false,
+      
+      "trade[currency]" : self.trade.currency,
+      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
+      "base[currency]"  : self.base.currency,
+      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
+      
+    }, function(data){
+      loader.transition().style('opacity',0);
+      transactions = transactions.concat(data).slice(0,50);   
+      updateTrades()
+           
+    }, function (error){
+      loader.transition().style('opacity',0);
+      status.html(error.text ? error.text : "Unable to load data");
+      console.log(error);
+    }); 
+  }
+  
+  this.suspend = function () {
     if (listener) listener.stopListener();
+    if (dailyTimer) clearInterval(dailyTimer);
   }
 }

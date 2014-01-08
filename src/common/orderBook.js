@@ -18,15 +18,23 @@ var OrderBook = function (options) {
     yScale   = d3.scale.linear(),
     lineData = [];
     
-  //resize on window resize
  
-  addResizeEvent(function() {
+  this.suspend = function () {
+    removeResizeListener(window, resizeChart);   
+  }
+  
+  function resizeChart() {
+    old = options.width;
     w = parseInt(chart.style('width'), 10);
     options.width  = w-options.margin.left - options.margin.right;
     options.height = options.width/4;
-    drawChart(); 
-    redrawChart();
-  }); 
+    
+    if (old != options.width) {
+      drawChart(); 
+      drawData();
+    }
+
+  }
   
   function drawChart() {
     chart.html("");  
@@ -43,9 +51,9 @@ var OrderBook = function (options) {
     xAxis      = gEnter.append("g").attr("class", "x axis");
     leftAxis   = gEnter.append("g").attr("class", "y axis");
     rightAxis  = gEnter.append("g").attr("class", "y axis");
-    xTitle     = xAxis.append("text").attr("class", "title").attr("y",-5).attr("x",10);
-    leftTitle  = leftAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",15).attr("x",-25);
-    rightTitle = rightAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",-5).attr("x",-25);  
+    xTitle     = xAxis.append("text").attr("class", "title").attr("y",-5).attr("x",5);
+    leftTitle  = leftAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",15).attr("x",-options.height*0.85);
+    rightTitle = rightAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",-5).attr("x",-options.height*0.85);  
     
     hover      = gEnter.append("line").attr("class", "hover").attr("y2", options.height).style("opacity",0);   
     focus      = gEnter.append("circle").attr("class", "focus dark").attr("r",3).style("opacity",0);
@@ -164,13 +172,13 @@ var OrderBook = function (options) {
     
     function handleAskModel (offers) {
       self.offers.asks = handleBook(offers,'asks');
-      redrawChart(); 
+      drawData(); 
       redrawBook();     
     }
     
     function handleBidModel (offers) {
       self.offers.bids = handleBook(offers,'bids');
-      redrawChart(); 
+      drawData(); 
       redrawBook();      
     }
     
@@ -187,7 +195,7 @@ var OrderBook = function (options) {
     setStatus("");
   }  
   
-  function redrawChart () {
+  function drawData () {
     if (!self.offers.bids || !self.offers.asks) return; //wait for both to load
     if (!self.offers.bids.length || !self.offers.asks.length) {
       setStatus("No Orders");  
@@ -219,7 +227,7 @@ var OrderBook = function (options) {
     }
     
     xScale.domain(d3.extent(lineData, function(d) { return d.showPrice; })).range([0, options.width]);
-    yScale.domain([0, d3.max(lineData, function(d) { return d.showSum; })]).range([options.height, 0]);
+    yScale.domain([0, d3.max(lineData, function(d) { return d.showSum; })*1.1]).range([options.height, 0]);
     center = xScale((bestBid+bestAsk)/2);
     
     path.datum(lineData)
@@ -230,8 +238,8 @@ var OrderBook = function (options) {
   
     
     xAxis.attr("transform", "translate(0," + yScale.range()[0] + ")").call(d3.svg.axis().scale(xScale))
-    leftAxis.attr("transform", "translate(" + xScale.range()[0] + ",0)").call(d3.svg.axis().scale(yScale).orient("left"));
-    rightAxis.attr("transform", "translate(" + xScale.range()[1] + ",0)").call(d3.svg.axis().scale(yScale).orient("right"));
+    leftAxis.attr("transform", "translate(" + xScale.range()[0] + ",0)").call(d3.svg.axis().scale(yScale).orient("left").tickFormat(d3.format("s")));
+    rightAxis.attr("transform", "translate(" + xScale.range()[1] + ",0)").call(d3.svg.axis().scale(yScale).orient("right").tickFormat(d3.format("s")));
     
     xTitle.text("Price ("+options.trade.currency+")");
     leftTitle.text(options.base.currency);
@@ -264,6 +272,8 @@ var OrderBook = function (options) {
   }
   
   drawChart();
+  addResizeListener(window, resizeChart);
+  
   var bookTables = d3.select("#"+options.tableID).attr("class","bookTables");
   var bidsTable = bookTables.append("table").attr("class","bidsTable"),
     bidsHead    = bidsTable.append("thead"),

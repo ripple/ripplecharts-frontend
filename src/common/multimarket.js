@@ -1,5 +1,11 @@
 var MiniChart = function(base, trade, markets) {
-  var self      = this;
+  var self      = this,
+    details, range, showHigh, showLow, change, volume,
+    svg, svgEnter, pointer, gEnter, 
+    flipping, flip, 
+    status, horizontal, lastPrice, loader,
+    dropdownA, dropdownB, dropdowns;
+  
   self.lineData = [];
   self.div      = markets.el.insert("div",".add").attr("class","chart");
   self.markets  = markets;
@@ -11,71 +17,9 @@ var MiniChart = function(base, trade, markets) {
     xAxis       = d3.svg.axis().scale(xScale).ticks(6),
     priceAxis   = d3.svg.axis().scale(priceScale).orient("right");  
   
-  var margin = {top: 0, right: 40, bottom: 20, left: 0},
-    height   = 230,
-    width    = 280;
-    
-  var details  = self.div.append("table").attr("class", "chartDetails").append("tr");
-  var range    = details.append("td").attr("class","range");
-  var showHigh = details.select(".range").append("div").attr("class","high");
-  var showLow  = details.select(".range").append("div").attr("class","low");
-  var change   = details.append("td").attr("class","change"); 
-  var volume   = details.append("td").attr("class","volume"); 
-              
-  var svg      = self.div.selectAll("svg").data([0])
-  var svgEnter = svg.enter().append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);     
-  
-  var pointer = svg.append("path")
-    .attr("class","pointer")
-    .attr("d", "M 0 0 L 7 -7 L 40 -7 L 40 7 L 7 7 L 0 0")
-    .attr("transform","translate("+(width+margin.left)+","+(height+margin.top)+")");
-
-  svg.append("rect").attr("width", width+margin.left+margin.right)
-    .attr("class","timeBackground")
-    .attr("height", margin.bottom)
-    .attr("transform", "translate(0,"+(height+margin.top)+")");  
-    
-  var gEnter = svg.append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-  //gEnter.append("rect").attr("class", "background").attr("width", width).attr("height", height);
-                 
-  gEnter.append("g").attr("class","grid");
-  gEnter.append("path").attr("class", "line");
-  
-  gEnter.append("g").attr("class", "x axis");  
-  gEnter.append("g").attr("class", "price axis").attr("transform", "translate("+width+", 0)")
-
-  var flip = svg.append("g").attr("class","flip")
-    .attr("width", margin.right)   
-    .attr("height", margin.bottom)  
-    .attr("transform", "translate("+(width+margin.left)+","+(height+margin.top)+")")
-    .on("click", function(){
-      dropdownA.selected(self.trade);
-      dropdownB.selected(self.base);
-      dropdowns.selectAll("select").remove();
-      dropdowns.append("div").attr("class","base").call(dropdownA);
-      dropdowns.append("div").attr("class","trade").call(dropdownB);  
-    });
-  
-  flip.append("rect").attr({width:margin.right,height:margin.bottom});
-  flip.append("text").text("Flip").attr({"text-anchor":"middle",y:margin.bottom*4/5,x:margin.right/2});
-  
-  var status     = self.div.append("h4").attr("class", "status");  
-  var horizontal = gEnter.append("line")
-    .attr("class", "horizontal")
-    .attr({x1:0,x2:width})
-    .attr("transform","translate(0,"+height+")"); 
-  var lastPrice = gEnter.append("text")
-    .attr("class","lastPrice")
-    .style("text-anchor","middle")
-    .attr("x", (width+margin.left)/2);
-    
-  var loader = self.div.append("img")
-    .attr("class", "loader")
-    .attr("src", "assets/images/throbber5.gif")
-    .style("opacity", 0); 
+  var margin = {top: 0, right: 40, bottom: 20, left: 0};
+  var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
+  var height = width/1.5>200 ? width/1.5 : 200;
 
   if (!markets.options.fixed) {
     var closeButton = self.div.append("div")
@@ -84,6 +28,92 @@ var MiniChart = function(base, trade, markets) {
       .on("click", function(){
         self.remove();
       });
+  }
+   
+  function drawChart() {
+    self.div.html("");   
+    
+    details  = self.div.append("table").attr("class", "chartDetails").append("tr");
+    range    = details.append("td").attr("class","range");
+    showHigh = details.select(".range").append("div").attr("class","high");
+    showLow  = details.select(".range").append("div").attr("class","low");
+    change   = details.append("td").attr("class","change"); 
+    volume   = details.append("td").attr("class","volume"); 
+                
+    svg      = self.div.selectAll("svg").data([0])
+    svgEnter = svg.enter().append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);     
+    
+    pointer = svg.append("path")
+      .attr("class","pointer")
+      .attr("d", "M 0 0 L 7 -7 L 40 -7 L 40 7 L 7 7 L 0 0")
+      .attr("transform","translate("+(width+margin.left)+","+(height+margin.top)+")");
+  
+    svg.append("rect").attr("width", width+margin.left+margin.right)
+      .attr("class","timeBackground")
+      .attr("height", margin.bottom)
+      .attr("transform", "translate(0,"+(height+margin.top)+")");  
+      
+    gEnter = svg.append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    //gEnter.append("rect").attr("class", "background").attr("width", width).attr("height", height);
+                   
+    gEnter.append("g").attr("class","grid");
+    gEnter.append("path").attr("class", "line");
+    
+    gEnter.append("g").attr("class", "x axis");  
+    gEnter.append("g").attr("class", "price axis").attr("transform", "translate("+width+", 0)")
+  
+    flipping = false;
+    flip = svg.append("g").attr("class","flip")
+      .attr("width", margin.right)   
+      .attr("height", margin.bottom)  
+      .attr("transform", "translate("+(width+margin.left)+","+(height+margin.top)+")")
+      .on("click", function(){
+        flipping = true;
+        dropdownA.selected(self.trade);
+        dropdownB.selected(self.base);
+        dropdowns.selectAll("select").remove();
+        dropdowns.append("div").attr("class","base").call(dropdownA);
+        dropdowns.append("div").attr("class","trade").call(dropdownB);  
+        flipping = false;
+      });
+    
+    flip.append("rect").attr({width:margin.right,height:margin.bottom});
+    flip.append("text").text("Flip").attr({"text-anchor":"middle",y:margin.bottom*4/5,x:margin.right/2});
+    
+    status     = self.div.append("h4").attr("class", "status");  
+    horizontal = gEnter.append("line")
+      .attr("class", "horizontal")
+      .attr({x1:0,x2:width})
+      .attr("transform","translate(0,"+height+")"); 
+    lastPrice = gEnter.append("text")
+      .attr("class","lastPrice")
+      .style("text-anchor","middle")
+      .attr("x", (width+margin.left)/2);
+      
+    loader = self.div.append("img")
+      .attr("class", "loader")
+      .attr("src", "assets/images/throbber5.gif")
+      .style("opacity", 0); 
+      
+      
+    dropdownA = ripple.currencyDropdown().selected(base);
+    dropdownA.on("change", function(d) {
+        self.base = d;
+        if (!flipping) self.load();
+        });
+           
+    dropdownB = ripple.currencyDropdown().selected(trade);
+    dropdownB.on("change", function(d) {
+        self.trade = d;
+        self.load();
+      });
+      
+    dropdowns = self.div.append("div").attr("class", "dropdowns");
+    dropdowns.append("div").attr("class","base").call(dropdownA);
+    dropdowns.append("div").attr("class","trade").call(dropdownB);
   }
     
   this.setStatus = function (string) {
@@ -97,6 +127,7 @@ var MiniChart = function(base, trade, markets) {
   } 
   
   this.remove = function () {
+    removeResizeListener(window, resizeChart);
     self.div.remove();
     markets.charts[self.index] = {};
   } 
@@ -123,11 +154,11 @@ var MiniChart = function(base, trade, markets) {
 
     }, function(data){
       self.lineData = data;
-      self.draw();
+      drawData(true);
       
     }, function (error){
       console.log(error);
-      self.setStatus(error.text);
+      self.setStatus(error.text ? error.text : "Unable to load data" );
     });  
   }  
   
@@ -140,7 +171,7 @@ var MiniChart = function(base, trade, markets) {
     return ripple.Amount.from_human(d).to_human(opts);     
   }
   
-  this.draw = function () {
+  function drawData(update) {
 
     
     //if there is no data, hide the old chart and details
@@ -171,14 +202,14 @@ var MiniChart = function(base, trade, markets) {
       horizontalStyle = {stroke:"#777"};
       pointerStyle = {fill:"#aaa"};
       changeStyle  = {color:"#777"};
+      
     } else if (last < open) {  //down
-      //pathStyle = {fill:"rgba(250,100,100,.6)",stroke:"#b66"};
       pathStyle = {fill:"#c55",stroke:"#a00"}; 
       horizontalStyle = {stroke:"#d22"};
       pointerStyle = {fill:"#c33"};
       changeStyle  = {color:"#c33"};
+      
     } else { //up
-      //pathStyle = {fill:"rgba(140,200,120,.5)",stroke:"#7a5"}; 
       pathStyle = {fill:"#8c7",stroke:"#483"}; 
       horizontalStyle = {stroke:"#0a0"};
       pointerStyle = {fill:"#2a2"};
@@ -212,12 +243,16 @@ var MiniChart = function(base, trade, markets) {
     );
             
     //add the price line
-    gEnter.select(".line").datum(self.lineData)
+    if (update) gEnter.select(".line").datum(self.lineData)
       .transition()
       .duration(300)
       .attr("d", area)
       .style(pathStyle);  
     
+    else gEnter.select(".line").datum(self.lineData)
+      .attr("d", area)
+      .style(pathStyle);  
+      
     // Update the x-axis.
     gEnter.select(".x.axis").call(xAxis)
       .attr("transform", "translate(0," + priceScale.range()[0] + ")");
@@ -230,10 +265,16 @@ var MiniChart = function(base, trade, markets) {
     
     if (lastY<20) lastY += 20; //reposition last price below line if its too high on the graph.
     
-    horizontal.transition().duration(600).attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
-    pointer.transition().duration(600).attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
-    lastPrice.transition().duration(600).attr("transform","translate(0, "+lastY+")").text(amountToHuman(last));
-
+    if (update) {
+      horizontal.transition().duration(600).attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
+      pointer.transition().duration(600).attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
+      lastPrice.transition().duration(600).attr("transform","translate(0, "+lastY+")").text(amountToHuman(last));
+    } else {
+      horizontal.attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
+      pointer.attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
+      lastPrice.attr("transform","translate(0, "+lastY+")").text(amountToHuman(last));
+    }
+    
     vol = amountToHuman(vol, {min_precision:0, max_sig_digits:7});
     showHigh.html("<label>high</label> "+amountToHuman(high));
     showLow.html("<label>low</label> "+amountToHuman(low));
@@ -244,23 +285,25 @@ var MiniChart = function(base, trade, markets) {
     details.selectAll("td").style("opacity",1);
     gEnter.transition().style("opacity",1);
   }
-
-  var dropdownA = ripple.currencyDropdown().selected(base);
-  dropdownA.on("change", function(d) {
-      self.base = d;
-      self.load();
-      });
-         
-  var dropdownB = ripple.currencyDropdown().selected(trade);
-  dropdownB.on("change", function(d) {
-      self.trade = d;
-      self.load();
-    });
+  
+  function resizeChart() {
+    old    = width;
+    width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
+    height = width/1.5>200 ? width/1.5 : 200;
     
-  var dropdowns = self.div.append("div").attr("class", "dropdowns");
-  dropdowns.append("div").attr("class","base").call(dropdownA);
-  dropdowns.append("div").attr("class","trade").call(dropdownB);
-
+    if (old != width) {
+      drawChart(); 
+      drawData();
+    }
+  }
+  
+  this.suspend = function ()
+  {
+    removeResizeListener(window, resizeChart);
+  }
+  
+  drawChart();
+  addResizeListener(window, resizeChart);
 }
 
 var MultiMarket = function (options) {

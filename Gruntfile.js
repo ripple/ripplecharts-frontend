@@ -359,7 +359,7 @@ module.exports = function ( grunt ) {
         configFile: '<%= build_dir %>/karma-unit.js'
       },
       unit: {
-        runnerPort: 9101,
+        port: 9101,
         background: true
       },
       continuous: {
@@ -555,7 +555,7 @@ module.exports = function ( grunt ) {
    * before watching for changes.
    */
   grunt.renameTask( 'watch', 'delta' );
-  grunt.registerTask( 'watch', [ 'build', 'karma:unit', 'delta' ] );
+  grunt.registerTask( 'watch', [ 'build', 'karma:unit:start', 'delta' ] );
 
   /**
    * The default task is to build and compile.

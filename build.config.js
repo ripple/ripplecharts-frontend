@@ -80,7 +80,8 @@ module.exports = {
       'vendor/store/dist/store2.js',
       'vendor/d3/d3.js',
       'deps/ripple-0.7.30.js',
-      'deps/offersExercisedListener.js'
+      'deps/offersExercisedListener.js',
+      'deps/onResize.js'
     ],
     css: [
       'vendor/angular-snap/angular-snap.css',

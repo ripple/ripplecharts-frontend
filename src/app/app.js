@@ -42,16 +42,3 @@ angular.element(document).ready(function() {
     angular.bootstrap(document, ['ripplecharts']);
   });
 });
-
-
-//Global functions
-function addResizeEvent(func) {
-  var oldResize = window.onresize;
-  window.onresize = function () {
-    func();
-    if (typeof oldResize === 'function') oldResize();
-  };
-}
-
-
- 

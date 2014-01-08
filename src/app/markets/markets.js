@@ -58,6 +58,7 @@ angular.module( 'ripplecharts.markets', [
   
   var intervalA = d3.select("#interval").selectAll("a")
     .data([
+      {name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},
       {name: "1m",  interval:"minute", multiple:1,  offset: function(d) { return d3.time.hour.offset(d, -2); }},
       {name: "5m",  interval:"minute", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -12); }},
       {name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
@@ -101,7 +102,7 @@ angular.module( 'ripplecharts.markets', [
   });   
 
   loaded = true;
-  d3.select("#interval a:nth-child(4)")[0][0].click();
+  d3.select("#interval a:nth-child(1)")[0][0].click();
 
   var remote = new ripple.Remote(Options.ripple);
     
@@ -128,8 +129,9 @@ angular.module( 'ripplecharts.markets', [
   
   $scope.$on("$destroy", function(){
     console.log("destroy");
-    priceChart.suspendLiveFeed();
-    transFeed.suspendLiveFeed();
+    priceChart.suspend();
+    book.suspend();
+    transFeed.suspend();
     //stop the listener when leaving 
   });
 });

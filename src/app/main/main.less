@@ -3,3 +3,45 @@
 }
 
 .main #multimarkets .dropdowns {display:none}
+
+#multimarkets {
+  margin-bottom:20px;
+}
+
+@media (min-width: 1200px) {
+  #multimarkets {
+    width:1170px;
+  }
+  
+  #multimarkets .chart {
+    width:375px ;
+  }
+}
+
+@media (max-width: 979px) {
+  #multimarkets {
+    width:724px;
+  }
+  
+  #multimarkets .chart {
+    width:350px ;
+  }
+}
+
+@media (max-width: 767px) {
+  #multimarkets {
+    width: 80%;
+    display:inline-block;
+  }
+  
+  #multimarkets .chart {
+    float:none ;
+    width:auto ;
+  }
+}
+
+@media (max-width: 480px) {
+  .snap-content {
+    zoom: 0.75;
+  }
+}

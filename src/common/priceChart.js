@@ -42,14 +42,14 @@ PriceChart = function (options) {
       .append("text").text("Volume")
       .attr("class", "title")
       .attr("transform", "rotate(-90)")
-      .attr("y",15).attr("x",-90);
+      .attr("y",15).attr("x",-110);
   
     gEnter.append("g").attr("class", "price axis")
       .attr("transform", "translate("+options.width+", 0)")
       .append("text").text("Price")
         .attr("class", "title")
         .attr("transform", "rotate(-90)")
-        .attr("y",-10).attr("x",-80);
+        .attr("y",-10).attr("x",-100);
           
     // gradient for volume bars	    
     gradient = svg.append("svg:defs")
@@ -86,8 +86,22 @@ PriceChart = function (options) {
       .style("opacity", 0);	
   }
   
+  function resizeChart () {
+    old = options.width;
+    w = parseInt(div.style('width'), 10);
+    options.width  = w-options.margin.left - options.margin.right;
+    options.height = options.width/2>400 ? options.width/2 : 400;
+    
+    if (old != options.width) {
+      drawChart(); 
+      drawData();  
+    } 
+  }
+  
   drawChart();
- 
+  addResizeListener(window, resizeChart);
+  
+/* 
   //resize on window resize
   addResizeEvent(function() {
     w = parseInt(div.style('width'), 10);
@@ -96,7 +110,7 @@ PriceChart = function (options) {
     drawChart(); 
     drawData();
   });
-  
+*/  
     
   //fade to throber when reloading from history
   this.fadeOut = function () {
@@ -162,13 +176,12 @@ PriceChart = function (options) {
 
     }, function(data){
       self.lineData = data.concat(self.lineData);
-      console.log(data);
-      
       drawData();
       
     }, function (error){
       console.log(error);
-      setStatus(error.text);
+      
+      setStatus(error.text ? error.text : "Unable to load data");
     });     
   }
   
@@ -196,43 +209,51 @@ PriceChart = function (options) {
       incompleteApiRow : candle
     }
     
+    //console.log(JSON.stringify(viewOptions));
+    
     if (liveFeed) liveFeed.updateViewOpts(viewOptions);
     else liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
   }
   
-  this.suspendLiveFeed = function ()
+  this.suspend = function ()
   {
     if (liveFeed) liveFeed.stopListener();
+    removeResizeListener(window, resizeChart);
   }
   
   function liveUpdate (data) {
     var time = data.time ? data.time : data.openTime;
     console.log(data);
-    console.log(moment(time).format());
+
     var first = self.lineData.length ? self.lineData[0] : null;
     var last  = self.lineData.length ? self.lineData[self.lineData.length-1] : null;
     var candle = {
         time   : moment(time),
-        volume : data.baseCurrVol ? data.baseCurrVol : data.curr1Volume,
-        vwap   : data.vwavPrice   ? data.vwavPrice   : data.volumeWeightedAvg,
-        close  : data.closePrice  ? data.closePrice  : data.close,
-        open   : data.openPrice   ? data.openPrice   : data.open,
-        high   : data.highPrice   ? data.highPrice   : data.high,
-        low    : data.lowPrice    ? data.lowPrice    : data.low
+        volume : data.baseCurrVol,
+        vwap   : data.vwavPrice,
+        close  : data.closePrice,
+        open   : data.openPrice,
+        high   : data.highPrice,
+        low    : data.lowPrice
       }; 
       
-    console.log(candle);
-    console.log(last);
-    console.log(last.time.unix());
-    console.log(candle.time.unix());
+    //console.log(candle);
+    //console.log(last);
+    //console.log(last.time.unix());
+    //console.log(candle.time.unix());
     
     if (last && candle.volume && last.time.unix()===candle.time.unix()) {
+      console.log('replace');
+      console.log(candle);
       last = candle;
     } else {
       
       //new candle, only add it if something happened
-      if (candle.volume) self.lineData.push(candle) //append the candle    
-      
+      if (candle.volume) {
+        console.log('append');
+        console.log(candle);
+        self.lineData.push(candle); //append the candle    
+      }
       //adjust the range  
       self.start.add(self.seconds,"seconds");
       self.end.add(self.seconds,"seconds");
@@ -261,11 +282,10 @@ PriceChart = function (options) {
     var line = d3.svg.line()
       .x(function(d) { return xScale(d.time); })
       .y(function(d) { return priceScale(d.close); });
-
-
+    
     var num = (moment(self.end).unix() - moment(self.start).unix())/self.seconds;
     
-    console.log(num); //aiming for around 100-200 here
+    //console.log(num); //aiming for around 100-200 here
     
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
@@ -369,7 +389,6 @@ PriceChart = function (options) {
     // Update the left axis.
     gEnter.select(".volume.axis").call(volumeAxis);
 
-
     //hide the loader, show the chart
     svg.transition().duration(300).style("opacity", 1);
     loader.transition().duration(300).style("opacity", 0);
@@ -419,27 +438,6 @@ PriceChart = function (options) {
       horizontal.style("opacity",1);
       focus.style("opacity",1);
     }
-  }
-
-  function getExtents () {
-    if (self.lineData && self.lineData.length>1) {  //add an extra increment on the right side
-      var difference = (self.lineData[1].time - self.lineData[0].time)/1000;
-
-      return [
-        d3.min(self.lineData, function(d) { return d.time }),
-        d3.time.second.offset(d3.max(self.lineData, function(d) { return d.time }), difference)];
-    }
-
-    return d3.extent(self.lineData, function(d) { return d.time; });	
-  }
-
-  function params(o) {
-    var s = [];
-    for (var key in o) {
-      s.push(key + "=" + encodeURIComponent(o[key]));
-    }
-
-      return s.join("&");
   }
 
   function parseDate (date, increment) {

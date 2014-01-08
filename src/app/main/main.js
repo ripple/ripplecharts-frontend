@@ -57,5 +57,9 @@ angular.module( 'ripplecharts.main', [
       trade : {currency:"XRP"}}
     ]);
     
+  $scope.$on("$destroy", function(){
+    markets.list([]);
+  });
+    
 });
 
