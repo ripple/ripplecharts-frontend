@@ -2,7 +2,7 @@
   "name": "ripplecharts",
   "version": "0.0.1",
   "devDependencies": {
-    "angular": "~1.0.7",
+    "angular": "~1.2.8",
     "angular-mocks": "~1.0.7",
     "bootstrap": "~2.3.2",
     "angular-bootstrap": "~0.3.0",
@@ -16,6 +16,5 @@
     "font-awesome": "~4.0.3",
     "d3": "~3.3.13"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }

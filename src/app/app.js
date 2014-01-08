@@ -20,10 +20,13 @@ angular.element(document).ready(function() {
   })
   
   .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
-    $scope.theme = Options.theme;
+    $scope.theme = store.get('theme') || Options.theme;
+    $scope.$watch('theme', function(){store.set('theme', $scope.theme)});
+    
     $scope.snapOptions = {
       disable: 'right'
     }
+    
     //disable touch drag for desktop devices
     if (!("ontouchstart" in document.documentElement)) $scope.snapOptions.touchToDrag = false;
     
@@ -37,7 +40,7 @@ angular.element(document).ready(function() {
 
   //load gateways file before starting the app
   d3.json("assets/gateways.json", function(error, data) {
-    
+
     gateways = data;
     angular.bootstrap(document, ['ripplecharts']);
   });

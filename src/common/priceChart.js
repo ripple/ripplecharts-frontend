@@ -157,7 +157,8 @@ PriceChart = function (options) {
       //TODO: unacceptable!
     }
     
-    self.seconds *= self.multiple;    
+    self.seconds *= self.multiple;  
+      
     if (liveFeed) liveFeed.stopListener();
     setLiveFeed();
     
@@ -205,8 +206,8 @@ PriceChart = function (options) {
       base  : self.base,
       trade : self.trade,
       timeIncrement    : self.interval,
-      timeMultiple     : self.multiple,
-      incompleteApiRow : candle
+      timeMultiple     : self.multiple
+      //incompleteApiRow : candle
     }
     
     //console.log(JSON.stringify(viewOptions));
@@ -228,7 +229,7 @@ PriceChart = function (options) {
     var first = self.lineData.length ? self.lineData[0] : null;
     var last  = self.lineData.length ? self.lineData[self.lineData.length-1] : null;
     var candle = {
-        time   : moment(time),
+        time   : moment(data.openTime),
         volume : data.baseCurrVol,
         vwap   : data.vwavPrice,
         close  : data.closePrice,

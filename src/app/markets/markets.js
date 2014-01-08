@@ -17,43 +17,42 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope ) {
+    $scope.base      = store.get('base')      || Options.base      || {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
+    $scope.trade     = store.get('trade')     || Options.trade     || {currency:"XRP", issuer:""};
+    $scope.chartType = store.get('chartType') || Options.chartType || "line";
+    $scope.interval  = store.get('interval')  || Options.interval  || "1h";
 
   //load chart   
-  var loaded = false,  
-    trade    = {currency:"XRP", issuer:""},
-    base     = {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-    dropdownB = ripple.currencyDropdown().selected(trade)
+  var loaded  = false, 
+    dropdownB = ripple.currencyDropdown().selected($scope.trade)
       .on("change", function(d) {
         if (loaded) {
-          priceChart.load(base, trade = d, d3.select("#interval .selected").datum());
-          book.getMarket(base, trade);
-          transFeed.loadPair (base, trade);
+          $scope.trade = d;
+          loadPair();
         }}),
-    dropdownA = ripple.currencyDropdown().selected(base)
+    dropdownA = ripple.currencyDropdown().selected($scope.base)
       .on("change", function(d) {
         if (loaded) {
-          priceChart.load(base = d, trade, d3.select("#interval .selected").datum());
-          book.getMarket(base, trade); 
-          transFeed.loadPair (base, trade);
+          $scope.base = d;
+          loadPair();
         }});
 
   d3.select("#base").call(dropdownA);
   d3.select("#quote").call(dropdownB);
   d3.select("#flip").on("click", function(){ //probably better way to do this
-    dropdownA.selected(trade);
-    dropdownB.selected(base);
+    dropdownA.selected($scope.trade);
+    dropdownB.selected($scope.base);
     d3.select("#base").selectAll("select").remove();
     d3.select("#quote").selectAll("select").remove();
     loaded = false;
     d3.select("#base").call(dropdownA);
     d3.select("#quote").call(dropdownB);
     loaded = true;
-    swap   = trade;
-    trade  = base;
-    base   = swap;
-    priceChart.load(base, trade, d3.select("#interval .selected").datum());
-    book.getMarket(base, trade);
-    transFeed.loadPair (base, trade);
+    
+    swap         = $scope.trade;
+    $scope.trade = $scope.base;
+    $scope.base  = swap;
+    loadPair();
   });
   
   var intervalA = d3.select("#interval").selectAll("a")
@@ -70,40 +69,40 @@ angular.module( 'ripplecharts.markets', [
       ])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(_, i) { return !i; })
+    .classed("selected", function(d) { return d.name === $scope.interval })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
       d3.event.preventDefault();
       var that = this;
+      store.set("interval", d.name);
       intervalA.classed("selected", function() { return this === that; });
-      priceChart.load(base, trade, d);
+      priceChart.load($scope.base, $scope.trade, d);
     });
     
   var chartType = d3.select("#chartType").selectAll("a")
     .data(["line", "candlestick"])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(_, i) { return !i; })
+    .classed("selected", function(d) { return d === $scope.chartType; })
     .text(function(d) { return d })   
     .on("click", function(d) {
       d3.event.preventDefault();
       var that = this;
+      store.set("chartType", d);
       chartType.classed("selected", function() { return this === that; });
       chartType.selected = d;
       priceChart.setType(d);
     });
 
-  chartType.selected = "line";
-
   var priceChart = new PriceChart ({
     id     : "#priceChart",
     url    : API,  
-    type   : chartType.selected
+    type   : $scope.chartType
   });   
 
   loaded = true;
-  d3.select("#interval a:nth-child(1)")[0][0].click();
-
+  d3.select("#interval .selected")[0][0].click();
+  
   var remote = new ripple.Remote(Options.ripple);
     
   book = new OrderBook ({
@@ -116,7 +115,7 @@ angular.module( 'ripplecharts.markets', [
   
   remote.connect();
   remote.on('connect', function(){
-    book.getMarket(base, trade);
+    book.getMarket($scope.base, $scope.trade);
   }); 
   
   transFeed = new TransactionFeed({
@@ -124,8 +123,16 @@ angular.module( 'ripplecharts.markets', [
     url    : API   
   });
   
-  transFeed.loadPair (base, trade);
+  transFeed.loadPair ($scope.base, $scope.trade);
   
+  function loadPair() {
+    store.set('base',  $scope.base);
+    store.set('trade', $scope.trade);
+    
+    priceChart.load($scope.base, $scope.trade, d3.select("#interval .selected").datum());
+    book.getMarket($scope.base, $scope.trade); 
+    transFeed.loadPair ($scope.base, $scope.trade);    
+  }
   
   $scope.$on("$destroy", function(){
     console.log("destroy");

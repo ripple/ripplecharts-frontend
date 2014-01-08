@@ -252,19 +252,32 @@ function parseViewOpts(opts) {
     opts.reduce = false;
   }
 
-  if (opts.base && opts.base.issuer) {
-    var baseGatewayAddress = gatewayNameToAddress(opts.base.issuer, opts.base.currency);
-    if (baseGatewayAddress) {
-      opts.base.issuer = baseGatewayAddress;
+  if (opts.base) {
+
+    if (opts.base.issuer === '') {
+      delete opts.base.issuer;
+    } else if (opts.base.issuer) {
+
+      var baseGatewayAddress = gatewayNameToAddress(opts.base.issuer, opts.base.currency);
+      if (baseGatewayAddress) {
+        opts.base.issuer = baseGatewayAddress;
+      }
     }
   }
 
-  if (opts.trade && opts.trade.issuer) {
-    var tradeGatewayAddress = gatewayNameToAddress(opts.trade.issuer, opts.trade.currency);
-    if (tradeGatewayAddress) {
-      opts.trade.issuer = tradeGatewayAddress;
+  if (opts.trade) {
+    if (opts.trade.issuer === '') {
+      delete opts.trade.issuer;
+    } else if (opts.trade.issuer) {
+
+      var tradeGatewayAddress = gatewayNameToAddress(opts.trade.issuer, opts.trade.currency);
+      if (tradeGatewayAddress) {
+        opts.trade.issuer = tradeGatewayAddress;
+      }
     }
   }
+
+  console.log(JSON.stringify(opts));
 
   return opts;
 }
@@ -335,6 +348,14 @@ function createTransactionProcessor(viewOpts, resultHandler) {
           }
           
         }
+
+        // Flip the currencies if necessary
+        if (viewOpts.base.currency === key[1][0] && viewOpts.base.issuer === key[1][1]) {
+          key = [key[1].slice(), key[0].slice()].concat(key.slice(2));
+          value = [value[1], value[0], 1/value[2]];
+        }
+
+
 
         resultHandler({key: key, value: value});
 
