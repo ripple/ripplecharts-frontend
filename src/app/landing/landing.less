@@ -1,0 +1,46 @@
+.main {
+  text-align:center;
+}
+
+
+#topMarkets {
+  margin-bottom:20px;
+  overflow:hidden;
+}
+
+#topMarkets .chart {
+  width:300px;
+}
+
+@media (min-width: 1200px) {
+  #topMarkets {
+    width:1170px;
+  }
+  
+  #topMarkets .chart {
+    width:375px ;
+  }
+}
+
+@media (max-width: 979px) {
+  
+  #topMarkets {
+    width:724px;
+  }
+  
+  #topMarkets .chart {
+    width:350px ;
+  }
+}
+
+@media (max-width: 767px) {
+  #topMarkets {
+    width: 90%;
+    display:inline-block;
+  }
+  
+  #topMarkets .chart {
+    float:none ;
+    width:auto ;
+  }
+}

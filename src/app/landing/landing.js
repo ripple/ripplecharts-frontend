@@ -12,7 +12,7 @@
  * The dependencies block here is also where component dependencies should be
  * specified, as shown below.
  */
-angular.module( 'ripplecharts.main', [
+angular.module( 'ripplecharts.landing', [
   'ui.state'
 ])
 
@@ -22,26 +22,26 @@ angular.module( 'ripplecharts.main', [
  * this way makes each module more "self-contained".
  */
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'main', {
+  $stateProvider.state( 'landing', {
     url: '/',
     views: {
       "main": {
-        controller: 'MainCtrl',
-        templateUrl: 'main/main.tpl.html'
+        controller: 'LandingCtrl',
+        templateUrl: 'landing/landing.tpl.html'
       }
     },
-    data:{ pageTitle: 'Main' }
+    data:{ pageTitle: 'Ripple Charts' }
   });
 })
 
 /**
  * And of course we define a controller for our route.
  */
-.controller( 'MainCtrl', function MainController( $scope ) {
+.controller( 'LandingCtrl', function LandingCtrl( $scope ) {
   
   var markets = new MultiMarket ({
     url   : API+"/offersExercised",  
-    id    : "multimarkets",
+    id    : "topMarkets",
     fixed : true
   });
   

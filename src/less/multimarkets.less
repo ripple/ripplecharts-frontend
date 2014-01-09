@@ -1,12 +1,12 @@
 
 .multiMarket .add {
-  width:300px;
-  height:315px;
+  width:320px;
+  height:284px;
   background:#f5f5f5;
   float:left;
   border: 1px solid #ddd;
   margin: 5px;
-  line-height:315px;
+  line-height:284px;
   font-size:200px;
   color:#ddd;
   cursor:pointer;
@@ -32,7 +32,7 @@
 .multiMarket .chartDetails .range .high {color:#2a2}
 .multiMarket .chartDetails .range .low {color:#c33}
 .multiMarket .chartDetails .change {font-size:18px; font-weight:bold}
-.multiMarket .chartDetails .volume {font-size:18px; font-weight:bold}
+.multiMarket .chartDetails .volume {font-size:18px; font-weight:bold; text-align:right}
 .multiMarket .chartDetails .volume label {padding:0 5px; font-size:12px; color:#999; font-weight:normal}
 .multiMarket .chartDetails .volume small {padding:0 5px; font-size:12px; color:#999; font-weight:normal}
 
@@ -41,7 +41,7 @@
   margin:5px;
   float:left;
   position:relative;
-  width:300px;
+  width:320px;
 }
 
 .multiMarket .chart .loader {
@@ -144,7 +144,7 @@
 .multiMarket .chart .dropdowns {
   border-top:1px solid #bbb;
   display:table;
-  width:320px;
+  width:100%;
 }
 .multiMarket .chart .dropdowns div {
   overflow:hidden;
@@ -167,7 +167,7 @@
 }
 .multiMarket .chart .dropdowns .currency {
   font-size:16px;  
-  width:48px;
+  min-width:48px;
 }
 
 .multiMarket .chart .dropdowns .gateway {
@@ -238,4 +238,22 @@
 
 .dark .multiMarket .chartDetails .volume {
   color:#ddd;
+}
+
+.dark .multiMarket .chart .dropdowns {
+  border-color:#333;
+  background:#151515;
+}
+
+.dark .multiMarket .chart .dropdowns select {
+  border-color:#333;
+  color:#999;
+  font-weight:bold;
+  background-image: url('images/dropdownLight.png');
+}
+
+.dark .multiMarket .add {
+  color:#333;
+  background:#222;
+  border-color:#333;
 }

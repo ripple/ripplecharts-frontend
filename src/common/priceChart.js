@@ -246,7 +246,7 @@ PriceChart = function (options) {
     if (last && candle.volume && last.time.unix()===candle.time.unix()) {
       console.log('replace');
       console.log(candle);
-      last = candle;
+      self.lineData[self.lineData.length-1] = candle;
     } else {
       
       //new candle, only add it if something happened
@@ -264,7 +264,7 @@ PriceChart = function (options) {
     }
     
     //redraw the chart
-    drawData();
+    if (self.lineData.length) drawData();
   }
   
   function drawData () {	

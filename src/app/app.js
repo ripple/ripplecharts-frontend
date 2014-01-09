@@ -4,8 +4,9 @@ angular.element(document).ready(function() {
   angular.module( 'ripplecharts', [
     'templates-app',
     'templates-common',
-    'ripplecharts.main',
+    'ripplecharts.landing',
     'ripplecharts.markets',
+    'ripplecharts.multimarkets',
     'ripplecharts.network',
     'ui.state',
     'ui.route',

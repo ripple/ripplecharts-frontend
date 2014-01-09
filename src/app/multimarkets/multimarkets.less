@@ -1,11 +1,8 @@
-.main {
-  text-align:center;
-}
-
-.main #multimarkets .dropdowns {display:none}
 
 #multimarkets {
-  margin-bottom:20px;
+  display:inline-block;
+  overflow:hidden;
+  width:1000px;
 }
 
 @media (min-width: 1200px) {
@@ -13,28 +10,29 @@
     width:1170px;
   }
   
-  #multimarkets .chart {
-    width:375px ;
+  #multimarkets .chart, #multimarkets .add {
+    width:375px;
   }
 }
 
 @media (max-width: 979px) {
+  
   #multimarkets {
     width:724px;
   }
   
-  #multimarkets .chart {
+  #multimarkets .chart, #multimarkets .add {
     width:350px ;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 725px) {
   #multimarkets {
     width: 90%;
     display:inline-block;
   }
   
-  #multimarkets .chart {
+  #multimarkets .chart, #multimarkets .add {
     float:none ;
     width:auto ;
   }

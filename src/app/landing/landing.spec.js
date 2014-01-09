@@ -5,7 +5,7 @@
  * automatically.
  */
 describe( 'main section', function() {
-  beforeEach( module( 'ripplecharts.main' ) );
+  beforeEach( module( 'ripplecharts.landing' ) );
 
   it( 'should have a dummy test', inject( function() {
     expect( true ).toBeTruthy();

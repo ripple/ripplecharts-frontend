@@ -114,6 +114,7 @@ var MiniChart = function(base, trade, markets) {
     dropdowns = self.div.append("div").attr("class", "dropdowns");
     dropdowns.append("div").attr("class","base").call(dropdownA);
     dropdowns.append("div").attr("class","trade").call(dropdownB);
+    if (markets.options.fixed) dropdowns.style("display","none");
   }
     
   this.setStatus = function (string) {
