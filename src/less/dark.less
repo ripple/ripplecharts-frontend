@@ -2,6 +2,22 @@
   background:#333;  
 }
 
+.dark .logo {
+  float:left;
+  display:inline-block;
+  width:220px;
+  height:40px;
+  background-image:url('images/logoLight.png');
+  margin:4px 0;
+
+// Pixel ratio: 2
+  @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
+    background-image: url('images/logoLightLarge.png');
+    background-size: 220px 40px;
+  }
+}
+
+
 .dark .snap-drawers{
   background:#333;
   border-color:#444;
@@ -25,7 +41,7 @@
 .dark .logo img {opacity:.4; border-radius:2px}
 
 .dark .nav-toggle {
-  color:#ccc;
+  color:#888;
 }
 
 .dark .theme {
