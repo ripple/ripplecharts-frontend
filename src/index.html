@@ -39,7 +39,7 @@
   <body ng-controller="AppCtrl" ng-class="theme">
     <div class="header">
       <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
-      <a href="#/" ui-route="/" class="logo"></a>
+      <a href="#/" ui-route="/" class="logo" snap-close></a>
       <div class="theme">
         <span ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</span>
         <span ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</span>
@@ -85,7 +85,7 @@
       <div ui-view="main" style="overflow:hidden;"></div>
       <footer class="footer row">
         <div class="footer-inner"></div>
-        <small><ahref="">v<%= version %></a></small>
+        <small><a href="">v<%= version %></a></small>
       </div>
       </footer>
     </div>    

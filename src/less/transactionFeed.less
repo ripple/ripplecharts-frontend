@@ -1,0 +1,125 @@
+/* Icons */
+.transactionFeed .send { background-image:url('icons/send.svg'); cursor:pointer;}
+.transactionFeed .receive { background-image:url('icons/receive.svg'); cursor:pointer;}
+.transactionFeed .intermediate { background-image:url('icons/intermediate.svg'); cursor:pointer;}
+.transactionFeed .sendfailed { background-image:url('icons/sendfailed.svg'); cursor:pointer;}
+.transactionFeed .receivefailed { background-image:url('icons/receivefailed.svg'); cursor:pointer;}
+.transactionFeed .intermediatefailed { background-image:url('icons/intermediatefailed.svg'); cursor:pointer;}
+
+.transactionFeed .trustin { background-image:url('icons/trustin.svg'); }
+.transactionFeed .trustout { background-image:url('icons/trustout.svg'); }
+.transactionFeed .trustinfailed  { background-image:url('icons/trustinfailed.svg'); }
+.transactionFeed .trustoutfailed  { background-image:url('icons/trustoutfailed.svg'); }
+
+.transactionFeed .offerin { background-image:url('icons/offerin.svg'); }
+.transactionFeed .offerout { background-image:url('icons/offerout.svg'); }
+.transactionFeed .offerinfailed { background-image:url('icons/offerinfailed.svg'); }
+.transactionFeed .offeroutfailed { background-image:url('icons/offeroutfailed.svg'); }
+
+.transactionFeed .canceloffer { background-image:url('icons/canceloffer.svg'); }
+.transactionFeed .accountset { background-image:url('icons/accountset.svg'); }
+
+.transactionFeed .icon {
+  width:32px;
+  height:32px;
+  background-repeat:no-repeat;
+  background-position:center;
+  margin:0 10px;
+  vertical-align:middle;
+}
+
+.transactionFeed {
+  text-align:left;
+  overflow:auto;
+  background: rgba(150,155,160,.2);
+  border:1px solid rgba(150,150,150,.3);
+  border-radius:2px;
+  margin:3px;
+}
+
+.transactionFeed .time {
+  min-width:12%;
+  color:#888;
+}
+
+.transactionFeed .transaction {
+  overflow:auto;
+  padding:0 20px 5px 20px;
+  border-bottom:1px solid #ccc;
+  border-top:2px solid #f5f5f5;
+  }
+
+.transactionFeed .transaction:last-child {
+  border-bottom:none;  
+}
+
+.transactionFeed .transaction span {
+  display:inline-block;
+  vertical-align:middle;
+  }
+  
+.transactionFeed .transaction .details {
+  font-size:15px;  
+}
+
+.transactionFeed .transaction .details small {
+  font-size:75%;
+  font-weight:bold;
+  line-height:75%;
+  margin: 0 5px;
+  color: #888;
+}
+
+.transactionFeed .transaction .details i {
+  font-size:75%;
+  line-height:75%;  
+}
+
+.transactionFeed .transaction i  {
+  margin: 0 10px;
+  color: #aaa; 
+}
+
+.transactionFeed .transaction .accounts {
+  font-size:11px;
+  color:#8ab;  
+  margin-top:-3px;
+  vertical-align:middle;
+}
+
+.transactionFeed .transaction .accounts span {
+  max-width:45%;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+  display:inline-block;
+  float:left;
+}
+
+.transactionFeed .transaction .accounts i {
+  margin: 0 10px;
+  color: #aaa; 
+  float:left;
+}
+
+.dark .transactionFeed .transaction {
+  border-top:none;
+  border-color:#444;
+  color:#ccc;
+}
+
+.dark .transactionFeed .transaction .time {
+  color:#666;
+}
+
+.dark .transactionFeed .transaction small {
+  color:#777
+}
+
+.dark .transactionFeed .transaction i { 
+  color:#666;
+}
+
+.dark .transactionFeed .accounts {
+  color:#579;
+}

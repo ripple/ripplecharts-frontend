@@ -1,5 +1,5 @@
-var gateways;
-
+var gateways, remote;
+  
 angular.element(document).ready(function() {
   angular.module( 'ripplecharts', [
     'templates-app',
@@ -38,10 +38,15 @@ angular.element(document).ready(function() {
       }
     });
   });
-
+  
   //load gateways file before starting the app
   d3.json("assets/gateways.json", function(error, data) {
-
+    
+    //connect to the ripple network;
+    remote = new ripple.Remote(Options.ripple);
+    remote.connect();
+    console.log(remote);
+    
     gateways = data;
     angular.bootstrap(document, ['ripplecharts']);
   });

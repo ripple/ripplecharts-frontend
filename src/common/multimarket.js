@@ -1,6 +1,6 @@
 var MiniChart = function(base, trade, markets) {
   var self      = this,
-    details, range, showHigh, showLow, change, volume,
+    header, details, range, showHigh, showLow, change, volume,
     svg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader,
@@ -33,6 +33,9 @@ var MiniChart = function(base, trade, markets) {
   function drawChart() {
     self.div.html("");   
     
+    if (markets.options.fixed) {
+      header = self.div.append("div").attr("class","chartHeader");
+    }
     details  = self.div.append("table").attr("class", "chartDetails").append("tr");
     range    = details.append("td").attr("class","range");
     showHigh = details.select(".range").append("div").attr("class","high");
@@ -78,6 +81,12 @@ var MiniChart = function(base, trade, markets) {
         dropdowns.append("div").attr("class","base").call(dropdownA);
         dropdowns.append("div").attr("class","trade").call(dropdownB);  
         flipping = false;
+        
+        if (markets.options.fixed) {
+          header.html("<small>"+self.div.select(".base .gateway").node().value+
+            "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
+            self.div.select(".trade .gateway").node().value+"</small>");
+        }        
       });
     
     flip.append("rect").attr({width:margin.right,height:margin.bottom});
@@ -114,7 +123,12 @@ var MiniChart = function(base, trade, markets) {
     dropdowns = self.div.append("div").attr("class", "dropdowns");
     dropdowns.append("div").attr("class","base").call(dropdownA);
     dropdowns.append("div").attr("class","trade").call(dropdownB);
-    if (markets.options.fixed) dropdowns.style("display","none");
+    if (markets.options.fixed) {
+      dropdowns.style("display","none");
+      header.html("<small>"+self.div.select(".base .gateway").node().value+
+        "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
+        self.div.select(".trade .gateway").node().value+"</small>");
+    }
   }
     
   this.setStatus = function (string) {
@@ -199,7 +213,7 @@ var MiniChart = function(base, trade, markets) {
       
       
     if (Math.abs(pct)<0.5) { //unchanged (less than .5%)
-      pathStyle = {fill:"c5cacf",stroke:"#888"}; 
+      pathStyle = {fill:"#aaa",stroke:"#888"}; 
       horizontalStyle = {stroke:"#777"};
       pointerStyle = {fill:"#aaa"};
       changeStyle  = {color:"#777"};

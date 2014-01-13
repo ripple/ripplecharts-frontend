@@ -896,13 +896,14 @@ var ripple =
 	      request.ledgerIndex(ledger_hash);
 	      break;
 
+	    case 'undefined':
 	    case 'function':
-	      request.callback(ledger_hash);
+	      request.ledgerIndex('validated');
+	      callback = ledger_hash;
 	      break;
 
 	    default:
-	      request.ledgerIndex('validated');
-	      callback = ledger_hash;
+	      throw new Error('Invalid ledger_hash type');
 	  }
 
 	  request.callback(callback);
@@ -3388,7 +3389,7 @@ var ripple =
 	var Seed             = require(18).Seed;
 	var SerializedObject = require(9).SerializedObject;
 	var RippleError      = require(10).RippleError;
-	var hashprefixes     = require(19);
+	var hashprefixes     = require(21);
 	var config           = require(14);
 
 
@@ -3626,12 +3627,14 @@ var ripple =
 	    return this;
 	  }
 
-	  var key  = seed.get_key(this.tx_json.Account);
-	  var sig  = key.sign(hash, 0);
-	  var hex  = sjcl.codec.hex.fromBits(sig).toUpperCase();
+	  var key = seed.get_key(this.tx_json.Account);
+	  var sig = key.sign(hash, 0);
+	  var hex = sjcl.codec.hex.fromBits(sig).toUpperCase();
 
 	  this.tx_json.TxnSignature = hex;
 	  this.previousSigningHash = hash;
+
+	  this.emit('signed', this.hash());
 
 	  return this;
 	};
@@ -4052,6 +4055,10 @@ var ripple =
 	  }
 
 	  return this;
+	};
+
+	Transaction.prototype.transactionManager = function() {
+	  return this.remote.account(this.tx_json.Account)._transactionManager;
 	};
 
 	Transaction.prototype.abort = function(callback) {
@@ -4556,8 +4563,8 @@ var ripple =
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(11);
 	var extend     = require(29);
-	var stypes     = require(21);
-	var UInt256    = require(22).UInt256;
+	var stypes     = require(22);
+	var UInt256    = require(23).UInt256;
 	var assert     = require(27);
 
 	var utils      = require(12);
@@ -4854,7 +4861,7 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}(require, require(23).Buffer))
+	/* WEBPACK VAR INJECTION */}(require, require(24).Buffer))
 
 /***/ },
 
@@ -5019,7 +5026,7 @@ var ripple =
 /***/ 12:
 /***/ function(module, exports, require) {
 
-	var exports = module.exports = require(24);
+	var exports = module.exports = require(19);
 
 	// We override this function for browsers, because they print objects nicer
 	// natively than JSON.stringify can.
@@ -5777,6 +5784,7 @@ var ripple =
 
 	  function listenerAdded(type, listener) {
 	    if (~OrderBook.subscribe_events.indexOf(type)) {
+	      
 	      if (!self._subs && self._remote._connected) {
 	        self._subs += 1;
 	        self._subscribe();
@@ -5800,8 +5808,12 @@ var ripple =
 	    }
 	  };
 
+	  this.on('removeListener', listenerRemoved);
+
 	  // ST: This *should* call _prepareSubscribe.
-	  this._remote.on('prepare_subscribe', this._subscribe.bind(this));
+	  this._remote.on('prepare_subscribe', function(request) {
+	    self._subscribe(request);
+	  });
 
 	  function remoteDisconnected() {
 	    self._sync = false;
@@ -5824,19 +5836,23 @@ var ripple =
 	 *
 	 * @private
 	 */
-	OrderBook.prototype._subscribe = function () {
+	OrderBook.prototype._subscribe = function (request) {
 	  var self = this;
+
 	  if (self.is_valid() && self._subs) {
 	    var request = this._remote.request_subscribe();
 	    request.addBook(self.to_json(), true);
+
 	    request.once('success', function(res) {
 	      self._sync   = true;
 	      self._offers = res.offers;
 	      self.emit('model', self._offers);
 	    });
+
 	    request.once('error', function(err) {
 	      // XXX What now?
 	    });
+
 	    request.request();
 	  }
 	};
@@ -6138,8 +6154,8 @@ var ripple =
 
 	var Base    = require(7).Base;
 	var UInt    = require(30).UInt;
-	var UInt256 = require(22).UInt256;
-	var KeyPair = require(32).KeyPair;
+	var UInt256 = require(23).UInt256;
+	var KeyPair = require(31).KeyPair;
 
 	var Seed = extend(function () {
 	  // Internal form: NaN or BigInteger
@@ -6249,29 +6265,163 @@ var ripple =
 /***/ 19:
 /***/ function(module, exports, require) {
 
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
+	Function.prototype.method = function(name, func) {
+	  this.prototype[name] = func;
+	  return this;
+	};
 
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
+	function filterErr(code, done) {
+	  return function(e) {
+	    done(e.code !== code ? e : void(0));
+	  };
+	};
+
+	function throwErr(done) {
+	  return function(e) {
+	    if (e) {
+	      throw e;
+	    }
+	    done();
+	  };
+	};
+
+	function trace(comment, func) {
+	  return function() {
+	    console.log("%s: %s", trace, arguments.toString);
+	    func(arguments);
+	  };
+	};
+
+	function arraySet(count, value) {
+	  var a = new Array(count);
+
+	  for (var i=0; i<count; i++) {
+	    a[i] = value;
+	  }
+
+	  return a;
+	};
+
+	function hexToString(h) {
+	  var a = [];
+	  var i = 0;
+
+	  if (h.length % 2) {
+	    a.push(String.fromCharCode(parseInt(h.substring(0, 1), 16)));
+	    i = 1;
+	  }
+
+	  for (; i<h.length; i+=2) {
+	    a.push(String.fromCharCode(parseInt(h.substring(i, i+2), 16)));
+	  }
+
+	  return a.join('');
+	};
+
+	function stringToHex(s) {
+	  var result = '';
+	  for (var i=0; i<s.length; i++) {
+	    var b = s.charCodeAt(i);
+	    result += b < 16 ? '0' + b.toString(16) : b.toString(16);
+	  }
+	  return result;
+	};
+
+	function stringToArray(s) {
+	  var a = new Array(s.length);
+
+	  for (var i=0; i<a.length; i+=1) {
+	    a[i] = s.charCodeAt(i);
+	  }
+
+	  return a;
+	};
+
+	function hexToArray(h) {
+	  return stringToArray(hexToString(h));
+	};
+
+	function chunkString(str, n, leftAlign) {
+	  var ret = [];
+	  var i=0, len=str.length;
+
+	  if (leftAlign) {
+	    i = str.length % n;
+	    if (i) {
+	      ret.push(str.slice(0, i));
+	    }
+	  }
+
+	  for(; i<len; i+=n) {
+	    ret.push(str.slice(i, n + i));
+	  }
+
+	  return ret;
+	};
+
+	function logObject(msg) {
+	  var args = Array.prototype.slice.call(arguments, 1);
+
+	  args = args.map(function(arg) {
+	    return JSON.stringify(arg, null, 2);
+	  });
+
+	  args.unshift(msg);
+
+	  console.log.apply(console, args);
+	};
+
+	function assert(assertion, msg) {
+	  if (!assertion) {
+	    throw new Error("Assertion failed" + (msg ? ": "+msg : "."));
+	  }
+	};
+
+	/**
+	 * Return unique values in array.
+	 */
+	function arrayUnique(arr) {
+	  var u = {}, a = [];
+
+	  for (var i=0, l=arr.length; i<l; i++){
+	    var k = arr[i];
+	    if (u[k]) {
+	      continue;
+	    }
+	    a.push(k);
+	    u[k] = true;
+	  }
+
+	  return a;
+	};
+
+	/**
+	 * Convert a ripple epoch to a JavaScript timestamp.
+	 *
+	 * JavaScript timestamps are unix epoch in milliseconds.
+	 */
+	function toTimestamp(rpepoch) {
+	  return (rpepoch + 0x386D4380) * 1000;
+	};
+
+	exports.trace         = trace;
+	exports.arraySet      = arraySet;
+	exports.hexToString   = hexToString;
+	exports.hexToArray    = hexToArray;
+	exports.stringToArray = stringToArray;
+	exports.stringToHex   = stringToHex;
+	exports.chunkString   = chunkString;
+	exports.logObject     = logObject;
+	exports.assert        = assert;
+	exports.arrayUnique   = arrayUnique;
+	exports.toTimestamp   = toTimestamp;
+
+	// Going up three levels is needed to escape the src-cov folder used for the
+	// test coverage stuff.
+	exports.sjcl = require(32);
+	exports.jsbn = require(33);
+
+	// vim:sw=2:sts=2:ts=8:et
 
 
 /***/ },
@@ -6283,7 +6433,7 @@ var ripple =
 	var EventEmitter = require(25).EventEmitter;
 	var Transaction  = require(5).Transaction;
 	var RippleError  = require(10).RippleError;
-	var PendingQueue = require(31).TransactionQueue;
+	var PendingQueue = require(34).TransactionQueue;
 
 	/**
 	 * @constructor TransactionManager
@@ -6317,7 +6467,7 @@ var ripple =
 
 	    if (!transaction.validated) return;
 
-	    self._sequenceCache[sequence] = transaction;
+	    self._sequenceCache[sequence] = true;
 
 	    // ND: we need to check against all submissions IDs
 	    var pending = self._pending.getBySubmissions(hash);
@@ -6799,6 +6949,36 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	/**
+	 * Prefix for hashing functions.
+	 *
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
+	 */
+
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
+
+
+/***/ },
+
+/***/ 22:
+/***/ function(module, exports, require) {
+
+	/**
 	 * Type definitions for binary format.
 	 *
 	 * This file should not be included directly. Instead, find the format you're
@@ -6814,7 +6994,7 @@ var ripple =
 
 	var UInt128   = require(35).UInt128;
 	var UInt160   = require(15).UInt160;
-	var UInt256   = require(22).UInt256;
+	var UInt256   = require(23).UInt256;
 	var Base      = require(7).Base;
 
 	var amount    = require(3);
@@ -7635,7 +7815,7 @@ var ripple =
 
 /***/ },
 
-/***/ 22:
+/***/ 23:
 /***/ function(module, exports, require) {
 
 	var sjcl    = require(12).sjcl;
@@ -7673,7 +7853,7 @@ var ripple =
 
 /***/ },
 
-/***/ 23:
+/***/ 24:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {function SlowBuffer (size) {
@@ -8959,171 +9139,7 @@ var ripple =
 	SlowBuffer.prototype.writeDoubleLE = Buffer.prototype.writeDoubleLE;
 	SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
 	
-	/* WEBPACK VAR INJECTION */}(require, require(23).Buffer))
-
-/***/ },
-
-/***/ 24:
-/***/ function(module, exports, require) {
-
-	Function.prototype.method = function(name, func) {
-	  this.prototype[name] = func;
-	  return this;
-	};
-
-	function filterErr(code, done) {
-	  return function(e) {
-	    done(e.code !== code ? e : void(0));
-	  };
-	};
-
-	function throwErr(done) {
-	  return function(e) {
-	    if (e) {
-	      throw e;
-	    }
-	    done();
-	  };
-	};
-
-	function trace(comment, func) {
-	  return function() {
-	    console.log("%s: %s", trace, arguments.toString);
-	    func(arguments);
-	  };
-	};
-
-	function arraySet(count, value) {
-	  var a = new Array(count);
-
-	  for (var i=0; i<count; i++) {
-	    a[i] = value;
-	  }
-
-	  return a;
-	};
-
-	function hexToString(h) {
-	  var a = [];
-	  var i = 0;
-
-	  if (h.length % 2) {
-	    a.push(String.fromCharCode(parseInt(h.substring(0, 1), 16)));
-	    i = 1;
-	  }
-
-	  for (; i<h.length; i+=2) {
-	    a.push(String.fromCharCode(parseInt(h.substring(i, i+2), 16)));
-	  }
-
-	  return a.join('');
-	};
-
-	function stringToHex(s) {
-	  var result = '';
-	  for (var i=0; i<s.length; i++) {
-	    var b = s.charCodeAt(i);
-	    result += b < 16 ? '0' + b.toString(16) : b.toString(16);
-	  }
-	  return result;
-	};
-
-	function stringToArray(s) {
-	  var a = new Array(s.length);
-
-	  for (var i=0; i<a.length; i+=1) {
-	    a[i] = s.charCodeAt(i);
-	  }
-
-	  return a;
-	};
-
-	function hexToArray(h) {
-	  return stringToArray(hexToString(h));
-	};
-
-	function chunkString(str, n, leftAlign) {
-	  var ret = [];
-	  var i=0, len=str.length;
-
-	  if (leftAlign) {
-	    i = str.length % n;
-	    if (i) {
-	      ret.push(str.slice(0, i));
-	    }
-	  }
-
-	  for(; i<len; i+=n) {
-	    ret.push(str.slice(i, n + i));
-	  }
-
-	  return ret;
-	};
-
-	function logObject(msg) {
-	  var args = Array.prototype.slice.call(arguments, 1);
-
-	  args = args.map(function(arg) {
-	    return JSON.stringify(arg, null, 2);
-	  });
-
-	  args.unshift(msg);
-
-	  console.log.apply(console, args);
-	};
-
-	function assert(assertion, msg) {
-	  if (!assertion) {
-	    throw new Error("Assertion failed" + (msg ? ": "+msg : "."));
-	  }
-	};
-
-	/**
-	 * Return unique values in array.
-	 */
-	function arrayUnique(arr) {
-	  var u = {}, a = [];
-
-	  for (var i=0, l=arr.length; i<l; i++){
-	    var k = arr[i];
-	    if (u[k]) {
-	      continue;
-	    }
-	    a.push(k);
-	    u[k] = true;
-	  }
-
-	  return a;
-	};
-
-	/**
-	 * Convert a ripple epoch to a JavaScript timestamp.
-	 *
-	 * JavaScript timestamps are unix epoch in milliseconds.
-	 */
-	function toTimestamp(rpepoch) {
-	  return (rpepoch + 0x386D4380) * 1000;
-	};
-
-	exports.trace         = trace;
-	exports.arraySet      = arraySet;
-	exports.hexToString   = hexToString;
-	exports.hexToArray    = hexToArray;
-	exports.stringToArray = stringToArray;
-	exports.stringToHex   = stringToHex;
-	exports.chunkString   = chunkString;
-	exports.logObject     = logObject;
-	exports.assert        = assert;
-	exports.arrayUnique   = arrayUnique;
-	exports.toTimestamp   = toTimestamp;
-
-	// Going up three levels is needed to escape the src-cov folder used for the
-	// test coverage stuff.
-	exports.sjcl = require(33);
-	exports.jsbn = require(34);
-
-	// vim:sw=2:sts=2:ts=8:et
-
+	/* WEBPACK VAR INJECTION */}(require, require(24).Buffer))
 
 /***/ },
 
@@ -9132,7 +9148,7 @@ var ripple =
 
 	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
 	var isArray = require(37);
-	var indexOf = require(38);
+	var indexOf = require(42);
 
 
 
@@ -9328,10 +9344,10 @@ var ripple =
 	var events = require(25);
 
 	var isArray = require(37);
-	var Object_keys = require(39);
-	var Object_getOwnPropertyNames = require(41);
-	var Object_create = require(42);
-	var isRegExp = require(40);
+	var Object_keys = require(38);
+	var Object_getOwnPropertyNames = require(39);
+	var Object_create = require(40);
+	var isRegExp = require(41);
 
 	exports.isArray = isArray;
 	exports.isDate = isDate;
@@ -9643,8 +9659,8 @@ var ripple =
 	var util = require(26);
 	var pSlice = Array.prototype.slice;
 
-	var objectKeys = require(39);
-	var isRegExp = require(40);
+	var objectKeys = require(38);
+	var isRegExp = require(41);
 
 	// 1. The assert module provides functions that throw
 	// AssertionError's when particular conditions are not met. The
@@ -9776,7 +9792,7 @@ var ripple =
 	  if (actual === expected) {
 	    return true;
 
-	  } else if (require(23).Buffer.isBuffer(actual) && require(23).Buffer.isBuffer(expected)) {
+	  } else if (require(24).Buffer.isBuffer(actual) && require(24).Buffer.isBuffer(expected)) {
 	    if (actual.length != expected.length) return false;
 
 	    for (var i = 0; i < actual.length; i++) {
@@ -10341,59 +10357,10 @@ var ripple =
 /***/ 31:
 /***/ function(module, exports, require) {
 
-	function TransactionQueue() {
-	  this._queue  = [ ];
-	}
-
-	TransactionQueue.prototype.length = function() {
-	  return this._queue.length;
-	};
-
-	TransactionQueue.prototype.getBySubmissions = function(hash) {
-	  var result = false;
-
-	  top:
-	  for (var i=0, tx; tx=this._queue[i]; i++) {
-	    for (var j=0, id; id=tx.submittedTxnIDs[j]; j++) {
-	      if (hash === id) {
-	        result = tx;
-	        break top;
-	      };
-	    }
-	  }
-
-	  return result;
-	};
-
-	// ND: We are just removing the Transaction by identity
-	TransactionQueue.prototype.remove = function(removedTx) {
-	  top:
-	  for (var i = this._queue.length - 1; i >= 0; i--) {
-	    if (this._queue[i] === removedTx) {
-	      this._queue.splice(i, 1);
-	      break top;
-	    };
-	  };
-	};
-
-	[ 'forEach', 'push', 'shift', 'unshift' ].forEach(function(fn) {
-	  TransactionQueue.prototype[fn] = function() {
-	    Array.prototype[fn].apply(this._queue, arguments);
-	  };
-	});
-
-	exports.TransactionQueue = TransactionQueue;
-
-
-/***/ },
-
-/***/ 32:
-/***/ function(module, exports, require) {
-
 	var sjcl    = require(12).sjcl;
 
 	var UInt160 = require(15).UInt160;
-	var UInt256 = require(22).UInt256;
+	var UInt256 = require(23).UInt256;
 
 	function KeyPair() {
 	  this._curve  = sjcl.ecc.curves['c256'];
@@ -10487,7 +10454,7 @@ var ripple =
 
 /***/ },
 
-/***/ 33:
+/***/ 32:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {/** @fileOverview Javascript cryptography implementation.
@@ -14620,7 +14587,7 @@ var ripple =
 
 /***/ },
 
-/***/ 34:
+/***/ 33:
 /***/ function(module, exports, require) {
 
 	// Copyright (c) 2005  Tom Wu
@@ -15837,6 +15804,55 @@ var ripple =
 
 /***/ },
 
+/***/ 34:
+/***/ function(module, exports, require) {
+
+	function TransactionQueue() {
+	  this._queue  = [ ];
+	}
+
+	TransactionQueue.prototype.length = function() {
+	  return this._queue.length;
+	};
+
+	TransactionQueue.prototype.getBySubmissions = function(hash) {
+	  var result = false;
+
+	  top:
+	  for (var i=0, tx; tx=this._queue[i]; i++) {
+	    for (var j=0, id; id=tx.submittedTxnIDs[j]; j++) {
+	      if (hash === id) {
+	        result = tx;
+	        break top;
+	      };
+	    }
+	  }
+
+	  return result;
+	};
+
+	// ND: We are just removing the Transaction by identity
+	TransactionQueue.prototype.remove = function(removedTx) {
+	  top:
+	  for (var i = this._queue.length - 1; i >= 0; i--) {
+	    if (this._queue[i] === removedTx) {
+	      this._queue.splice(i, 1);
+	      break top;
+	    };
+	  };
+	};
+
+	[ 'forEach', 'push', 'shift', 'unshift' ].forEach(function(fn) {
+	  TransactionQueue.prototype[fn] = function() {
+	    Array.prototype[fn].apply(this._queue, arguments);
+	  };
+	});
+
+	exports.TransactionQueue = TransactionQueue;
+
+
+/***/ },
+
 /***/ 35:
 /***/ function(module, exports, require) {
 
@@ -15991,20 +16007,6 @@ var ripple =
 /***/ 38:
 /***/ function(module, exports, require) {
 
-	module.exports = function indexOf (xs, x) {
-	    if (xs.indexOf) return xs.indexOf(x);
-	    for (var i = 0; i < xs.length; i++) {
-	        if (x === xs[i]) return i;
-	    }
-	    return -1;
-	}
-
-
-/***/ },
-
-/***/ 39:
-/***/ function(module, exports, require) {
-
 	module.exports = Object.keys || function objectKeys(object) {
 		if (object !== Object(object)) throw new TypeError('Invalid object');
 		var result = [];
@@ -16019,17 +16021,7 @@ var ripple =
 
 /***/ },
 
-/***/ 40:
-/***/ function(module, exports, require) {
-
-	module.exports = function isRegExp(re) {
-	  return re instanceof RegExp ||
-	    (typeof re === 'object' && Object.prototype.toString.call(re) === '[object RegExp]');
-	}
-
-/***/ },
-
-/***/ 41:
+/***/ 39:
 /***/ function(module, exports, require) {
 
 	module.exports = Object.getOwnPropertyNames || function (obj) {
@@ -16042,7 +16034,7 @@ var ripple =
 
 /***/ },
 
-/***/ 42:
+/***/ 40:
 /***/ function(module, exports, require) {
 
 	module.exports = Object.create || function (prototype, properties) {
@@ -16067,6 +16059,30 @@ var ripple =
 	    }
 	    return object;
 	};
+
+/***/ },
+
+/***/ 41:
+/***/ function(module, exports, require) {
+
+	module.exports = function isRegExp(re) {
+	  return re instanceof RegExp ||
+	    (typeof re === 'object' && Object.prototype.toString.call(re) === '[object RegExp]');
+	}
+
+/***/ },
+
+/***/ 42:
+/***/ function(module, exports, require) {
+
+	module.exports = function indexOf (xs, x) {
+	    if (xs.indexOf) return xs.indexOf(x);
+	    for (var i = 0; i < xs.length; i++) {
+	        if (x === xs[i]) return i;
+	    }
+	    return -1;
+	}
+
 
 /***/ },
 
