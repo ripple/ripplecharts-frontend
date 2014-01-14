@@ -213,7 +213,11 @@ var MiniChart = function(base, trade, markets) {
       
       
     if (Math.abs(pct)<0.5) { //unchanged (less than .5%)
+<<<<<<< HEAD
       pathStyle = {fill:"rgba(160,160,160,.6)",stroke:"#888"}; 
+=======
+      pathStyle = {fill:"#aaa",stroke:"#888"}; 
+>>>>>>> 4ad11ae292c3140516f7701ba210d6608466f4de
       horizontalStyle = {stroke:"#777"};
       pointerStyle = {fill:"#aaa"};
       changeStyle  = {color:"#777"};
