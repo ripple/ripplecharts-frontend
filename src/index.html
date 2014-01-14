@@ -39,53 +39,72 @@
   <body ng-controller="AppCtrl" ng-class="theme">
     <div class="header">
       <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
-      <a href="#/" ui-route="/" class="logo"></a>
+      <a href="#/" ui-route="/" class="logo" snap-close></a>
       <div class="theme">
         <span ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</span>
         <span ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</span>
       </div>  
-    </div>     
-           
+    </div> 
+             
     <div snap-drawer>
       <ul class="nav">
-        <li ui-route="/markets" ng-class="{active:$uiRoute}" class="category">
-          <a href="#/markets" snap-close><i class="fa fa-angle-right"></i>Markets</a>
+        <li class="top">
+        </li>
+        <li ui-route="/markets"  class="category">
+          <a href="#/markets" snap-close><img src="assets/icons/999_markets.svg">Markets</a>
         </li> 
-        <li ui-route="/markets" ng-class="{active:$uiRoute}" class="page">
-          <a href="#/markets" snap-close>Live Chart</a>
+        <li class="page">
+          <ul>
+            <li ui-route="/markets" ng-class="{active:$uiRoute}">
+              <a href="#/markets" snap-close>Live Chart</a>
+            </li>
+            <li ui-route="/multimarkets" ng-class="{active:$uiRoute}">
+              <a href="#/multimarkets" snap-close>Multi Markets</a>
+            </li>
+          </ul>
         </li>
-        <li ui-route="/multimarkets" ng-class="{active:$uiRoute}" class="page">
-          <a href="#/multimarkets" snap-close>Multi Markets</a>
-        </li>
-        <li ui-route="/value" ng-class="{active:$uiRoute}" class="category">
-          <a href="#/value" snap-close><i class="fa fa-angle-right"></i>Value</a>
+        <li ui-route="/value" class="category value">
+          <a href="#/value" snap-close><img src="assets/icons/999_value.svg"></i>Value</a>
         </li> 
-        <li ui-route="/value" ng-class="{active:$uiRoute}" class="page">
-          <a href="#/value" snap-close>Capitalization</a>
-        </li>
-        <li ui-route="/accounts" ng-class="{active:$uiRoute}" class="category">
-          <a href="#/accounts" snap-close><i class="fa fa-angle-right"></i>Accounts</a>
+        <li class="page">
+          <ul>
+            <li ui-route="/value" ng-class="{active:$uiRoute}">
+              <a href="#/value" snap-close>Capitalization</a>
+            </li>
+          </ul>
+        </li>    
+        <li ui-route="/accounts" class="category accounts">
+          <a href="#/accounts" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
         </li> 
-        <li ui-route="/accounts" ng-class="{active:$uiRoute}" class="page">
-          <a href="#/accounts" snap-close>Accounts Explorer</a>
-        </li>
-        <li ui-route="/network" ng-class="{active:$uiRoute}" class="category">
-          <a href="#/network" snap-close><i class="fa fa-angle-right"></i>Network</a>
+        <li class="page">
+          <ul>
+            <li ui-route="/accounts" ng-class="{active:$uiRoute}">
+              <a href="#/accounts" snap-close>Accounts Explorer</a>
+            </li>
+          </ul>
         </li> 
-        <li ui-route="/network" ng-class="{active:$uiRoute}" class="page">
-          <a href="#/network" snap-close>Accounts</a>
-        </li>
-        <li ui-route="/network" ng-class="{active:$uiRoute}" class="page">
-          <a href="#/network" snap-close>Transactions</a>
-        </li>
+        <li ui-route="/network" class="category network">
+          <a href="#/network" snap-close><img src="assets/icons/999_stats.svg"></i>Network</a>
+        </li> 
+        <li class="page">
+          <ul>
+            <li ui-route="/network" ng-class="{active:$uiRoute}">
+              <a href="#/network" snap-close>Accounts</a>
+            </li>
+            <li ui-route="/network" ng-class="{active:$uiRoute}">
+              <a href="#/network" snap-close>Transactions</a>
+            </li>
+          </ul>
+        </li> 
       </ul>
     </div snap-drawer>
-
+    
     <div snap-content class="snap-content" snap-options="snapOptions">    
+      
       <div ui-view="main" style="overflow:hidden;"></div>
       <footer class="footer row">
         <div class="footer-inner"></div>
-        <small><ahref="">v<%= version %></a></small>
+        <small><a href="">v<%= version %></a></small>
       </div>
       </footer>
     </div>    

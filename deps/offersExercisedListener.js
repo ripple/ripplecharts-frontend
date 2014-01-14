@@ -2,7 +2,6 @@ var Remote,
   Amount,
   moment,
   gateways,
-  remote,
   require,
   module;
 
@@ -49,24 +48,6 @@ if (require) {
  *  each time it hears an offer exercised with an object of the form:
  *  {key: [[trade currency, trade curr issuer][base currency, base curr issuer], year, month, day, hour, minute second], value: [trade curr volume, base curr volume, exchange rate]}
  */
- 
-
-// Connect to ripple-lib
-if (remote) {
-    remote = remote;
-} else {
-  remote = new Remote({
-      // trace: true,
-      servers: [{
-          host: 's_west.ripple.com',
-          port: 443
-      },{
-          host: 's_east.ripple.com',
-          port: 443
-      }]
-  });
-  remote.connect();
-}
 
 
 /**

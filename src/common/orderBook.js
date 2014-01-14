@@ -156,9 +156,21 @@ var OrderBook = function (options) {
     bookTables.transition().style("opacity", 0.5);
     self.resetChart();
     
-    if (asks) asks.removeListener('model', handleAskModel);
-    if (bids) bids.removeListener('model', handleBidModel);   
-
+    if (asks) {
+      asks.removeListener('model', handleAskModel);
+      asks._remote.request_unsubscribe()
+        .books([asks.to_json()])
+        .request();
+    }
+    if (bids) {
+      bids.removeListener('model', handleBidModel); 
+      bids._remote.request_unsubscribe()
+        .books([bids.to_json()])
+        .request();
+      }  
+     
+    remote._books = {};
+    
     asks = remote.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
     bids = remote.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
     

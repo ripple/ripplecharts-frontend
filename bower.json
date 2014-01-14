@@ -16,5 +16,7 @@
     "font-awesome": "~4.0.3",
     "d3": "~3.3.13"
   },
-  "dependencies": {}
+  "dependencies": {
+    "modernizr": "~2.7.1"
+  }
 }

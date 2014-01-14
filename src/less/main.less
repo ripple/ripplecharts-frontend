@@ -71,9 +71,6 @@ h1, h2, h3, h4 {
   font-weight: 300;
 }
 
-/**
- * Navigation
- */
 .header {
   overflow:hidden;
   border-bottom:1px solid #eee;
@@ -81,37 +78,116 @@ h1, h2, h3, h4 {
   z-index:3;
   background:#fff;
 }
+
+/**
+ * Navigation
+ */
+#cover {
+  background:#fff;
+  position:fixed;
+  height:37px;
+  width:2px;
+  margin-left:-2px;  
+  z-index:5;
+  display:none;
+}
+
 .nav-toggle {
   font-size:25px;
   margin:12px 20px;  
   float:left;
   cursor:pointer;
+  color:#ccc;
 }
 
-.nav li {
+.nav {
+  border-bottom:2px solid #fdfdfd;
+}
 
+.nav .top {
+  background:#f6f6f6;
+  height:49px;
+  border-right:1px solid #fdfdfd;
+  border-bottom:1px solid #e8e8e8;
+}
+
+.nav .category {
+  background:#f6f6f6;
+  border-top:1px solid #fdfdfd;
+  border-right:1px solid #fdfdfd;
+  border-bottom:1px solid #e8e8e8;
+}
+
+.nav .category img {
+  height:18px;
+  width:18px; 
+  margin:1px 5px; 
+  float:left; 
+}
+
+.nav .page {
+  background:#eee;
+  border-bottom:1px solid #e0e0e0;
+  padding:0;
+}
+
+.nav .page ul {
+  list-style:none;
+  margin-left:40px;
+}
+.nav li a:hover {
+  background:none 
 }
 
 .nav li a {
-  font-size:16px;
-  margin:2px;
+  font-size:15px;
   border-radius:1px;  
-  padding:10px 20px;
+  padding:8px 12px;
   color:#999;
+  display:block;
+  text-decoration:none;
 }
 
-.nav i {
-  margin:0 10px 0 0;
+
+.nav .page li {
+  border-top:1px solid #f4f4f4;
+  border-bottom:1px solid #e0e0e0;
 }
 
-.nav .category a{
-  background:#f9f9f9;
+.nav .page li:first-child {
+  border-top:none;  
 }
 
-.nav .page a {
-  padding-left:50px;
-  background:#eee;
+.nav .page li:last-child {
+  border-bottom:none;
 }
+
+.nav .page li a {
+  padding-left:0;
+}
+
+.nav .page li.active {
+  background:#fff;
+  margin-left:-40px;
+  margin-bottom:-1px;
+  margin-top:-1px;
+  border-bottom:1px solid #f4f4f4;
+  border-top:1px solid #e8e8e8;
+}
+
+.nav .page li.active a {
+  border-bottom:1px solid #e8e8e8;
+}
+
+.nav .page li a:hover {
+  color:#486db4;  
+}
+
+.nav .page li.active a{
+  color:#3a62ae;
+  padding-left:40px;
+}
+
 
 /**
  * Header
@@ -163,16 +239,21 @@ h1, h2, h3, h4 {
  */
 .snap-drawers {
   position:fixed;
-  top:50px;
+  top:0;
   left:0;
   bottom:0;
   right:0;
   z-index:1;
 }
 
+.snap-drawer-left {
+  width:267px;
+}
+
 .snap-content {
-  border-left:1px solid #eee;
   background:#fff; 
+  border-left:1px solid #e8e8e8;
+  margin-left:-1px;
   width:100%;
   padding-top:50px;
   top:0;
@@ -180,6 +261,7 @@ h1, h2, h3, h4 {
   left:inherit;
   right:inherit;
   min-height:100%;
+  overflow:auto;
 }
 
 /**
@@ -217,6 +299,7 @@ footer {
 @import 'orderBook.less';
 @import 'tradeFeed.less';
 @import 'multimarkets.less';
+@import 'transactionFeed.less';
 
 @media (max-width: 480px) {
   .header, .markets .wrap {

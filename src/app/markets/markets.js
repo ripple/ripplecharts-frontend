@@ -103,7 +103,6 @@ angular.module( 'ripplecharts.markets', [
   loaded = true;
   d3.select("#interval .selected")[0][0].click();
   
-  var remote = new ripple.Remote(Options.ripple);
     
   book = new OrderBook ({
     chartID : "bookChart",
@@ -112,18 +111,14 @@ angular.module( 'ripplecharts.markets', [
   });
   
   book.resetChart();
+  book.getMarket($scope.base, $scope.trade); 
   
-  remote.connect();
-  remote.on('connect', function(){
-    book.getMarket($scope.base, $scope.trade);
-  }); 
-  
-  transFeed = new TransactionFeed({
+  tradeFeed = new TradeFeed({
     id     : "tradeFeed",
     url    : API   
   });
   
-  transFeed.loadPair ($scope.base, $scope.trade);
+  tradeFeed.loadPair ($scope.base, $scope.trade);
   
   function loadPair() {
     store.set('base',  $scope.base);
@@ -131,14 +126,14 @@ angular.module( 'ripplecharts.markets', [
     
     priceChart.load($scope.base, $scope.trade, d3.select("#interval .selected").datum());
     book.getMarket($scope.base, $scope.trade); 
-    transFeed.loadPair ($scope.base, $scope.trade);    
+    tradeFeed.loadPair ($scope.base, $scope.trade);    
   }
   
   $scope.$on("$destroy", function(){
     console.log("destroy");
     priceChart.suspend();
     book.suspend();
-    transFeed.suspend();
+    tradeFeed.suspend();
     //stop the listener when leaving 
   });
 });

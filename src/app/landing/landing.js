@@ -39,6 +39,9 @@ angular.module( 'ripplecharts.landing', [
  */
 .controller( 'LandingCtrl', function LandingCtrl( $scope ) {
   
+  var feed = new TransactionFeed({id : 'liveFeed'});
+  remote.on('transaction_all', feed.handleTransaction);
+  
   var markets = new MultiMarket ({
     url   : API+"/offersExercised",  
     id    : "topMarkets",

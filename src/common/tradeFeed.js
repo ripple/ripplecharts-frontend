@@ -1,4 +1,4 @@
-var TransactionFeed = function (options) {
+var TradeFeed = function (options) {
   var self       = this,
     apiHandler   = new ApiHandler(options.url),
     div          = d3.select('#'+options.id).attr("class","transactions"),

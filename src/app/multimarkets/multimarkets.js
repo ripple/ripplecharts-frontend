@@ -23,6 +23,7 @@ angular.module( 'ripplecharts.multimarkets', [
     id    : "multimarkets"
   });
   
+  
   markets.list([
     {
       base  : {currency:"XRP"},

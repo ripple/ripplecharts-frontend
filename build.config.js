@@ -78,6 +78,7 @@ module.exports = {
       'vendor/underscore/underscore.js',
       'vendor/moment/moment.js',
       'vendor/store/dist/store2.js',
+      'vendor/modernizr/modernizr.js',
       'vendor/d3/d3.js',
       'deps/ripple-0.7.30.js',
       'deps/offersExercisedListener.js',
