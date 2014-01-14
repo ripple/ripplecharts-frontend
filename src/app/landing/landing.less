@@ -6,7 +6,8 @@
   font-size:14px;
   font-weight:bold;
   text-align:left;
-  margin:5px;  
+  margin:5px; 
+  margin-top:15px; 
 }
 
 .landing .stats ul {
@@ -27,7 +28,7 @@
   width:40%;
   text-align:left;
   float:left;
-  margin:5px 20px;
+  margin:5px 10px;
   color:#888;
 }
 
@@ -52,7 +53,7 @@
  * Dark theme
  */
 
-.landing h5 {
+.dark .landing h5 {
   color:#999;
 }
 
@@ -90,5 +91,25 @@
   #topMarkets .chart {
     float:none ;
     width:auto ;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing span6 {
+    text-align:center;
+  }
+  
+  .landing .stats ul, .landing h5, .landing #liveFeed {
+    zoom: .75;
+    width:87%;
+    display:inline-block;
+  }
+  
+  .landing .stats ul li {
+    margin: 3px 0;  
+  }
+  
+  .landing #liveFeed {
+    height:155px;
   }
 }

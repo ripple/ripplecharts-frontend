@@ -38,13 +38,15 @@
   </head>
   <body ng-controller="AppCtrl" ng-class="theme">
     <div class="header">
-      <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
-      <a href="#/" ui-route="/" class="logo" snap-close></a>
-      <div class="theme">
-        <span ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</span>
-        <span ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</span>
-      </div>  
-    </div> 
+      <div class="wrapper">
+        <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
+        <a href="#/" ui-route="/" class="logo" snap-close></a>
+        <div class="theme">
+          <span ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</span>
+          <span ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</span>
+        </div>  
+      </div>
+    </div>   
              
     <div snap-drawer>
       <ul class="nav">

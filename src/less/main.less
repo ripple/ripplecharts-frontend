@@ -72,11 +72,17 @@ h1, h2, h3, h4 {
 }
 
 .header {
-  overflow:hidden;
-  border-bottom:1px solid #eee;
   position:relative;
   z-index:3;
+  border-bottom:1px solid #e8e8e8;
+  background:#f9f9f9;
+  padding-bottom:1px;
+}
+
+.header .wrapper {
   background:#fff;
+  overflow:hidden;
+  border-bottom:5px solid #f9f9f9;
 }
 
 /**
@@ -106,7 +112,7 @@ h1, h2, h3, h4 {
 
 .nav .top {
   background:#f6f6f6;
-  height:49px;
+  height:55px;
   border-right:1px solid #fdfdfd;
   border-bottom:1px solid #e8e8e8;
 }
@@ -255,7 +261,7 @@ h1, h2, h3, h4 {
   border-left:1px solid #e8e8e8;
   margin-left:-1px;
   width:100%;
-  padding-top:50px;
+  margin-top:55px;
   top:0;
   bottom:inherit;
   left:inherit;
@@ -306,12 +312,15 @@ footer {
     zoom: 0.75;  //zoom 75% for phones
   }
   
-  .snap-drawers {
-    top:37.5px;  //header height * 0.75
+  .snap-content {
+    margin-top:41.5px; //header height * 0.75
+  }
+  .nav .top {
+    height:40.5px;  //header height * 0.75 - 1px
   }
   
-  .snap-content {
-    padding-top:37.5px;
+  .dark .nav .top {
+    height:39.5px;  //header height *.75 - 2px;
   }
 }
 

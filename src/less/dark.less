@@ -27,7 +27,12 @@
 
 .dark .header {
   border-color:#444;
+  background:#151515;
+}
+
+.dark .header .wrapper {
   background:#000;
+  border-color:#222;
 }
 
 .dark .logo img {opacity:.4; border-radius:2px}
@@ -50,7 +55,7 @@
 
 .dark .nav .top {
   background-color:#333;
-  height:48px;
+  height:54px;
 }
 
 .dark .nav .category, .dark .nav .top {
@@ -95,4 +100,8 @@
   border-color:#333;
 }
 
-
+@media (max-width: 480px) {
+  .dark .nav .top {
+    height:35.5px;  //header height *.75 - 2px;
+  }
+}
