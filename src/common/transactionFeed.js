@@ -39,21 +39,23 @@ var TransactionFeed = function (options) {
     rowEnter.append("span").attr("class","details");
     rowEnter.append("div").attr("class", "accounts");
     
-    rows.select('.time').html(function(d){return absoluteTime(d.time)});
+    rows.select('.time').html(function(d){return self.absoluteTime(d.time)});
     rows.select('.icon')
       .attr('class', function(d){return d.type + " icon"})
       .attr('title', function(d){return txAltText[d.type]});
     rows.select('.details').html(function(d){
-      var html = prepareAmount(d.amount1, d.currency1);
-      if (d.amount2) html += "<i>for</i>" + prepareAmount(d.amount2, d.currency2);  
+      var html = self.prepareAmount(d.amount1, d.currency1);
+      if (d.amount2) html += "<i>for</i>" + self.prepareAmount(d.amount2, d.currency2);  
       return html;
     });
     
-    rows.select(".accounts").html(function(d){return accountSpan(d.from)+(d.to ? "<i>to</i>"+accountSpan(d.to) : "")});
+    rows.select(".accounts").html(function(d){
+      return self.accountSpan(d.from)+(d.to ? "<i>to</i>"+self.accountSpan(d.to) : "");
+    });
 
   }
   
-  function accountSpan (address) {
+  this.accountSpan = function (address) {
     return "<span title='"+address+"'>"+address+"</span>";
   }
   
@@ -117,83 +119,19 @@ var TransactionFeed = function (options) {
     transactions = transactions.slice(0,max);
   }
   
-  function prepareAmount (amount, currency) {
+  this.prepareAmount = function (amount, currency) {
     var html = "";
-    if (amount && currency) html = "<b>"+commas(amount)+"</b><small>"+currency+"</small>";
+    if (amount && currency) html = "<b>"+self.commas(amount)+"</b><small>"+currency+"</small>";
     return html;
   }
   
-  //convert to html
-  function renderTransaction(tx) {
-
-    var transactionType;
-    var from = tx.Account;
-    var to = null;
-    var amount = null;
-    var currency = null;
-    var secondAmount = null;
-    var secondCurrency = null;
-    if (tx.TransactionType == "Payment") {
-      amount = tx.Amount;
-      transactionType = "send";
-      to = tx.Destination;
-    } else if (tx.TransactionType == "TrustSet") {
-      amount = tx.LimitAmount;
-      transactionType = "trustout";
-      to = tx.LimitAmount.issuer;
-    } else if (tx.TransactionType == "OfferCreate") {
-      transactionType = "offerout";
-      amount = tx.TakerGets;
-      secondAmount = tx.TakerPays;
-    } else if (tx.TransactionType == "OfferCancel") {
-      transactionType = "canceloffer";
-    } else {return;}
-    if (amount) {
-      if (amount.currency) {
-        currency = amount.currency;
-        amount = amount.value;
-      } else {
-        currency = "XRP";
-        amount = amount/1000000;
-      }
-    }
-    if (secondAmount) {
-      if (secondAmount.currency) {
-        secondCurrency = secondAmount.currency;
-        secondAmount = secondAmount.value;
-      } else {
-        secondCurrency = "XRP";
-        secondAmount = secondAmount/1000000;
-      }
-    }
-    transactionMap[tx.hash] = tx;
-    console.log('tTX:', tx);
-    return (
-      '<td style="width:80px;">'+absoluteTime(tx.date)+'</td>'+
-      '<td style="width:1px;">'+clickableAccountSpan(from)+'</td>'+
-      '<td style="width:40px;"><div '+(transactionType=='send'?'oncontextmenu="animateInPlaceWithHash(\''+tx.hash+'\');return false;" onclick="showTransactionWithHash(\''+tx.hash+'\')"':'')+' class="'+transactionType+' icon" title="'+txAltText[transactionType]+'">&nbsp;</div></td>'+
-      ( to||secondAmount ?
-        '<td style="width:1px;"><span class="bold amount small">'+commas(amount)+'</span>&nbsp;<span class="light small darkgray">'+currency+'</span></td>'+
-        '<td style="text-align:center; width:20px;"><i class="light small darkgray">'+
-        ( to ?
-          'to</i></td>'+
-          '<td style="width:1px;">'+clickableAccountSpan(to)+'</td>'
-          :
-          'for</i></td>'+
-          '<td style="width:1px;"><span class="bold amount small">'+commas(secondAmount)+'</span>&nbsp;<span class="light small darkgray">'+secondCurrency+'</span></td>'
-        )
-        :
-        '<td colspan=3></td>'
-      ));
-  }
-  
-  function absoluteDateOnly(secondsSince2000) {
+  this.absoluteDateOnly = function(secondsSince2000) {
     var d = new Date(0);
     d.setUTCSeconds(secondsSince2000+946684800);
     return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear()
   }
 
-  function absoluteTimeOnly(secondsSince2000) {
+  this.absoluteTimeOnly = function(secondsSince2000) {
     var d = new Date(0);
     d.setUTCSeconds(secondsSince2000+946684800);
     var hours = d.getHours();
@@ -205,28 +143,24 @@ var TransactionFeed = function (options) {
     return strTime = hours + ':' + minutes + ':' + (d.getSeconds()<10 ? '0'+d.getSeconds() : d.getSeconds()) + ' ' + ampm;
   }
   
-  function absoluteDate(secondsSince2000) {
+  this.absoluteDate = function(secondsSince2000) {
     var d = new Date(0);
     d.setUTCSeconds(secondsSince2000+946684800);
-    return '<span class="date" title="'+absoluteTimeOnly(secondsSince2000)+'">'+absoluteDateOnly(secondsSince2000)+'</span>';
+    return '<span class="date" title="'+
+      self.absoluteTimeOnly(secondsSince2000)+'">'+
+      self.absoluteDateOnly(secondsSince2000)+'</span>';
   }
-  function absoluteTime(secondsSince2000) {
+  
+  this.absoluteTime = function(secondsSince2000) {
     var d = new Date(0);
     d.setUTCSeconds(secondsSince2000+946684800);
-    return '<span class="date" title="'+absoluteDateOnly(secondsSince2000)+'">'+absoluteTimeOnly(secondsSince2000)+'</span>';
-  }
-  
-  function clickableAccountSpan(address) {
-    var o = "<span class='light address' style='cursor:pointer;' "+
-      "onmouseover='lightenAddress(\""+address+"\");' "+
-      "onmouseout='darkenAddress(\""+address+"\");' "+
-      "onclick='expandNode(\""+address+"\");'>"+
-      address+"</span>";
-    return o;
+    return '<span class="date" title="'+
+      self.absoluteDateOnly(secondsSince2000)+'">'+
+      self.absoluteTimeOnly(secondsSince2000)+'</span>';
   }
   
   
-  function commas(number) {
+  this.commas = function (number) {
     var parts = number.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return parts.join(".");

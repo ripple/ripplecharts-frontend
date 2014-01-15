@@ -38,7 +38,6 @@ angular.module( 'ripplecharts.landing', [
  * And of course we define a controller for our route.
  */
 .controller( 'LandingCtrl', function LandingCtrl( $scope ) {
-  
   var feed = new TransactionFeed({id : 'liveFeed'});
   remote.on('transaction_all', feed.handleTransaction);
   
@@ -63,6 +62,33 @@ angular.module( 'ripplecharts.landing', [
   $scope.$on("$destroy", function(){
     markets.list([]);
   });
-    
+
+
+  //get ledger number and total coins  
+  remote.on('ledger_closed', function(x){
+
+    $scope.ledgerIndex = feed.commas(parseInt(x.ledger_index,10));
+    remote.request_ledger('closed', handleLedger);
+    $scope.$apply();
+     
+  });
+  
+  function handleLedger(err, obj) {
+    if (obj) {
+      $scope.ledgerIndex  = feed.commas(parseInt(obj.ledger.ledger_index,10));
+      $scope.networkValue = feed.commas(parseInt(obj.ledger.total_coins,10)/1000000); 
+      $scope.$apply();
+    }
+  }  
+  
+  remote.request_ledger('closed', handleLedger); //get current ledger;  
+  
+  //get num accounts
+  api = new ApiHandler(API);
+  api.getTotalAccounts(null, function(total){
+    $scope.totalAccounts = total;
+    $scope.$apply();
+  });
+  
 });
 

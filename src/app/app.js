@@ -7,7 +7,7 @@ angular.element(document).ready(function() {
     'ripplecharts.landing',
     'ripplecharts.markets',
     'ripplecharts.multimarkets',
-    'ripplecharts.network',
+    'ripplecharts.accounts',
     'ui.state',
     'ui.route',
     'snap'
@@ -37,33 +37,17 @@ angular.element(document).ready(function() {
       if ( angular.isDefined( toState.data.pageTitle ) ) {
         $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
       }
-      
-
-      
     });
-    
- /*   
-    $scope.$on('$viewContentLoaded',  function(route, b){
-      setTimeout(function(){
-        var active = d3.select(".nav li.active").node();
-        var top    = active ? active.getBoundingClientRect().top : null;
-        console.log(top);
-        if (top) d3.select("#cover").style("top",top+"px").style("display","block");
-        else d3.select("#cover").style("display","none");
-      },100);    
-    });
- */   
   });
   
   //load gateways file before starting the app
   d3.json("assets/gateways.json", function(error, data) {
-    
+    gateways = data;
+        
     //connect to the ripple network;
     remote = new ripple.Remote(Options.ripple);
     remote.connect();
-    console.log(remote);
-    
-    gateways = data;
+
     angular.bootstrap(document, ['ripplecharts']);
   });
 });

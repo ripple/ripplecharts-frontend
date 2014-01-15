@@ -1,0 +1,128 @@
+
+.lineChart .loader {
+  width:40px;
+  position:absolute;
+  top:50%;
+  left:50%; 
+  margin-top:-50px;
+  margin-left:-20px;
+}
+
+.lineChart .background {
+    fill: none;
+    stroke : #bbb;
+    pointer-events: all;
+    stroke-width:1;
+    shape-rendering: crispEdges;
+}
+
+.lineChart .axis {
+  shape-rendering: crispEdges;
+  fill:#bbb;
+}
+
+.lineChart .axis path, .lineChart .axis line {
+  stroke:#999;
+  stroke-width:1;
+}
+
+.lineChart .axis text {
+  font-size:10px;
+}
+
+.lineChart .axis .title {
+  fill : #ccc;
+  stroke :none;  
+}
+
+.lineChart .axis.y text {
+  font-size:12px;
+}
+
+.lineChart {
+  position: relative;
+  width:100%;
+}
+
+.lineChart path {
+  fill: none;
+  stroke: @rippleBlue;
+  stroke-width:2;
+}
+
+.lineChart path.line2 {
+  stroke:#bcd;
+  stroke-width:1.5;
+}
+
+.lineChart .status {
+  text-align:center;
+  color:#aaa;
+  position:absolute;
+  width:100%;
+  top:30%;
+}
+
+.lineChart .hover {
+  stroke: #666;
+  stroke-width: .5;
+}
+
+.lineChart .focus circle {
+  fill: rgba(255,255,255,.5);
+  stroke: #999;
+}
+
+.lineChart div.details {   
+  position: absolute;           
+  text-align: center;           
+  width: 180px;                  
+  height: 65px;                 
+  padding: 10px;             
+  font-size:14px;   
+  background: rgba(255,255,255,.9);   
+  border: 1px solid #ccc;               
+  pointer-events: none; 
+  color:#333; 
+  z-index:1000; 
+  border-radius:2px;      
+}
+
+.lineChart div.details span {
+  font-size:10px;
+  color:#999;
+  margin-right:.5em;
+}
+
+/*
+ * Dark theme 
+ */
+.dark .lineChart .status {
+  color:#333;
+}
+
+.dark .lineChart .background {
+  stroke:#333;
+}
+
+.dark .lineChart .axis text {
+  fill: #666;
+  stroke: #666;
+}
+
+.dark .lineChart .axis path, .dark .lineChart .axis line {
+  stroke:#444;
+}
+
+.dark .lineChart div.details { 
+  background: rgba(40,40,40,.9);
+  border-color: #444;
+  color: #eee;
+}
+
+.dark .lineChart div.details span {
+  font-weight:bold;
+}
+.dark .lineChart path.line2 {
+  stroke:#345;
+}

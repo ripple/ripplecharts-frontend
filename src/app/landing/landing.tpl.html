@@ -6,7 +6,10 @@
         <ul>
           <li>
             <label>Total Network Value:</label>
-            <div class="stat"></div>
+            <div class="stat">
+              <span ng-bind="networkValue">--</span>
+              <small>XRP</small>
+            </div>
           </li>
           <li>
             <label>Transactions (24 hours):</label>
@@ -18,11 +21,11 @@
           </li>
           <li>
             <label># of Ripple accounts:</label>
-            <div class="stat"></div>
+            <div class="stat" ng-bind="totalAccounts"></div>
           </li>
           <li>
             <label>Ledger #:</label>
-            <div class="stat"></div>
+            <div class="stat" ng-bind="ledgerIndex">--</div>
           </li>
           <li>
             <label>Network Latency:</label>
@@ -40,5 +43,3 @@
     <div id="topMarkets"></div> 
   </div>
 </div>
-
-

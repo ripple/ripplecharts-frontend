@@ -77,7 +77,9 @@ PriceChart = function (options) {
     status      = div.append("h4").attr("class", "status");
   
     details = div.append("div")   
-      .attr("class", "chartDetails")               
+      .attr("class", "chartDetails")   
+      .style("left", options.margin.left+"px")
+      .style("right", options.margin.right+"px")            
       .style("opacity", 0);      
   
     loader = div.append("img")
@@ -99,7 +101,12 @@ PriceChart = function (options) {
   }
   
   drawChart();
-  addResizeListener(window, resizeChart);
+  if (options.resize && typeof addResizeListener === 'function') {
+    addResizeListener(window, resizeChart);
+  } else {
+    var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
+    details.style("width", (options.width-padding)+"px").style("right","auto");
+  }
   
 /* 
   //resize on window resize
@@ -219,7 +226,8 @@ PriceChart = function (options) {
   this.suspend = function ()
   {
     if (liveFeed) liveFeed.stopListener();
-    removeResizeListener(window, resizeChart);
+    if (options.resize && typeof removeResizeListener === 'function')
+      removeResizeListener(window, resizeChart);   
   }
   
   function liveUpdate (data) {

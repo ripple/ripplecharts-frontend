@@ -55,7 +55,7 @@ angular.module( 'ripplecharts.markets', [
     loadPair();
   });
   
-  var intervalA = d3.select("#interval").selectAll("a")
+  var intervalA = d3.select("#interval").attr("class","selectList").selectAll("a")
     .data([
       {name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},
       {name: "1m",  interval:"minute", multiple:1,  offset: function(d) { return d3.time.hour.offset(d, -2); }},
@@ -79,7 +79,7 @@ angular.module( 'ripplecharts.markets', [
       priceChart.load($scope.base, $scope.trade, d);
     });
     
-  var chartType = d3.select("#chartType").selectAll("a")
+  var chartType = d3.select("#chartType").attr("class","selectList").selectAll("a")
     .data(["line", "candlestick"])
     .enter().append("a")
     .attr("href", "#")
@@ -97,7 +97,8 @@ angular.module( 'ripplecharts.markets', [
   var priceChart = new PriceChart ({
     id     : "#priceChart",
     url    : API,  
-    type   : $scope.chartType
+    type   : $scope.chartType,
+    resize : true
   });   
 
   loaded = true;
@@ -107,7 +108,8 @@ angular.module( 'ripplecharts.markets', [
   book = new OrderBook ({
     chartID : "bookChart",
     tableID : "bookTables",
-    remote  : remote
+    remote  : remote,
+    resize  : true
   });
   
   book.resetChart();

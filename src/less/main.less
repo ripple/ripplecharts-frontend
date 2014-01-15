@@ -221,25 +221,6 @@ h1, h2, h3, h4 {
   font-size:12px;
 }
 
-.theme span {
-  margin:3px;
-  cursor:pointer;
-  border-bottom:3px solid transparent;
-}
-
-.theme span:hover {
-  color: #999;
-  border-bottom:3px solid #999;
-}
-
-.theme span.selected {
-  color:@rippleBlue;
-  font-weight:bold;
-  border-bottom:3px solid @rippleBlue;
-  font-size:12px;
-  line-height:13px;
-}
-
 /* 
  * Content 
  */
@@ -268,6 +249,27 @@ h1, h2, h3, h4 {
   right:inherit;
   min-height:100%;
   overflow:auto;
+}
+
+.selectList a {
+  font-size:12px;
+  line-height:13px;
+  display: inline-block;
+  text-decoration: none;
+  color:#666;
+  margin:1px 4px;
+  border-bottom:3px solid transparent;
+}
+
+.selectList a:hover {
+  color: #999;
+  border-bottom:3px solid #999;
+}
+
+.selectList a.selected {
+  color: @rippleBlue;
+  font-weight:bold;
+  border-bottom:3px solid @rippleBlue;
 }
 
 /**
@@ -299,13 +301,14 @@ footer {
 @import '../app/landing/landing.less';
 @import '../app/markets/markets.less';
 @import '../app/multimarkets/multimarkets.less';
-
+@import '../app/accounts/accounts.less';
 
 @import 'priceChart.less';
 @import 'orderBook.less';
 @import 'tradeFeed.less';
 @import 'multimarkets.less';
 @import 'transactionFeed.less';
+@import 'lineChart.less';
 
 @media (max-width: 480px) {
   .header, .markets .wrap {

@@ -20,6 +20,7 @@ var OrderBook = function (options) {
     
  
   this.suspend = function () {
+    if (options.resize && typeof removeResizeListener === 'function')
     removeResizeListener(window, resizeChart);   
   }
   
@@ -62,7 +63,9 @@ var OrderBook = function (options) {
     status     = chart.append("h4").attr("class", "status");
   
     details   = chart.append("div")   
-      .attr("class", "chartDetails")               
+      .attr("class", "chartDetails")  
+      .style("left", options.margin.left+"px")   
+      .style("right", options.margin.right+"px")           
       .style("opacity", 0);  
   
     gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);  
@@ -276,7 +279,12 @@ var OrderBook = function (options) {
   }
   
   drawChart();
-  addResizeListener(window, resizeChart);
+  if (options.resize && typeof addResizeListener === 'function') {
+    addResizeListener(window, resizeChart);
+  } else {
+    var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
+    details.style("width", (options.width-padding)+"px").style("right","auto");
+  }
   
   var bookTables = d3.select("#"+options.tableID).attr("class","bookTables");
   var bidsTable = bookTables.append("table").attr("class","bidsTable"),

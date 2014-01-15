@@ -25,11 +25,18 @@
 }
 
 .landing .stats label {
-  width:40%;
+  width:50%;
   text-align:left;
   float:left;
   margin:5px 10px;
   color:#888;
+}
+
+.landing .stat {
+  float: left;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 5px;
 }
 
 .landing .stats .stat {
@@ -53,9 +60,11 @@
  * Dark theme
  */
 
-.dark .landing h5 {
-  color:#999;
+.dark .landing h5, .dark .landing .stat {
+  color:#ccc;
 }
+
+
 
 .landing .transactionFeed {
   height:265px;
@@ -92,15 +101,12 @@
     float:none ;
     width:auto ;
   }
-}
 
-@media (max-width: 480px) {
   .landing span6 {
     text-align:center;
   }
   
   .landing .stats ul, .landing h5, .landing #liveFeed {
-    zoom: .75;
     width:87%;
     display:inline-block;
   }
@@ -111,5 +117,11 @@
   
   .landing #liveFeed {
     height:155px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing .stats ul, .landing h5, .landing #liveFeed {
+    zoom: .75;
   }
 }

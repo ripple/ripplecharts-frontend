@@ -68,6 +68,42 @@ ApiHandler = function (url) {
     return request;    
   } 
   
+  this.getTotalAccounts = function(time, callback){
+    var request = apiRequest("accountsCreated");
+    time = time || new Date();
+    
+    request.post(parseParams({
+      startTime     : time,  
+      endTime       : d3.time.year.offset(time, -10),
+      timeIncrement : "all"
+      
+    })).on('load', function(xhr){   
+      data  = JSON.parse(xhr.response);
+      num   = data[1] && data[1][1] ? data[1][1] : 0;
+      callback (num);
+    }).on('error', function(xhr){
+      console.log(xhr.response);
+      callback(null);
+    }); 
+    
+    return request;
+  }
+  
+  this.accountsCreated = function (params, callback, err) {
+    var request = apiRequest("accountsCreated");
+    console.log(params);
+    request.post(parseParams(params))
+    .on('load', function(xhr){   
+      callback(JSON.parse(xhr.response));
+      
+    }).on('error', function(xhr){
+      console.log(xhr.response);
+      error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    });
+    
+    return request;
+  }
+  
   function parseParams(o) {
     var s = [];
     for (var key in o) {

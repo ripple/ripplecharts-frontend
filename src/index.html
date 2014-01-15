@@ -41,9 +41,9 @@
       <div class="wrapper">
         <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
-        <div class="theme">
-          <span ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</span>
-          <span ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</span>
+        <div class="theme selectList">
+          <a ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</a>
+          <a ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</a>
         </div>  
       </div>
     </div>   
@@ -75,26 +75,26 @@
             </li>
           </ul>
         </li>    
-        <li ui-route="/accounts" class="category accounts">
-          <a href="#/accounts" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
+        <li ui-route="/account" class="category account">
+          <a href="#/account" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
+        </li> 
+        <li class="page">
+          <ul>
+            <li ui-route="/account" ng-class="{active:$uiRoute}">
+              <a href="#/account" snap-close>Account Explorer</a>
+            </li>
+          </ul>
+        </li> 
+        <li ui-route="/accounts" class="category network">
+          <a href="#/accounts" snap-close><img src="assets/icons/999_stats.svg"></i>Network</a>
         </li> 
         <li class="page">
           <ul>
             <li ui-route="/accounts" ng-class="{active:$uiRoute}">
-              <a href="#/accounts" snap-close>Accounts Explorer</a>
+              <a href="#/accounts" snap-close>Accounts</a>
             </li>
-          </ul>
-        </li> 
-        <li ui-route="/network" class="category network">
-          <a href="#/network" snap-close><img src="assets/icons/999_stats.svg"></i>Network</a>
-        </li> 
-        <li class="page">
-          <ul>
-            <li ui-route="/network" ng-class="{active:$uiRoute}">
-              <a href="#/network" snap-close>Accounts</a>
-            </li>
-            <li ui-route="/network" ng-class="{active:$uiRoute}">
-              <a href="#/network" snap-close>Transactions</a>
+            <li ui-route="/transactions" ng-class="{active:$uiRoute}">
+              <a href="#/transactions" snap-close>Transactions</a>
             </li>
           </ul>
         </li> 
