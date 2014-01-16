@@ -149,7 +149,6 @@ PriceChart = function (options) {
     self.base     = base;
     self.trade    = trade;
     self.interval = d.interval;
-    self.start    = moment(d.offset(new Date()));
     self.end      = moment();
     self.multiple = d.multiple;
     self.lineData = [];
@@ -165,6 +164,13 @@ PriceChart = function (options) {
     }
     
     self.seconds *= self.multiple;  
+    self.last     = getAlignedCandle();
+    self.end      = self.last.add('seconds', self.seconds);
+    self.start    = moment(d.offset(self.end));
+    
+    console.log(self.start);
+    console.log(self.last);
+    console.log(self.end);
       
     if (liveFeed) liveFeed.stopListener();
     setLiveFeed();
@@ -449,6 +455,65 @@ PriceChart = function (options) {
     }
   }
 
+  function getAlignedCandle() {
+    var now = moment().utc(), aligned;
+
+
+    var format = "YYYY/MM/DD, hh:mm:ss a z";
+    //now.subtract("days", 24);   
+    console.log(now.dayOfYear()%self.multiple);
+    console.log(now.format(format));
+    console.log(self.interval);
+    console.log(self.multiple);
+
+    
+    
+    if (self.interval=='second') {
+      aligned = now.subtract("seconds", now.seconds()%self.multiple);
+      
+    } else if (self.interval=='minute') {
+      aligned = now.subtract({
+        seconds : now.seconds(), 
+        minutes : now.minutes()%self.multiple
+      });
+            
+    } else if (self.interval=='hour') {
+      aligned = now.subtract({
+        seconds : now.seconds(), 
+        minutes : now.minutes(),
+        hours   : now.hours()%self.multiple
+      });   
+             
+    } else if (self.interval=='day') {
+      aligned = now.subtract({
+        seconds : now.seconds(), 
+        minutes : now.minutes(),
+        hours   : now.hours(),
+        days    : now.dayOfYear()%self.multiple
+      }); 
+
+    } else if (self.interval=='week') {
+      aligned = now.subtract({
+        seconds : now.seconds(), 
+        minutes : now.minutes(),
+        hours   : now.hours(),
+        days    : now.day(),
+        weeks   : now.isoWeek()%self.multiple
+      }); 
+      
+    } else if (self.interval=='month') {
+      aligned = now.subtract({
+        seconds : now.seconds(), 
+        minutes : now.minutes(),
+        hours   : now.hours(),
+        days    : now.date()-1,
+        months  : now.months()%self.multiple
+      }); 
+    } 
+      
+    return aligned;  
+  }
+  
   function parseDate (date, increment) {
     var monthNames = [ "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December" ];
