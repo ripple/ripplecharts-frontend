@@ -80,6 +80,11 @@ module.exports = {
       'vendor/store/dist/store2.js',
       'vendor/modernizr/modernizr.js',
       'vendor/d3/d3.js',
+      'vendor/jquery/jquery.js',
+      'vendor/jscrollpane/script/jquery.mousewheel.js',
+      'vendor/jscrollpane/script/jquery.jscrollpane.js',
+      'deps/jquery.selectbox.min.js',
+      'deps/jquery.inview.js',
       'deps/ripple-0.7.30.js',
       'deps/offersExercisedListener.js',
       'deps/onResize.js'
@@ -87,6 +92,7 @@ module.exports = {
     css: [
       'vendor/angular-snap/angular-snap.css',
       'vendor/snapjs/snap.css',
+      'vendor/jscrollpane/style/jquery.jscrollpane.css',
       //'vendor/font-awesome/css/font-awesome.css',  //Using CDN for now
     ],
     assets: [

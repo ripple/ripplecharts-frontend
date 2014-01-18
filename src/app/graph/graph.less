@@ -1,0 +1,298 @@
+.graph {
+  position:relative; 
+  margin-left: auto; 
+  margin-right: auto;
+  position:relative;  
+  pointer-events:none;
+}
+
+.fullwidth { width: 100%; }
+
+/*
+ * jscrollpane
+ */
+.graph .jspVerticalBar {
+  width:8px;
+  background:none;  
+}
+
+.graph .jspTrack {
+  background:none;  
+}
+
+.graph .jspDrag {
+  background:rgba(100,100,100,.5);
+}
+
+/* Colors and fonts */
+.graph .light {
+  font-family: "OpenSans-Light",
+    "Open Sans Light",
+    "HelveticaNeue-Light",
+    "Helvetica Neue Light",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;}
+.graph .regular {
+  font-family: "OpenSans",
+    "Open Sans",
+    "HelveticaNeue",
+    "Helvetica Neue",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;}
+.graph .bold {
+  font-weight: bold;
+  font-family: "OpenSans-Bold",
+    "Open Sans Bold",
+    "HelveticaNeue-Bold",
+    "Helvetica Neue Bold",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;}
+.graph .address {
+  color: #36c;
+  font-size:12px; }
+.graph .amount {
+  font-size:14px;
+  color:#000;}
+.graph .negative  { color:#d00; }
+.graph .darkgray  { color:#333; }
+.graph .mediumgray { color:#666; }
+.graph .heading{
+  font-size:36px;
+  text-align:center;
+  width:100%;
+  min-width: 935px;
+  padding:30px 0;}
+.graph .large { font-size:21px; }
+.graph .midsize { font-size:14px;}
+.graph .small { font-size:12px;}
+
+
+/* Borders, alignment, and spacing */
+.graph .rightbordered { border-right: 1px solid #c8c8c8; } 
+.graph .topbordered { border-top: 1px solid #c8c8c8; }
+.graph .bottombordered  {border-bottom: 1px solid #c8c8c8;}
+.graph .rounded {
+  border-radius: 4px; 
+  -moz-border-radius: 4px; 
+  -webkit-border-radius: 4px;
+  border:2px solid #eee;}
+.graph .center { text-align:center; }
+.graph .right { text-align:right; }
+.graph .horizontalrule { height:10px; }
+.graph .clearboth { clear:both; }
+.graph .topbar {
+  opacity:0.8;
+  position:absolute; 
+  top:23px; 
+  pointer-events:auto;
+  color:#333;}
+.graph .bottomlist { height:293px; }
+.graph #otherCurrency {
+  display:none;
+  color:#999;
+  font-style:italic;
+  outline:none;
+  border:none;
+  background-color:none;
+  /*opacity:.3;*/
+  position:absolute;
+  margin-top:-44px;
+  margin-left:2px;
+  height:35px;
+  width:190px;
+  font-size:12pt;
+  line-height:0px;
+  font-family: "OpenSans-Light",
+    "Open Sans Light",
+    "HelveticaNeue-Light",
+    "Helvetica Neue Light",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;}
+ 
+
+/* Tables and cells */
+.graph table { border-collapse: collapse; }
+.graph table.outertable { table-layout: fixed; width: 100%}
+.graph table.outertable td {
+  padding-top: 18px;
+  padding-bottom: 14px;
+  border-width: 1px 0 0 0;
+  border-color: #eee;
+  border-style: solid;}
+.graph tr.toprow td { border-top:0px; }
+.graph tr.innertablecontainer { display:none; }
+.graph tr.innertablecontainer td {
+  border:none !important;
+  padding: 0px 0px 0px 25px !important;}
+.graph table.innertable {
+  width:97%;
+  margin-top:-4px;}
+.graph table.innertable td {
+  padding: 0px;
+  border:none;}
+.graph table.innertable th {
+  text-align:left;
+  font-weight:normal;
+  padding-left:12px;}
+.graph table.innertable tr { height:25px; }
+.graph .circlecell {
+  width:31px;
+  padding-left:13px;
+  padding-top:11px;
+  padding-bottom: 7px; }
+.graph .marginalcell {
+  width:10%;
+  border:none !important;}
+.expander {
+  text-align: right;
+  padding-right:15px;
+  font-size:12px;
+  color:#666;}
+
+
+/* Icons */
+.graph .send { background-image:url('icons/send.svg'); cursor:pointer;}
+.graph .receive { background-image:url('icons/receive.svg'); cursor:pointer;}
+.graph .intermediate { background-image:url('icons/intermediate.svg'); cursor:pointer;}
+.graph .sendfailed { background-image:url('icons/sendfailed.svg'); cursor:pointer;}
+.graph .receivefailed { background-image:url('icons/receivefailed.svg'); cursor:pointer;}
+.graph .intermediatefailed { background-image:url('icons/intermediatefailed.svg'); cursor:pointer;}
+
+.graph .trustin { background-image:url('icons/trustin.svg'); }
+.graph .trustout { background-image:url('icons/trustout.svg'); }
+.graph .trustinfailed  { background-image:url('icons/trustinfailed.svg'); }
+.graph .trustoutfailed  { background-image:url('icons/trustoutfailed.svg'); }
+
+.graph .offerin { background-image:url('icons/offerin.svg'); }
+.graph .offerout { background-image:url('icons/offerout.svg'); }
+.graph .offerinfailed { background-image:url('icons/offerinfailed.svg'); }
+.graph .offeroutfailed { background-image:url('icons/offeroutfailed.svg'); }
+
+.graph .canceloffer { background-image:url('icons/canceloffer.svg'); }
+.graph .accountset { background-image:url('icons/accountset.svg'); }
+
+.graph .icon {
+  background-repeat:no-repeat;
+  background-position:center;}
+  
+  
+  
+.graph div#transactionInformation div.bigString {
+  font-family: monospace;
+  margin-left:20px;
+  word-break: break-all;
+}
+ 
+.graph div#transactionInformation ul {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  }
+  
+.graph #transactionTable span.date {
+  /*margin-left:12px;
+    margin-right:12px;*/
+}
+
+.graph #transactionFeedTable td {
+  padding-top:12px;
+  padding-bottom:12px;
+}
+
+
+.graph .unselectedTab {
+  font-family: "OpenSans-Light",
+    "Open Sans Light",
+    "HelveticaNeue-Light",
+    "Helvetica Neue Light",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;
+  cursor:pointer;
+  color: #666;
+  background-color: none;
+}
+/*
+.unselectedTab:hover {
+  color: #36c;
+}*/
+
+.graph .selectedTab {
+  font-weight: bold;
+  font-family: "OpenSans-Bold",
+    "Open Sans Bold",
+    "HelveticaNeue-Bold",
+    "Helvetica Neue Bold",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;
+  color: #000;
+  background-color:#fff;
+  border-left: 1px solid #c8c8c8;
+  border-top: 1px solid #c8c8c8;
+  border-right: 1px solid #c8c8c8;
+}
+
+.graph .tab {
+  width:140px;
+  height:35px;
+  text-align:center;
+  line-height:35px;
+}
+
+.graph #individualTab, 
+.graph #feedTab, 
+.graph #focalAddress {
+  display:none;
+}
+
+.graph .topbordered {
+  border:none;
+}
+
+
+.graph #information {
+  background-color:rgba(255,255,255,.1); 
+  position:absolute; 
+  top:704px; 
+  width:100%; 
+  border: 1px solid #c8c8c8; 
+  margin-left:-1px; 
+  pointer-events:auto;
+}
+
+/*
+ * Dark Theme 
+ */
+.dark .graph #visualization {
+  color: @darkText;
+}
+
+.dark .graph #information,
+.dark .graph .bottombordered,
+.dark .graph .righbordered,
+.dark .graph table.outertable td
+ {
+  border-color: @darkLine;
+}
+
+.dark .graph .amount {
+  color:@darkTextBright
+}

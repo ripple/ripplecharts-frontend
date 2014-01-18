@@ -161,12 +161,13 @@ PriceChart = function (options) {
     else if (self.interval=="month")  self.seconds = 60*60*24*30.5; //approx
     else {
       //TODO: unacceptable!
+      self.seconds = 60*60;
     }
     
     self.seconds *= self.multiple;  
     self.last     = getAlignedCandle();
     self.end      = self.last.add('seconds', self.seconds);
-    self.start    = moment(d.offset(self.end));
+    self.start    = moment.utc(d.offset(self.end));
     
     console.log(self.start);
     console.log(self.last);
@@ -189,12 +190,28 @@ PriceChart = function (options) {
       "base[issuer]"    : base.issuer  ? base.issuer : ""
 
     }, function(data){
+      
+      //if we've got live data reported already, we need to merge
+      //the first live data with the last historic candle
+      if (self.lineData.length && data.length) {
+        var first  = self.lineData.shift();
+        var candle = data[data.length-1];
+        var volume = candle.volume + first.volume;
+        //candle.open will be from historic
+        //vwap should be recalculated?
+        if (candle.high>first.high) candle.high = first.high;
+        if (candle.low<first.low)   candle.low  = first.low;
+        candle.vwap   = (candle.vwap*candle.volume+first.vwap*first.volume)/volume;
+        candle.volume = volume;
+        candle.close  = first.close;
+        data[data.length-1] = candle;
+      }
+      
       self.lineData = data.concat(self.lineData);
       drawData();
       
     }, function (error){
       console.log(error);
-      
       setStatus(error.text ? error.text : "Unable to load data");
     });     
   }
@@ -206,7 +223,7 @@ PriceChart = function (options) {
 
   function setLiveFeed () {
     var candle = {
-        time   : self.end,
+        time   : self.last,
         volume : 0,
         vwap   : 0,
         close  : 0,
@@ -219,11 +236,9 @@ PriceChart = function (options) {
       base  : self.base,
       trade : self.trade,
       timeIncrement    : self.interval,
-      timeMultiple     : self.multiple
-      //incompleteApiRow : candle
+      timeMultiple     : self.multiple,
+      incompleteApiRow : candle
     }
-    
-    //console.log(JSON.stringify(viewOptions));
     
     if (liveFeed) liveFeed.updateViewOpts(viewOptions);
     else liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
@@ -249,7 +264,8 @@ PriceChart = function (options) {
         close  : data.closePrice,
         open   : data.openPrice,
         high   : data.highPrice,
-        low    : data.lowPrice
+        low    : data.lowPrice,
+        live   : true
       }; 
       
     //console.log(candle);
@@ -259,7 +275,17 @@ PriceChart = function (options) {
     
     if (last && candle.volume && last.time.unix()===candle.time.unix()) {
       console.log('replace');
-      console.log(candle);
+      if (!last.live) {
+        var volume = candle.volume + last.volume;
+        if (candle.high<last.high) candle.high = last.high;
+        if (candle.low>last.low)   candle.low  = last.low;
+        candle.vwap   = (candle.vwap*candle.volume+last.vwap*last.volume)/volume;
+        candle.volume = volume;
+        candle.open   = last.open;
+        //close will be from live data
+        data[data.length-1] = candle;
+        
+      }
       self.lineData[self.lineData.length-1] = candle;
     } else {
       
@@ -457,17 +483,7 @@ PriceChart = function (options) {
 
   function getAlignedCandle() {
     var now = moment().utc(), aligned;
-
-
-    var format = "YYYY/MM/DD, hh:mm:ss a z";
-    //now.subtract("days", 24);   
-    console.log(now.dayOfYear()%self.multiple);
-    console.log(now.format(format));
-    console.log(self.interval);
-    console.log(self.multiple);
-
-    
-    
+        
     if (self.interval=='second') {
       aligned = now.subtract("seconds", now.seconds()%self.multiple);
       

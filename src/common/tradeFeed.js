@@ -118,6 +118,9 @@ var TradeFeed = function (options) {
         max_sig_digits : 8
     }); 
     
+    //its possible there are other reasons for value being empty, but right
+    //now i am assuming it is below the minimum threshold
+    if (!value) return "> 0.000001"; //must match min_precision variable
     var parts = value.split(".");
     var decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0') : null;
     value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
@@ -187,6 +190,7 @@ var TradeFeed = function (options) {
       loader.transition().style('opacity',0);
       transactions = transactions.concat(data).slice(0,50);   
       updateTrades()
+      console.log(transactions);
            
     }, function (error){
       loader.transition().style('opacity',0);

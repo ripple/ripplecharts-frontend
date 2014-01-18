@@ -7,7 +7,9 @@ angular.element(document).ready(function() {
     'ripplecharts.landing',
     'ripplecharts.markets',
     'ripplecharts.multimarkets',
+    'ripplecharts.graph',
     'ripplecharts.accounts',
+    'ripplecharts.capitalization',
     'ui.state',
     'ui.route',
     'snap'
