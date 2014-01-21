@@ -2,10 +2,9 @@ var Remote,
   Amount,
   moment,
   gateways,
-  require,
-  module;
+  remote;
 
-if (require) {
+if (typeof require != 'undefined') {
 
   /* Loading with Node.js */
   var Remote = require('ripple-lib').Remote,
@@ -48,6 +47,24 @@ if (require) {
  *  each time it hears an offer exercised with an object of the form:
  *  {key: [[trade currency, trade curr issuer][base currency, base curr issuer], year, month, day, hour, minute second], value: [trade curr volume, base curr volume, exchange rate]}
  */
+ 
+
+// Connect to ripple-lib
+if (remote) {
+    remote = remote;
+} else {
+  remote = new Remote({
+      // trace: true,
+      servers: [{
+          host: 's_west.ripple.com',
+          port: 443
+      },{
+          host: 's_east.ripple.com',
+          port: 443
+      }]
+  });
+  remote.connect();
+}
 
 
 /**
@@ -82,12 +99,12 @@ function OffersExercisedListener(opts, displayFn) {
 
   // Wrapper to call the displayFn and update the openTime and closeTime
   this.finishedInterval = function() {
-    this.storedResults.closeTime = moment().toArray().slice(0,6);
-
+    this.storedResults.closeTime = moment.utc().toArray().slice(0,6);
+    
     this.displayFn(formatReduceResult(this.storedResults));
 
     this.storedResults = {
-      openTime: moment().toArray().slice(0,6),
+      openTime: moment.utc().toArray().slice(0,6),
     };
   };
 
@@ -138,7 +155,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
     listener.viewOpts.openTime = row.time || row.openTime || row[0];
 
     listener.storedResults = {
-      openTime: moment(row.time || row.openTime || row[0]).toArray().slice(0,6),
+      openTime: moment.utc(row.time || row.openTime || row[0]).toArray().slice(0,6),
       curr1Volume: row.tradeCurrVol || row[2],
       curr2Volume: row.baseCurrVol || row[1],
       numTrades: row.numTrades || row[3],
@@ -171,7 +188,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
         listener.storedResults = offersExercisedReduce(null, [reducedTrade, listener.storedResults], true);
       }
 
-      listener.storedResults.closeTime = moment().toArray().slice(0,6);
+      listener.storedResults.closeTime = moment.utc().toArray().slice(0,6);
 
       // Call displayFn every time a new trade comes in, as well as after the interval
       listener.displayFn(formatReduceResult(listener.storedResults));
@@ -181,8 +198,8 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
     // handle first interval
 
-    var endOfFirstIncrement = moment(listener.viewOpts.openTime).add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple),
-      firstIncrementRemainder = endOfFirstIncrement.diff(moment());
+    var endOfFirstIncrement = moment.utc(listener.viewOpts.openTime).add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple),
+      firstIncrementRemainder = endOfFirstIncrement.diff(moment.utc());
 
 
     // If there is time left in the first timeIncrement, wait until that 
@@ -219,7 +236,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 function parseViewOpts(opts) {
   // TODO validate opts more thoroughly
 
-  opts.openTime = moment(opts.openTime).toArray().slice(0,6);
+  opts.openTime = moment.utc(opts.openTime).toArray().slice(0,6);
 
   if (opts.timeIncrement) {
     opts.reduce = true;
@@ -282,9 +299,9 @@ function createTransactionProcessor(viewOpts, resultHandler) {
 
     // use the map function to parse txContainer data
     offersExercisedMap(txContainer, function(key, value){
-
+      
       // this function will be called twice if viewOpts.reduce === true, once otherwise
-
+      
       if (viewOpts.reduce) {
         // emit called twice, be more strict about matching 
         // because the reverse trade is also passed to emit
@@ -305,6 +322,8 @@ function createTransactionProcessor(viewOpts, resultHandler) {
 
         }
 
+        //console.log(key);
+        //console.log(value);
         resultHandler(offersExercisedReduce([[key]], [value], false));
 
       } else {
@@ -337,7 +356,8 @@ function createTransactionProcessor(viewOpts, resultHandler) {
         }
 
 
-
+        console.log("trade:", key);
+        console.log("trade:", value);
         resultHandler({key: key, value: value});
 
       }
@@ -636,6 +656,6 @@ function getCurrenciesForGateway( name ) {
 
 
 
-if (module) {
+if (typeof module != 'undefined') {
   module.exports = OffersExercisedListener;
 }

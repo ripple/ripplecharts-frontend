@@ -190,7 +190,6 @@ var TradeFeed = function (options) {
       loader.transition().style('opacity',0);
       transactions = transactions.concat(data).slice(0,50);   
       updateTrades()
-      console.log(transactions);
            
     }, function (error){
       loader.transition().style('opacity',0);

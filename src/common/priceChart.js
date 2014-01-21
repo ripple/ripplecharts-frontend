@@ -166,13 +166,13 @@ PriceChart = function (options) {
     
     self.seconds *= self.multiple;  
     self.last     = getAlignedCandle();
-    self.end      = self.last.add('seconds', self.seconds);
+    self.end      = moment(self.last).add('seconds', self.seconds);
     self.start    = moment.utc(d.offset(self.end));
+     
+    //console.log(moment.utc().format("HH:mm:ss")); 
+    //console.log(self.last.format("HH:mm:ss")); 
+    //console.log(self.end.format("HH:mm:ss")); 
     
-    console.log(self.start);
-    console.log(self.last);
-    console.log(self.end);
-      
     if (liveFeed) liveFeed.stopListener();
     setLiveFeed();
     
@@ -252,13 +252,11 @@ PriceChart = function (options) {
   }
   
   function liveUpdate (data) {
-    var time = data.time ? data.time : data.openTime;
-    console.log(data);
 
     var first = self.lineData.length ? self.lineData[0] : null;
     var last  = self.lineData.length ? self.lineData[self.lineData.length-1] : null;
     var candle = {
-        time   : moment(data.openTime),
+        time   : moment.utc(data.openTime),
         volume : data.baseCurrVol,
         vwap   : data.vwavPrice,
         close  : data.closePrice,
@@ -268,14 +266,13 @@ PriceChart = function (options) {
         live   : true
       }; 
       
-    //console.log(candle);
-    //console.log(last);
-    //console.log(last.time.unix());
-    //console.log(candle.time.unix());
+    //if (last) console.log("last:", last.time.local().format("HH:mm:ss"));
+    //console.log("time:", candle.time.local().format("HH:mm:ss"));
+    //console.log(data.closePrice, data.baseCurrVol);
     
     if (last && candle.volume && last.time.unix()===candle.time.unix()) {
       console.log('replace');
-      if (!last.live) {
+      if (!last.live) {  //historical data
         var volume = candle.volume + last.volume;
         if (candle.high<last.high) candle.high = last.high;
         if (candle.low>last.low)   candle.low  = last.low;
@@ -483,7 +480,8 @@ PriceChart = function (options) {
 
   function getAlignedCandle() {
     var now = moment().utc(), aligned;
-        
+    now.subtract("milliseconds", now.milliseconds());
+     
     if (self.interval=='second') {
       aligned = now.subtract("seconds", now.seconds()%self.multiple);
       
