@@ -17,8 +17,8 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope ) {
-    $scope.base      = store.get('base')      || Options.base      || {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
-    $scope.trade     = store.get('trade')     || Options.trade     || {currency:"XRP", issuer:""};
+    $scope.base      = store.get('base')      || Options.base      || {currency:"XRP", issuer:""};
+    $scope.trade     = store.get('trade')     || Options.trade     || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
     $scope.chartType = store.get('chartType') || Options.chartType || "line";
     $scope.interval  = store.get('interval')  || Options.interval  || "1h";
 

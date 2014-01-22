@@ -271,7 +271,7 @@ PriceChart = function (options) {
     //console.log(data.closePrice, data.baseCurrVol);
     
     if (last && candle.volume && last.time.unix()===candle.time.unix()) {
-      console.log('replace');
+      //console.log('replace');
       if (!last.live) {  //historical data
         var volume = candle.volume + last.volume;
         if (candle.high<last.high) candle.high = last.high;
@@ -288,8 +288,8 @@ PriceChart = function (options) {
       
       //new candle, only add it if something happened
       if (candle.volume) {
-        console.log('append');
-        console.log(candle);
+        //console.log('append');
+        //console.log(candle);
         self.lineData.push(candle); //append the candle    
       }
       //adjust the range  

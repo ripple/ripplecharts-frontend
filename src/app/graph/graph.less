@@ -189,6 +189,13 @@
   
   
   
+.graph div#transactionInformationContainer {
+  z-index:1; 
+  display:none;
+  background:rgba(255,255,255,.8);
+  height:288px;
+}  
+  
 .graph div#transactionInformation div.bigString {
   font-family: monospace;
   margin-left:20px;
@@ -269,13 +276,31 @@
 
 
 .graph #information {
-  background-color:rgba(255,255,255,.1); 
+  background-color:rgba(255,255,255,.9); 
   position:absolute; 
   top:704px; 
   width:100%; 
   border: 1px solid #c8c8c8; 
   margin-left:-1px; 
   pointer-events:auto;
+}
+
+.graph line.static {
+  stroke: rgba(160,160,160,.5);
+  stroke-linecap: round;
+}
+
+.graph path.arrowhead {
+  fill:#000;
+}
+
+.graph circle.node {
+}
+
+.graph circle.halo {
+  stroke: #ccc;
+  stroke-width:1.5; 
+  fill:none; 
 }
 
 /*
@@ -287,12 +312,29 @@
 
 .dark .graph #information,
 .dark .graph .bottombordered,
-.dark .graph .righbordered,
+.dark .graph .rightbordered,
 .dark .graph table.outertable td
  {
   border-color: @darkLine;
 }
 
+.dark .graph #information {
+  background-color:rgba(30,30,30,.9); 
+} 
+
+.dark .graph div#transactionInformationContainer {
+  background:rgba(30,30,30,.8);
+} 
+ 
 .dark .graph .amount {
   color:@darkTextBright
+}
+
+.dark .graph path.arrowhead {
+  fill:#ddd;
+}
+
+.dark .graph circle.halo {
+  stroke: #555;
+  stroke-width:2;
 }

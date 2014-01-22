@@ -60,7 +60,7 @@ var TradeFeed = function (options) {
   }
   
   function handleTransaction (data) {
-    console.log(data);
+    //console.log(data);
     
     var last = transactions[0];
     
@@ -85,9 +85,6 @@ var TradeFeed = function (options) {
     
     updateDailyStats(); 
     updateTrades();    
-    
-    console.log(trade);
-    console.log(moment(trade.time).format());
   }
   
   function updateTrades () {
