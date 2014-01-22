@@ -1,11 +1,10 @@
 var Remote,
   Amount,
   moment,
-  gateways,
   remote;
-
+console.log("gateways:", gateways);
 if (typeof require != 'undefined') {
-
+  console.log("here");
   /* Loading with Node.js */
   var Remote = require('ripple-lib').Remote,
     Amount = require('ripple-lib').Amount,

@@ -155,12 +155,13 @@ var MiniChart = function(base, trade, markets) {
 
     self.setStatus("");
     loader.transition().style("opacity",1);
-    
+   
     if (self.request) self.request.abort();
     self.request = self.markets.apiHandler.offersExercised({
       startTime     : new Date(),
-      endTime       : d3.time.day.offset(new Date(), -2),
+      endTime       : d3.time.day.offset(new Date(), -1),
       timeIncrement : "hour",
+      timeMultiple  : 1,
       descending    : true,
       "trade[currency]" : self.trade.currency,
       "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",

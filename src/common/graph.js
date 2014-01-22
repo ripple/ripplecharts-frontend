@@ -1710,19 +1710,20 @@ function updateTransactions(address, appending) {
           for (var j=0; j<meta.AffectedNodes.length; j++) {
             var mn = meta.AffectedNodes[j].ModifiedNode || meta.AffectedNodes[j].DeletedNode || meta.AffectedNodes[j].CreatedNode;
             var LatestFields = mn.FinalFields || mn.NewFields;
-            var diff, let, cur, issuer, cip;
+            var diff,type,cur,issuer,cip;
+              
             
             if (mn && LatestFields) {
               if (LatestFields.Account == address || (LatestFields.HighLimit && LatestFields.HighLimit.issuer == address) ) {
-                let = mn.LedgerEntryType;
-                if (let == "AccountRoot") {
+                type = mn.LedgerEntryType;
+                if (type == "AccountRoot") {
                   diff = LatestFields.Balance - (mn.PreviousFields ? mn.PreviousFields.Balance : 0);
                   if (affectedBalances["XRP"]) {
                     affectedBalances["XRP"]+=diff;
                   } else {
                     affectedBalances["XRP"]=diff;
                   }
-                } else if (let == "RippleState") {
+                } else if (type == "RippleState") {
                   //console.log("Affected RippleState:", mn);
                   //Not sure why this is reversed, but that's the way it is:
                   diff = 0-(LatestFields.Balance.value - (mn.PreviousFields ? mn.PreviousFields.Balance.value : 0));
@@ -1736,7 +1737,7 @@ function updateTransactions(address, appending) {
                     affectedBalances[cip]=diff;
                   }
                 } else {
-                  //console.log("Affected my", let,  mn);
+                  //console.log("Affected my", type,  mn);
                 }
 
               } else {

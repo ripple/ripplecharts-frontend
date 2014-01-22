@@ -12,12 +12,8 @@
             </div>
           </li>
           <li>
-            <label>Transactions (24 hours):</label>
-            <div class="stat"></div>
-          </li>
-          <li>
-            <label>Volume (30 days):</label>
-            <div class="stat"></div>
+            <label>Trade Volume <small>(24 hours - USD terms)</small>:</label>
+            <div class="stat" ng-bind="tradeVolume"></div>
           </li>
           <li>
             <label># of Ripple accounts:</label>
@@ -26,12 +22,7 @@
           <li>
             <label>Ledger #:</label>
             <div class="stat" ng-bind="ledgerIndex">--</div>
-          </li>
-          <li>
-            <label>Network Latency:</label>
-            <div class="stat"></div>
-          </li>
-          
+          </li>   
         </ul>
       </div>
       <div class="span6">

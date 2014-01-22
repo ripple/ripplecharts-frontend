@@ -19,13 +19,12 @@
   border:1px solid rgba(150,150,150,.3);
   background:rgba(150,155,160,.2); 
   overflow:hidden;
-  padding:5px;
+  padding:8px;
   border-radius:2px;
   margin:3px; 
 }
 
 .landing .stats label {
-  width:50%;
   text-align:left;
   float:left;
   margin:5px 10px;
@@ -33,10 +32,12 @@
 }
 
 .landing .stat {
-  float: left;
+  float: right;
+  width:50%;
   font-size: 18px;
   font-weight: bold;
   margin: 5px;
+  text-align:left;
 }
 
 .landing .stats .stat {
@@ -67,7 +68,7 @@
 
 
 .landing .transactionFeed {
-  height:265px;
+  height:200px;
 }
 
 @media (min-width: 1200px) {
@@ -89,6 +90,18 @@
   #topMarkets .chart {
     width:350px ;
   }
+  
+  .landing .span6 {
+    display:block;
+    float:none;
+    width:100%;
+    margin:0;  
+  } 
+  
+  .landing .stats ul, .landing h5, .landing #liveFeed {
+    width:98%;
+    display:inline-block;
+  }  
 }
 
 @media (max-width: 767px) {
@@ -106,11 +119,6 @@
     text-align:center;
   }
   
-  .landing .stats ul, .landing h5, .landing #liveFeed {
-    width:87%;
-    display:inline-block;
-  }
-  
   .landing .stats ul li {
     margin: 3px 0;  
   }
@@ -118,6 +126,11 @@
   .landing #liveFeed {
     height:155px;
   }
+  
+  .landing .stats ul, .landing h5, .landing #liveFeed {
+    width:87%;
+    display:inline-block;
+  }  
 }
 
 @media (max-width: 480px) {

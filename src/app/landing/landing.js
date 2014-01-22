@@ -90,5 +90,15 @@ angular.module( 'ripplecharts.landing', [
     $scope.$apply();
   });
   
+  api.getTopMarkets(function(data){
+    var volume = 0;
+    for (var i=0; i<data.length; i++) {
+      volume += data[i][3];
+    }
+    
+    $scope.tradeVolume = "$"+feed.commas(volume,2);
+    $scope.$apply();
+  });
+  
 });
 

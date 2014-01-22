@@ -160,9 +160,10 @@ var TransactionFeed = function (options) {
   }
   
   
-  this.commas = function (number) {
+  this.commas = function (number, precision) {
     var parts = number.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (precision) parts[1] = parts[1].substring(0,precision);
     return parts.join(".");
   }
 }

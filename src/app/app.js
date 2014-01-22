@@ -1,4 +1,3 @@
-var gateways, remote;
 
 angular.element(document).ready(function() {
   angular.module( 'ripplecharts', [
@@ -45,7 +44,7 @@ angular.element(document).ready(function() {
   //load gateways file before starting the app
   d3.json("assets/gateways.json", function(error, data) {
     gateways = data;
-        
+    console.log(gateways);
     //connect to the ripple network;
     remote = new ripple.Remote(Options.ripple);
     remote.connect();

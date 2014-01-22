@@ -91,7 +91,7 @@ ApiHandler = function (url) {
   
   this.accountsCreated = function (params, callback, err) {
     var request = apiRequest("accountsCreated");
-    console.log(params);
+
     request.post(parseParams(params))
     .on('load', function(xhr){   
       callback(JSON.parse(xhr.response));
@@ -102,6 +102,21 @@ ApiHandler = function (url) {
     });
     
     return request;
+  }
+  
+  this.getTopMarkets = function (callback, err) {
+    var request = apiRequest("topMarkets");
+
+    request.post("")
+    .on('load', function(xhr){   
+      var response = JSON.parse(xhr.response);
+      response.splice(0,1); //remove first  
+      callback(response);
+      
+    }).on('error', function(xhr){
+      console.log(xhr.response);
+      error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    });    
   }
   
   function parseParams(o) {
