@@ -2,7 +2,7 @@ var OrderBook = function (options) {
   var self    = this, asks, bids;
   self.offers;
   
-  var remote = options.remote; 
+  var r      = options.remote; 
   var chart  = d3.select("#"+options.chartID).attr('class','chart'),
     svg, depth, gEnter, 
     xAxis, leftAxis, rightAxis,
@@ -161,21 +161,22 @@ var OrderBook = function (options) {
     
     if (asks) {
       asks.removeListener('model', handleAskModel);
-      asks._remote.request_unsubscribe()
+      r.request_unsubscribe()
         .books([asks.to_json()])
         .request();
     }
     if (bids) {
       bids.removeListener('model', handleBidModel); 
-      bids._remote.request_unsubscribe()
+      r.request_unsubscribe()
         .books([bids.to_json()])
         .request();
       }  
      
-    remote._books = {};
+    r._books = {};
+    r._events.prepare_subscribe = [];
     
-    asks = remote.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
-    bids = remote.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
+    asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
+    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
     
     function handleAskModel (offers) {
       self.offers.asks = handleBook(offers,'asks');

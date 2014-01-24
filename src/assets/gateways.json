@@ -42,25 +42,6 @@
             "hotwallets": ["rUeFPRGNjtcbtezyQKKiDcS1eQyYLQ1gcr"]
             }]
     }, {
-        "name": "WeExchange",
-        "accounts": [{
-            "address": "r47RkFi1Ew3LvCNKT6ufw3ZCyj5AJiLHi9",
-            "currencies": ["CAD"],
-            "hotwallets": []
-            }, {
-            "address": "rBcYpuDT1aXNo4jnqczWJTytKGdBGufsre",
-            "currencies": ["AUD"],
-            "hotwallets": []
-            }, {
-            "address": "rpvfJ4mR6QQAeogpXEKnuyGBx8mYCSnYZi",
-            "currencies": ["BTC"],
-            "hotwallets": []
-            }, {
-            "address": "r9vbV3EHvXWjSkeQ6CAcYVPGeq7TuiXY2X",
-            "currencies": ["USD"],
-            "hotwallets": []
-            }]
-    }, {
         "name": "WisePass",
         "accounts": [{
             "address": "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
@@ -89,13 +70,6 @@
             "hotwallets": []
             }]
     },{
-        "name": "chriswen",
-        "accounts": [{
-            "address": "rDihBcUrrfDwUBZWBcuP2z5n47KVLQFNQH",
-            "currencies": ["LTC"],
-            "hotwallets": []
-            }]
-    },{
         "name": "Ripple Money",
         "accounts": [{
             "address": "rkH1aQbL2ajA7HUsx8VQRuL3VaEByHELm",
@@ -120,7 +94,7 @@
         "name": "Peercover",
         "accounts": [{
             "address": "ra9eZxMbJrUcgV8ui7aPc161FgrqWScQxV",
-            "currencies": ["USD"],
+            "currencies": ["USD","DOG","BTC","NXT"],
             "hotwallets": []
             }]
     }

@@ -17,12 +17,21 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope ) {
-    $scope.base      = store.get('base')      || Options.base      || {currency:"XRP", issuer:""};
-    $scope.trade     = store.get('trade')     || Options.trade     || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
-    $scope.chartType = store.get('chartType') || Options.chartType || "line";
-    $scope.interval  = store.get('interval')  || Options.interval  || "1h";
+  
+//load settings from session, local storage, options, or defaults  
+  $scope.base  = store.session.get('base') || store.get('base') || 
+    Options.base || {currency:"XRP", issuer:""};
+  
+  $scope.trade = store.session.get('trade') || store.get('trade') || 
+    Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
+  
+  $scope.chartType = store.session.get('chartType') || store.get('chartType') || 
+    Options.chartType || "line";
+  
+  $scope.interval  = store.session.get('interval') || store.get('interval') || 
+    Options.interval  || "1h";
 
-  //load chart   
+//set up the currency pair dropdowns
   var loaded  = false, 
     dropdownB = ripple.currencyDropdown().selected($scope.trade)
       .on("change", function(d) {
@@ -55,6 +64,8 @@ angular.module( 'ripplecharts.markets', [
     loadPair();
   });
   
+  
+//set up the interval selector  
   var intervalA = d3.select("#interval").attr("class","selectList").selectAll("a")
     .data([
       {name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},
@@ -75,10 +86,13 @@ angular.module( 'ripplecharts.markets', [
       d3.event.preventDefault();
       var that = this;
       store.set("interval", d.name);
+      store.session.set("interval", d.name);
+      
       intervalA.classed("selected", function() { return this === that; });
       priceChart.load($scope.base, $scope.trade, d);
     });
     
+//set up the chart type selector    
   var chartType = d3.select("#chartType").attr("class","selectList").selectAll("a")
     .data(["line", "candlestick"])
     .enter().append("a")
@@ -89,11 +103,14 @@ angular.module( 'ripplecharts.markets', [
       d3.event.preventDefault();
       var that = this;
       store.set("chartType", d);
+      store.session.set("chartType", d);
+      
       chartType.classed("selected", function() { return this === that; });
       chartType.selected = d;
       priceChart.setType(d);
     });
 
+//set up the price chart
   var priceChart = new PriceChart ({
     id     : "#priceChart",
     url    : API,  
@@ -102,40 +119,68 @@ angular.module( 'ripplecharts.markets', [
   });   
 
   loaded = true;
-  d3.select("#interval .selected")[0][0].click();
-  
-    
+  d3.select("#interval .selected")[0][0].click(); //to load the first chart
+
+
+//new connection needed for now because of a bug in ripple-lib 
+//when unsubscribing from an orderbook.
+  var orderBookRemote = new ripple.Remote(Options.ripple);
+  orderBookRemote.connect();
+     
+//set up the order book      
   book = new OrderBook ({
     chartID : "bookChart",
     tableID : "bookTables",
-    remote  : remote,
+    remote  : orderBookRemote,
     resize  : true
   });
   
   book.resetChart();
   book.getMarket($scope.base, $scope.trade); 
+
   
+//set up trades feed  
   tradeFeed = new TradeFeed({
     id     : "tradeFeed",
     url    : API   
   });
   
   tradeFeed.loadPair ($scope.base, $scope.trade);
-  
+
+
+//single function to reload all feeds when something changes
   function loadPair() {
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
     
+    store.session.set('base',  $scope.base);
+    store.session.set('trade', $scope.trade);
+        
     priceChart.load($scope.base, $scope.trade, d3.select("#interval .selected").datum());
     book.getMarket($scope.base, $scope.trade); 
     tradeFeed.loadPair ($scope.base, $scope.trade);    
   }
-  
+
+
+//stop the listeners when leaving page  
   $scope.$on("$destroy", function(){
     console.log("destroy");
     priceChart.suspend();
     book.suspend();
     tradeFeed.suspend();
-    //stop the listener when leaving 
+  });
+  
+
+//reload data when coming back online  
+  $scope.$watch('online', function(online) { 
+    if (online) {
+      remote.connect();  
+      orderBookRemote.connect();
+      loadPair();    
+    
+    } else {
+      remote.disconnect();  
+      orderBookRemote.disconnect();      
+    }
   });
 });

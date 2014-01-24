@@ -107,17 +107,6 @@ PriceChart = function (options) {
     var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
     details.style("width", (options.width-padding)+"px").style("right","auto");
   }
-  
-/* 
-  //resize on window resize
-  addResizeEvent(function() {
-    w = parseInt(div.style('width'), 10);
-    options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/2>400 ? options.width/2 : 400;
-    drawChart(); 
-    drawData();
-  });
-*/  
     
   //fade to throber when reloading from history
   this.fadeOut = function () {

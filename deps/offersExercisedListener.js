@@ -2,9 +2,9 @@ var Remote,
   Amount,
   moment,
   remote;
-console.log("gateways:", gateways);
+
 if (typeof require != 'undefined') {
-  console.log("here");
+
   /* Loading with Node.js */
   var Remote = require('ripple-lib').Remote,
     Amount = require('ripple-lib').Amount,
@@ -273,9 +273,7 @@ function parseViewOpts(opts) {
       }
     }
   }
-
-  console.log(JSON.stringify(opts));
-
+  
   return opts;
 }
 
@@ -286,7 +284,7 @@ function parseViewOpts(opts) {
  */
 function createTransactionProcessor(viewOpts, resultHandler) {
 
-  // console.log('Creating transaction processor with opts: ' + JSON.stringify(viewOpts));
+  //console.log('Creating transaction processor with opts: ' + JSON.stringify(viewOpts));
   
   function txProcessor (txData){
 
@@ -299,69 +297,40 @@ function createTransactionProcessor(viewOpts, resultHandler) {
     // use the map function to parse txContainer data
     offersExercisedMap(txContainer, function(key, value){
       
-      // this function will be called twice if viewOpts.reduce === true, once otherwise
+      //console.log(viewOpts.reduce ? "chart:" : "trade:", key[0], key[1], value);
       
-      if (viewOpts.reduce) {
-        // emit called twice, be more strict about matching 
-        // because the reverse trade is also passed to emit
-
-        if (viewOpts.trade) {
-
-          if (viewOpts.trade.currency !== key[0][0] || viewOpts.trade.issuer !== key[0][1]) {
-            return;
-          }
-
+      if (viewOpts.trade) {
+        
+        // return if trade doesn't match either currency in the pair
+        if ((viewOpts.trade.currency !== key[0][0] || viewOpts.trade.issuer !== key[0][1])
+            && (viewOpts.trade.currency !== key[1][0] || viewOpts.trade.issuer !== key[1][1])) {
+          return;
         }
-
-        if (viewOpts.base) {
-
-          if (viewOpts.base.currency !== key[1][0] || viewOpts.base.issuer !== key[1][1]) {
-            return;
-          }
-
-        }
-
-        //console.log(key);
-        //console.log(value);
-        resultHandler(offersExercisedReduce([[key]], [value], false));
-
-      } else {
-        // emit called once
-
-        if (viewOpts.trade) {
-          
-          // return if trade doesn't match either currency in the pair
-          if ((viewOpts.trade.currency !== key[0][0] || viewOpts.trade.issuer !== key[0][1])
-              && (viewOpts.trade.currency !== key[1][0] || viewOpts.trade.issuer !== key[1][1])) {
-            return;
-          }
-
-        }
-
-        if (viewOpts.base) {
-          
-          // return if base doesn't match either currency in the pair
-          if ((viewOpts.base.currency !== key[0][0] || viewOpts.base.issuer !== key[0][1])
-              && (viewOpts.base.currency !== key[1][0] || viewOpts.base.issuer !== key[1][1])) {
-            return;
-          }
-          
-        }
-
-        // Flip the currencies if necessary
-        if (viewOpts.base.currency === key[1][0] && viewOpts.base.issuer === key[1][1]) {
-          key = [key[1].slice(), key[0].slice()].concat(key.slice(2));
-          value = [value[1], value[0], 1/value[2]];
-        }
-
-
-        console.log("trade:", key);
-        console.log("trade:", value);
-        resultHandler({key: key, value: value});
 
       }
 
-    }, !viewOpts.reduce);
+      if (viewOpts.base) {
+        
+        // return if base doesn't match either currency in the pair
+        if ((viewOpts.base.currency !== key[0][0] || viewOpts.base.issuer !== key[0][1])
+            && (viewOpts.base.currency !== key[1][0] || viewOpts.base.issuer !== key[1][1])) {
+          return;
+        }
+        
+      }
+
+      // Flip the currencies if necessary
+      if (viewOpts.base.currency === key[1][0] && viewOpts.base.issuer === key[1][1]) {
+        key = [key[1].slice(), key[0].slice()].concat(key.slice(2));
+        value = [value[1], value[0], 1/value[2]];
+      }
+
+      
+      
+      if (!viewOpts.reduce) resultHandler({key: key, value: value});
+      else resultHandler(offersExercisedReduce([[key]], [value], false));
+       
+    });
   }
 
   return txProcessor;
@@ -374,11 +343,11 @@ function createTransactionProcessor(viewOpts, resultHandler) {
  *  offersExercisedMap is, with three exceptions, the same as the
  *  map function used in the CouchDB view offersExercised
  *
- *  the only exceptions are 'emit' as a parameter,
- *  the 'emitOnlyOne' parameter to stop the emit function from 
- *  being called twice, and the line that parses the exchange_rate
+ *  the only exceptions are 'emit' as a parameter, emit only
+ *  being called once, and the line that parses the exchange_rate
  */
-function offersExercisedMap(doc, emit, emitOnlyOne) {
+
+function offersExercisedMap(doc, emit) {
 
     var time = new Date(doc.close_time_timestamp),
         timestamp = [time.getUTCFullYear(), time.getUTCMonth(), time.getUTCDate(),
@@ -386,7 +355,8 @@ function offersExercisedMap(doc, emit, emitOnlyOne) {
         ];
 
     doc.transactions.forEach(function(tx) {
-
+        
+      
         if (tx.metaData.TransactionResult !== 'tesSUCCESS') {
             return;
         }
@@ -395,6 +365,7 @@ function offersExercisedMap(doc, emit, emitOnlyOne) {
             return;
         }
 
+        //console.log(tx.hash);
         tx.metaData.AffectedNodes.forEach(function(affNode) {
 
             var node = affNode.ModifiedNode || affNode.DeletedNode;
@@ -437,12 +408,14 @@ function offersExercisedMap(doc, emit, emitOnlyOne) {
                 exchangeRate = exchangeRate * 1000000.0;
             }
 
-            emit([payCurr, getCurr].concat(timestamp), [payAmnt, getAmnt, exchangeRate]);
 
-            if (!emitOnlyOne) {
-              emit([getCurr, payCurr].concat(timestamp), [getAmnt, payAmnt, 1 / exchangeRate]);
-            }
+            //I found it necessary to reverse the amounts here... - Matthew Fettig
+            emit([payCurr, getCurr].concat(timestamp), [getAmnt, payAmnt, 1 / exchangeRate]);
+            //emit([getCurr, payCurr].concat(timestamp), [getAmnt, payAmnt, 1 / exchangeRate]);
+            
         });
+        
+        
     });
 }
 

@@ -66,8 +66,8 @@ var TradeFeed = function (options) {
     
     var trade = {
       time   : moment.utc(data.key.slice(2)),
-      amount : data.value[0],
-      price  : 1/data.value[2],
+      amount : data.value[1], //oddly backwards from my expectation
+      price  : data.value[2],
       type   : ''
     }
     

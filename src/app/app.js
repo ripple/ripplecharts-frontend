@@ -18,7 +18,20 @@ angular.element(document).ready(function() {
     $urlRouterProvider.otherwise( '/' );
   })
   
-  .run( function run () {
+  .run(function($window, $rootScope) {
+    if (typeof navigator.onLine != 'undefined') {
+      $rootScope.online = navigator.onLine;
+      $window.addEventListener("offline", function () {
+        $rootScope.$apply(function() {
+          $rootScope.online = false;
+        });
+      }, false);
+      $window.addEventListener("online", function () {
+        $rootScope.$apply(function() {
+          $rootScope.online = true;
+        });
+      }, false);  
+    }  
   })
   
   .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
@@ -44,11 +57,13 @@ angular.element(document).ready(function() {
   //load gateways file before starting the app
   d3.json("assets/gateways.json", function(error, data) {
     gateways = data;
-    console.log(gateways);
+
     //connect to the ripple network;
     remote = new ripple.Remote(Options.ripple);
     remote.connect();
 
     angular.bootstrap(document, ['ripplecharts']);
+    //setTimeout(function(){console.log(remote); remote.disconnect()}, 10000);
+    //setTimeout(function(){remote.connect()}, 15000);
   });
 });
