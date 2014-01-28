@@ -11,6 +11,7 @@ function CapChart(options) {
   if (!options.height) options.height = options.width/2>500 ? options.width/2 : 500;
   
   self.currency = options.currency;
+  self.format   = options.format || "stacked";
   
   var isBlank = true;
   var currencyList = ['BTC','USD','CNY','EUR','GBP','JPY','ILS','LTC'];
@@ -26,13 +27,13 @@ function CapChart(options) {
     .data(["line","stacked"])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { return d === (options.type || "line")})
+    .classed("selected", function(d) { return d === self.format})
     .text(function(d) { return d })
     .on("click", function(d){
       d3.event.preventDefault();
       var that = this;
       type.classed("selected", function() { return this === that; });
-      self.type = d;
+      self.format = d;
       drawData();
     });
   
@@ -56,7 +57,6 @@ function CapChart(options) {
       if (d.name == "custom") {
         //$('#range').slideToggle();    
       } else {
-        console.log(d);
         loadData(d);
       }
     });
@@ -74,7 +74,7 @@ function CapChart(options) {
     
   var stack = d3.layout.stack().values(function(d) { return d.values; });  
   
-  var svg, g, timeAxis, amountAxis, borders, sections,
+  var svg, g, timeAxis, amountAxis, borders, sections, lines,
     tracer, tooltip, loader;
   
   var dataCache  = {};
@@ -132,13 +132,16 @@ function CapChart(options) {
     });    
   }
   
+  function sortTime(a,b){return a[0]-b[0]}
+  
   function prepareLineData() {
     var raw = dataCache[self.currency][self.range].raw;
     var totals = {}, series;
+    if (raw.length<2) return;
     
     for (var i=0; i<raw.length; i++) {
       series = raw[i];
-      
+      series.results.sort(sortTime);//necessary?
       for (var j=0; j<series.results.length; j++) {
         var timestamp = series.results[j][0];
         totals[timestamp]  = (totals[timestamp] || 0) + series.results[j][1];
@@ -147,7 +150,7 @@ function CapChart(options) {
   
     var t = [];
     for (var key in totals) {
-      t.push([key,totals[key]]);
+      t.push([parseInt(key,10),totals[key]]);
     }
     
     
@@ -235,13 +238,12 @@ function CapChart(options) {
   }
   
   function drawData() {
-    var data;
-    
+  
     loader.transition().style("opacity",0);
     
-    if (self.type=="stacked") {
+    if (self.format=="stacked") {
       svg.selectAll('.line').remove();
-      data     = dataCache[self.currency][self.range].stacked;
+      var data = dataCache[self.currency][self.range].stacked;
       sections = stack(data);
       
       color.domain(data.map(function(d){return d.address}));  
@@ -264,25 +266,25 @@ function CapChart(options) {
       timeAxis.call(xAxis);
       amountAxis.call(yAxis);
       isBlank = false;
+      
     } else {
       svg.selectAll('.section').remove();
-      data = dataCache[self.currency][self.range].raw.slice();  //make a copy
-      data.push(dataCache[self.currency][self.range].totals);
+      lines = dataCache[self.currency][self.range].raw.slice();  //make a copy
+      if (lines.length>1) lines.push(dataCache[self.currency][self.range].totals);
       
-      console.log(data);
+      var totals = lines[lines.length-1].results;
       
-      var totals = data[data.length-1].results;
-      
-      color.domain(data.map(function(d){return d.address})); 
+      color.domain(lines.map(function(d){return d.address})); 
       xScale.domain(d3.extent(totals, function(d){return d[0]}));
       yScale.domain([0, d3.max(totals, function(d){return d[1]})]);
 
-      var line = g.selectAll("g.line").data(data);
+      var line = g.selectAll("g.line").data(lines);
       line.enter().append("g").attr("class","line");
       line.exit().remove();
       
       var p = line.selectAll("path").data(function(d){return[d]});
-      p.enter().append("path").on("mouseover", movingOnLine);
+      p.enter().append("path")
+      //.on("mouseover", movingOnLine);
         
       p.transition().attr("d", function(d) {
          var l = d3.svg.line()
@@ -292,44 +294,66 @@ function CapChart(options) {
       }).style("stroke", function(d) { return color(d.address); })
         
       p.exit().remove();
-
+      
+      timeAxis.call(xAxis);
+      amountAxis.call(yAxis);
+      isBlank = false;
     }
   } 
   
+  
   function movingInSky() {
-    if (!isBlank) {
-      var tx, ty;
-      var top = sections[sections.length-1].values;
-      var date  = xScale.invert(d3.mouse(this)[0]);
-      var i   = d3.bisect(top.map(function(d){return d.date}), date);
+    var top, date, i, j, cx, cy, position;
+    if (!isBlank && self.format=="stacked") {
+
+      top  = sections[sections.length-1].values;
+      date = xScale.invert(d3.mouse(this)[0]);
+      i    = d3.bisect(top.map(function(d){return d.date}), date);
    
       if (date<(top[i].date+top[i-1].date)/2) i--;
-      var cy = yScale(top[i].y+top[i].y0)+options.margin.top;
-      var cx = xScale(top[i].date)+options.margin.left;
-
-      
-      tracer.select(".vertical").transition().duration(50).attr({x1:cx, x2:cx, y1:options.margin.top, y2:options.height+options.margin.top});
-      tracer.select(".horizontal").transition().duration(50).attr({x1:cx, x2:options.width+options.margin.left, y1:cy, y2:cy}).style("opacity",1);
-      tracer.select(".top").transition().duration(50).attr({cx: cx, cy: cy});
-      tracer.select(".bottom").transition().duration(50).style("opacity",0);
-      tracer.transition().duration(50).style("opacity",1);
+      cy = yScale(top[i].y+top[i].y0)+options.margin.top;
+      cx = xScale(top[i].date)+options.margin.left;
 
 //    determine position of tooltip      
-      var position = getTooltipPosition(cx, cy);
-            
-      tooltip.html("");
-      tooltip.append("h5").html("Total");
-      tooltip.append("div")
-        .html(top[i].date.format("MMMM D YYYY"))
-        .attr("class", "date"); 
-      tooltip.append("div")
-        .html(commas(top[i].y+top[i].y0, 2))
-        .attr("class", "amount"); 
-      tooltip.transition().duration(100).style("left", position[0] + "px")     
-        .style("top", position[1] + "px") 
-        .style("opacity",1);
+      position = getTooltipPosition(cx, cy);
+      date     = top[i].date.utc().format("MMMM D YYYY");
+      amt      = commas(top[i].y+top[i].y0, 2);  
+      
+      handleTooltip("Total", null, date, amt, position);
+      handleTracer(cx, cy);
+        
+    } else if (!isBlank) {
+      top  = lines[lines.length-1].results;
+      date = xScale.invert(d3.mouse(this)[0]);
+      amt  = yScale.invert(d3.mouse(this)[1]);
+      //i    = d3.bisect(top.map(function(d){return d[0]}), date);  
+
+      rows = lines.map(function(d,i){ 
+        j = d3.bisectLeft(d.results.map(function(d){return d[0]}), date);
+        return [i,j,d.results[j]?d.results[j][1]:0]});
+      
+      rows.sort(function(a,b){return a[2]-b[2]});
+      for (i=0;i<rows.length;i++) {if (rows[i][2]>amt) break;}
+      if (i==rows.length) i--;
+      
+      line = lines[rows[i][0]];
+      j    = rows[i][1];
+
+      
+      cy = yScale(line.results[j][1])+options.margin.top;
+      cx = xScale(line.results[j][0])+options.margin.left;
+
+//    determine position of tooltip      
+      position = getTooltipPosition(cx, cy);
+      date     = moment(line.results[j][0]).utc().format("MMMM D YYYY");
+      amt      = commas(line.results[j][1], 2);  
+      var name = currencyDropdown.getName(line.address) || line.name;
+      
+      handleTooltip(name, line.address, date, amt, position);
+      handleTracer(cx, cy);
     }
   }
+
 
   function movingInGround(section) {
     if (!isBlank) {
@@ -342,39 +366,53 @@ function CapChart(options) {
       var cx  = xScale(section.values[i].date)+options.margin.left;
       var c2y = yScale(section.values[i].y0)+options.margin.top;
    
-      tracer.select(".vertical").transition().duration(50).attr({x1:cx, x2:cx, y1:cy, y2:c2y});
-      tracer.select(".horizontal").transition().duration(50).style("opacity",0);
-      tracer.select(".top").transition().duration(50).attr({cx: cx, cy: cy});
-      tracer.select(".bottom").transition().duration(50).attr({cx: cx, cy: c2y}).style("opacity",1);
-      tracer.transition().duration(50).style("opacity",1);
+      
       
 //    determine position of tooltip      
       var position = getTooltipPosition(cx, cy);
-            
-      tooltip.html("");
-      tooltip.append("h5").html(currencyDropdown.getName(section.address))
-        .style("color", color(section.address));
-      tooltip.append("div").html(section.address)
-        .style("color", color(section.address))
-        .attr("class", "address");  
-      tooltip.append("div")
-        .attr("class", "date")
-        .html(section.values[i].date.format("MMMM D YYYY"));
-      tooltip.append("div")
-        .attr("class", "amount")
-        .html(commas(section.values[i].y, 2));
-        
-      tooltip.transition().duration(100).style("left", position[0] + "px")     
-        .style("top", position[1] + "px") 
-        .style("opacity",1);
-      
-      //d3.event.stopPropagation();
+      var name     = currencyDropdown.getName(section.address);
+      var amount   = commas(section.values[i].y, 2);
+      date = section.values[i].date.utc().format("MMMM D YYYY");
+          
+      handleTooltip(name, section.address, date, amount, position);
+      handleTracer(cx, cy, c2y);
     }
   }
-  
-  function movingOnLine(d) {
-    console.log(d);
+
+
+  function handleTracer (cx, cy, c2y) {
+    
+    tracer.select(".top").transition().duration(50).attr({cx: cx, cy: cy});
+    
+    if (c2y) {
+      tracer.select(".vertical").transition().duration(50).attr({x1:cx, x2:cx, y1:cy, y2:c2y});
+      tracer.select(".horizontal").transition().duration(50).style("opacity",0);
+      tracer.select(".bottom").transition().duration(50).attr({cx: cx, cy: c2y}).style("opacity",1);
+    } else {
+      tracer.select(".vertical").transition().duration(50).attr({x1:cx, x2:cx, y1:options.margin.top, y2:options.height+options.margin.top});
+      tracer.select(".horizontal").transition().duration(50).attr({x1:cx, x2:options.width+options.margin.left, y1:cy, y2:cy}).style("opacity",1);
+      tracer.select(".bottom").transition().duration(50).style("opacity",0);      
+    }  
+    
+    tracer.select(".top").transition().duration(50).attr({cx: cx, cy: cy});
+    tracer.transition().duration(50).style("opacity",1);  
   }
+  
+  
+  function handleTooltip(title, address, date, amount, position) {
+    
+    tooltip.html("");
+    tooltip.append("h5").html(title).style("color", address ? color(address) : "inherit");
+    if (address) tooltip.append("div").html(address)
+        .style("color", color(address))
+        .attr("class", "address"); 
+    tooltip.append("div").html(date).attr("class", "date"); 
+    tooltip.append("div").html(amount).attr("class", "amount"); 
+    tooltip.transition().duration(100).style("left", position[0] + "px")     
+      .style("top", position[1] + "px") 
+      .style("opacity",1);    
+  }
+  
   
   function getTooltipPosition(cx,cy) {
     var tx, ty;
@@ -387,6 +425,7 @@ function CapChart(options) {
     return [tx,ty];
   }
   
+  
   function commas (number, precision) {
     var parts = number.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -394,7 +433,6 @@ function CapChart(options) {
     return parts.join(".");
   }
 
-  
   drawChart();
   controls.select(".interval .selected")[0][0].click();
 }
