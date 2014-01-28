@@ -1,0 +1,145 @@
+.capChart .controls {
+  margin:20px 60px 0 60px;  
+}
+
+.capChart .controls .currencyDropdowns {
+  float:left;
+  padding-top:5px;
+}
+
+.capChart .controls .selectList {
+  padding-top:8px;
+}
+
+.capChart .controls .chartType {
+  float:left;
+  margin:0 20px;
+}
+
+.capChart .controls .interval {
+  float:right;
+}
+
+.capChart .background {
+    fill: none;
+    stroke : #ccc;
+    pointer-events: all;
+    stroke-width:1;
+    shape-rendering: crispEdges;
+}
+
+.capChart .loader {
+    width:40px;
+    position:absolute;
+    top:50%;
+    left:50%; 
+    margin-top:-50px;
+    margin-left:-20px;
+}
+
+.capChart .axis {
+    fill: #999;
+    shape-rendering: crispEdges;
+}
+
+.capChart .axis .title {
+    stroke-width:1;
+    stroke: #bbb;
+    fill: #bbb;
+}
+
+
+.capChart .axis path, .capChart .axis line {
+    fill: none;
+    stroke: #999;
+    stroke-width: 1;
+}
+
+.capChart .line path {
+  fill:none;
+  stroke-width:2;
+  stroke:@rippleBlue;  
+}
+
+.capChart .axis text {
+    font-size:10px;
+}
+
+.capChart .tracer {
+  opacity:0;  
+}
+
+.capChart .tracer line {
+  stroke:rgba(50,50,50,.5);   
+}
+
+.capChart .tracer circle {
+  fill:rgba(50,50,50,.5); 
+  stroke:none;
+}
+
+.capChart div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 220px;                                  
+  padding: 10px;             
+  font-size:14px;   
+  background: rgba(255,255,255,.9);   
+  border: 1px solid #ccc;               
+  pointer-events: none; 
+  color:#777; 
+  z-index:1000; 
+  border-radius:2px;  
+  opacity:0;  
+}
+
+.capChart div.tooltip h5 {
+  margin:2px;
+}
+
+.capChart div.tooltip .address {
+  font-size:10px;
+}
+
+.capChart div.tooltip .date {
+  padding-top:3px;
+  color:#aaa;
+}
+
+.capChart div.tooltip .amount {
+  font-size:18px;  
+  padding:2px;
+}
+
+/*
+ * Dark Theme
+ */
+.dark .capChart .section {
+  opacity:.7;
+}
+
+.dark .capChart .background,
+.dark .capChart .hover,
+.dark .capChart .axis path,
+.dark .capChart .axis line {
+  stroke : #404040;
+}
+
+.dark .capChart .axis text {
+  fill : #666; 
+  stroke: #666;
+}
+
+.dark .capChart .tracer line {
+  stroke:rgba(200,200,200,.7);   
+}
+
+.dark .capChart .tracer circle {
+  fill:rgba(200,200,200,.7); 
+}
+
+.dark .capChart div.tooltip { 
+  background: rgba(40,40,40,.9);
+  border-color: #444;
+  color: #eee;
+}

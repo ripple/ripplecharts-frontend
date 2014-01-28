@@ -18,13 +18,13 @@ angular.module( 'ripplecharts.capitalization', [
 
 .controller( 'CapitalizationCtrl', function CapitalizationCtrl( $scope ) {
 
-  CapitalizationChart();
-/*  
+//  CapitalizationChart();
+  
   var cap = new CapChart ({
     id       : "#capitalizationChart",
     currency : "USD",
     url      : API,  
     resize   : true
   });
-*/    
+    
 });

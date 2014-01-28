@@ -119,7 +119,8 @@ angular.module( 'ripplecharts.markets', [
   });   
 
   loaded = true;
-  d3.select("#interval .selected")[0][0].click(); //to load the first chart
+//the code below should not be needed as it should load via the 'online' indicator
+//d3.select("#interval .selected")[0][0].click(); //to load the first chart
 
 
 //new connection needed for now because of a bug in ripple-lib 

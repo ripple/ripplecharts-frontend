@@ -130,15 +130,18 @@ var TradeFeed = function (options) {
      
     if (self.requestDaily) self.requestDaily.abort();
     self.requestDaily = apiHandler.offersExercised({
-      startTime     : then,
-      endTime       : now,
+      startTime     : then.toDate(),
+      endTime       : now.toDate(),
       timeIncrement : 'all',
       
-      "trade[currency]" : self.trade.currency,
-      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
-      "base[currency]"  : self.base.currency,
-      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
+//      "trade[currency]" : self.trade.currency,
+//      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
+//      "base[currency]"  : self.base.currency,
+//      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
 
+      base  : self.base,
+      trade : self.trade
+      
     }, function(data){
       
       high   = data[0].high;
@@ -174,14 +177,17 @@ var TradeFeed = function (options) {
 //  parameter for max returned transactions, so we will set that instead    
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime : then,
-      endTime   : now,
+      startTime : then.toDate(),
+      endTime   : now.toDate(),
       reduce    : false,
       
-      "trade[currency]" : self.trade.currency,
-      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
-      "base[currency]"  : self.base.currency,
-      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
+//      "trade[currency]" : self.trade.currency,
+//      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
+//      "base[currency]"  : self.base.currency,
+//      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
+
+      base  : self.base,
+      trade : self.trade
       
     }, function(data){
       loader.transition().style('opacity',0);

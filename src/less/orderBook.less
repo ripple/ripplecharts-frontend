@@ -1,4 +1,87 @@
-.chart .centerline {stroke:#cde}
+.orderbookChart {
+    width:100%;
+    position: relative;
+    clear:both;
+}
+
+.orderbookChart .background {
+    fill: none;
+    stroke : #999;
+    pointer-events: all;
+    stroke-width:1;
+    shape-rendering: crispEdges;
+}
+
+.orderbookChart .loader {
+    width:40px;
+    position:absolute;
+    top:50%;
+    left:50%; 
+    margin-top:-50px;
+    margin-left:-20px;
+}
+
+.orderbookChart .axis {
+    fill: #999;
+    shape-rendering: crispEdges;
+}
+
+.orderbookChart .axis .title {
+    stroke-width:1;
+    stroke: #bbb;
+    fill: #bbb;
+}
+
+
+.orderbookChart .axis path, .orderbookChart .axis line {
+    fill: none;
+    stroke: #999;
+    stroke-width: 1;
+}
+
+.orderbookChart .axis text {
+    font-size:10px;
+}
+
+.orderbookChart .axis.price text, .orderbookChart .axis.volume text {
+    font-size:12px;
+}
+
+.orderbookChart path {
+    fill: none;
+    stroke: #3369a8;
+    stroke-width:2;
+}
+
+.orderbookChart line {
+    stroke: #999;
+    shape-rendering: crispEdges;
+}
+
+.orderbookChart .status {
+    text-align:center;
+    color:#aaa;
+    position:absolute;
+    width:100%;
+    top:30%;
+}
+
+.orderbookChart .hover {
+    stroke: #999;
+    stroke-width: 1;
+}
+
+.orderbookChart .focus {
+    fill: rgba(255,255,255,.5);
+    stroke: #999;
+}
+
+.orderbookChart .focus.dark {
+    fill:#555;
+    stroke: none;
+}
+
+.orderbookChart .centerline {stroke:#cde}
 
 .bookTables {
   width:auto;
@@ -61,8 +144,24 @@
  *  dark theme 
  */
 
-.dark .chart .centerline {
+.dark .orderbookChart .centerline {
   stroke:#123;
+}
+
+.dark .orderbookChart .background,
+.dark .orderbookChart .hover,
+.dark .orderbookChart .axis path,
+.dark .orderbookChart .axis line {
+  stroke : #404040;
+}
+
+.dark .orderbookChart .axis text {
+  fill : #666; 
+  stroke: #666;
+}
+
+.dark .orderbookChart .status {
+  color: #666;
 }
 
 .dark .bookTables {

@@ -1,8 +1,10 @@
-
-.chart svg {
+.priceChart {
+    width:100%;
+    position: relative;
+    clear:both;
 }
 
-.chart .background {
+.priceChart .background {
     fill: none;
     stroke : #999;
     pointer-events: all;
@@ -10,7 +12,7 @@
     shape-rendering: crispEdges;
 }
 
-.chart .loader {
+.priceChart .loader {
     width:40px;
     position:absolute;
     top:50%;
@@ -19,49 +21,44 @@
     margin-left:-20px;
 }
 
-.chart .axis {
+.priceChart .axis {
     fill: #999;
     shape-rendering: crispEdges;
 }
 
-.chart .axis .title {
+.priceChart .axis .title {
     stroke-width:1;
     stroke: #bbb;
     fill: #bbb;
 }
 
 
-.chart .axis path, .chart .axis line {
+.priceChart .axis path, .priceChart .axis line {
     fill: none;
     stroke: #999;
     stroke-width: 1;
 }
 
-.chart .axis text {
+.priceChart .axis text {
     font-size:10px;
 }
 
-.chart .axis.price text, .chart .axis.volume text {
+.priceChart .axis.price text, .priceChart .axis.volume text {
     font-size:12px;
 }
 
-.chart {
-    width:100%;
-    position: relative;
-}
-
-.chart path {
+.priceChart path {
     fill: none;
     stroke: #3369a8;
     stroke-width:2;
 }
 
-.chart line {
+.priceChart line {
     stroke: #999;
     shape-rendering: crispEdges;
 }
 
-.chart .status {
+.priceChart .status {
     text-align:center;
     color:#aaa;
     position:absolute;
@@ -69,17 +66,17 @@
     top:30%;
 }
 
-.chart .hover {
+.priceChart .hover {
     stroke: #999;
     stroke-width: 1;
 }
 
-.chart .focus {
+.priceChart .focus {
     fill: rgba(255,255,255,.5);
     stroke: #999;
 }
 
-.chart .focus.dark {
+.priceChart .focus.dark {
     fill:#555;
     stroke: none;
 }
@@ -109,12 +106,12 @@
     stroke-width : 2;	
 }
 
-.chart .volumeBars rect {
+.priceChart .volumeBars rect {
     fill : #ddd;	
     stroke : #bbb;
 }
 
-.chart .title {
+.priceChart .title {
     font-size:15px;
 }
 
@@ -148,24 +145,24 @@ div.chartDetails .volume {color:#369}
  * dark theme 
  */
 
-.dark .chart .background,
-.dark .chart .hover,
-.dark .chart .axis path,
-.dark .chart .axis line {
+.dark .priceChart .background,
+.dark .priceChart .hover,
+.dark .priceChart .axis path,
+.dark .priceChart .axis line {
   stroke : #404040;
 }
 
-.dark .chart .axis text {
+.dark .priceChart .axis text {
   fill : #666; 
   stroke: #666;
 }
 
-.dark .chart .volumeBars rect {
+.dark .priceChart .volumeBars rect {
   stroke:#888;
   opacity:.4;
 }
 
-.dark .chart .status {
+.dark .priceChart .status {
   color: #666;
 }
 

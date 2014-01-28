@@ -163,10 +163,8 @@ var MiniChart = function(base, trade, markets) {
       timeIncrement : "hour",
       timeMultiple  : 1,
       descending    : true,
-      "trade[currency]" : self.trade.currency,
-      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
-      "base[currency]"  : self.base.currency,
-      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
+      base          : self.base,
+      trade         : self.trade
 
     }, function(data){
       self.lineData = data;

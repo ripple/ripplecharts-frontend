@@ -11,17 +11,16 @@ var TotalAccounts = function (options) {
   
   var interval = d3.select(".interval").selectAll("a")
     .data([
-      {name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
-      {name: "1h",  interval:"hour",   multiple:1,  offset: function(d) { return d3.time.day.offset(d, -5); }},
-      {name: "4hr", interval:"hour",   multiple:4,  offset: function(d) { return d3.time.day.offset(d, -20); }},
-      {name: "1d",  interval:"day",    multiple:1,  offset: function(d) { return d3.time.day.offset(d, -120); }},
-      {name: "3d",  interval:"day",    multiple:3,  offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "1w",  interval:"day",    multiple:7,  offset: function(d) { return d3.time.year.offset(d, -3); }},
-      {name: "1m",  interval:"month",  multiple:1,  offset: function(d) { return d3.time.year.offset(d, -5); }}
+      //{name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
+      {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
+      {name: "month",  interval:"hour",  offset: function(d) { return d3.time.month.offset(d, -1); }},
+      {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
+      {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
+      {name: "max",    interval:"day",  offset: function(d) { return d3.time.year.offset(d, -3); }}
     ])
   .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { return d.name === "3d"})
+    .classed("selected", function(d) { return d.name === "year"})
     .text(function(d) { return d.name; })
     .on("click", function(d){
       d3.event.preventDefault();
@@ -92,6 +91,7 @@ var TotalAccounts = function (options) {
         lineData = [];
         
       data.splice(0,1);
+      data.reverse(); //descending option doesnt work
       
       lineData = data.map(function(d){
         total += d[1];

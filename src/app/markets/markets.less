@@ -19,33 +19,15 @@
   text-align:center;
 }
 
-#currency-pair {
+#currencyPair {
   margin:5px 0 5px 55px;
 }
 
-#currency-pair select {
-  width:auto;
-  margin:2px;
-  width:auto;
-  height:auto;
-  border:1.5px solid @rippleBlue;
-  color: @rippleBlue;
-  background:none;
-  -webkit-appearance:none;
-  padding: 2px 20px 2px 4px;
-  line-height:1em;
-  background-image:url('images/dropdownBlue.png');
-  background-repeat: no-repeat;
-  background-position: 95% 50%;
-  background-size: 13px;
-  font-weight:bold;
-}
-
-#currency-pair .gateway {
+#currencyPair .gateway {
   min-width:150px;  
 }
 
-#currency-pair h3 {
+#currencyPair h3 {
   margin: 0 0 .5em;
   background: #f6f6f6;
 }
@@ -74,19 +56,7 @@
   margin-right:55px;
 }
 
-.markets .chart {
-  clear:both;
-}
-
 #bookChart {margin-top:15px}
-
-/*
- * Dark theme
- * 
- */
-.dark #currency-pair select {
-  border:2px solid #137;
-}
 
 /*
  * Responsive tweaks 
@@ -133,7 +103,7 @@
 }
 
 @media (max-width: 767px) {
-  #currency-pair {
+  #currencyPair {
     width:90%;
     text-align:center;
     margin:10px 5%;
@@ -179,17 +149,17 @@
 }
 
 @media (max-width: 480px) {
-  #currency-pair select{
+  #currencyPair select{
     font-size:22px;
     padding:8px 40px 8px 8px;
     background-size:20px;
   }  
   
-  #currency-pair .gateway {
+  #currencyPair .gateway {
     min-width:260px;  
   }
   
-  .dark #currency-pair select {
+  .dark #currencyPair select {
     border-width:3px;
   } 
   

@@ -5,14 +5,15 @@ ApiHandler = function (url) {
   
   function apiRequest (route) {
     var request = d3.xhr(self.url+"/"+route);
-    request.header("Content-type","application/x-www-form-urlencoded");
+    //request.header("Content-type","application/x-www-form-urlencoded");
+    request.header('Content-Type', 'application/json');
     return request;
   }
   
   this.offersExercised = function (params, load, error) {
     var request = apiRequest("offersExercised");
-    
-    request.post(parseParams(params))
+
+    request.post(JSON.stringify(params))
       .on('load', function(xhr){
         var response = JSON.parse(xhr.response), data = [];   
 
@@ -68,11 +69,28 @@ ApiHandler = function (url) {
     return request;    
   } 
   
+  this.issuerCapitalization = function (params, load, error) {
+    
+    var request = apiRequest("gatewayCapitalization");
+        
+    request.post(JSON.stringify(params))
+      .on('load', function(xhr) {
+        var response = JSON.parse(xhr.response);   
+        load(response);
+      })
+      .on('error', function(xhr){
+        console.log(xhr.response);
+        error({status:xhr.status,text:xhr.statusText,message:xhr.response})
+      });
+      
+    return request;        
+  }
+  
   this.getTotalAccounts = function(time, callback){
     var request = apiRequest("accountsCreated");
     time = time || new Date();
     
-    request.post(parseParams({
+    request.post(JSON.stringify({
       startTime     : time,  
       endTime       : d3.time.year.offset(time, -10),
       timeIncrement : "all"
@@ -91,8 +109,7 @@ ApiHandler = function (url) {
   
   this.accountsCreated = function (params, callback, err) {
     var request = apiRequest("accountsCreated");
-
-    request.post(parseParams(params))
+    request.post(JSON.stringify(params))
     .on('load', function(xhr){   
       callback(JSON.parse(xhr.response));
       
@@ -117,14 +134,5 @@ ApiHandler = function (url) {
       console.log(xhr.response);
       error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });    
-  }
-  
-  function parseParams(o) {
-    var s = [];
-    for (var key in o) {
-      s.push(key + "=" + encodeURIComponent(o[key]));
-    }
-
-      return s.join("&");
   }
 }

@@ -11,7 +11,7 @@ PriceChart = function (options) {
     
   self.type = options.type ? options.type : "line";  //default to line  	
   
-  var div = d3.select(options.id).attr("class","chart"),
+  var div = d3.select(options.id).attr("class","priceChart"),
     svg, svgEnter, gEnter, gradient, 
     hover, horizontal, focus, 
     status, details, loader;
@@ -167,17 +167,19 @@ PriceChart = function (options) {
     
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime     : self.start,
-      endTime       : self.end,
+      startTime     : self.start.toDate(),
+      endTime       : self.end.toDate(),
       timeIncrement : d.interval,
       timeMultiple  : d.multiple,
       descending    : false,
       
-      "trade[currency]" : trade.currency,
-      "trade[issuer]"   : trade.issuer ? trade.issuer : "",
-      "base[currency]"  : base.currency,
-      "base[issuer]"    : base.issuer  ? base.issuer : ""
-
+      
+      //"trade[currency]" : trade.currency,
+      //"trade[issuer]"   : trade.issuer ? trade.issuer : "",
+      //"base[currency]"  : base.currency,
+      //"base[issuer]"    : base.issuer  ? base.issuer : ""
+      base : base,
+      trade : trade
     }, function(data){
       
       //if we've got live data reported already, we need to merge

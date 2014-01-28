@@ -5,7 +5,7 @@
     gatewayByAddress,
     queue = [];
 
-  ripple.currencyDropdown = function(excludeIssuers) {
+  ripple.currencyDropdown = function(currencyList) {
     var event = d3.dispatch("change"), selected;
 	
     if (!accountsByCurrency) {
@@ -39,10 +39,10 @@
 
 //  this function is called to display currency then issuer    
     function loadDropdowns(selection) {
-      var currencies     = ["XRP"].concat(d3.keys(accountsByCurrency).sort());
+      var currencies     = currencyList || ["XRP"].concat(d3.keys(accountsByCurrency).sort());
       var currencySelect = selection.append("select").attr("class","currency").on("change", changeCurrency);
       var gateway        = selected && gatewayByAddress[selected.issuer];
-      if (!excludeIssuers) var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
+      if (!currencyList) var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
 
       var option = currencySelect.selectAll("option")
         .data(currencies)
@@ -51,10 +51,10 @@
         .text(function(d){return d});   
        
         
-      if (!excludeIssuers) changeCurrency();
+      if (!currencyList) changeCurrency();
       
       function changeCurrency() {
-        if (excludeIssuers) {
+        if (currencyList) {
           event.change(currencySelect.node().value);  
         } else {
           var currency = currencySelect.node().value;
@@ -132,6 +132,22 @@
     dropdown.selected = function(_) {
       return arguments.length ? (selected = _, dropdown) : selected;
     };
+    
+    dropdown.getIssuers = function (currency) {
+      var accounts = accountsByCurrency[currency], issuers = []; 
+      if (!accounts || !accounts.length) return issuers;
+      
+      issuers = accounts.map(function(d){
+        return d.address;
+      });
+      
+      return issuers;
+    }
+    
+    dropdown.getName = function(issuer) {
+      var gateway = gatewayByAddress[issuer];
+      return gateway ? gateway.name : ""; 
+    }
     
     return d3.rebind(dropdown, event, "on");
   };

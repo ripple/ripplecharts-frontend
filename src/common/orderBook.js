@@ -3,7 +3,7 @@ var OrderBook = function (options) {
   self.offers;
   
   var r      = options.remote; 
-  var chart  = d3.select("#"+options.chartID).attr('class','chart'),
+  var chart  = d3.select("#"+options.chartID).attr('class','orderbookChart'),
     svg, depth, gEnter, 
     xAxis, leftAxis, rightAxis,
     xTitle, leftTitle, rightTitle,

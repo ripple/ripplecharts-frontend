@@ -449,7 +449,6 @@ function enterTransactionMode(tx) {
   if (mode != "transaction") {
     eraseGraph();
     txx = tx;
-    console.log(tx);
     $("#transactionInformation").html(txDescription(tx));
     var currency;
     var amount = tx.Amount ? tx.Amount : tx.LimitAmount;
@@ -907,7 +906,6 @@ var translationX = 0;
 var translationY = 0;
 var panOffset = [0,0];
 function redraw() {
-  console.log('redraw');
   translationX += d3.event.dx;
   translationY += d3.event.dy;
   panAndZoom();
@@ -1385,7 +1383,7 @@ function addNodes(degree) {
   var link = svg.select("g#linkGroup").selectAll("line.static").data(force.links())
     .enter().append("svg:line")
     .attr("class","static")
-    .style("opacity",function(d) {console.log(d.opacity); return d.opacity ? d.opacity:1})
+    .style("opacity",function(d) { return d.opacity ? d.opacity:1})
     .attr("stroke-width", linkOrNot);
 
 
@@ -1760,8 +1758,6 @@ function updateTransactions(address, appending) {
               transactionType = "offerin";
               amount = affectedKeys[posKey]=="XRP" ? positive : {value: positive, currency: affectedKeys[posKey]};
               secondAmount = affectedKeys[negKey]=="XRP" ? -negative : {value: -negative, currency: affectedKeys[negKey]};
-              console.log(amount);
-              console.log(secondAmount);
             }
           } else {
             console.log("Could not interpret as offerin.", affectedBalances);
@@ -2036,14 +2032,12 @@ function focusOtherCurrency(that) {
 }
 
 function blurOtherCurrency(that) {
-  console.log(that.value);
-  console.log($(that).css('font-style'));
+
   if ($(that).val()==='' || $(that).css('font-style')=='italic') { 
     $(that).css('font-style','italic').css('color','#999').val('other');
   } else {
     var upper=$(that).val().toUpperCase();
     $(that).val(upper);
-    console.log(that);
     changeCurrency('___');
   }
 }
