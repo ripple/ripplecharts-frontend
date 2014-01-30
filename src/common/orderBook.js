@@ -1,5 +1,5 @@
 var OrderBook = function (options) {
-  var self    = this, asks, bids;
+  var self    = this, asks, bids, isLoading;
   self.offers;
   
   var r      = options.remote; 
@@ -74,6 +74,11 @@ var OrderBook = function (options) {
       .attr("class", "loader")
       .attr("src", "assets/images/throbber5.gif")
       .style("opacity", 0); 
+      
+    if (isLoading) {
+      depth.style("opacity", 0.5); 
+      loader.style("opacity", 1);
+    }
   }
   
   function setStatus (string) {
@@ -158,6 +163,7 @@ var OrderBook = function (options) {
 
     bookTables.transition().style("opacity", 0.5);
     self.resetChart();
+    isLoading = true;
     
     if (asks) {
       asks.removeListener('model', handleAskModel);

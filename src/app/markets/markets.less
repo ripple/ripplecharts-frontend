@@ -20,7 +20,7 @@
 }
 
 #currencyPair {
-  margin:5px 0 5px 55px;
+  margin:5px 55px 5px 55px;
 }
 
 #currencyPair .gateway {
@@ -49,6 +49,44 @@
   border-bottom:3px solid transparent;
 }
 
+.rippleStatus {
+  float:right;
+  overflow:hidden;
+  color:#aaa;
+}
+
+.rippleStatus .items {
+  display:table; 
+  margin-top:3px; 
+}
+
+.rippleStatus .items div {
+  display:table-cell;
+  vertical-align:middle;
+}
+
+.rippleStatus .label {
+  font-size:10px;
+  padding:0 5px;
+}
+
+.rippleStatus .index {
+  font-size:13px;
+}
+
+.rippleStatus svg {
+  opacity:.55;
+  float:right;
+}
+
+.rippleStatus svg.disconnected circle {
+  fill : #c00;  
+}
+
+.rippleStatus svg.connected circle {
+  fill : #0a0;  
+}
+
 #interval {margin-left:55px; float:left; clear:both}
 
 #chartType {
@@ -57,6 +95,14 @@
 }
 
 #bookChart {margin-top:15px}
+
+/*
+ *  dark theme 
+ */
+.dark .rippleStatus {
+  color:@darkTextDark;
+  font-weight:bold;
+}
 
 /*
  * Responsive tweaks 
@@ -107,6 +153,16 @@
     width:90%;
     text-align:center;
     margin:10px 5%;
+  }
+  
+  .rippleStatus {
+    float:none;
+    text-align:center;
+  }
+  
+  .rippleStatus .items {
+    display:inline-table;
+    margin:0 10px 10px;
   }
 }
 

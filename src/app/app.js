@@ -48,10 +48,53 @@ angular.element(document).ready(function() {
     
         
     $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
+
+      mixpanel.track("Page", {"Page Name":toState.name, "Theme":$scope.theme});
+      
       if ( angular.isDefined( toState.data.pageTitle ) ) {
         $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
       }
     });
+    
+    
+  //get ledger number and total coins  
+    remote.on('ledger_closed', function(x){
+      
+      $scope.ledgerLabel = "Ledger #:";
+      $scope.ledgerIndex = Number(parseInt(x.ledger_index,10)).toLocaleString();
+      remote.request_ledger('closed', handleLedger);
+      $scope.$apply();
+       
+    });
+  
+    function handleLedger(err, obj) {
+      if (obj) {
+        $scope.ledgerLabel  = "Ledger #:";
+        $scope.ledgerIndex  = Number(parseInt(obj.ledger.ledger_index,10)).toLocaleString();
+        $scope.networkValue = Number(parseInt(obj.ledger.total_coins,10)/1000000).toLocaleString(); 
+        $scope.$apply();
+      }
+    }  
+    
+    $scope.ledgerLabel = "connecting...";
+    
+    remote.request_ledger('closed', handleLedger); //get current ledger;     
+    remote.on("disconnect", function(){
+      $scope.ledgerLabel      = "reconnecting...";
+      $scope.ledgerIndex      = "";
+      $scope.connectionStatus = "disconnected";
+      $scope.$apply();      
+    }); 
+    
+    remote.on("connect", function(){
+      $scope.ledgerLabel      = "connected";
+      $scope.connectionStatus = "connected";
+      $scope.$apply();      
+    
+      //setTimeout(function(){remote.disconnect()},5000);
+      //setTimeout(function(){remote.connect()},10000);
+    }); 
+    
   });
   
   //load gateways file before starting the app
@@ -61,7 +104,7 @@ angular.element(document).ready(function() {
     //connect to the ripple network;
     remote = new ripple.Remote(Options.ripple);
     remote.connect();
-
+  
     angular.bootstrap(document, ['ripplecharts']);
     //setTimeout(function(){console.log(remote); remote.disconnect()}, 10000);
     //setTimeout(function(){remote.connect()}, 15000);

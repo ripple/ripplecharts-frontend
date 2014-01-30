@@ -34,7 +34,8 @@ var TradeFeed = function (options) {
     
     if (listener) listener.updateViewOpts({base:base,trade:trade});
     else listener = new OffersExercisedListener({base:base,trade:trade}, handleTransaction);
-    
+
+/*    
     //mock data
     transactions = [
       {time:moment(new Date()), amount:100, price:50, type:""},
@@ -52,7 +53,7 @@ var TradeFeed = function (options) {
       {time:moment(new Date()), amount:100, price:50, type:"bid"},
       {time:moment(new Date()), amount:110, price:200, type:"bid"}
     ];
-    
+*/    
     transactions = [];
     updateTrades();     //reset the last trade list
     updateDailyStats(); //reset the daily stats
@@ -84,7 +85,8 @@ var TradeFeed = function (options) {
     volume += trade.amount;
     
     updateDailyStats(); 
-    updateTrades();    
+    updateTrades();
+    loader.style('opacity', 0);    
   }
   
   function updateTrades () {
@@ -180,14 +182,8 @@ var TradeFeed = function (options) {
       startTime : then.toDate(),
       endTime   : now.toDate(),
       reduce    : false,
-      
-//      "trade[currency]" : self.trade.currency,
-//      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
-//      "base[currency]"  : self.base.currency,
-//      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
-
-      base  : self.base,
-      trade : self.trade
+      base      : self.base,
+      trade     : self.trade
       
     }, function(data){
       loader.transition().style('opacity',0);
@@ -195,8 +191,11 @@ var TradeFeed = function (options) {
       updateTrades()
            
     }, function (error){
-      loader.transition().style('opacity',0);
-      status.html(error.text ? error.text : "Unable to load data");
+
+      if (!transactions.length) //trades may have come through the live feed
+        status.html(error.text ? error.text : "Unable to load data");
+      
+      loader.transition().style('opacity',0);      
       console.log(error);
     }); 
   }

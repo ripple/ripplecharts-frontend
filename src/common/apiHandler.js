@@ -47,13 +47,15 @@ ApiHandler = function (url) {
             
             data = response.map(function(d) {
               return {
-                time   : moment.utc(d[0]),
-                open   : d[4],
-                close  : d[5],
-                high   : d[6],
-                low    : d[7],
-                vwap   : d[8],
-                volume : d[1]
+                time    : moment.utc(d[0]),
+                open    : d[4],
+                close   : d[5],
+                high    : d[6],
+                low     : d[7],
+                vwap    : d[8],
+                volume  : d[1],
+                num     : d[3],
+                volume2 : d[2]
               };
             });
           }
@@ -72,10 +74,23 @@ ApiHandler = function (url) {
   this.issuerCapitalization = function (params, load, error) {
     
     var request = apiRequest("gatewayCapitalization");
+/*  
+    params = {
+      pairs : [{
+      currency: 'USD',
+      issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"  
+      }],
+    
+      startTime : moment.utc().subtract("minutes",1),
+      endTime : moment.utc(),
+      timeIncrement : "minutes" 
+    }
+*/        
         
     request.post(JSON.stringify(params))
       .on('load', function(xhr) {
-        var response = JSON.parse(xhr.response);   
+        var response = JSON.parse(xhr.response);  
+        console.log(response); 
         load(response);
       })
       .on('error', function(xhr){

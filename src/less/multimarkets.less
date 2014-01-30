@@ -1,12 +1,12 @@
 
 .multiMarket .add {
   width:320px;
-  height:284px;
+  height:281px;
   background:#f5f5f5;
   float:left;
   border: 1px solid #ddd;
   margin: 5px;
-  line-height:284px;
+  line-height:271px;
   font-size:200px;
   color:#ddd;
   cursor:pointer;
@@ -163,35 +163,39 @@
 .multiMarket .chart .dropdowns div {
   overflow:hidden;
   display:table-cell;
+  text-align:left;
 }
- 
+
+.multiMarket .chart .dropdowns .base {
+  border-right:1px solid #ddd;  
+} 
+
 .multiMarket .chart .dropdowns select {
   -webkit-appearance: none;
   border:none;
   background:none;
   width:auto;  
   margin:0;
-  height:25px;
+  height:22px;
   background:url('images/dropdown.png') no-repeat 97% 100%;
   background-size:8px 10px;
-  padding:0 8px 0 3px;
+  padding:4px 10px 4px 5px;
   border-right:1px solid #ddd;
   border-radius:0;
   display:inline;
+  color:#666;
 }
 .multiMarket .chart .dropdowns .currency {
   font-size:16px;  
-  min-width:48px;
+  width:60px;
 }
 
 .multiMarket .chart .dropdowns .gateway {
   font-size:11px;
-  width:110px;
-}
-
-.multiMarket .chart .trade .currency {
+  width:96px;
   border:none;
 }
+
 
 .multiMarket .chart .status {
   position:absolute;
@@ -266,6 +270,10 @@
   border-color:#333;
   background:#151515;
 }
+
+.dark .multiMarket .chart .dropdowns .base {
+  border-color:#333;  
+} 
 
 .dark .multiMarket .chart .dropdowns select {
   border-color:#333;

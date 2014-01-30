@@ -1,7 +1,8 @@
 //API url to backend
-var API = ""; 
+var API      = ""; 
+var MIXPANEL = ""
 
-var Options = {
+var Options  = {
   
   theme     : "light",
   base      : {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},

@@ -7,7 +7,7 @@ PriceChart = function (options) {
     volumeAxis  = d3.svg.axis().scale(volumeScale).orient("left").tickFormat(d3.format("s")),
     priceAxis   = d3.svg.axis().scale(priceScale).orient("right"),
     apiHandler  = new ApiHandler(options.url),
-    liveFeed;
+    liveFeed, isLoading;
     
   self.type = options.type ? options.type : "line";  //default to line  	
   
@@ -86,6 +86,11 @@ PriceChart = function (options) {
       .attr("class", "loader")
       .attr("src", "assets/images/throbber5.gif")
       .style("opacity", 0);	
+      
+    if (isLoading) {
+      svg.style("opacity", 0.5);
+      loader.style("opacity", 1);
+    }
   }
   
   function resizeChart () {
@@ -116,7 +121,7 @@ PriceChart = function (options) {
     status.style("opacity", 0);
     div.selectAll(".hover").style("opacity", 0);
     div.selectAll(".focus").style("opacity", 0);	
-    loader.style("opacity",1);	
+    loader.transition().duration(100).style("opacity",1);	
   }
 
     //set to line or candlestick  	
@@ -134,6 +139,8 @@ PriceChart = function (options) {
 
   //load historical from API  	  	      			
   this.load = function (base, trade, d) {
+
+    
     self.fadeOut();
     self.base     = base;
     self.trade    = trade;
@@ -141,6 +148,7 @@ PriceChart = function (options) {
     self.end      = moment();
     self.multiple = d.multiple;
     self.lineData = [];
+    isLoading     = true;
     
     if      (self.interval=="second") self.seconds = 1;
     else if (self.interval=="minute") self.seconds = 60;
@@ -172,14 +180,8 @@ PriceChart = function (options) {
       timeIncrement : d.interval,
       timeMultiple  : d.multiple,
       descending    : false,
-      
-      
-      //"trade[currency]" : trade.currency,
-      //"trade[issuer]"   : trade.issuer ? trade.issuer : "",
-      //"base[currency]"  : base.currency,
-      //"base[issuer]"    : base.issuer  ? base.issuer : ""
-      base : base,
-      trade : trade
+      base          : base,
+      trade         : trade
     }, function(data){
       
       //if we've got live data reported already, we need to merge
@@ -199,9 +201,13 @@ PriceChart = function (options) {
       }
       
       self.lineData = data.concat(self.lineData);
+      isLoading     = false;
+      
       drawData();
       
     }, function (error){
+      
+      isLoading = false;
       console.log(error);
       setStatus(error.text ? error.text : "Unable to load data");
     });     
@@ -209,7 +215,8 @@ PriceChart = function (options) {
   
   function setStatus (string) {
     status.html(string).style("opacity",1); 
-    if (string) loader.style("opacity",0);
+    if (string) loader.transition().duration(10).style("opacity",0);
+
   }
 
   function setLiveFeed () {
@@ -296,7 +303,7 @@ PriceChart = function (options) {
   }
   
   function drawData () {	
-    if (!self.lineData || !self.lineData.length) {
+    if (!isLoading && (!self.lineData || !self.lineData.length)) {
       setStatus("No Data for this Period");
     } else setStatus("");
 
@@ -419,8 +426,10 @@ PriceChart = function (options) {
     gEnter.select(".volume.axis").call(volumeAxis);
 
     //hide the loader, show the chart
-    svg.transition().duration(300).style("opacity", 1);
-    loader.transition().duration(300).style("opacity", 0);
+    if (!isLoading) {
+      svg.transition().duration(300).style("opacity", 1);
+      loader.transition().duration(300).style("opacity", 0);
+    }
 
   }
 

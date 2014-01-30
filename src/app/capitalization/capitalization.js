@@ -23,7 +23,7 @@ angular.module( 'ripplecharts.capitalization', [
   var cap = new CapChart ({
     id       : "#capitalizationChart",
     currency : "BTC",
-    format   : "stacked",
+    format   : "line",
     url      : API,  
     resize   : true
   });

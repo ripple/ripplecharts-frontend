@@ -616,9 +616,9 @@ module.exports = function ( grunt ) {
       process: function ( contents, path ) {
         return grunt.template.process( contents, {
           data: {
-            scripts: jsFiles,
-            styles: cssFiles,
-            version: grunt.config( 'pkg.version' )
+            scripts  : jsFiles,
+            styles   : cssFiles,
+            version  : grunt.config( 'pkg.version' )
           }
         });
       }

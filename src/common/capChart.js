@@ -11,18 +11,37 @@ function CapChart(options) {
   if (!options.height) options.height = options.width/2>500 ? options.width/2 : 500;
   
   self.currency = options.currency;
-  self.format   = options.format || "stacked";
-  
-  var isBlank = true;
+  self.format   = options.format   || "stacked";
+  self.dataType = options.dataType || "Capitalization";
+  self.range    = options.range    || "max";
+
+//add data type dropdown
+  controls.append("div").attr("class","dropdowns dataType").append("select").selectAll("option")
+    .data(['Capitalization', 'Trade Volume', '# of Trades'])
+    .enter().append("option")
+    .html(function(d){return d})
+    .attr("selected", function(d) {if (d == self.dataType) return true});
+    
+  controls.select(".dataType select").on('change',function(){
+    self.dataType = this.value;
+    var d = controls.select(".interval .selected").datum();
+    loadData(d);
+  });
+ 
+ 
+//add currency dropdown    
   var currencyList = ['BTC','USD','CNY','EUR','GBP','JPY','ILS','LTC'];
   var currencyDropdown = ripple.currencyDropdown(currencyList).selected({currency:options.currency})
     .on("change", function(currency) {
       self.currency = currency;
-      var d = controls.select(".interval .selected").datum();
-      loadData(d);
-  });
+      var range = controls.select(".interval .selected").datum();
+      loadData(range);
+  });  
+  
+  controls.append("div").attr("class","dropdowns").call(currencyDropdown);
 
-  controls.append("div").attr("class","currencyDropdowns").call(currencyDropdown);
+
+//add chart type select  
   var type = controls.append("div").attr("class", "chartType selectList").selectAll("a")
     .data(["line","stacked"])
     .enter().append("a")
@@ -36,28 +55,29 @@ function CapChart(options) {
       self.format = d;
       drawData();
     });
+
   
+//add interval select  
   var interval = controls.append("div").attr("class","interval selectList").selectAll("a")
     .data([
-      //{name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
       {name: "month",  interval:"hour",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
       {name: "max",    interval:"month", offset: function(d) { return d3.time.year.offset(d, -3); }}
     ])
-  .enter().append("a")
+    .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { return d.name === (options.range || "max")})
+    .classed("selected", function(d) { return d.name === self.range})
     .text(function(d) { return d.name; })
-    .on("click", function(d){
+    .on("click", function(range){
       d3.event.preventDefault();
       var that = this;
       interval.classed("selected", function() { return this === that; });
-      if (d.name == "custom") {
+      if (range.name == "custom") {
         //$('#range').slideToggle();    
       } else {
-        loadData(d);
+        loadData(range);
       }
     });
   
@@ -75,32 +95,99 @@ function CapChart(options) {
   var stack = d3.layout.stack().values(function(d) { return d.values; });  
   
   var svg, g, timeAxis, amountAxis, borders, sections, lines,
-    tracer, tooltip, loader;
+    tracer, tooltip, loader, isLoading;
   
-  var dataCache  = {};
-  var seriesList = {};
+  var capDataCache   = {};
+  var tradeDataCache = {};
   
-  function loadData (d) {
+  function loadData (range) {
     
-    self.range = d.name;
-    isBlank = true;
+    if (typeof mixpanel !== undefined) mixpanel.track("Value Chart", {
+      "Data Type"  : self.dataType,
+      "Currency"   : self.currency,
+      "Format"     : self.format,
+      "Range"      : range.name
+    });
+    
+    self.range = range.name;
+    isLoading  = true;
     loader.transition().style("opacity",1);
-    if (dataCache[self.currency] &&
-        dataCache[self.currency][self.range]) {
+    tracer.transition().duration(50).style("opacity",0); 
+    tooltip.transition().duration(50).style("opacity",0);     
+    if (self.dataType=="Capitalization") {
+      loadCapitalizationData(range, self.currency);
+    } else {
+      loadTradeData(range);
+    }
+  } 
+  
+  
+  function loadTradeData(range) {
+    if (tradeDataCache[self.currency] &&
+        tradeDataCache[self.currency][self.range]) {
+      drawData();
+      return;  
+    } 
+
+    var issuers = currencyDropdown.getIssuers(self.currency);    
+    for (var i=0; i<issuers.length; i++) {
+      loadTradeHelper(range, {currency:self.currency, issuer:issuers[i]});
+    }    
+  }
+  
+  function loadTradeHelper (range, base) {
+    var end = moment.utc();
+    
+    apiHandler.offersExercised({
+      startTime     : range.offset(end),
+      endTime       : end,
+      timeIncrement : range.interval,
+      descending    : false,
+      base          : base,
+      trade         : {currency:"XRP"}
+      
+    }, function(data){  
+      if (!tradeDataCache[base.currency]) 
+        tradeDataCache[base.currency] = {};
+      if (!tradeDataCache[base.currency][range.name])
+        tradeDataCache[base.currency][range.name] = {raw:[]};
+      
+        
+      tradeDataCache[base.currency][range.name]['raw'].push({
+        address : base.issuer,
+        name    : currencyDropdown.getName(base.issuer),
+        results : data.map(function(d){return[d.time.unix()*1000,d.volume]})});
+       
+      prepareStackedData(base.currency, range); 
+      if ((self.dataType=="Trade Volume" || self.dataType=="# of Trades") &&
+          self.currency==base.currency &&
+          self.range==range.name) drawData(); //may have been changed after loading started
+      
+    }, function (error){
+    console.log(error);
+    //setStatus(error.text ? error.text : "Unable to load data");
+    });       
+  }
+  
+  
+  function loadCapitalizationData(range, currency) { 
+    
+    if (capDataCache[currency] &&
+        capDataCache[currency][range.name]) {
       drawData();
       return;  
     } 
     
     var end     = moment.utc();
-    var issuers = currencyDropdown.getIssuers(self.currency);    
+    var issuers = currencyDropdown.getIssuers(currency);    
     var pairs = issuers.map(function(d){
       return {
-        currency : self.currency,
+        currency : currency,
         issuer   : d
       }
     });
     
-    var currencies = [self.currency];
+    var currencies = [currency];
     var gateways   = issuers.map(function(d){
       return d;
     });
@@ -114,28 +201,32 @@ function CapChart(options) {
     self.request = apiHandler.issuerCapitalization({
       currencies : currencies,
       gateways   : gateways,
-      timeIncrement : d.interval,
+      timeIncrement : range.interval,
       //pairs     : pairs,
-      startTime  : d.offset(end),
+      startTime  : range.offset(end),
       endTime    : end
-    }, function(response){
-      if (!dataCache[self.currency]) dataCache[self.currency] = {};
-      dataCache[self.currency][self.range] = {raw : response};
+    }, function(data){
+      if (!capDataCache[self.currency]) capDataCache[self.currency] = {};
+      capDataCache[self.currency][self.range] = {raw : data};
  
-      prepareStackedData();
+      prepareStackedData(currency, range);
       prepareLineData();
-      drawData();
+      
+      if (self.dataType=="Capitalization" &&
+        self.currency==currency &&
+        self.range==range.name) drawData(); //may have been changed after loading started
+
       
     }, function (error){
       console.log(error);
-      setStatus(error.text ? error.text : "Unable to load data");
+      //setStatus(error.text ? error.text : "Unable to load data");
     });    
   }
   
   function sortTime(a,b){return a[0]-b[0]}
   
   function prepareLineData() {
-    var raw = dataCache[self.currency][self.range].raw;
+    var raw = capDataCache[self.currency][self.range].raw;
     var totals = {}, series;
     if (raw.length<2) return;
     
@@ -154,7 +245,7 @@ function CapChart(options) {
     }
     
     
-    dataCache[self.currency][self.range].totals ={
+    capDataCache[self.currency][self.range].totals ={
       name    : "Total",
       address : "",
       results : t
@@ -163,10 +254,18 @@ function CapChart(options) {
   
 
   
-  function prepareStackedData() {
-    var raw = dataCache[self.currency][self.range].raw;
+  function prepareStackedData(currency, range) {
+
     var timestamps = [];
     var stacked = [];
+    var raw;
+    
+    if (self.dataType=='Capitalization') {
+      raw = capDataCache[currency][range.name].raw;
+      
+    } else {
+      raw = tradeDataCache[currency][range.name].raw;
+    }
 
 //  get all timestamps and set up data for the stacked chart    
     for (var i=0; i<raw.length; i++) {
@@ -200,7 +299,12 @@ function CapChart(options) {
       } 
     }  
     
-    dataCache[self.currency][self.range].stacked = stacked;  
+    if (self.dataType=='Capitalization') {
+      capDataCache[currency][range.name].stacked = stacked; 
+      
+    } else {
+      tradeDataCache[currency][range.name].stacked = stacked; 
+    }
   }
   
   function drawChart() {
@@ -215,12 +319,7 @@ function CapChart(options) {
       .attr("width", options.width)
       .attr("height", options.height)
       .on("mousemove", movingInSky);
-        
-    //borders.append("line").attr(borderAttributes).attr("x2",options.width);
-    //borders.append("line").attr(borderAttributes).attr("y2",options.height);
-    //borders.append("line").attr(borderAttributes).attr({y1:options.height, x2:options.width, y2:options.height});
-    //borders.append("line").attr(borderAttributes).attr({x1:options.width,  x2:options.width, y2:options.height});  
-    
+         
     timeAxis   = g.append("g").attr({class: "x axis", transform: "translate(0,"+ options.height+")"});
     amountAxis = g.append("g").attr({class: "y axis", transform: "translate("+options.width+",0)"});
       
@@ -240,10 +339,24 @@ function CapChart(options) {
   function drawData() {
   
     loader.transition().style("opacity",0);
+    if      (self.dataType=='Capitalization') drawCapData(); 
+    else if (self.dataType=='Trade Volume')   drawCapData(); 
+  
     
+  }
+  
+  
+  function drawCapData() {
     if (self.format=="stacked") {
       svg.selectAll('.line').remove();
-      var data = dataCache[self.currency][self.range].stacked;
+      var data;
+
+      if (self.dataType=='Capitalization') 
+        data = capDataCache[self.currency][self.range].stacked;
+        
+      else if (self.dataType=='Trade Volume')   
+       data = tradeDataCache[self.currency][self.range].stacked;
+          
       sections = stack(data);
       
       color.domain(data.map(function(d){return d.address}));  
@@ -265,18 +378,22 @@ function CapChart(options) {
       
       timeAxis.call(xAxis);
       amountAxis.call(yAxis);
-      isBlank = false;
+      isLoading = false;
       
     } else {
       svg.selectAll('.section').remove();
-      lines = dataCache[self.currency][self.range].raw.slice();  //make a copy
-      if (lines.length>1) lines.push(dataCache[self.currency][self.range].totals);
-      
-      var totals = lines[lines.length-1].results;
+      if (self.dataType=='Capitalization') {
+        lines = capDataCache[self.currency][self.range].raw;
+        
+      } else if (self.dataType=='Trade Volume')   {
+        lines = tradeDataCache[self.currency][self.range].raw;
+      }
+       
       
       color.domain(lines.map(function(d){return d.address})); 
-      xScale.domain(d3.extent(totals, function(d){return d[0]}));
-      yScale.domain([0, d3.max(totals, function(d){return d[1]})]);
+      
+      xScale.domain(getExtents("x", lines));
+      yScale.domain(getExtents("y", lines));
 
       var line = g.selectAll("g.line").data(lines);
       line.enter().append("g").attr("class","line");
@@ -297,14 +414,14 @@ function CapChart(options) {
       
       timeAxis.call(xAxis);
       amountAxis.call(yAxis);
-      isBlank = false;
+      isLoading = false;
     }
   } 
   
   
   function movingInSky() {
     var top, date, i, j, cx, cy, position;
-    if (!isBlank && self.format=="stacked") {
+    if (!isLoading && self.format=="stacked") {
 
       top  = sections[sections.length-1].values;
       date = xScale.invert(d3.mouse(this)[0]);
@@ -322,7 +439,7 @@ function CapChart(options) {
       handleTooltip("Total", null, date, amt, position);
       handleTracer(cx, cy);
         
-    } else if (!isBlank) {
+    } else if (!isLoading) {
       top  = lines[lines.length-1].results;
       date = xScale.invert(d3.mouse(this)[0]);
       amt  = yScale.invert(d3.mouse(this)[1]);
@@ -356,7 +473,7 @@ function CapChart(options) {
 
 
   function movingInGround(section) {
-    if (!isBlank) {
+    if (!isLoading) {
       var tx, ty;
       var date = xScale.invert(d3.mouse(this)[0]);
       var i    = d3.bisect(section.values.map(function(d){return d.date}), date);
@@ -432,7 +549,20 @@ function CapChart(options) {
     if (precision && parts[1]) parts[1] = parts[1].substring(0,precision);
     return parts.join(".");
   }
+  
+  function getExtents(axis, data) {
+    
+    var max, min, rows = data.map(function(d){
+        return d3.extent(d.results, function(d){ return axis=="x" ? d[0]:d[1]; });
+    });
+    
+    min = d3.min(rows, function(d){return d[0]});
+    max = d3.max(rows, function(d){return d[1]});
+    if (axis=="y") max *= 1.1; 
+    return [min, max];
+  }
 
   drawChart();
-  controls.select(".interval .selected")[0][0].click();
+  var range = controls.select(".interval .selected").datum();
+  loadData(range);  
 }

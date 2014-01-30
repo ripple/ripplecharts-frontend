@@ -47,7 +47,7 @@
       var option = currencySelect.selectAll("option")
         .data(currencies)
         .enter().append("option")
-        .property("selected", function(d) { return d === selected.currency; })
+        .property("selected", function(d) { return selected && d === selected.currency; })
         .text(function(d){return d});   
        
         

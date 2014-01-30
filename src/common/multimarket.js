@@ -3,7 +3,7 @@ var MiniChart = function(base, trade, markets) {
     header, details, range, showHigh, showLow, change, volume,
     svg, svgEnter, pointer, gEnter, 
     flipping, flip, 
-    status, horizontal, lastPrice, loader,
+    status, horizontal, lastPrice, loader, isLoading,
     dropdownA, dropdownB, dropdowns;
   
   self.lineData = [];
@@ -129,11 +129,13 @@ var MiniChart = function(base, trade, markets) {
         "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
         self.div.select(".trade .gateway").node().value+"</small>");
     }
+    
+    if (isLoading) loader.transition().duration(10).style("opacity",1);
   }
     
   this.setStatus = function (string) {
     status.html(string); 
-    if (string) {
+    if (string && !isLoading) {
       loader.transition().style("opacity",0);  
       details.selectAll("td").transition().style("opacity",0);
       gEnter.transition().style("opacity",0);
@@ -155,23 +157,35 @@ var MiniChart = function(base, trade, markets) {
 
     self.setStatus("");
     loader.transition().style("opacity",1);
-   
+    isLoading = true;
+    
+    if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
+      "Base Currency"  : self.base.currency,
+      "Base Issuer"    : self.base.issuer || "",
+      "Trade Currency" : self.trade.currency,
+      "Trade Issuer"   : self.trade.issuer || ""
+    });
+    
     if (self.request) self.request.abort();
     self.request = self.markets.apiHandler.offersExercised({
       startTime     : new Date(),
       endTime       : d3.time.day.offset(new Date(), -1),
       timeIncrement : "hour",
       timeMultiple  : 1,
-      descending    : true,
+      descending    : false,
       base          : self.base,
       trade         : self.trade
 
     }, function(data){
+      
       self.lineData = data;
+      isLoading     = false;
       drawData(true);
       
     }, function (error){
+      
       console.log(error);
+      isLoading = false;
       self.setStatus(error.text ? error.text : "Unable to load data" );
     });  
   }  
@@ -186,12 +200,14 @@ var MiniChart = function(base, trade, markets) {
   }
   
   function drawData(update) {
-
+        
+    if (!isLoading) {
+      loader.transition().style("opacity",0);
     
-    //if there is no data, hide the old chart and details
-    if (!self.lineData.length) return self.setStatus("No Data");  
-    else self.setStatus("");
-    loader.transition().style("opacity",0);
+      //if there is no data, hide the old chart and details
+      if (!self.lineData.length) return self.setStatus("No Data");  
+      else self.setStatus("");
+    }
     
     var area = d3.svg.area()
         .x(function(d) { return xScale(d.time); })

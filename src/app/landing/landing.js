@@ -63,25 +63,6 @@ angular.module( 'ripplecharts.landing', [
     markets.list([]);
   });
 
-
-  //get ledger number and total coins  
-  remote.on('ledger_closed', function(x){
-
-    $scope.ledgerIndex = feed.commas(parseInt(x.ledger_index,10));
-    remote.request_ledger('closed', handleLedger);
-    $scope.$apply();
-     
-  });
-  
-  function handleLedger(err, obj) {
-    if (obj) {
-      $scope.ledgerIndex  = feed.commas(parseInt(obj.ledger.ledger_index,10));
-      $scope.networkValue = feed.commas(parseInt(obj.ledger.total_coins,10)/1000000); 
-      $scope.$apply();
-    }
-  }  
-  
-  remote.request_ledger('closed', handleLedger); //get current ledger;  
   
   //get num accounts
   api = new ApiHandler(API);

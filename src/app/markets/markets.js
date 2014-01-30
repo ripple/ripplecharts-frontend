@@ -151,15 +151,26 @@ angular.module( 'ripplecharts.markets', [
 
 //single function to reload all feeds when something changes
   function loadPair() {
+    
+    var interval = d3.select("#interval .selected").datum();
+    
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
     
     store.session.set('base',  $scope.base);
     store.session.set('trade', $scope.trade);
         
-    priceChart.load($scope.base, $scope.trade, d3.select("#interval .selected").datum());
+    priceChart.load($scope.base, $scope.trade, interval);
     book.getMarket($scope.base, $scope.trade); 
-    tradeFeed.loadPair ($scope.base, $scope.trade);    
+    tradeFeed.loadPair ($scope.base, $scope.trade);   
+    mixpanel.track("Price Chart", {
+      "Base Currency"  : $scope.base.currency,
+      "Base Issuer"    : $scope.base.issuer || "",
+      "Trade Currency" : $scope.trade.currency,
+      "Trade Issuer"   : $scope.trade.issuer || "",
+      "Interval"       : interval.name,
+      "Chart Type"     : priceChart.type
+    }); 
   }
 
 
