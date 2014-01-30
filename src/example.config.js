@@ -1,9 +1,8 @@
 //API url to backend
-var API      = ""; 
-var MIXPANEL = ""
+API      = ""; 
+MIXPANEL = "";
 
-var Options  = {
-  
+Options = {
   theme     : "light",
   base      : {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
   trade     : {currency:"XRP", issuer:""},
@@ -13,7 +12,7 @@ var Options  = {
   ripple    : {
     
     trace   : false,
-    trusted : true,
+    trusted : false,
 
     servers: [
       { host: 's_west.ripple.com', port: 443, secure: true },

@@ -216,7 +216,6 @@ var OrderBook = function (options) {
       return;
     }
 
-    setStatus("");
     var bestBid = self.offers.bids[0].showPrice,
       bestAsk   = self.offers.asks[0].showPrice;
          
@@ -231,6 +230,9 @@ var OrderBook = function (options) {
       path.transition().style("opacity",0);  
       return;
     }
+    
+    setStatus("");
+    isLoading = false;
 
     //get rid of outliers, anything greater than 5 times the best price
     var min = Math.max(d3.min(lineData, function(d) { return d.showPrice; }), bestBid/5),

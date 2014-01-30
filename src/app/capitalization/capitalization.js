@@ -22,10 +22,13 @@ angular.module( 'ripplecharts.capitalization', [
   
   var cap = new CapChart ({
     id       : "#capitalizationChart",
-    currency : "BTC",
-    format   : "line",
     url      : API,  
     resize   : true
   });
-    
+
+
+//stop the listeners when leaving page  
+  $scope.$on("$destroy", function(){
+    cap.suspend();
+  });    
 });

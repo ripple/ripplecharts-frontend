@@ -139,7 +139,6 @@ angular.module( 'ripplecharts.markets', [
   book.resetChart();
   book.getMarket($scope.base, $scope.trade); 
 
-  
 //set up trades feed  
   tradeFeed = new TradeFeed({
     id     : "tradeFeed",
@@ -176,7 +175,6 @@ angular.module( 'ripplecharts.markets', [
 
 //stop the listeners when leaving page  
   $scope.$on("$destroy", function(){
-    console.log("destroy");
     priceChart.suspend();
     book.suspend();
     tradeFeed.suspend();

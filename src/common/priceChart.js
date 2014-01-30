@@ -242,8 +242,7 @@ PriceChart = function (options) {
     else liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
   }
   
-  this.suspend = function ()
-  {
+  this.suspend = function () {
     if (liveFeed) liveFeed.stopListener();
     if (options.resize && typeof removeResizeListener === 'function')
       removeResizeListener(window, resizeChart);   
