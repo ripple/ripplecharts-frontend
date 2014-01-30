@@ -1,5 +1,6 @@
 *.sw*
 *~
+*.credentials.json
 build/
 bin/
 node_modules/
