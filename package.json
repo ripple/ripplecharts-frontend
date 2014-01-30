@@ -33,6 +33,7 @@
     "karma-firefox-launcher": "~0.1.3",
     "karma-chrome-launcher": "~0.1.2",
     "karma-phantomjs-launcher": "~0.1.1",
-    "karma-coffee-preprocessor": "~0.1.2"
+    "karma-coffee-preprocessor": "~0.1.2",
+    "grunt-aws": "~0.3.0"
   }
 }

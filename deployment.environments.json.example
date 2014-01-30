@@ -1,0 +1,8 @@
+{
+  "staging": {
+    "bucket": "staging-bucket"
+  },
+  "production": {
+    "bucket": "production-bucket"
+  }
+}

@@ -18,17 +18,40 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-ngmin');
   grunt.loadNpmTasks('grunt-html2js');
+  grunt.loadNpmTasks('grunt-aws');
 
   /**
    * Load in our build configuration file.
    */
   var userConfig = require( './build.config.js' );
 
+  var deploymentEnvironment = process.env.NODE_ENV || "staging";
+
+  var deploymentConfig = require( './deployment.config.js' )(deploymentEnvironment);
+
   /**
    * This is the configuration object Grunt uses to give each plugin its 
    * instructions.
    */
   var taskConfig = {
+
+    aws:{
+      accessKeyId: deploymentConfig.aws.accessKeyId,
+      secretAccessKey: deploymentConfig.aws.secretAccessKey
+    },
+    s3: {
+      options: {
+        accessKeyId: deploymentConfig.aws.accessKeyId,
+        secretAccessKey: deploymentConfig.aws.secretAccessKey,
+        bucket: deploymentConfig.s3.bucket,
+        enableWeb: deploymentConfig.s3.enableWeb
+      },
+      build: {
+        cwd: "bin/",
+        src: "**"
+      }
+    },
+
     /**
      * We read in our `package.json` file so we can access the package name and
      * version. It's already there, so we don't repeat ourselves here.
@@ -545,6 +568,11 @@ module.exports = function ( grunt ) {
   };
 
   grunt.initConfig( grunt.util._.extend( taskConfig, userConfig ) );
+
+  /**
+   * Deployment Tasks
+   */
+  grunt.registerTask( 'deploy', [ 'default', 's3' ] );
 
   /**
    * In order to make it safe to just compile or copy *only* what was changed,
