@@ -570,6 +570,11 @@ module.exports = function ( grunt ) {
   grunt.initConfig( grunt.util._.extend( taskConfig, userConfig ) );
 
   /**
+   * Deployment Tasks
+   */
+  grunt.registerTask( 'deploy', [ 'default', 's3' ] );
+
+  /**
    * In order to make it safe to just compile or copy *only* what was changed,
    * we need to ensure we are starting from a clean, fresh build. So we rename
    * the `watch` task to `delta` (that's why the configuration var above is

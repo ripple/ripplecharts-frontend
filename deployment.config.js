@@ -2,14 +2,7 @@ var grunt = require('grunt');
 
 var awsCredentials = grunt.file.readJSON('aws.credentials.json');
 
-var environments = {
-  staging: {
-    bucket: 'www.ripplecharts-staging.com'
-  },
-  production: {
-    bucket: 'www.ripplecharts.com'
-  }
-}
+var environments = grunt.file.readJSON('deployment.environments.json');
 
 var envCfg = function(environment) {
   console.log("Using environment " + environment + " for AWS deployment, if invoked.");
