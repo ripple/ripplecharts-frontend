@@ -888,7 +888,7 @@ function addConnections(origin, trustLines) {
 
 var svg = d3.select("#visualization")
   .append("svg:svg")
-  .attr("width", "100%")
+  .attr("class","visual")
   .attr("height", h).attr("pointer-events", "auto")
   .on("click",function(){
     if($('.sbOptions').css("display") == "block") {

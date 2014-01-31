@@ -97,5 +97,13 @@
             "currencies": ["USD","DOG","BTC","NXT"],
             "hotwallets": []
             }]
+    }, {
+        "name": "Ripple Singapore",
+        "accounts": [{
+            "address": "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
+            "currencies": ["XAU","XAG"],
+            "hotwallets": []
+            }]
     }
+    
 ]

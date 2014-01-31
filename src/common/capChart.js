@@ -462,6 +462,9 @@ function CapChart(options) {
       date = xScale.invert(d3.mouse(this)[0]);
       i    = d3.bisect(top.map(function(d){return d.date}), date);
    
+
+      if (!top || !top[i]) return;
+      
       if (date<(top[i].date+top[i-1].date)/2) i--;
       cy = yScale(top[i].y+top[i].y0)+options.margin.top;
       cx = xScale(top[i].date)+options.margin.left;

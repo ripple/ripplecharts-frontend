@@ -109,12 +109,21 @@
   opacity:.4;
 }
 
+.graph .visual {
+  width:100%;    
+} 
+  
 /*
  * jscrollpane
  */
 .graph .jspVerticalBar {
   width:8px;
   background:none;  
+}
+
+.graph .jspHorizontalBar {
+  height:8px;
+  background:none; 
 }
 
 .graph .jspTrack {
@@ -244,7 +253,7 @@
 
 .graph tr.innertablecontainer td {
   border:none !important;
-  padding: 0px 0px 0px 25px !important;}
+  padding: 0px 0px 0px 25px}
 
 .graph table.innertable {
   width:97%;
@@ -257,7 +266,10 @@
 .graph table.innertable th {
   text-align:left;
   font-weight:normal;
-  padding-left:12px;}
+  padding-left:12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .graph table.innertable tr { height:25px; }
 
@@ -489,16 +501,47 @@
   }
 }
 
-@media (max-width: 767px) {
-  .graph #information {
-    top:500px;
+@media (max-width: 767px) {  
+  .graph .topbar .centered {
+    display:block;
   }
   
   .graph #focus {
+    float:none;
     display:block;
   }
-}
   
+  .graph #information {
+    top: 618px;
+  }
+  
+  .graph .visual {
+    height:950px;
+  }  
+}
+
+@media (max-width: 600px) {  
+  .graph #information {
+    top: 0px;
+    border: none;
+    padding-top: 110px; 
+  }
+  
+  .graph #rightHeading, .graph #leftHeading {
+    display:none;
+  }
+  
+  .graph .bottomlist {
+    width:100% !important;
+    border: none;
+    border-bottom: 10px solid #eee;
+  }
+  
+  .graph .visual {
+    height:735px;
+  }  
+}
+   
 @media (max-width:480px) {
   .graph .topbar {
     zoom:.7;
@@ -524,19 +567,15 @@
   }
   
   .graph #information {
-    top: 0px;
-    border: none;
     padding-top: 80px; 
   }
   
-  .graph #rightHeading, .graph #leftHeading {
-    display:none;
+  .graph tr.innertablecontainer td {
+    padding:0;
   }
   
-  .graph .bottomlist {
-    width:100% !important;
-    border: none;
-    border-bottom: 10px solid #eee;
-  }
+  .graph .visual {
+    height:705px;
+  }  
 }
 
