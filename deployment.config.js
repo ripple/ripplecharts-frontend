@@ -1,7 +1,7 @@
 var grunt = require('grunt');
 
 var awsCredentials = grunt.file.readJSON('aws.credentials.json');
-var cloudflareCredentials = grunt.find.readJSON('cloudflare.credentials.json');
+var cloudflareCredentials = grunt.file.readJSON('cloudflare.credentials.json');
 var environments = grunt.file.readJSON('deployment.environments.json');
 
 var envCfg = function(environment) {
