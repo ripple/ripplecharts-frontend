@@ -1,8 +1,10 @@
 {
   "staging": {
     "bucket": "staging-bucket"
+    "cloudflare_domain": "REPLACEME"
   },
   "production": {
-    "bucket": "production-bucket"
+    "bucket": "production-bucket",
+    "cloudflare_domain": "REPLACEME"
   }
 }
