@@ -6,7 +6,7 @@ function CapChart(options) {
   var controls  = div.append("div").attr("class","controls");
   var dropdowns = controls.append("div").attr("class","dropdownBox");
   var chart     = div.append("div").attr("class","chart");
-   
+
   if (!options.margin) options.margin = {top: 5, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
   if (!options.height) options.height = options.width/2>350 ? options.width/2 :350;

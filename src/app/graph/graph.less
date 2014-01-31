@@ -6,7 +6,108 @@
   pointer-events:none;
 }
 
-.fullwidth { width: 100%; }
+.graph.fullwidth { width: 100%; }
+
+.graph .topbar {
+  position:absolute; 
+  top:15px; 
+  pointer-events:auto;
+  color:#333;
+  width:100%;
+  text-align:center;  
+  z-index: 1;
+}
+
+.graph .topbar .centered {
+  display:inline-block;
+  margin:0 10px;
+}
+  
+.graph #focus {
+  
+  width: 420px;
+  height: 20px;
+  font-size: 18px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  background:rgba(255,255,255,.8);
+  font: "Open Sans";
+  font-weight:100;
+  float:left;
+  margin:5px;
+  box-shadow:none;
+  
+}
+
+.graph .sbHolder {
+  border:none;
+  background:none;
+  color:#777;
+}
+
+.graph .sbSelector {
+  background:none;
+  font-size:18px;
+  line-height:36px;
+}
+
+.graph .sbToggle {
+  border-left:1px solid #ddd;
+  border-top-right-radius:4px;
+  border-bottom-right-radius:4px;
+}
+
+.graph #currencySelect {
+  text-align:left;
+  height  : 36px;
+  width   : 230px;
+  outline : none;
+  display : inline-block;
+  margin:5px;
+  float:left;
+  border: 1px solid #ddd;
+  background:rgba(255,255,255,.8);
+  font: "Open Sans";
+  font-weight:100;
+  border-radius:4px;
+}
+
+.graph #searchButton {
+  float:left;
+  height:38px;
+  width:50px;
+  border: 1px solid #999;
+  border-radius:4px;
+  margin:5px;
+  background:rgba(150,150,150,.7);
+  color:#fff;
+}
+
+.graph .zoom {
+  position:absolute; 
+  right:15px; 
+  top:20px; 
+  opacity:.8; 
+  z-index:2;
+  
+}
+.graph .zoom input {
+  width:30px; 
+  height:25px; 
+  font-size:12pt; 
+  pointer-events:auto;  
+  background:none;
+  border:1px solid #ddd;
+  background:rgba(240,240,240,.8);
+  display:inline-block;
+  margin:1px; 
+  border-radius:4px;
+  font-weight:bold;
+}
+
+.graph #zoomInButton:disabled, .graph #zoomOutButton:disabled {
+  opacity:.4;
+}
 
 /*
  * jscrollpane
@@ -78,24 +179,27 @@
 
 /* Borders, alignment, and spacing */
 .graph .rightbordered { border-right: 1px solid #c8c8c8; } 
+
 .graph .topbordered { border-top: 1px solid #c8c8c8; }
+
 .graph .bottombordered  {border-bottom: 1px solid #c8c8c8;}
+
 .graph .rounded {
   border-radius: 4px; 
   -moz-border-radius: 4px; 
   -webkit-border-radius: 4px;
   border:2px solid #eee;}
+
 .graph .center { text-align:center; }
+
 .graph .right { text-align:right; }
+
 .graph .horizontalrule { height:10px; }
+
 .graph .clearboth { clear:both; }
-.graph .topbar {
-  opacity:0.8;
-  position:absolute; 
-  top:23px; 
-  pointer-events:auto;
-  color:#333;}
+  
 .graph .bottomlist { height:293px; }
+
 .graph #otherCurrency {
   display:none;
   color:#999;
@@ -124,37 +228,49 @@
 
 /* Tables and cells */
 .graph table { border-collapse: collapse; }
+
 .graph table.outertable { table-layout: fixed; width: 100%}
+
 .graph table.outertable td {
   padding-top: 18px;
   padding-bottom: 14px;
   border-width: 1px 0 0 0;
   border-color: #eee;
   border-style: solid;}
+
 .graph tr.toprow td { border-top:0px; }
+
 .graph tr.innertablecontainer { display:none; }
+
 .graph tr.innertablecontainer td {
   border:none !important;
   padding: 0px 0px 0px 25px !important;}
+
 .graph table.innertable {
   width:97%;
   margin-top:-4px;}
+
 .graph table.innertable td {
   padding: 0px;
   border:none;}
+
 .graph table.innertable th {
   text-align:left;
   font-weight:normal;
   padding-left:12px;}
+
 .graph table.innertable tr { height:25px; }
+
 .graph .circlecell {
   width:31px;
   padding-left:13px;
   padding-top:11px;
   padding-bottom: 7px; }
+
 .graph .marginalcell {
   width:10%;
   border:none !important;}
+
 .expander {
   text-align: right;
   padding-right:15px;
@@ -313,6 +429,7 @@
 .dark .graph #information,
 .dark .graph .bottombordered,
 .dark .graph .rightbordered,
+.dark .graph .bottomlist,
 .dark .graph table.outertable td
  {
   border-color: @darkLine;
@@ -338,3 +455,88 @@
   stroke: #555;
   stroke-width:2;
 }
+
+.dark .graph #focus,
+.dark .graph #currencySelect
+ {
+  background:rgba(60,60,60,.8);
+  border:none;
+  color:@darkText;
+}
+
+.dark .graph .sbToggle {
+  background: rgba(100, 100, 100, 0.7) url('icons/downward-triangle.svg') !important;
+  border:none;
+}
+
+.dark .graph #searchButton {
+  border:none;
+  background:rgba(200,200,200,.7);
+  height:36px;
+  color:#333;
+}
+
+.dark .graph .zoom input {
+  border: none;
+  background: rgba(120,120,120,.7);
+  color: #ccc;
+}
+
+
+@media (max-width: 939px) {
+  .graph .zoom {
+    top:80px;
+  }
+}
+
+@media (max-width: 767px) {
+  .graph #information {
+    top:500px;
+  }
+  
+  .graph #focus {
+    display:block;
+  }
+}
+  
+@media (max-width:480px) {
+  .graph .topbar {
+    zoom:.7;
+  }
+  
+  .graph #focus {
+    width: 90%;
+    padding: 10px 5%;
+    margin: 5px 0;
+  }
+  
+  .graph #currencySelect {
+    margin-left:0;
+  }
+  
+  .graph .zoom {
+    top: 48px;
+    right: 5px;
+  }
+  
+  .graph .zoom input {
+    height:30px;
+  }
+  
+  .graph #information {
+    top: 0px;
+    border: none;
+    padding-top: 80px; 
+  }
+  
+  .graph #rightHeading, .graph #leftHeading {
+    display:none;
+  }
+  
+  .graph .bottomlist {
+    width:100% !important;
+    border: none;
+    border-bottom: 10px solid #eee;
+  }
+}
+
