@@ -369,7 +369,7 @@ function CapChart(options) {
     tooltip = chart.append("div").attr("class", "tooltip");
     loader  = chart.append("img")
       .attr("class", "loader")
-      .attr("src", "assets/images/throbber5.gif");
+      .attr("src", "assets/images/rippleThrobber.png");
       
     if (isLoading) loader.style("opacity", 1);   
   }

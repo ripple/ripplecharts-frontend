@@ -49,7 +49,7 @@ var LineChart = function (options){
   
     loader = div.append("img")
       .attr("class", "loader")
-      .attr("src", "assets/images/throbber5.gif")
+      .attr("src", "assets/images/rippleThrobber.png")
       .style("opacity", 0);
   }	
 

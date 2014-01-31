@@ -104,7 +104,7 @@ var MiniChart = function(base, trade, markets) {
       
     loader = self.div.append("img")
       .attr("class", "loader")
-      .attr("src", "assets/images/throbber5.gif")
+      .attr("src", "assets/images/rippleThrobber.png")
       .style("opacity", 0); 
       
       

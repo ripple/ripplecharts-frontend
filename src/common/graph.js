@@ -554,7 +554,7 @@ function eraseGraph() {
   provisionallyExpandedNodes = {};
   animatorLinks = [];
   $("#loading").css("display","block").css("color","#aaa");
-  $("#loading").html('<img src="assets/images/throbber5.gif" style="vertical-align: middle;" /> Loading...');
+  $("#loading").html('<img class="loader" src="assets/images/rippleThrobber.png" style="vertical-align: middle;" /> Loading...');
 }
 
 
@@ -1850,7 +1850,7 @@ function updateTransactions(address, appending) {
     }
     
     if (!nodes[nodeMap[address]].transactionsFinished) { //Are there more?
-      $('#transactionTable').append('<tr id="transactionThrobber"><td colspan=3 style="text-align:center; padding:10px"><img src="assets/images/throbber5.gif" width=30 height=30 /></td></tr>');
+      $('#transactionTable').append('<tr id="transactionThrobber"><td colspan=3 style="text-align:center; padding:10px"><img class="loader" src="assets/images/rippleThrobber.png" width=30 height=30 /></td></tr>');
       $('#transactionThrobber').bind('inview', function (event, visible) {
         console.log('in');
         if (visible === true) {

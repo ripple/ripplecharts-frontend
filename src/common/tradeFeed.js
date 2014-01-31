@@ -24,7 +24,7 @@ var TradeFeed = function (options) {
   var status = tableWrap.append("h4").attr('class','status');
   var loader = tableWrap.append("img")
       .attr("class", "loader")
-      .attr("src", "assets/images/throbber5.gif")
+      .attr("src", "assets/images/rippleThrobber.png")
       .style("opacity", 0); 
       
   this.loadPair = function (base, trade) {
