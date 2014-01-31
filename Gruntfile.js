@@ -53,11 +53,13 @@ module.exports = function ( grunt ) {
       }
     },
     cloudflare: {
-      /* purge the cache */
-      a: 'fpurge_ts',
-      tkn: deploymentConfig.cloudflare.api_key,
-      email: deploymentConfig.cloudflare.email,
-      z: deploymentConfig.cloudflare.domain
+      options: {
+        /* purge the cache */
+        a: 'fpurge_ts',
+        tkn: deploymentConfig.cloudflare.api_key,
+        email: deploymentConfig.cloudflare.email,
+        z: deploymentConfig.cloudflare.domain
+      }
     },
 
     /**
