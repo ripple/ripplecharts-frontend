@@ -9,7 +9,7 @@ function CapChart(options) {
 
   if (!options.margin) options.margin = {top: 5, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
-  if (!options.height) options.height = options.width/2>350 ? options.width/2 :350;
+  if (!options.height) options.height = options.width/2>400 ? options.width/2 :400;
   
   self.currency = options.currency || "BTC";
   self.format   = options.format   || "stacked";
@@ -114,7 +114,7 @@ function CapChart(options) {
     old = options.width;
     w = parseInt(div.style('width'), 10);
     options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/2>350 ? options.width/2 : 350;
+    options.height = options.width/2>400 ? options.width/2 : 400;
     
     if (old != options.width) {
       drawChart(); 

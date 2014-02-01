@@ -34,7 +34,7 @@ ApiHandler = function (url) {
             for (var i=data.length; i>-1; i--) {
               if (prev && prev.price>data[i].price)      data[i].type = 'bid';
               else if (prev && prev.price<data[i].price) data[i].type = 'ask';
-              else if (prev)                             data[i].type = prev.type;
+            //else if (prev)                             data[i].type = prev.type;
               prev = data[i];
             }
             

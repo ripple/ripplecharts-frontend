@@ -50,6 +50,11 @@ html {
   overflow:auto;
 }
 
+
+label {
+  cursor:auto; /* override bootstrap */ 
+}
+
 code, pre, .pre {
   padding: 5px;
   margin: 10px 0;
@@ -215,7 +220,7 @@ h1, h2, h3, h4 {
 }
 
 .theme {
-  padding:14px 20px;
+  padding:14px 20px 14px 5px;
   color:#ccc;
   float:right;
   font-size:12px;
@@ -259,6 +264,7 @@ h1, h2, h3, h4 {
   color:#666;
   margin:1px 4px;
   border-bottom:3px solid transparent;
+  cursor:pointer;
 }
 
 .selectList a:hover {
@@ -282,12 +288,20 @@ h1, h2, h3, h4 {
   background:none;
   -webkit-appearance:none;
   padding: 2px 20px 2px 4px;
-  line-height:1em;
+  line-height:1.2em;
   background-image:url('images/dropdownBlue.png');
   background-repeat: no-repeat;
   background-position: 95% 50%;
   background-size: 13px;
   font-weight:bold;
+}
+
+.dropdowns select:disabled {
+  opacity:0.2;  
+}
+
+.dark .dropdowns select:disabled {
+  opacity:0.4;  
 }
 
 @keyframes rotating {
@@ -323,11 +337,11 @@ h1, h2, h3, h4 {
   }
 }
 .loader {
-  -webkit-animation: rotating 2s linear infinite;
-  -moz-animation: rotating 2s linear infinite;
-  -ms-animation: rotating 2s linear infinite;
-  -o-animation: rotating 2s linear infinite;
-  animation: rotating 2s linear infinite;
+  -webkit-animation: rotating 1s linear infinite;
+  -moz-animation: rotating 1s linear infinite;
+  -ms-animation: rotating 1s linear infinite;
+  -o-animation: rotating 1s linear infinite;
+  animation: rotating 1s linear infinite;
 }
 
 /**

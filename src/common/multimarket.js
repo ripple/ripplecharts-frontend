@@ -20,22 +20,21 @@ var MiniChart = function(base, trade, markets) {
   var margin = {top: 0, right: 40, bottom: 20, left: 0};
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
   var height = width/1.5>200 ? width/1.5 : 200;
-
-  if (!markets.options.fixed) {
-    var closeButton = self.div.append("div")
-      .attr("class","closeButton")
-      .html("x")
-      .on("click", function(){
-        self.remove();
-      });
-  }
    
   function drawChart() {
     self.div.html("");   
     
     if (markets.options.fixed) {
       header = self.div.append("div").attr("class","chartHeader");
+    } else {
+      self.div.append("div")
+        .attr("class","closeButton")
+        .html("x")
+        .on("click", function(){
+          self.remove();
+      });
     }
+    
     details  = self.div.append("table").attr("class", "chartDetails").append("tr");
     range    = details.append("td").attr("class","range");
     showHigh = details.select(".range").append("div").attr("class","high");
@@ -306,8 +305,8 @@ var MiniChart = function(base, trade, markets) {
     }
     
     vol = amountToHuman(vol, {min_precision:0, max_sig_digits:7});
-    showHigh.html("<label>high</label> "+amountToHuman(high));
-    showLow.html("<label>low</label> "+amountToHuman(low));
+    showHigh.html("<label>H:</label> "+amountToHuman(high));
+    showLow.html("<label>L:</label> "+amountToHuman(low));
     change.html((pct>0 ? "+":"")+amountToHuman(pct)+"%").style(changeStyle);
     volume.html("<label>Vol:</label>"+vol+"<small>"+self.base.currency+"</small>");  
     

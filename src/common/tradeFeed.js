@@ -74,7 +74,7 @@ var TradeFeed = function (options) {
     
     if (last && last.price<trade.price)      trade.type = 'ask';
     else if (last && last.price>trade.price) trade.type = 'bid';
-    else if (last)                           trade.type = last.type;
+    //else if (last)                           trade.type = last.type;
     
     transactions.unshift(trade);  //prepend trade
     transactions = transactions.slice(0,50);  //keep last 50
@@ -145,7 +145,9 @@ var TradeFeed = function (options) {
       trade : self.trade
       
     }, function(data){
-      
+
+
+//TODO: should be checking the existing high and low      
       high   = data[0].high;
       low    = data[0].low;
       volume = data[0].volume;
@@ -186,6 +188,7 @@ var TradeFeed = function (options) {
       trade     : self.trade
       
     }, function(data){
+
       loader.transition().style('opacity',0);
       transactions = transactions.concat(data).slice(0,50);   
       updateTrades()

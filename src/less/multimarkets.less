@@ -35,20 +35,22 @@
 .multiMarket .chartDetails {
   width:100%;
   border-collapse:collapse;
-  vertical-align:middle;
   min-height:38px;
   border-bottom:1px solid #ddd;
 }
 
 .multiMarket .chartDetails label {display:inline}
-.multiMarket .chartDetails .range {text-align:left; line-height:16px; padding: 2px 5px; font-size:12px; font-weight:bold;}
-.multiMarket .chartDetails .range label {font-size:12px; font-weight:normal; line-height:16px}
+.multiMarket .chartDetails td {vertical-align:bottom}
+.multiMarket .chartDetails .range {text-align:left; padding: 2px 5px; font-size:12px; font-weight:bold;}
+.multiMarket .chartDetails .range div {vertical-align:bottom; overflow:hidden}
+.multiMarket .chartDetails .range label {font-size:10px; line-height:12px; font-weight:bold; display:inline-block; margin:0; width:13px}
 .multiMarket .chartDetails .range .high {color:#2a2}
 .multiMarket .chartDetails .range .low {color:#c33}
 .multiMarket .chartDetails .change {font-size:18px; font-weight:bold}
 .multiMarket .chartDetails .volume {font-size:18px; font-weight:bold; text-align:right}
 .multiMarket .chartDetails .volume label {padding:0 5px; font-size:12px; color:#999; font-weight:normal}
 .multiMarket .chartDetails .volume small {padding:0 5px; font-size:12px; color:#999; font-weight:normal}
+
 
 .multiMarket .chart {
   border:1px solid #ddd;
@@ -208,17 +210,20 @@
 
 .multiMarket .chart .closeButton {
   position: absolute;
-  right: 4px;
-  top: 2px;
+  right: 0;
+  top: 0;
   line-height: 10px;
   font-size: 12px;
   font-weight: bold;
   color: #ccc;
   cursor:pointer;
+  border-radius:1px;
+  padding:2px 5px;
 }
 
 .multiMarket .chart .closeButton:hover {
-  color:#aaa;
+  color:#777;
+  background:#ddd;
 }
 
 /*
@@ -228,6 +233,15 @@
 
 .dark .multiMarket .chart {
   border-color:#333;
+}
+
+.dark .multiMarket .closeButton {
+  color:@darkTextDark
+}
+
+.dark .multiMarket .chart .closeButton:hover {
+  color:#aaa;
+  background:@darkLine;
 }
 
 .dark .multiMarket .chartDetails {
@@ -240,6 +254,10 @@
 
 .dark .multiMarket .chart .axis path, .dark .chart .axis line {
   stroke:#333;
+}
+
+.dark .multiMarket .chart .axis text {
+  fill:@darkText;
 }
  
 .dark .multiMarket .chart .timeBackground {

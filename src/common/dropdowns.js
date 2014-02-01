@@ -67,6 +67,9 @@
           
           option.enter().append("option").text(function(d){return d});
           option.exit().remove();
+          if (currency=="XRP") gatewaySelect.attr("disabled", "true");
+          else gatewaySelect.attr('disabled', null);
+         
           
           if (selected) {
             var name = gateway ? gateway.name : "";
