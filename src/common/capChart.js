@@ -59,7 +59,9 @@ function CapChart(options) {
 
   
 //add interval select  
-  var interval = controls.append("div").attr("class","interval selectList").selectAll("a")
+  var list = controls.append("div").attr("class","interval selectList");
+  list.append("label").html("Interval:");
+  var interval = list.selectAll("a")
     .data([
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
       {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
@@ -354,8 +356,11 @@ function CapChart(options) {
       .attr("height", options.height)
       .on("mousemove", movingInSky);
          
-    timeAxis   = g.append("g").attr({class: "x axis", transform: "translate(0,"+ options.height+")"});
-    amountAxis = g.append("g").attr({class: "y axis", transform: "translate("+options.width+",0)"});
+    timeAxis   = svg.append("g").attr("class", "x axis")
+      .attr("transform", "translate("+options.margin.left+","+(options.height+options.margin.top)+")");
+      
+    amountAxis = svg.append("g").attr("class", "y axis")
+      .attr("transform", "translate("+(options.width+options.margin.left)+","+options.margin.top+")");
     
     xScale.range([0, options.width])
     yScale.range([options.height, 0]);
@@ -451,13 +456,19 @@ function CapChart(options) {
 
     timeAxis.call(xAxis.ticks(ticks).scale(xScale));
     amountAxis.call(yAxis.scale(yScale));
+    
+    amountAxis.append("text").attr("class", "title")
+      .attr("transform", "rotate(-90)").attr("y",-5)
+      .attr("x",-options.height*0.85)
+      .text(self.currency);  
   } 
   
   
   function movingInSky() {
     var top, date, i, j, cx, cy, position;
-    if (!isLoading && self.format=="stacked") {
-
+    if (self.format=="stacked") {
+      if (!sections || !sections.length) return;
+      
       top  = sections[sections.length-1].values;
       date = xScale.invert(d3.mouse(this)[0]);
       i    = d3.bisect(top.map(function(d){return d.date}), date);
@@ -477,7 +488,7 @@ function CapChart(options) {
       handleTooltip("Total", null, date, amt, position);
       handleTracer(cx, cy);
         
-    } else if (!isLoading) {
+    } else {
       top  = lines[lines.length-1].results;
       date = xScale.invert(d3.mouse(this)[0]);
       amt  = yScale.invert(d3.mouse(this)[1]);
@@ -511,69 +522,67 @@ function CapChart(options) {
 
 
   function movingInGround(section) {
-    if (!isLoading) {
-      var tx, ty;
-      var date = xScale.invert(d3.mouse(this)[0]);
-      var i    = d3.bisect(section.values.map(function(d){return d.date}), date);
-   
-      if (date<(section.values[i].date+section.values[i-1].date)/2) i--;
-      var cy  = yScale(section.values[i].y+section.values[i].y0)+options.margin.top;
-      var cx  = xScale(section.values[i].date)+options.margin.left;
-      var c2y = yScale(section.values[i].y0)+options.margin.top;
-   
-      
-      
-//    determine position of tooltip      
-      var position = getTooltipPosition(cx, cy);
-      var name     = currencyDropdown.getName(section.address);
-      var amount   = commas(section.values[i].y, 2);
-      date = section.values[i].date.utc().format("MMMM D YYYY");
-          
-      handleTooltip(name, section.address, date, amount, position);
-      handleTracer(cx, cy, c2y);
-    }
+    var tx, ty;
+    var date = xScale.invert(d3.mouse(this)[0]);
+    var i    = d3.bisect(section.values.map(function(d){return d.date}), date);
+ 
+    if (date<(section.values[i].date+section.values[i-1].date)/2) i--;
+    var cy  = yScale(section.values[i].y+section.values[i].y0)+options.margin.top;
+    var cx  = xScale(section.values[i].date)+options.margin.left;
+    var c2y = yScale(section.values[i].y0)+options.margin.top;
+ 
+    
+    
+//  determine position of tooltip      
+    var position = getTooltipPosition(cx, cy);
+    var name     = currencyDropdown.getName(section.address);
+    var amount   = commas(section.values[i].y, 2);
+    date = section.values[i].date.utc().format("MMMM D YYYY");
+        
+    handleTooltip(name, section.address, date, amount, position);
+    handleTracer(cx, cy, c2y);
+    
   }
   
   function movingOnLine(line) {
-    if (!isLoading) {
-      var tx, ty;
-      var date = xScale.invert(d3.mouse(this)[0]);
-      var i    = d3.bisect(line.results.map(function(d){return d[0]}), date);
-   
-      if (i && date<(line.results[i][0]+line.results[i-1][0])/2) i--;
-      var cy  = yScale(line.results[i][1])+options.margin.top;
-      var cx  = xScale(line.results[i][0])+options.margin.left;
-   
-      
-      
-//    determine position of tooltip      
-      var position = getTooltipPosition(cx, cy);
-      var name     = currencyDropdown.getName(line.address);
-      var amount   = commas(line.results[i][1], 2);
-      date = moment(line.results[i][0]).utc().format("MMMM D YYYY");
-          
-      handleTooltip(name, line.address, date, amount, position);
-      handleTracer(cx, cy);
-    }    
+    var tx, ty;
+    var date = xScale.invert(d3.mouse(this)[0]);
+    var i    = d3.bisect(line.results.map(function(d){return d[0]}), date);
+ 
+    if (i && date<(line.results[i][0]+line.results[i-1][0])/2) i--;
+    var cy  = yScale(line.results[i][1])+options.margin.top;
+    var cx  = xScale(line.results[i][0])+options.margin.left;
+ 
+    
+    
+//  determine position of tooltip      
+    var position = getTooltipPosition(cx, cy);
+    var name     = currencyDropdown.getName(line.address);
+    var amount   = commas(line.results[i][1], 2);
+    date = moment(line.results[i][0]).utc().format("MMMM D YYYY");
+        
+    handleTooltip(name, line.address, date, amount, position);
+    handleTracer(cx, cy);
+        
   }
 
 
   function handleTracer (cx, cy, c2y) {
-    
-    tracer.select(".top").transition().duration(50).attr({cx: cx, cy: cy});
+    var dur = 50;
+    tracer.select(".top").transition().duration(dur).attr({cx: cx, cy: cy});
     
     if (c2y) {
-      tracer.select(".vertical").transition().duration(50).attr({x1:cx, x2:cx, y1:cy, y2:c2y});
-      tracer.select(".horizontal").transition().duration(50).style("opacity",0);
-      tracer.select(".bottom").transition().duration(50).attr({cx: cx, cy: c2y}).style("opacity",1);
+      tracer.select(".vertical").transition().duration(dur).attr({x1:cx, x2:cx, y1:cy, y2:c2y});
+      tracer.select(".horizontal").transition().duration(dur).style("opacity",0);
+      tracer.select(".bottom").transition().duration(dur).attr({cx: cx, cy: c2y}).style("opacity",1);
     } else {
-      tracer.select(".vertical").transition().duration(50).attr({x1:cx, x2:cx, y1:options.margin.top, y2:options.height+options.margin.top});
-      tracer.select(".horizontal").transition().duration(50).attr({x1:cx, x2:options.width+options.margin.left, y1:cy, y2:cy}).style("opacity",1);
-      tracer.select(".bottom").transition().duration(50).style("opacity",0);      
+      tracer.select(".vertical").transition().duration(dur).attr({x1:cx, x2:cx, y1:options.margin.top, y2:options.height+options.margin.top});
+      tracer.select(".horizontal").transition().duration(dur).attr({x1:cx, x2:options.width+options.margin.left, y1:cy, y2:cy}).style("opacity",1);
+      tracer.select(".bottom").transition().duration(dur).style("opacity",0);      
     }  
     
-    tracer.select(".top").transition().duration(50).attr({cx: cx, cy: cy});
-    tracer.transition().duration(50).style("opacity",1);  
+    tracer.select(".top").transition().duration(dur).attr({cx: cx, cy: cy});
+    tracer.transition().duration(dur).style("opacity",1);  
   }
   
   
@@ -585,7 +594,7 @@ function CapChart(options) {
         .style("color", color(address))
         .attr("class", "address"); 
     tooltip.append("div").html(date).attr("class", "date"); 
-    tooltip.append("div").html(amount).attr("class", "amount"); 
+    tooltip.append("div").html(amount+" "+self.currency).attr("class", "amount"); 
     tooltip.transition().duration(100).style("left", position[0] + "px")     
       .style("top", position[1] + "px") 
       .style("opacity",1);    
@@ -598,8 +607,8 @@ function CapChart(options) {
     else if (cx-120<options.margin.left) tx = cx+20;
     else tx = cx-120;
     
-    if (cy-80<options.margin.top) ty = cy+80;
-    else ty = cy-80;
+    if (cy-130<options.margin.top) ty = cy+100;
+    else ty = cy-100;
     return [tx,ty];
   }
   

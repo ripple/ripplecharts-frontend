@@ -106,7 +106,16 @@ angular.element(document).ready(function() {
     remote.connect();
   
     angular.bootstrap(document, ['ripplecharts']);
-    //setTimeout(function(){console.log(remote); remote.disconnect()}, 10000);
-    //setTimeout(function(){remote.connect()}, 15000);
+
+/*
+    api = new ApiHandler("http://localhost:5993/api");
+    api.networkValue({
+      
+    }, function(data){
+      console.log(data);
+    }, function(data){
+      console.log(data);
+    });  
+*/    
   });
 });

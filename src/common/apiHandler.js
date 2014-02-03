@@ -122,7 +122,7 @@ ApiHandler = function (url) {
     return request;
   }
   
-  this.accountsCreated = function (params, callback, err) {
+  this.accountsCreated = function (params, callback, error) {
     var request = apiRequest("accountsCreated");
     request.post(JSON.stringify(params))
     .on('load', function(xhr){   
@@ -136,7 +136,7 @@ ApiHandler = function (url) {
     return request;
   }
   
-  this.getTopMarkets = function (callback, err) {
+  this.getTopMarkets = function (callback, error) {
     var request = apiRequest("topMarkets");
 
     request.post("")
@@ -149,5 +149,19 @@ ApiHandler = function (url) {
       console.log(xhr.response);
       error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });    
+  }
+  
+  this.networkValue = function (params, callback, error) {
+    var request = apiRequest("networkValue");
+    request.post(JSON.stringify(params))
+    .on('load', function(xhr){   
+      callback(JSON.parse(xhr.response));
+      
+    }).on('error', function(xhr){
+      console.log(xhr.response);
+      error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    });
+    
+    return request;    
   }
 }

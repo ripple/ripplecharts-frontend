@@ -146,12 +146,14 @@ var TradeFeed = function (options) {
       
     }, function(data){
 
-
-//TODO: should be checking the existing high and low      
-      high   = data[0].high;
-      low    = data[0].low;
-      volume = data[0].volume;
-      if (!close) close = data[0].close; //dont overwrite existing
+      if (data && data.length) {
+        //TODO: should be comparing the existing high and low      
+        high   = data[0].high;
+        low    = data[0].low;
+        volume = data[0].volume;
+        if (!close) close = data[0].close; //dont overwrite existing
+      }
+      
       updateDailyStats();
       
     }, function (error){

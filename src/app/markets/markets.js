@@ -66,7 +66,9 @@ angular.module( 'ripplecharts.markets', [
   
   
 //set up the interval selector  
-  var intervalA = d3.select("#interval").attr("class","selectList").selectAll("a")
+  var list = d3.select("#interval").attr("class","selectList")
+  list.append("label").html("Interval:");
+  var interval = list.selectAll("a")
     .data([
       {name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},
       {name: "1m",  interval:"minute", multiple:1,  offset: function(d) { return d3.time.hour.offset(d, -2); }},
@@ -88,7 +90,7 @@ angular.module( 'ripplecharts.markets', [
       store.set("interval", d.name);
       store.session.set("interval", d.name);
       
-      intervalA.classed("selected", function() { return this === that; });
+      interval.classed("selected", function() { return this === that; });
       priceChart.load($scope.base, $scope.trade, d);
     });
     
@@ -186,7 +188,10 @@ angular.module( 'ripplecharts.markets', [
     if (online) {
       remote.connect();  
       orderBookRemote.connect();
-      loadPair();    
+      setTimeout(function(){ //put this in to prevent getting "unable to load data"
+        loadPair(); 
+      }, 100);
+         
     
     } else {
       remote.disconnect();  

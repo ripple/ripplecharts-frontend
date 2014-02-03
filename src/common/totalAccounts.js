@@ -6,10 +6,11 @@ var TotalAccounts = function (options) {
   if (options.id) self.div = d3.select("#"+options.id).attr("class","chartWrap");
   else            self.div = d3.select("body").append("div").attr("class","chartWrap");
   
-  self.div.append("div").attr("class","interval selectList");
+  var list = self.div.append("div").attr("class","interval selectList");
   self.div.append("div").attr("class","lineChart").attr('id', options.id+"Chart");
   
-  var interval = d3.select(".interval").selectAll("a")
+  list.append("label").html("Range:");
+  var interval = list.selectAll("a")
     .data([
       //{name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},

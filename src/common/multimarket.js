@@ -4,7 +4,7 @@ var MiniChart = function(base, trade, markets) {
     svg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
-    dropdownA, dropdownB, dropdowns;
+    dropdownA, dropdownB, dropdowns, loaded;
   
   self.lineData = [];
   self.div      = markets.el.insert("div",".add").attr("class","chart");
@@ -20,32 +20,62 @@ var MiniChart = function(base, trade, markets) {
   var margin = {top: 0, right: 40, bottom: 20, left: 0};
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
   var height = width/1.5>200 ? width/1.5 : 200;
-   
-  function drawChart() {
-    self.div.html("");   
+
+  if (markets.options.fixed) {
+    header = self.div.append("div").attr("class","chartHeader");
+  } else {
+    self.div.append("div")
+      .attr("class","closeButton")
+      .html("x")
+      .on("click", function(){
+        self.remove();
+    });
+  }
+  
+  loaded = false;
+  
+  details  = self.div.append("table").attr("class", "chartDetails").append("tr");
+  svg      = self.div.selectAll("svg").data([0]);
+  svgEnter = svg.enter().append("svg");
+             
+  loader = self.div.append("img")
+    .attr("class", "loader")
+    .attr("src", "assets/images/rippleThrobber.png");
     
-    if (markets.options.fixed) {
-      header = self.div.append("div").attr("class","chartHeader");
-    } else {
-      self.div.append("div")
-        .attr("class","closeButton")
-        .html("x")
-        .on("click", function(){
-          self.remove();
+    
+  dropdownA = ripple.currencyDropdown().selected(base);
+  dropdownA.on("change", function(d) {
+      self.base = d;
+      if (!flipping && loaded) self.load();
       });
-    }
+         
+  dropdownB = ripple.currencyDropdown().selected(trade);
+  dropdownB.on("change", function(d) {
+      self.trade = d;
+      if (loaded) self.load();
+    });
     
-    details  = self.div.append("table").attr("class", "chartDetails").append("tr");
+  dropdowns = self.div.append("div").attr("class", "dropdowns");
+  dropdowns.append("div").attr("class","base").call(dropdownA);
+  dropdowns.append("div").attr("class","trade").call(dropdownB);
+  if (markets.options.fixed) {
+    dropdowns.style("display","none");
+    header.html("<small>"+self.div.select(".base .gateway").node().value+
+      "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
+      self.div.select(".trade .gateway").node().value+"</small>");
+  } 
+      
+  function drawChart() {            
+    details.html("");
+    svg.html("")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);  
+    
     range    = details.append("td").attr("class","range");
     showHigh = details.select(".range").append("div").attr("class","high");
     showLow  = details.select(".range").append("div").attr("class","low");
     change   = details.append("td").attr("class","change"); 
     volume   = details.append("td").attr("class","volume"); 
-                
-    svg      = self.div.selectAll("svg").data([0])
-    svgEnter = svg.enter().append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom);     
     
     pointer = svg.append("path")
       .attr("class","pointer")
@@ -66,6 +96,7 @@ var MiniChart = function(base, trade, markets) {
     
     gEnter.append("g").attr("class", "x axis");  
     gEnter.append("g").attr("class", "price axis").attr("transform", "translate("+width+", 0)")
+  
   
     flipping = false;
     flip = svg.append("g").attr("class","flip")
@@ -90,7 +121,7 @@ var MiniChart = function(base, trade, markets) {
     
     flip.append("rect").attr({width:margin.right,height:margin.bottom});
     flip.append("text").text("Flip").attr({"text-anchor":"middle",y:margin.bottom*4/5,x:margin.right/2});
-    
+   
     status     = self.div.append("h4").attr("class", "status");  
     horizontal = gEnter.append("line")
       .attr("class", "horizontal")
@@ -100,36 +131,8 @@ var MiniChart = function(base, trade, markets) {
       .attr("class","lastPrice")
       .style("text-anchor","middle")
       .attr("x", (width+margin.left)/2);
-      
-    loader = self.div.append("img")
-      .attr("class", "loader")
-      .attr("src", "assets/images/rippleThrobber.png")
-      .style("opacity", 0); 
-      
-      
-    dropdownA = ripple.currencyDropdown().selected(base);
-    dropdownA.on("change", function(d) {
-        self.base = d;
-        if (!flipping) self.load();
-        });
-           
-    dropdownB = ripple.currencyDropdown().selected(trade);
-    dropdownB.on("change", function(d) {
-        self.trade = d;
-        self.load();
-      });
-      
-    dropdowns = self.div.append("div").attr("class", "dropdowns");
-    dropdowns.append("div").attr("class","base").call(dropdownA);
-    dropdowns.append("div").attr("class","trade").call(dropdownB);
-    if (markets.options.fixed) {
-      dropdowns.style("display","none");
-      header.html("<small>"+self.div.select(".base .gateway").node().value+
-        "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
-        self.div.select(".trade .gateway").node().value+"</small>");
-    }
     
-    if (isLoading) loader.transition().duration(10).style("opacity",1);
+    //if (isLoading) loader.transition().duration(10).style("opacity",1);
   }
     
   this.setStatus = function (string) {
@@ -155,6 +158,7 @@ var MiniChart = function(base, trade, markets) {
       self.trade.currency == "XRP")) return self.setStatus("Select a currency pair."); 
 
     self.setStatus("");
+
     loader.transition().style("opacity",1);
     isLoading = true;
     
@@ -331,7 +335,9 @@ var MiniChart = function(base, trade, markets) {
     removeResizeListener(window, resizeChart);
   }
   
+  loaded = true;
   drawChart();
+  self.load();
   addResizeListener(window, resizeChart);
 }
 
