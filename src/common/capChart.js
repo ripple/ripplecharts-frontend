@@ -9,7 +9,7 @@ function CapChart(options) {
 
   if (!options.margin) options.margin = {top: 5, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
-  if (!options.height) options.height = options.width/2>400 ? options.width/2 :400;
+  if (!options.height) options.height = options.width/2.25>400 ? options.width/2.25 :400;
   
   self.currency = options.currency || "BTC";
   self.format   = options.format   || "stacked";
@@ -60,7 +60,7 @@ function CapChart(options) {
   
 //add interval select  
   var list = controls.append("div").attr("class","interval selectList");
-  list.append("label").html("Interval:");
+  list.append("label").html("Range:");
   var interval = list.selectAll("a")
     .data([
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
@@ -116,14 +116,16 @@ function CapChart(options) {
     old = options.width;
     w = parseInt(div.style('width'), 10);
     options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/2>400 ? options.width/2 : 400;
+    options.height = options.width/2.25>400 ? options.width/2.25 : 400;
     
     if (old != options.width) {
       drawChart(); 
       drawData();  
     } 
   }
-    
+   
+   
+//load the current chart data from the API    
   function loadData (range) {
     
     if (typeof mixpanel !== undefined) mixpanel.track("Value Chart", {
@@ -145,7 +147,7 @@ function CapChart(options) {
     }
   } 
   
-  
+//load trade data from offers exercised API for each issuer  
   function loadTradeData(range) {
     if (tradeDataCache[self.currency] &&
         tradeDataCache[self.currency][self.range]) {
@@ -200,7 +202,8 @@ function CapChart(options) {
     });       
   }
   
-  
+
+//load capitalization data from issuerCapitalization API  
   function loadCapitalizationData(range, currency) { 
     
     if (capDataCache[currency] &&
@@ -219,15 +222,16 @@ function CapChart(options) {
         issuer   : d
       }
     });
-    
+ 
+//code below is used for gatewayCapitalization, wont be necessary
+//when issuerCapitalization is functioning    
     var currencies = [currency];
     var gateways   = issuers.map(function(d){
       return d;
     });
     
-    console.log(currencies);
-    console.log(gateways);
-    
+    //console.log(currencies);
+    //console.log(gateways); 
     //console.log(pairs);
     
     apiHandler.issuerCapitalization({
@@ -243,7 +247,7 @@ function CapChart(options) {
       capDataCache[self.currency][self.range] = {raw : data};
       
       prepareStackedData(currency, range);
-      prepareLineData();
+      //prepareLineData();
       
       if (self.dataType=="Capitalization" &&
         self.currency==currency &&
@@ -265,7 +269,7 @@ function CapChart(options) {
     var raw = capDataCache[self.currency][self.range].raw;
     var totals = {}, series;
     if (raw.length<2) return;
-    
+      
     for (var i=0; i<raw.length; i++) {
       series = raw[i];
       series.results.sort(sortTime);//necessary?

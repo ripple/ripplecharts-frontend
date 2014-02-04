@@ -24,9 +24,7 @@ angular.module( 'ripplecharts.accounts', [
     resize : true
   });
   
-  
   $scope.$on("$destroy", function(){
-    accounts.suspend();
-    //remove the resize listener
+    accounts.suspend();  //remove the resize listener
   });
 });

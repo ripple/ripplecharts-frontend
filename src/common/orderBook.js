@@ -389,7 +389,7 @@ var OrderBook = function (options) {
     row.select(".size").html(function(offer){return filter(offer.showTakerGets)});
     row.select(".price").html(function(offer){return filter(offer.showPrice)}); 
     
-    updateTitle();
+    emitSpread();
   }
   
   function pad(data, length) {
@@ -401,15 +401,19 @@ var OrderBook = function (options) {
     return data.concat(newArray);
   }
   
-  function updateTitle () {
-    var opts = {
+  function emitSpread () {
+    if (options.emit) {
+       var opts = {
           precision      : 4,
           min_precision  : 4,
           max_sig_digits : 10
       }
         
-    bestBid = self.offers.bids[0] ? ripple.Amount.from_human(self.offers.bids[0].showPrice).to_human(opts) : "0.0";
-    bestAsk = self.offers.asks[0] ? ripple.Amount.from_human(self.offers.asks[0].showPrice).to_human(opts) : "0.0";
-    document.title = bestBid + "/" + bestAsk + " " + options.base.currency + "/" + options.trade.currency + " - Ripple Charts";    
+    
+      options.emit('spread', {
+        bid : self.offers.bids[0] ? ripple.Amount.from_human(self.offers.bids[0].showPrice).to_human(opts) : "0.0",
+        ask : self.offers.asks[0] ? ripple.Amount.from_human(self.offers.asks[0].showPrice).to_human(opts) : "0.0"
+      });
+    }  
   }
 }

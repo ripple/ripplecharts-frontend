@@ -51,9 +51,10 @@ angular.element(document).ready(function() {
 
       mixpanel.track("Page", {"Page Name":toState.name, "Theme":$scope.theme});
       
-      if ( angular.isDefined( toState.data.pageTitle ) ) {
-        $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
-      }
+      if ( angular.isDefined( toState.data.pageTitle ) ) 
+           $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
+      else $scope.pageTitle = "Ripple Charts"
+      
     });
     
     

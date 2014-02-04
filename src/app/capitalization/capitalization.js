@@ -18,14 +18,12 @@ angular.module( 'ripplecharts.capitalization', [
 
 .controller( 'CapitalizationCtrl', function CapitalizationCtrl( $scope ) {
 
-//  CapitalizationChart();
-  
+//CapitalizationChart(); //old version
   var cap = new CapChart ({
     id       : "#capitalizationChart",
     url      : API,  
     resize   : true
   });
-
 
 //stop the listeners when leaving page  
   $scope.$on("$destroy", function(){

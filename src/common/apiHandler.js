@@ -1,6 +1,5 @@
 ApiHandler = function (url) {
   var self = this;
-  
   self.url = url;
   
   function apiRequest (route) {
@@ -9,6 +8,7 @@ ApiHandler = function (url) {
     request.header('Content-Type', 'application/json');
     return request;
   }
+  
   
   this.offersExercised = function (params, load, error) {
     var request = apiRequest("offersExercised");
@@ -23,7 +23,7 @@ ApiHandler = function (url) {
               d = JSON.parse(d);
               return {
                 id     : d.id,
-                time   : moment.utc(d.key.slice(2)),
+                time   : moment.utc(d.key.slice(2)), 
                 amount : d.value[1],
                 price  : d.value[2],        
                 type   : ''
@@ -71,6 +71,7 @@ ApiHandler = function (url) {
     return request;    
   } 
   
+  
   this.issuerCapitalization = function (params, load, error) {
     
     var request = apiRequest("gatewayCapitalization");
@@ -101,6 +102,7 @@ ApiHandler = function (url) {
     return request;        
   }
   
+  
   this.getTotalAccounts = function(time, callback){
     var request = apiRequest("accountsCreated");
     time = time || new Date();
@@ -122,6 +124,7 @@ ApiHandler = function (url) {
     return request;
   }
   
+  
   this.accountsCreated = function (params, callback, error) {
     var request = apiRequest("accountsCreated");
     request.post(JSON.stringify(params))
@@ -135,6 +138,7 @@ ApiHandler = function (url) {
     
     return request;
   }
+  
   
   this.getTopMarkets = function (callback, error) {
     var request = apiRequest("topMarkets");
@@ -150,6 +154,7 @@ ApiHandler = function (url) {
       error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });    
   }
+  
   
   this.networkValue = function (params, callback, error) {
     var request = apiRequest("networkValue");

@@ -17,5 +17,5 @@ angular.module( 'ripplecharts.graph', [
 })
 
 .controller( 'GraphCtrl', function GraphCtrl( $scope ) {
-networkGraph();
+  networkGraph();
 });

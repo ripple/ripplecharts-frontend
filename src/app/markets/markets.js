@@ -12,7 +12,7 @@ angular.module( 'ripplecharts.markets', [
         templateUrl: 'markets/markets.tpl.html'
       }
     },
-    data:{ pageTitle: 'Markets' }
+    data:{ pageTitle: 'Live Chart' }
   });
 })
 
@@ -131,11 +131,19 @@ angular.module( 'ripplecharts.markets', [
   orderBookRemote.connect();
      
 //set up the order book      
+  function emitHandler (type, data) {
+    if (type=='spread') {
+      document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    
+    }    
+    
+  }
+  
   book = new OrderBook ({
     chartID : "bookChart",
     tableID : "bookTables",
     remote  : orderBookRemote,
-    resize  : true
+    resize  : true,
+    emit    : emitHandler
   });
   
   book.resetChart();
@@ -180,6 +188,7 @@ angular.module( 'ripplecharts.markets', [
     priceChart.suspend();
     book.suspend();
     tradeFeed.suspend();
+    orderBookRemote.disconnect();  
   });
   
 

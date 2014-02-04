@@ -9,7 +9,7 @@ var LineChart = function (options){
     
   if (!options.margin) options.margin = {top: 10, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
-  if (!options.height) options.height = options.width/2>400 ? options.width/2 : 400;
+  if (!options.height) options.height = options.width/2.25>400 ? options.width/2.25 : 400;
    
   self.lineData = [];
   self.interval = null;
@@ -188,7 +188,7 @@ var LineChart = function (options){
     old = options.width;
     w = parseInt(div.style('width'), 10);
     options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/2>400 ? options.width/2 : 400;
+    options.height = options.width/2.25>400 ? options.width/2.25 : 400;
 
     if (old != options.width) {
       drawChart(); 
