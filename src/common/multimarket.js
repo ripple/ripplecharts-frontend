@@ -64,6 +64,8 @@ var MiniChart = function(base, trade, markets) {
       "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
       self.div.select(".trade .gateway").node().value+"</small>");
   } 
+  
+  status = self.div.append("h4").attr("class", "status");  
       
   function drawChart() {            
     details.html("");
@@ -122,7 +124,7 @@ var MiniChart = function(base, trade, markets) {
     flip.append("rect").attr({width:margin.right,height:margin.bottom});
     flip.append("text").text("Flip").attr({"text-anchor":"middle",y:margin.bottom*4/5,x:margin.right/2});
    
-    status     = self.div.append("h4").attr("class", "status");  
+    
     horizontal = gEnter.append("line")
       .attr("class", "horizontal")
       .attr({x1:0,x2:width})
@@ -149,10 +151,11 @@ var MiniChart = function(base, trade, markets) {
     removeResizeListener(window, resizeChart);
     self.div.remove();
     markets.charts[self.index] = {};
+    markets.updateListHandler();
   } 
           
   this.load  = function () {
-    
+    markets.updateListHandler();
     if (!self.base || !self.trade ||
       (self.base.currency == self.trade.currency &&
       self.trade.currency == "XRP")) return self.setStatus("Select a currency pair."); 
@@ -368,6 +371,19 @@ var MultiMarket = function (options) {
     self.charts[index].remove();
   }
   
+  this.updateListHandler = function () {
+      if (self.updateListCallback) {
+        var data = [];
+        for (var i=0; i<self.charts.length; i++) {
+          data.push({
+            base  : self.charts[i].base,
+            trade : self.charts[i].trade
+          });
+        }
+        self.updateListCallback(data);
+      }
+  }
+  
   this.list = function (charts) {
     for (var i=0; i<self.charts.length; i++) {
       self.charts[i].remove();
@@ -376,6 +392,10 @@ var MultiMarket = function (options) {
     for (var j=0; j<charts.length; j++) {
       self.addChart(charts[j].base, charts[j].trade);
     }
+  }
+  
+  this.on = function(type, callback) {
+    if (type=='updateList') self.updateListCallback = callback;
   }
 }
 
