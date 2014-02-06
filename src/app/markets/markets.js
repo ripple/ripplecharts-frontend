@@ -1,10 +1,21 @@
 angular.module( 'ripplecharts.markets', [
   'ui.state',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'ui.route'
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'markets', {
+  $stateProvider.state( 'markets2', {
+    url: '/markets/:base/:trade',
+    views: {
+      "main": {
+        controller: 'MarketsCtrl',
+        templateUrl: 'markets/markets.tpl.html'
+      }
+    },
+    data:{ pageTitle: 'Live Chart' }
+  })
+  .state( 'markets', {
     url: '/markets',
     views: {
       "main": {
@@ -16,7 +27,21 @@ angular.module( 'ripplecharts.markets', [
   });
 })
 
-.controller( 'MarketsCtrl', function MarketsCtrl( $scope ) {
+.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $stateParams, $location) {
+  if ($stateParams.base && $stateParams.trade) {
+    var base = $stateParams.base.split(":");
+    base = {currency:base[0],issuer:base[1] ? base[1]:""};
+    var trade = $stateParams.trade.split(":");
+    trade = {currency:trade[0],issuer:trade[1] ? trade[1]:""};   
+
+    store.set('base',  base);
+    store.set('trade', trade);
+    store.session.set('base',  base);
+    store.session.set('trade', trade);  
+    $location.path("/markets");
+    $scope.$apply();
+    return;  
+  }
   
 //load settings from session, local storage, options, or defaults  
   $scope.base  = store.session.get('base') || store.get('base') || 

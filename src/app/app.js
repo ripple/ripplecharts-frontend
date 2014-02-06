@@ -48,7 +48,6 @@ angular.element(document).ready(function() {
     
         
     $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
-
       mixpanel.track("Page", {"Page Name":toState.name, "Theme":$scope.theme});
       
       if ( angular.isDefined( toState.data.pageTitle ) ) 

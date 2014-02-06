@@ -1,9 +1,15 @@
 <div class="markets row-fluid">
   <div class="span3">
+    <div class="helpbox" ng-class="{showHelp : showHelp}">
+      Trade Feed
+    </div>
     <div id="tradeFeed"></div> 
   </div>   
   
   <div class="wrap span9">
+    <div class="helpbox" ng-class="{showHelp : showHelp}">
+      Price Chart
+    </div>  
     <div id="currencyPair">
       <div class="rippleStatus">
         <div class="items">
@@ -26,8 +32,17 @@
     <div id="interval"></div>
     <div id="chartType"></div>
     <div id="priceChart" data-snap-ignore="true"></div>
+    <div class="helpbox" ng-class="{showHelp : showHelp}">
+      Order Book
+    </div> 
     <div id="bookChart"  data-snap-ignore="true"></div>
     <div id="bookTables"></div>
   </div>
 </div>
-
+<style>
+  footer .footerInner {
+    width:98%;
+    padding-left:1%;
+    padding-right:1%;
+  }
+</style>

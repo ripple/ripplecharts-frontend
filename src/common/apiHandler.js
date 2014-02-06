@@ -74,7 +74,7 @@ ApiHandler = function (url) {
   
   this.issuerCapitalization = function (params, load, error) {
     
-    var request = apiRequest("gatewayCapitalization");
+    var request = apiRequest("issuerCapitalization");
 /*  
     params = {
       pairs : [{

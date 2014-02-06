@@ -20,7 +20,7 @@
 }
 
 #currencyPair {
-  margin:10px 55px 5px 55px;
+  margin:10px 60px 5px 60px;
 }
 
 #currencyPair .gateway {
@@ -113,8 +113,18 @@
   margin-left: 1% !important;
 }
 
+.markets .span3 .helpbox{
+  margin-left:0;
+  margin-right:0;
+}
+
 .markets .span9 {
   margin:0 !important
+}
+
+.markets .span9 .helpbox {
+  margin-left:60px;
+  margin-right:60px;
 }
 
 @media (max-width: 979px) {
@@ -127,6 +137,12 @@
   .markets .span3 {
     display:table;
     border-bottom:1px solid rgba(150,150,150,.2); 
+  }
+  
+  .markets .span3 .helpbox {
+    display:table-caption;
+    margin-left:10px;
+    margin-right:10px;
   }
   
   #tradeFeed {

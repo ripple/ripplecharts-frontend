@@ -28,9 +28,16 @@ var MiniChart = function(base, trade, markets) {
       .attr("class","closeButton")
       .html("x")
       .on("click", function(){
-        self.remove();
+        event.stopPropagation();
+        self.remove(true);
     });
   }
+  
+  
+  self.div.on("click", function(){
+    markets.chartClickHandler(self);
+  });
+  
   
   loaded = false;
   
@@ -106,6 +113,7 @@ var MiniChart = function(base, trade, markets) {
       .attr("height", margin.bottom)  
       .attr("transform", "translate("+(width+margin.left)+","+(height+margin.top)+")")
       .on("click", function(){
+        event.stopPropagation();
         flipping = true;
         dropdownA.selected(self.trade);
         dropdownB.selected(self.base);
@@ -147,11 +155,11 @@ var MiniChart = function(base, trade, markets) {
     }
   } 
   
-  this.remove = function () {
+  this.remove = function (update) {
     removeResizeListener(window, resizeChart);
     self.div.remove();
     markets.charts[self.index] = {};
-    markets.updateListHandler();
+    if (update) markets.updateListHandler();
   } 
           
   this.load  = function () {
@@ -368,25 +376,33 @@ var MultiMarket = function (options) {
   
   this.removeChart = function (index) {
     if (options.fixed) return;
-    self.charts[index].remove();
+    self.charts[index].remove(true);
   }
   
   this.updateListHandler = function () {
-      if (self.updateListCallback) {
-        var data = [];
-        for (var i=0; i<self.charts.length; i++) {
-          data.push({
-            base  : self.charts[i].base,
-            trade : self.charts[i].trade
-          });
-        }
-        self.updateListCallback(data);
+    if (self.updateListCallback) {
+      var data = [];
+      for (var i=0; i<self.charts.length; i++) {
+        if (!self.charts[i].base) continue;
+        else if (self.charts[i].base.currency=='XRP' &&
+          self.charts[i].trade.currency=='XRP') continue;
+        data.push({
+          base  : self.charts[i].base,
+          trade : self.charts[i].trade
+        });
       }
+      self.updateListCallback(data);
+    }
   }
+  
+  this.chartClickHandler = function (chart) {
+    if (self.chartClickCallback) self.chartClickCallback(chart);
+  }
+  
   
   this.list = function (charts) {
     for (var i=0; i<self.charts.length; i++) {
-      self.charts[i].remove();
+      self.charts[i].remove(false);
     }
     
     for (var j=0; j<charts.length; j++) {
@@ -395,7 +411,8 @@ var MultiMarket = function (options) {
   }
   
   this.on = function(type, callback) {
-    if (type=='updateList') self.updateListCallback = callback;
+    if      (type=='updateList') self.updateListCallback = callback;
+    else if (type=='chartClick') self.chartClickCallback = callback;
   }
 }
 

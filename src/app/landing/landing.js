@@ -16,7 +16,7 @@ angular.module( 'ripplecharts.landing', [
 })
 
 
-.controller( 'LandingCtrl', function LandingCtrl( $scope ) {
+.controller( 'LandingCtrl', function LandingCtrl( $scope, $location ) {
   var feed = new TransactionFeed({id : 'liveFeed'});
   remote.on('transaction_all', feed.handleTransaction);
  
@@ -38,7 +38,18 @@ angular.module( 'ripplecharts.landing', [
       base  : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
       trade : {currency:"XRP"}}
     ]);
-    
+
+  markets.on('chartClick', function(chart){
+    console.log(chart.base,chart.trade); 
+    var path = "/markets/"+chart.base.currency+
+      (chart.base.issuer ? ":"+chart.base.issuer : "")+
+      "/"+chart.trade.currency+
+      (chart.trade.issuer ? ":"+chart.trade.issuer : "");
+      console.log(path);
+    $location.path(path);
+    $scope.$apply();  
+  });
+      
   $scope.$on("$destroy", function(){
     markets.list([]);
   });

@@ -11,10 +11,10 @@ function CapChart(options) {
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
   if (!options.height) options.height = options.width/2.25>400 ? options.width/2.25 :400;
   
-  self.currency = options.currency || "BTC";
+  self.currency = options.currency || "USD";
   self.format   = options.format   || "stacked";
   self.dataType = options.dataType || "Capitalization";
-  self.range    = options.range    || "max";
+  self.range    = options.range    || "week";
 
 //add data type dropdown
   dropdowns.append("div").attr("class","dropdowns dataType").append("select").selectAll("option")
@@ -97,7 +97,7 @@ function CapChart(options) {
     
   var stack = d3.layout.stack().values(function(d) { return d.values; });  
   
-  var svg, g, timeAxis, amountAxis, borders, sections, lines,
+  var svg, g, timeAxis, amountAxis, amountLabel, borders, sections, lines,
     tracer, tooltip, loader, isLoading;
   
   var capDataCache   = {};
@@ -235,10 +235,10 @@ function CapChart(options) {
     //console.log(pairs);
     
     apiHandler.issuerCapitalization({
-      currencies : currencies,
-      gateways   : gateways,
+      //currencies : currencies,
+      //gateways   : gateways,
       timeIncrement : range.interval,
-      //pairs     : pairs,
+      pairs     : pairs,
       startTime  : range.offset(end),
       endTime    : end
       
@@ -325,17 +325,20 @@ function CapChart(options) {
     }
 
     timestamps.sort(function(a,b){return a-b});
-//  add 0's for empty timestamps    
+    
+//  add last amount for empty timestamps    
     for (k=0; k<stacked.length; k++) {
       var data = stacked[k].data;
-      var amount;
-      
+      var last = 0;
+     
       stacked[k].values = [];
       for (var m=0; m<timestamps.length; m++) {
         stacked[k].values.push({
           date : moment(parseInt(timestamps[m], 10)),
-          y    : data[timestamps[m]] || 0
+          y    : data[timestamps[m]] || last
         });
+        
+        last = data[timestamps[m]] || last;
       } 
     }  
     
@@ -366,6 +369,10 @@ function CapChart(options) {
     amountAxis = svg.append("g").attr("class", "y axis")
       .attr("transform", "translate("+(options.width+options.margin.left)+","+options.margin.top+")");
     
+    amountLabel = amountAxis.append("text").attr("class", "title")
+      .attr("transform", "rotate(-90)").attr("y",-5)
+      .attr("x",-options.height*0.85);
+       
     xScale.range([0, options.width])
     yScale.range([options.height, 0]);
     
@@ -460,11 +467,8 @@ function CapChart(options) {
 
     timeAxis.call(xAxis.ticks(ticks).scale(xScale));
     amountAxis.call(yAxis.scale(yScale));
-    
-    amountAxis.append("text").attr("class", "title")
-      .attr("transform", "rotate(-90)").attr("y",-5)
-      .attr("x",-options.height*0.85)
-      .text(self.currency);  
+    amountLabel.text(self.currency);
+ 
   } 
   
   

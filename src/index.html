@@ -36,6 +36,7 @@
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
 
+<script type="text/javascript" src="http://code.angularjs.org/1.2.9/angular-animate.js"></script>
   <!-- start Mixpanel --><script type="text/javascript">(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
 typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");for(g=0;g<i.length;g++)f(c,i[g]);
 b._i.push([a,e,d])};b.__SV=1.2}})(document,window.mixpanel||[]);
@@ -47,6 +48,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
       <div class="wrapper">
         <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
+        <div id="helpButton" ng-click="showHelp = !showHelp"><span>?</span></div>
         <div class="theme selectList">
           <a ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</a>
           <a ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</a>
@@ -110,10 +112,29 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
     <div snap-content class="snap-content" snap-options="snapOptions">    
       
       <div ui-view="main"></div>
-      <footer class="footer row">
-        <div class="footer-inner"></div>
-        <small><a href="">v<%= version %></a></small>
-      </div>
+      <footer class="footer">
+        <div class="footerInner container">
+          Ripple Charts is built on data from the ripple network.
+          <div class="disclaimer">
+            Information is provided "as is" and soley for informational purposes, not for trading purposes or advice, and may be delayed, or incorrect.
+            <br />
+            To see all exchange delays, please see disclaimer
+          </div>
+          <div class="links">
+            <a href="https://ripple.com/client">Ripple Wallet</a>
+            &middot;
+            <a href="https://ripple.com/blog">Blog</a>
+            &middot;
+            <a href="https://ripplelabs.com">Ripple Labs</a>
+            &middot;
+            <a href="https://ripple.com">Ripple.com</a>
+            &middot;
+            <a href="#/privacy-policy">Privacy Policy</a>
+            &middot;
+            <a href="#/terms-of-service">Terms of Service</a>
+          </div>  
+          <small><a style="display:none" href="">v<%= version %></a></small>
+        </div>
       </footer>
     </div>    
   </body>

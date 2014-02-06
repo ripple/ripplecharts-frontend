@@ -16,7 +16,7 @@ angular.module( 'ripplecharts.multimarkets', [
   });
 })
 
-.controller( 'MultimarketsCtrl', function MultimarketsCtrl( $scope ) {
+.controller( 'MultimarketsCtrl', function MultimarketsCtrl( $scope, $location ) {
   $scope.markets  = store.session.get('multimarkets') || 
     store.get('multimarkets') || 
     Options.multimarkets || [
@@ -43,6 +43,17 @@ angular.module( 'ripplecharts.multimarkets', [
     store.set('multimarkets', data);
     store.session.set('multimarkets', data);
   });
+  
+  markets.on('chartClick', function(chart){
+    console.log(chart.base,chart.trade); 
+    var path = "/markets/"+chart.base.currency+
+      (chart.base.issuer ? ":"+chart.base.issuer : "")+
+      "/"+chart.trade.currency+
+      (chart.trade.issuer ? ":"+chart.trade.issuer : "");
+      console.log(path);
+    $location.path(path);
+    $scope.$apply();  
+  })
     
   $scope.$on("$destroy", function(){
     markets.list([]);

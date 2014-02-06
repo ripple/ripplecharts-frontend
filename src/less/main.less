@@ -220,11 +220,41 @@ h1, h2, h3, h4 {
 }
 
 .theme {
-  padding:14px 20px 14px 5px;
+  padding:16px 5px;
   color:#ccc;
   float:right;
   font-size:12px;
 }
+
+#helpButton {
+  float: right;
+  width: 12px;
+  height: 12px;
+  padding: 4px;
+  margin: 13px 20px 13px 5px;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 12px;
+  color: #999;
+  text-align: center;
+  background: #ddd;
+  border-radius: 20px;
+  border: 2px solid #bbb;
+  cursor:pointer;
+}
+
+#helpButton:hover {
+  background:#e5e5e5;
+  color:#777;
+  border-color:#999;  
+}
+
+#helpButton:active {
+  background:@rippleBlue;
+  border-color:#eee;
+  color:#eee;
+}
+
 
 /* 
  * Content 
@@ -318,6 +348,31 @@ h1, h2, h3, h4 {
   opacity:0.4;  
 }
 
+
+.helpbox {
+  border:1px solid rgba(150,150,150,.3);
+  border-radius:1px;
+  background:rgba(200,200,200,.2);
+  -webkit-transition: .3s;
+  transition: .3s; 
+  opacity:0; 
+  height:0;
+  line-height:0;
+  padding:0;
+  overflow:hidden;
+  font-size:1px;
+}
+
+.showHelp {
+  opacity:1;
+  height:auto;
+  line-height:inherit;
+  padding:10px;
+  margin-top:20px;
+  margin-bottom:10px;
+  font-size:12px;
+}
+
 @keyframes rotating {
   from {
     transform: rotate(0deg);
@@ -368,6 +423,38 @@ footer {
   text-align:center;  
 }
 
+footer .footerInner {
+  color:#999;
+  font-size:12px;
+  text-align:left;
+  clear:both;
+  padding:10px;
+}
+
+footer .footerInner .disclaimer {
+  margin:10px 0;
+  font-size:10px;
+}
+
+footer .links {
+  margin-top:15px;
+  font-weight:bold;
+}
+
+footer .links a {
+  margin:0 10px;
+  color:#999;
+  font-weight:normal;
+}
+
+footer .links a:first-child {
+  margin-left:0;
+}
+
+footer .links a:hover {
+  color:#bbb;
+}
+
 @import 'light.less';
 @import 'dark.less';
 
@@ -416,6 +503,12 @@ footer {
   
   .dark .nav .top {
     height:39.5px;  //header height *.75 - 2px;
+  }
+
+  footer .links a:first-child {margin:0 10px}  
+  footer .links a {
+    display: inline-block;
+    width: 40%;
   }
 }
 
