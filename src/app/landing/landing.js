@@ -22,9 +22,10 @@ angular.module( 'ripplecharts.landing', [
  
 //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
-    url   : API+"/offersExercised",  
-    id    : "topMarkets",
-    fixed : true
+    url       : API+"/offersExercised",  
+    id        : "topMarkets",
+    fixed     : true,
+    clickable : true
   });
   
   markets.list([
@@ -40,12 +41,10 @@ angular.module( 'ripplecharts.landing', [
     ]);
 
   markets.on('chartClick', function(chart){
-    console.log(chart.base,chart.trade); 
     var path = "/markets/"+chart.base.currency+
       (chart.base.issuer ? ":"+chart.base.issuer : "")+
       "/"+chart.trade.currency+
       (chart.trade.issuer ? ":"+chart.trade.issuer : "");
-      console.log(path);
     $location.path(path);
     $scope.$apply();  
   });

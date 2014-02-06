@@ -33,8 +33,9 @@ angular.module( 'ripplecharts.multimarkets', [
     
     
   var markets = new MultiMarket ({
-    url   : API+"/offersExercised",  
-    id    : "multimarkets"
+    url       : API+"/offersExercised",  
+    id        : "multimarkets",
+    clickable : true
   });
   
   
@@ -45,15 +46,13 @@ angular.module( 'ripplecharts.multimarkets', [
   });
   
   markets.on('chartClick', function(chart){
-    console.log(chart.base,chart.trade); 
     var path = "/markets/"+chart.base.currency+
       (chart.base.issuer ? ":"+chart.base.issuer : "")+
       "/"+chart.trade.currency+
       (chart.trade.issuer ? ":"+chart.trade.issuer : "");
-      console.log(path);
     $location.path(path);
     $scope.$apply();  
-  })
+  });
     
   $scope.$on("$destroy", function(){
     markets.list([]);

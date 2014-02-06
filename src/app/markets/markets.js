@@ -27,20 +27,21 @@ angular.module( 'ripplecharts.markets', [
   });
 })
 
-.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $stateParams, $location) {
-  if ($stateParams.base && $stateParams.trade) {
-    var base = $stateParams.base.split(":");
+.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location) {
+
+  if ($state.params.base && $state.params.trade) {
+    console.log($state);
+    
+    var base = $state.params.base.split(":");
     base = {currency:base[0],issuer:base[1] ? base[1]:""};
-    var trade = $stateParams.trade.split(":");
+    var trade = $state.params.trade.split(":");
     trade = {currency:trade[0],issuer:trade[1] ? trade[1]:""};   
 
     store.set('base',  base);
     store.set('trade', trade);
     store.session.set('base',  base);
     store.session.set('trade', trade);  
-    $location.path("/markets");
-    $scope.$apply();
-    return;  
+    $location.path("/markets").replace();
   }
   
 //load settings from session, local storage, options, or defaults  

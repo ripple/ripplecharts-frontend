@@ -34,9 +34,11 @@ var MiniChart = function(base, trade, markets) {
   }
   
   
-  self.div.on("click", function(){
-    markets.chartClickHandler(self);
-  });
+  if (markets.options.clickable) { 
+    self.div.classed("clickable", true).on("click", function(){
+      markets.chartClickHandler(self);
+    });
+  }
   
   
   loaded = false;
