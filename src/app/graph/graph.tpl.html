@@ -1,8 +1,27 @@
 <!-- BEGIN VISUALIZATION DIV -->
 <div id="visualization" class="fullwidth graph">
-<div class="light midsize mediumgray" style="position: absolute; top: -72px;  left:35px; pointer-events:auto">
-ledger number: <span id="ledgernumber"></span><br/>
-total ripples: <span id="totalripples"></span><br/></div>
+  <div class="helpWrap">
+    <div class="helpbox" ng-class="{showHelp : showHelp}">
+      <p>
+        The visualization shows the current account being queried and
+        each account that it is connected to via trust lines.  The arrows
+        at the node indicate the direction of the trust line, and the width 
+        of the line indicates the relative size of the trust line balance.
+        
+        Clicking on a node will set it as the current node, and its additional
+        connections will be added to the chart
+      </p>
+      <p>
+        At the bottom of the page, the table on the left shows all the balances
+        by currency for the selected account. For currencies other than XRP, clicking
+        on the balance will show the breakdown of each balance by trust lines for
+        each currency. The table on the right shows the history of transactions
+        for the selected account.
+      </p>
+
+    </div>    
+  </div>
+
 <!-- top bar -->
 <div class="topbar">
   <div class="centered">

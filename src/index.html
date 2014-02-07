@@ -60,6 +60,13 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
       <ul class="nav">
         <li class="top">
         </li>
+        <li class="page">
+          <ul>
+            <li ui-route="/" ng-class="{active:$uiRoute}">
+              <a href="#/" snap-close>Dashboard</a>
+            </li>
+          </ul>
+        </li> 
         <li ui-route="/markets"  class="category">
           <a href="#/markets" snap-close><img src="assets/icons/999_markets.svg">Markets</a>
         </li> 
@@ -72,17 +79,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
               <a href="#/multimarkets" snap-close>Multi Markets</a>
             </li>
           </ul>
-        </li>
-        <li ui-route="/capitalization" class="category value">
-          <a href="#/capitalization" snap-close><img src="assets/icons/999_value.svg"></i>Value</a>
-        </li> 
-        <li class="page">
-          <ul>
-            <li ui-route="/capitalization" ng-class="{active:$uiRoute}">
-              <a href="#/capitalization" snap-close>Capitalization</a>
-            </li>
-          </ul>
-        </li>    
+        </li>  
         <li ui-route="/graph" class="category">
           <a href="#/graph" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
         </li> 
@@ -91,18 +88,8 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             <li ui-route="/graph" ng-class="{active:$uiRoute}">
               <a href="#/graph" snap-close>Account Explorer</a>
             </li>
-          </ul>
-        </li> 
-        <li ui-route="/accounts" class="category network">
-          <a href="#/accounts" snap-close><img src="assets/icons/999_stats.svg"></i>Network</a>
-        </li> 
-        <li class="page">
-          <ul>
             <li ui-route="/accounts" ng-class="{active:$uiRoute}">
-              <a href="#/accounts" snap-close>Accounts</a>
-            </li>
-            <li ui-route="/" ng-class="{active:$uiRoute}">
-              <a href="#/" snap-close>Dashboard</a>
+              <a href="#/accounts" snap-close>Accounts Created</a>
             </li>
           </ul>
         </li> 

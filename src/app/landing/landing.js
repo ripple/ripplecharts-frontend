@@ -57,7 +57,7 @@ angular.module( 'ripplecharts.landing', [
 //get num accounts
   api = new ApiHandler(API);
   api.getTotalAccounts(null, function(total){
-    $scope.totalAccounts = total;
+    $scope.totalAccounts = commas(total);
     $scope.$apply();
   });
   
@@ -68,7 +68,7 @@ angular.module( 'ripplecharts.landing', [
       volume += data[i][3];
     }
     
-    $scope.tradeVolume = "$"+feed.commas(volume,2);
+    $scope.tradeVolume = "$"+commas(volume,2);
     $scope.$apply();
   });
   

@@ -126,7 +126,7 @@ var lastFocalNode = REFERENCE_NODE;
 var currentCurrency = "XRP";
 var currentLedger = {ledger_current_index: 2011754};
 var w = 935;  //Width
-var h = 1085; //Height
+var h = 1035; //Height
 var hh = 710; //Height above the bottom bar
 
 var nodes = [ {x:w/2, y:hh/2, account:{Account:focalNode, Balance:0}, trustLines:[], balances:{} }];

@@ -361,18 +361,25 @@ h1, h2, h3, h4 {
   padding:0;
   overflow:hidden;
   font-size:1px;
+  text-align:left;
 }
 
 .showHelp {
   opacity:1;
   height:auto;
   line-height:inherit;
-  padding:10px;
+  padding:10px 10px 20px;
   margin-top:20px;
   margin-bottom:10px;
   font-size:12px;
 }
 
+.helpbox h5 {
+  margin-top:5px;
+}
+
+
+/* animation for png loader */
 @keyframes rotating {
   from {
     transform: rotate(0deg);
@@ -493,9 +500,15 @@ footer .links a:hover {
     zoom: 0.75;  //zoom 75% for phones
   }
   
+  .markets .wrap .helpbox {
+    zoom:1.33;
+    margin:10px;  
+  }
+  
   .snap-content {
     margin-top:41.5px; //header height * 0.75
   }
+  
   .nav .top {
     height:40.5px;  //header height * 0.75 - 1px
   }

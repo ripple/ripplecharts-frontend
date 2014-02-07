@@ -8,6 +8,21 @@
 
 .graph.fullwidth { width: 100%; }
 
+.graph .helpWrap {
+  position:absolute;
+  top:60px;
+  width:100%;
+  text-align:center;
+  z-index:10;
+}
+
+.graph .helpbox {
+  width:80%; 
+  display:inline-block;
+  background: rgba(250,250,250,.9); 
+  padding-top:20px;
+}
+
 .graph .topbar {
   position:absolute; 
   top:15px; 
@@ -435,6 +450,10 @@
  */
 .dark .graph #visualization {
   color: @darkText;
+}
+
+.dark .graph .helpbox {
+  background:rgba(30,30,30,.9);
 }
 
 .dark .graph #information,

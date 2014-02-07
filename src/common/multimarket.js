@@ -34,13 +34,6 @@ var MiniChart = function(base, trade, markets) {
   }
   
   
-  if (markets.options.clickable) { 
-    self.div.classed("clickable", true).on("click", function(){
-      markets.chartClickHandler(self);
-    });
-  }
-  
-  
   loaded = false;
   
   details  = self.div.append("table").attr("class", "chartDetails").append("tr");
@@ -75,6 +68,15 @@ var MiniChart = function(base, trade, markets) {
   } 
   
   status = self.div.append("h4").attr("class", "status");  
+   
+  if (markets.options.clickable) { 
+    dropdowns.on("click", function(){
+      event.stopPropagation();
+    });
+    self.div.classed("clickable", true).on("click", function(){
+      markets.chartClickHandler(self);
+    });
+  }
       
   function drawChart() {            
     details.html("");

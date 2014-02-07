@@ -70,8 +70,8 @@ angular.element(document).ready(function() {
     function handleLedger(err, obj) {
       if (obj) {
         $scope.ledgerLabel  = "Ledger #:";
-        $scope.ledgerIndex  = Number(parseInt(obj.ledger.ledger_index,10)).toLocaleString();
-        $scope.networkValue = Number(parseInt(obj.ledger.total_coins,10)/1000000).toLocaleString(); 
+        $scope.ledgerIndex  = commas(parseInt(obj.ledger.ledger_index,10));
+        $scope.networkValue = commas(parseInt(obj.ledger.total_coins,10)/1000000); 
         $scope.$apply();
       }
     }  
@@ -119,3 +119,10 @@ angular.element(document).ready(function() {
 */    
   });
 });
+
+function commas (number, precision) {
+  var parts = number.toString().split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (precision && parts[1]) parts[1] = parts[1].substring(0,precision);
+  return parts.join(".");
+}

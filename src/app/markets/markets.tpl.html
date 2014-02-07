@@ -1,14 +1,73 @@
 <div class="markets row-fluid">
   <div class="span3">
     <div class="helpbox" ng-class="{showHelp : showHelp}">
-      Trade Feed
+      <h5>Live Trade Feed</h5>
+      <p>
+        The live trade feed shows the most recent trades for the 
+        selected currency pair, the latest trade price and
+        the 24 hour high, low, and volume.
+      </p>
+      <p>  
+        The large number at the top
+        is the last trade price. It is expressed as a currency pair. 
+        The number represents how much of the second currency (counter currency) 
+        you can get for one unit of the first currency (base currency).       
+      </p>
+      <p>  
+        The table below this is a live updating ticker of the latest trades.   
+        The colored bar shows if the trade price was higher, lower or the 
+        same as the previous trade. Left column: amount traded. 
+        Right column: the trade price.
+      </p>   
+      <table>
+        <tr><td class="type ask"></td><th>Higher than previous price</th></tr>
+        <tr><td class="type bid"></td><th>Lower than previous price</th></tr>
+        <tr><td class="type"></td><th>Same as previous price</th></tr>
+      </table>
     </div>
     <div id="tradeFeed"></div> 
   </div>   
   
   <div class="wrap span9">
     <div class="helpbox" ng-class="{showHelp : showHelp}">
-      Price Chart
+      <h5>Live Market Data</h5>
+      <p>
+        The dropdowns allow you to select a base currency and a counter currency.  
+        Select the currency first, and the issuer dropdown will update to show 
+        which issuers are available for the selected currency. On the right side,
+        the current ledger number is represented, followed by a circle which
+        indicates whether or not Ripple Charts is currently connected to the 
+        Ripple Network real time feed.       
+      </p>
+         <table>
+          <tr>
+            <td class="rippleStatus">
+              <svg height="20" width="20" class="connected">
+                <circle cx="10" cy="10" r="5" fill="#c00" />
+              </svg>
+            </td>
+            <th>Connected to the Ripple Network</th>
+          </tr>
+          <tr>
+            <td class="rippleStatus">
+              <svg height="20" width="20">
+                <circle cx="10" cy="10" r="5" fill="#c00" />
+              </svg>
+            </td>
+            <th>Disconnected from the Ripple Network</th>
+          </tr>
+        </table>     
+      <p>
+        This chart below shows price change over time. Grey bars in the 
+        background represent trade volume for that time period. In the top left, 
+        select time intervals between each data point. The displayed time range will
+        automatically adjust based on which interval you select.  At the top right
+        you can select between line or candlestick display.
+      </p>
+      <p>
+        Hover your mouse over the chart to see open, high, low, and close values
+        for each of the data points.
+      </p>
     </div>  
     <div id="currencyPair">
       <div class="rippleStatus">
@@ -33,7 +92,16 @@
     <div id="chartType"></div>
     <div id="priceChart" data-snap-ignore="true"></div>
     <div class="helpbox" ng-class="{showHelp : showHelp}">
-      Order Book
+      <h5>Order Book</h5>
+      <p>
+        The current order book for the selected currency pair is below - 
+        these are orders that have been placed but not filled yet. 
+        Bids are orders to buy the base currency, and asks are orders 
+        to sell the base currency. The “total” column shows the total 
+        amount of currency you could get at that price. The blue line 
+        shows the depth of the order book, and the vertical line represents
+        the midpoint between the best bid and ask price.       
+      </p>
     </div> 
     <div id="bookChart"  data-snap-ignore="true"></div>
     <div id="bookTables"></div>

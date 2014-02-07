@@ -183,7 +183,6 @@ angular.module( 'ripplecharts.markets', [
   
   tradeFeed.loadPair ($scope.base, $scope.trade);
 
-
 //single function to reload all feeds when something changes
   function loadPair() {
     
