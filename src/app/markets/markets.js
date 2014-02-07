@@ -96,7 +96,7 @@ angular.module( 'ripplecharts.markets', [
   list.append("label").html("Interval:");
   var interval = list.selectAll("a")
     .data([
-      {name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},
+      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//testing purposes only
       {name: "1m",  interval:"minute", multiple:1,  offset: function(d) { return d3.time.hour.offset(d, -2); }},
       {name: "5m",  interval:"minute", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -12); }},
       {name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
@@ -146,6 +146,21 @@ angular.module( 'ripplecharts.markets', [
     resize : true
   });   
 
+  var toCSV = d3.select("#toCSV");
+  toCSV.on('click', function(){
+    if (toCSV.attr("disabled")) return;
+    var data  = priceChart.getRawData();  
+    var csv   = jsonToCSV(data); 
+    var title = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv"; 
+    toCSV.attr("href", "data:text/csv;charset=utf-8," + escape(csv));
+    toCSV.attr("download", title);
+  });
+  
+  priceChart.onStateChange = function(state) {
+    if (state=='loaded') toCSV.style("opacity",1).attr("disabled",null);
+    else toCSV.style("opacity",0.3).attr("disabled",true);
+  }
+  
   loaded = true;
 //the code below should not be needed as it should load via the 'online' indicator
 //d3.select("#interval .selected")[0][0].click(); //to load the first chart
@@ -182,7 +197,7 @@ angular.module( 'ripplecharts.markets', [
   });
   
   tradeFeed.loadPair ($scope.base, $scope.trade);
-
+  
 //single function to reload all feeds when something changes
   function loadPair() {
     

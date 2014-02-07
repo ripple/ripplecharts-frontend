@@ -8,13 +8,19 @@ PriceChart = function (options) {
     priceAxis   = d3.svg.axis().scale(priceScale).orient("right"),
     apiHandler  = new ApiHandler(options.url),
     liveFeed, isLoading;
-    
-  self.type = options.type ? options.type : "line";  //default to line  	
+  
+  self.onStateChange = null;
+   
+  type = options.type ? options.type : "line";  //default to line  	
   
   var div = d3.select(options.id).attr("class","priceChart"),
     svg, svgEnter, gEnter, gradient, 
     hover, horizontal, focus, 
-    status, details, loader;
+    status, details, loader,
+    base, trade, lineData = [],
+    startTime, endTime, type, 
+    chartInterval, intervalSeconds, 
+    multiple, lastCandle;
     
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
@@ -125,10 +131,10 @@ PriceChart = function (options) {
   }
 
     //set to line or candlestick  	
-  this.setType = function (type) {
-    self.type = type;
+  this.setType = function (newType) {
+    type = newType;
 
-    if (self.type == 'line') {
+    if (type == 'line') {
       gEnter.select(".line").style("opacity",1); 
       gEnter.select(".candlesticks").style("opacity",0);				
     } else {
@@ -136,47 +142,51 @@ PriceChart = function (options) {
       gEnter.select(".candlesticks").style("opacity",1);	
     }
   };
+  
+  this.getRawData = function() {
+    return lineData;
+  }
 
   //load historical from API  	  	      			
-  this.load = function (base, trade, d) {
+  this.load = function (b, t, d) {
 
+    if (self.onStateChange) self.onStateChange("loading");
     
     self.fadeOut();
-    self.base     = base;
-    self.trade    = trade;
-    self.interval = d.interval;
-    self.end      = moment();
-    self.multiple = d.multiple;
-    self.lineData = [];
+    base     = b;
+    trade    = t;
+    chartInterval = d.interval;
+    multiple = d.multiple;
+    lineData = [];
     isLoading     = true;
     
-    if      (self.interval=="second") self.seconds = 1;
-    else if (self.interval=="minute") self.seconds = 60;
-    else if (self.interval=="hour")   self.seconds = 60*60;
-    else if (self.interval=="day")    self.seconds = 60*60*24;
-    else if (self.interval=="week")   self.seconds = 60*60*24*7;
-    else if (self.interval=="month")  self.seconds = 60*60*24*30.5; //approx
+    if      (chartInterval=="second") intervalSeconds = 1;
+    else if (chartInterval=="minute") intervalSeconds = 60;
+    else if (chartInterval=="hour")   intervalSeconds = 60*60;
+    else if (chartInterval=="day")    intervalSeconds = 60*60*24;
+    else if (chartInterval=="week")   intervalSeconds = 60*60*24*7;
+    else if (chartInterval=="month")  intervalSeconds = 60*60*24*30.5; //approx
     else {
       //TODO: unacceptable!
-      self.seconds = 60*60;
+      intervalSeconds = 60*60;
     }
     
-    self.seconds *= self.multiple;  
-    self.last     = getAlignedCandle();
-    self.end      = moment(self.last).add('seconds', self.seconds);
-    self.start    = moment.utc(d.offset(self.end));
+    intervalSeconds *= multiple;  
+    lastCandle     = getAlignedCandle();
+    endTime      = moment(lastCandle).add('seconds', intervalSeconds);
+    startTime    = moment.utc(d.offset(endTime));
      
     //console.log(moment.utc().format("HH:mm:ss")); 
-    //console.log(self.last.format("HH:mm:ss")); 
-    //console.log(self.end.format("HH:mm:ss")); 
+    //console.log(lastCandle.format("HH:mm:ss")); 
+    //console.log(endTime.format("HH:mm:ss")); 
     
     if (liveFeed) liveFeed.stopListener();
     setLiveFeed();
     
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime     : self.start.toDate(),
-      endTime       : self.end.toDate(),
+      startTime     : startTime.toDate(),
+      endTime       : endTime.toDate(),
       timeIncrement : d.interval,
       timeMultiple  : d.multiple,
       descending    : false,
@@ -186,8 +196,8 @@ PriceChart = function (options) {
       
       //if we've got live data reported already, we need to merge
       //the first live data with the last historic candle
-      if (self.lineData.length && data.length) {
-        var first  = self.lineData.shift();
+      if (lineData.length && data.length) {
+        var first  = lineData.shift();
         var candle = data[data.length-1];
         var volume = candle.volume + first.volume;
         //candle.open will be from historic
@@ -200,13 +210,13 @@ PriceChart = function (options) {
         data[data.length-1] = candle;
       }
       
-      self.lineData = data.concat(self.lineData);
+      lineData = data.concat(lineData);
       isLoading     = false;
-      
+      if (self.onStateChange) self.onStateChange("loaded");
       drawData();
       
     }, function (error){
-      
+      if (self.onStateChange) self.onStateChange("error");
       isLoading = false;
       console.log(error);
       setStatus(error.text ? error.text : "Unable to load data");
@@ -221,7 +231,7 @@ PriceChart = function (options) {
 
   function setLiveFeed () {
     var candle = {
-        time   : self.last,
+        time   : lastCandle,
         volume : 0,
         vwap   : 0,
         close  : 0,
@@ -231,10 +241,10 @@ PriceChart = function (options) {
       };
       
     var viewOptions = {
-      base  : self.base,
-      trade : self.trade,
-      timeIncrement    : self.interval,
-      timeMultiple     : self.multiple,
+      base  : base,
+      trade : trade,
+      timeIncrement    : chartInterval,
+      timeMultiple     : multiple,
       incompleteApiRow : candle
     }
     
@@ -250,8 +260,8 @@ PriceChart = function (options) {
   
   function liveUpdate (data) {
 
-    var first = self.lineData.length ? self.lineData[0] : null;
-    var last  = self.lineData.length ? self.lineData[self.lineData.length-1] : null;
+    var first = lineData.length ? lineData[0] : null;
+    var last  = lineData.length ? lineData[lineData.length-1] : null;
     var candle = {
         time   : moment.utc(data.openTime),
         volume : data.baseCurrVol,
@@ -280,33 +290,33 @@ PriceChart = function (options) {
         data[data.length-1] = candle;
         
       }
-      self.lineData[self.lineData.length-1] = candle;
+      lineData[lineData.length-1] = candle;
     } else {
       
       //new candle, only add it if something happened
       if (candle.volume) {
         //console.log('append');
         //console.log(candle);
-        self.lineData.push(candle); //append the candle    
+        lineData.push(candle); //append the candle    
       }
       //adjust the range  
-      self.start.add(self.seconds,"seconds");
-      self.end.add(self.seconds,"seconds");
+      startTime.add(intervalSeconds,"seconds");
+      endTime.add(intervalSeconds,"seconds");
     
       //remove the first candle if it is before the start range
-      if (first && first.time.unix()<self.start.unix()) self.lineData.shift();
+      if (first && first.time.unix()<startTime.unix()) lineData.shift();
     }
     
     //redraw the chart
-    if (self.lineData.length) drawData();
+    if (lineData.length) drawData();
   }
   
   function drawData () {	
-    if (!isLoading && (!self.lineData || !self.lineData.length)) {
+    if (!isLoading && (!lineData || !lineData.length)) {
       setStatus("No Data for this Period");
     } else setStatus("");
 
-    if (self.type == 'line') {
+    if (type == 'line') {
       gEnter.select(".line").style("opacity",1); 
       gEnter.select(".candlesticks").style("opacity",0);				
     } else {
@@ -318,22 +328,22 @@ PriceChart = function (options) {
       .x(function(d) { return xScale(d.time); })
       .y(function(d) { return priceScale(d.close); });
     
-    var num = (moment(self.end).unix() - moment(self.start).unix())/self.seconds;
+    var num = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
     
     //console.log(num); //aiming for around 100-200 here
     
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
-    svg.datum(self.lineData).on("mousemove.hover", mousemove);
+    svg.datum(lineData).on("mousemove.hover", mousemove);
 
-    gEnter.select(".axis.price").select("text").text("Price ("+self.trade.currency+")");
-    gEnter.select(".axis.volume").select("text").text("Volume ("+self.base.currency+")");
-    var bars = gEnter.select(".volumeBars").selectAll("rect").data(self.lineData);
+    gEnter.select(".axis.price").select("text").text("Price ("+trade.currency+")");
+    gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
+    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData);
     bars.enter().append("rect"); 
 
     // add the candlesticks.
-    var candle = gEnter.select(".candlesticks").selectAll("g").data(self.lineData);
+    var candle = gEnter.select(".candlesticks").selectAll("g").data(lineData);
     var candleEnter = candle.enter().append("g")
       .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; });
     candleEnter.append("line").attr("class","extent");
@@ -343,26 +353,26 @@ PriceChart = function (options) {
         
     // Update the x-scale.
     xScale
-      .domain([self.start, self.end])
+      .domain([startTime, endTime])
       .range([0, options.width]);
     
     // Update the volume scale.
     volumeScale
-      .domain([0, d3.max(self.lineData, function (d) {return d.volume})*2])
+      .domain([0, d3.max(lineData, function (d) {return d.volume})*2])
       .range([options.height, 0]);
 
     // Update the y-scale.
     priceScale
       .domain([
-        d3.min(self.lineData, function(d) { return Math.min(d.open, d.close, d.high, d.low); })*0.975,
-        d3.max(self.lineData, function(d) { return Math.max(d.open, d.close, d.high, d.low); })*1.025])
+        d3.min(lineData, function(d) { return Math.min(d.open, d.close, d.high, d.low); })*0.975,
+        d3.max(lineData, function(d) { return Math.max(d.open, d.close, d.high, d.low); })*1.025])
       .range([options.height, 0]);
 
     //add the price line
-    gEnter.select(".line").datum(self.lineData).transition().attr("d", line);	
+    gEnter.select(".line").datum(lineData).transition().attr("d", line);	
 
     //add the volume bars
-    bars.data(self.lineData)
+    bars.data(lineData)
       .transition()
       .attr("x", function(d){return xScale(d.time)-candleWidth/3})
       .attr("y", function(d){return volumeScale(d.volume)})
@@ -382,7 +392,7 @@ PriceChart = function (options) {
                     
     var candleUpdate = candle.classed("up", function(d, i) { 
       if (i>0) {
-        var prev = self.lineData[i-1];
+        var prev = lineData[i-1];
         return prev.close<=d.close;
       }
           
@@ -434,33 +444,33 @@ PriceChart = function (options) {
 
   function mousemove() {
     var tx = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
-      x    = d3.bisect(self.lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
-      d    = self.lineData[x],
+      x    = d3.bisect(lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
+      d    = lineData[x],
       o, h, l, c, v;
 
     if (d) {
       
       if (ripple && ripple.Amount) {
-        o = ripple.Amount.from_human(d.open).to_human({max_sig_digits:4});
-        h = ripple.Amount.from_human(d.high).to_human({max_sig_digits:4});
-        l = ripple.Amount.from_human(d.low).to_human({max_sig_digits:4});
-        c = ripple.Amount.from_human(d.close).to_human({max_sig_digits:4});
-        v = ripple.Amount.from_human(d.volume).to_human({max_sig_digits:0}); 
+        o = ripple.Amount.from_human(d.open).to_human({max_sig_digits:6});
+        h = ripple.Amount.from_human(d.high).to_human({max_sig_digits:6});
+        l = ripple.Amount.from_human(d.low).to_human({max_sig_digits:6});
+        c = ripple.Amount.from_human(d.close).to_human({max_sig_digits:6});
+        v = ripple.Amount.from_human(d.volume).to_human({max_sig_digits:6}); 
       } else {
         o = d.open.toFixed(4);
         h = d.high.toFixed(4);
         l = d.low.toFixed(4);
         c = d.close.toFixed(4);
-        v = d.volume.toFixed(0);
+        v = d.volume.toFixed(2);
       }
 
       var details = div.select('.chartDetails');
-      details.html("<span class='date'>"+ parseDate(d.time.local(), self.interval) + 
+      details.html("<span class='date'>"+ parseDate(d.time.local(), chartInterval) + 
         "</span><span>O:<b>" + o  + "</b></span>" +
         "<span class='high'>H:<b>" + h + "</b></span>" +
         "<span class='low'>L:<b>" + l + "</b></span>" +
         "<span>C:<b>" + c  + "</b></span>" +
-        "<span class='volume'>Volume:<b>" + v + " " + self.base.currency + "</b></span>")
+        "<span class='volume'>Volume:<b>" + v + " " + base.currency + "</b></span>")
         .style("opacity",1);
 
       hover.transition().duration(50).attr("transform", "translate(" + xScale(d.time) + ")");
@@ -481,46 +491,46 @@ PriceChart = function (options) {
     var now = moment().utc(), aligned;
     now.subtract("milliseconds", now.milliseconds());
      
-    if (self.interval=='second') {
-      aligned = now.subtract("seconds", now.seconds()%self.multiple);
+    if (chartInterval=='second') {
+      aligned = now.subtract("seconds", now.seconds()%multiple);
       
-    } else if (self.interval=='minute') {
+    } else if (chartInterval=='minute') {
       aligned = now.subtract({
         seconds : now.seconds(), 
-        minutes : now.minutes()%self.multiple
+        minutes : now.minutes()%multiple
       });
             
-    } else if (self.interval=='hour') {
+    } else if (chartInterval=='hour') {
       aligned = now.subtract({
         seconds : now.seconds(), 
         minutes : now.minutes(),
-        hours   : now.hours()%self.multiple
+        hours   : now.hours()%multiple
       });   
              
-    } else if (self.interval=='day') {
+    } else if (chartInterval=='day') {
       aligned = now.subtract({
         seconds : now.seconds(), 
         minutes : now.minutes(),
         hours   : now.hours(),
-        days    : now.dayOfYear()%self.multiple
+        days    : now.dayOfYear()%multiple
       }); 
 
-    } else if (self.interval=='week') {
+    } else if (chartInterval=='week') {
       aligned = now.subtract({
         seconds : now.seconds(), 
         minutes : now.minutes(),
         hours   : now.hours(),
         days    : now.day(),
-        weeks   : now.isoWeek()%self.multiple
+        weeks   : now.isoWeek()%multiple
       }); 
       
-    } else if (self.interval=='month') {
+    } else if (chartInterval=='month') {
       aligned = now.subtract({
         seconds : now.seconds(), 
         minutes : now.minutes(),
         hours   : now.hours(),
         days    : now.date()-1,
-        months  : now.months()%self.multiple
+        months  : now.months()%multiple
       }); 
     } 
       
