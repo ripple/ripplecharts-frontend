@@ -104,7 +104,12 @@ angular.element(document).ready(function() {
     //connect to the ripple network;
     remote = new ripple.Remote(Options.ripple);
     remote.connect();
-  
+
+    //2nd connection needed for now because of a bug in ripple-lib 
+    //when unsubscribing from an orderbook.
+    orderBookRemote = new ripple.Remote(Options.ripple);
+    orderBookRemote.connect();
+        
     angular.bootstrap(document, ['ripplecharts']);
 
 /*

@@ -164,19 +164,12 @@ angular.module( 'ripplecharts.markets', [
   loaded = true;
 //the code below should not be needed as it should load via the 'online' indicator
 //d3.select("#interval .selected")[0][0].click(); //to load the first chart
-
-
-//new connection needed for now because of a bug in ripple-lib 
-//when unsubscribing from an orderbook.
-  var orderBookRemote = new ripple.Remote(Options.ripple);
-  orderBookRemote.connect();
      
 //set up the order book      
   function emitHandler (type, data) {
     if (type=='spread') {
       document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    
-    }    
-    
+    }     
   }
   
   book = new OrderBook ({
