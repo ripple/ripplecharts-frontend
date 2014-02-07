@@ -24,12 +24,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- Open Sans from google -->
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,700' rel='stylesheet' type='text/css'>
-    
-    <!-- font awesome from BootstrapCDN -->
-    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
@@ -46,7 +40,9 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
   <body ng-class="theme">
     <div class="header">
       <div class="wrapper">
-        <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
+        <i class="nav-toggle" snap-toggle>
+          <img src="assets/images/menu.svg"/>
+        </i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
         <div id="helpButton" ng-click="showHelp = !showHelp"><span>?</span></div>
         <div class="theme selectList">
@@ -116,9 +112,9 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             &middot;
             <a href="https://ripple.com">Ripple.com</a>
             &middot;
-            <a href="#/privacy-policy">Privacy Policy</a>
+            <a href="https://ripple.com/privacy-policy/">Privacy Policy</a>
             &middot;
-            <a href="#/terms-of-service">Terms of Service</a>
+            <a href="https://ripple.com/terms/">Terms of Service</a>
           </div>  
           <small><a style="display:none" href="">v<%= version %></a></small>
         </div>

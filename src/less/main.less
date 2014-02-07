@@ -4,6 +4,11 @@
  * the Grunt configuration that is automatically processed.
  */
 
+@font-face { font-family: "Open Sans Light"; src: url('fonts/OpenSans-Light.ttf'); } 
+@font-face { font-family: "Open Sans Light"; font-style:italic; src: url('fonts/OpenSans-LightItalic.ttf'); } 
+@font-face { font-family: "Open Sans Light"; font-weight: bold; src: url('fonts/OpenSans-Bold.ttf'); } 
+@font-face { font-family: "Open Sans Light"; font-weight: bold; font-style:italic; src: url('fonts/OpenSans-BoldItalic.ttf'); } 
+@font-face { font-family: "Open Sans"; src: url('fonts/OpenSans-Regular.ttf'); } 
 
 /**
  * First, we include the Twitter Bootstrap LESS files. Only the ones used in the
@@ -37,7 +42,7 @@
 
 
 body {
-  font-family: "Open Sans", Helvetica, Arial, sans-serif; 
+  font-family: "Open Sans Light", Helvetica, Arial, sans-serif; 
   padding:0 !important;
   line-height:inherit;
   width:100%;
@@ -104,11 +109,15 @@ h1, h2, h3, h4 {
 }
 
 .nav-toggle {
-  font-size:27px;
-  margin:12px 10px 12px 20px;  
+  margin:10px 10px 10px 20px;  
   float:left;
   cursor:pointer;
   color:#ccc;
+}
+
+.nav-toggle img {
+  width:30px;
+  height:30px;
 }
 
 .nav {
@@ -435,6 +444,7 @@ footer .footerInner {
   text-align:left;
   clear:both;
   padding:10px;
+  font-family:"Open Sans";
 }
 
 footer .footerInner .disclaimer {
