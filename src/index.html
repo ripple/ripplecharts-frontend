@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-controller="AppCtrl">
+<html>
   <head>
     <title ng-bind="pageTitle">Ripple Charts</title>
     <link rel="icon" type="image/ico" href="assets/images/favicon.ico"/>
@@ -17,34 +17,36 @@
     <meta name="twitter:image:src" content="">
     <meta property="og:title" content="Ripple Charts" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https:/ripplecharts.com" />
+    <meta property="og:url" content="https://www.ripplecharts.com" />
     <meta property="og:image" content="" />
     <meta property="og:description" content="Ripple Network Data Visualization.">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     
+    <!-- Open Sans from google -->
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300,700' rel='stylesheet' type='text/css'>
+    
+    <!-- font awesome from BootstrapCDN -->
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
 
-<script type="text/javascript" src="http://code.angularjs.org/1.2.9/angular-animate.js"></script>
   <!-- start Mixpanel --><script type="text/javascript">(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
 typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");for(g=0;g<i.length;g++)f(c,i[g]);
 b._i.push([a,e,d])};b.__SV=1.2}})(document,window.mixpanel||[]);
 mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
 
   </head>
-  <body ng-class="theme">
+  <body ng-controller="AppCtrl" ng-class="theme">
     <div class="header">
       <div class="wrapper">
-        <i class="nav-toggle" snap-toggle>
-          <img src="assets/images/menu.svg"/>
-        </i>
+        <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
-        <div id="helpButton" ng-click="showHelp = !showHelp"><span>?</span></div>
         <div class="theme selectList">
           <a ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</a>
           <a ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</a>
@@ -56,36 +58,46 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
       <ul class="nav">
         <li class="top">
         </li>
-        <li class="page">
-          <ul>
-            <li ui-route="/" ng-class="{active:$uiRoute}">
-              <a href="#/" snap-close>Dashboard</a>
-            </li>
-          </ul>
-        </li> 
-        <li class="category">
+        <li ui-route="/markets"  class="category">
           <a href="#/markets" snap-close><img src="assets/icons/999_markets.svg">Markets</a>
         </li> 
         <li class="page">
           <ul>
-            <li ui-route="/markets(/.+)?" ng-class="{active:$uiRoute !== false}">
+            <li ui-route="/markets" ng-class="{active:$uiRoute}">
               <a href="#/markets" snap-close>Live Chart</a>
             </li>
-            <li ui-route="/multimarkets" ng-class="{active:$uiRoute !== false}">
+            <li ui-route="/multimarkets" ng-class="{active:$uiRoute}">
               <a href="#/multimarkets" snap-close>Multi Markets</a>
             </li>
           </ul>
-        </li>  
-        <li class="category">
+        </li>
+        <li ui-route="/capitalization" class="category value">
+          <a href="#/capitalization" snap-close><img src="assets/icons/999_value.svg"></i>Value</a>
+        </li> 
+        <li class="page">
+          <ul>
+            <li ui-route="/capitalization" ng-class="{active:$uiRoute}">
+              <a href="#/capitalization" snap-close>Capitalization</a>
+            </li>
+          </ul>
+        </li>    
+        <li ui-route="/graph" class="category graph">
           <a href="#/graph" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
         </li> 
         <li class="page">
           <ul>
-            <li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
+            <li ui-route="/graph" ng-class="{active:$uiRoute}">
               <a href="#/graph" snap-close>Account Explorer</a>
             </li>
-            <li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
-              <a href="#/accounts" snap-close>Accounts Created</a>
+          </ul>
+        </li> 
+        <li ui-route="/accounts" class="category network">
+          <a href="#/accounts" snap-close><img src="assets/icons/999_stats.svg"></i>Network</a>
+        </li> 
+        <li class="page">
+          <ul>
+            <li ui-route="/accounts" ng-class="{active:$uiRoute}">
+              <a href="#/accounts" snap-close>Accounts</a>
             </li>
           </ul>
         </li> 
@@ -95,35 +107,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
     <div snap-content class="snap-content" snap-options="snapOptions">    
       
       <div ui-view="main"></div>
-      <footer class="footer">
-        <div class="footerInner container">
-          Ripple Charts is built and maintained by Ripple Labs, based on data from the Ripple Network.
-          <div class="disclaimer">
-            Information is provided "as is" and solely as an informative resource.  
-            Ripple Charts is not a trading advisor. Data may be delayed or incorrect.
-            
-
-          </div>
-          <div class="links">
-            <a href="https://ripple.com/client">Ripple Wallet</a>
-            &middot;
-            <a href="https://ripple.com/blog">Blog</a>
-            &middot;
-            <a href="https://ripplelabs.com">Ripple Labs</a>
-            &middot;
-            <a href="https://ripple.com">Ripple.com</a>
-            &middot;
-            <a href="https://ripple.com/privacy-policy/">Privacy Policy</a>
-            &middot;
-            <a href="https://ripple.com/terms/">Terms of Service</a>
-            &middot;
-            <a href="https://github.com/ripple/ripplecharts-frontend">Github</a>
-            &middot;
-            <a href="https://ripplelabs.atlassian.net/browse/RC">Bug Reports</a>            
-            
-          </div>  
-          <small><a style="display:none" href="">v<%= version %></a></small>
-        </div>
+      <footer class="footer row">
+        <div class="footer-inner"></div>
+        <small><a href="">v<%= version %></a></small>
+      </div>
       </footer>
     </div>    
   </body>
