@@ -154,6 +154,7 @@ angular.module( 'ripplecharts.markets', [
     var title = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv"; 
     toCSV.attr("href", "data:text/csv;charset=utf-8," + escape(csv));
     toCSV.attr("download", title);
+    toCSV.attr("target", "_blank");
   });
   
   priceChart.onStateChange = function(state) {
