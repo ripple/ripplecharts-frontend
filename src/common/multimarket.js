@@ -1,7 +1,7 @@
 var MiniChart = function(base, trade, markets) {
   var self      = this,
     header, details, range, showHigh, showLow, change, volume,
-    svg, svgEnter, pointer, gEnter, 
+    wrap, svg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
     dropdownA, dropdownB, dropdowns, loaded;
@@ -37,8 +37,7 @@ var MiniChart = function(base, trade, markets) {
   loaded = false;
   
   details  = self.div.append("table").attr("class", "chartDetails").append("tr");
-  svg      = self.div.selectAll("svg").data([0]);
-  svgEnter = svg.enter().append("svg");
+  wrap     = self.div.append("div");
              
   loader = self.div.append("img")
     .attr("class", "loader")
@@ -60,6 +59,7 @@ var MiniChart = function(base, trade, markets) {
   dropdowns = self.div.append("div").attr("class", "dropdowns");
   dropdowns.append("div").attr("class","base").call(dropdownA);
   dropdowns.append("div").attr("class","trade").call(dropdownB);
+  
   if (markets.options.fixed) {
     dropdowns.style("display","none");
     header.html("<small>"+self.div.select(".base .gateway").node().value+
@@ -80,7 +80,9 @@ var MiniChart = function(base, trade, markets) {
       
   function drawChart() {            
     details.html("");
-    svg.html("")
+    wrap.html("");
+    
+    svg = wrap.append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom);  
     
@@ -358,6 +360,7 @@ var MiniChart = function(base, trade, markets) {
 
 var MultiMarket = function (options) {
   var self = this;
+  var add;
   
   self.charts     = [];  
   self.el         = d3.select("#"+options.id).attr("class","multiMarket");
@@ -365,14 +368,23 @@ var MultiMarket = function (options) {
   self.options    = options;
   
   if (!options.fixed) {
-    self.el.append("div")
+    add = self.el.append("div")
       .attr("class","add")
       .text("+")
       .on("click", function(d) {
         self.addChart();
-      });    
+      }); 
+      
+    resizeButton();  
+    addResizeListener(window, resizeButton);   
   }
 
+  function resizeButton() {
+    width   = parseInt(add.style('width'), 10)-40; //subtract chart margin
+    height  = width/1.5>200 ? width/1.5 : 200;
+    height += 83; //add height of details, dropdowns, borders
+    add.style({height: height+"px", "line-height":height+"px"});
+  }
     
   this.addChart = function (base, trade) {
     new MiniChart(base, trade, self); 
@@ -408,6 +420,9 @@ var MultiMarket = function (options) {
     for (var i=0; i<self.charts.length; i++) {
       self.charts[i].remove(false);
     }
+    
+    if (!charts.length && !options.fixed) 
+      removeResizeListener(window, resizeButton);
     
     for (var j=0; j<charts.length; j++) {
       self.addChart(charts[j].base, charts[j].trade);

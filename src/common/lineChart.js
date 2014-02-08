@@ -13,6 +13,7 @@ var LineChart = function (options){
    
   self.lineData = [];
   self.interval = null;
+  self.loading  = false;
   
   function drawChart () { 
     div.html("");
@@ -49,12 +50,13 @@ var LineChart = function (options){
   
     loader = div.append("img")
       .attr("class", "loader")
-      .attr("src", "assets/images/rippleThrobber.png")
-      .style("opacity", 0);
+      .attr("src", "assets/images/rippleThrobber.png");
+    
+    if (!self.loading) loader.style("opacity",0);
   }	
 
   function drawData() {
-    if (!self.lineData.length) {
+    if (!self.loading && !self.lineData.length) {
       loader.style("opacity",0);
       status.html("No Data for this Period").style("opacity",1);
       return; 
@@ -114,9 +116,14 @@ var LineChart = function (options){
 
     focus.append("circle").attr("r", 4.5);  
 
-    svg.transition().duration(300).style("opacity", 1);
-    loader.transition().duration(300).style("opacity", 0);
-
+    if (self.loading) {
+      svg.style("opacity", 0);
+      loader.style("opacity", 1);
+    } else {
+      svg.transition().duration(300).style("opacity", 1);
+      loader.transition().duration(300).style("opacity", 0);      
+    }
+    
     function mousemove(e) {
       var tx = Math.max(options.margin.left, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
         i    = d3.bisect(self.lineData.map(function(d) { return d.x; }), x.invert(tx-options.margin.left));
@@ -168,7 +175,7 @@ var LineChart = function (options){
     status.style("opacity", 0);
     div.selectAll(".hover").style("opacity", 0);
     div.selectAll(".details").style("opacity",0);	
-    loader.style("opacity",1);	
+    if (self.loading) loader.style("opacity",1);	
   }
 
 

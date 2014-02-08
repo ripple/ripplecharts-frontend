@@ -4,7 +4,17 @@ angular.module( 'ripplecharts.graph', [
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'graph', {
+  $stateProvider.state( 'graph2', {
+    url: '/graph/:id',
+    views: {
+      "main": {
+        controller: 'GraphCtrl',
+        templateUrl: 'graph/graph.tpl.html'
+      }
+    },
+    data:{ pageTitle: 'Network Graph' }
+  })
+  .state( 'graph', {
     url: '/graph',
     views: {
       "main": {
@@ -16,6 +26,15 @@ angular.module( 'ripplecharts.graph', [
   });
 })
 
-.controller( 'GraphCtrl', function GraphCtrl( $scope ) {
-  networkGraph();
+.controller( 'GraphCtrl', function GraphCtrl( $scope, $state, $location ) {
+  if ($state.params.id) {
+    store.session.set('graphID', $state.params.id); 
+    //$location.path("/graph").replace();
+  }
+  
+  var graph = new networkGraph();
+  //stop the listeners when leaving page  
+  $scope.$on("$destroy", function(){ 
+    graph.suspend();
+  });
 });

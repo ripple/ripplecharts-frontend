@@ -4,7 +4,8 @@ networkGraph = function () {
 var UNIX_RIPPLE_TIME = 946684800;
 var RECURSION_DEPTH = 1;
 var MAX_NUTL = 360;
-var REFERENCE_NODE = 'r3kmLJN5D28dHuH8vZNUZpMC43pEHpaocV';
+var REFERENCE_NODE = store.session.get('graphID') || 'r3kmLJN5D28dHuH8vZNUZpMC43pEHpaocV';
+console.log(REFERENCE_NODE);
 var HALO_MARGIN = 6;
 var COLOR_TABLE = {
 //currency  |  center  |   rim  |
@@ -85,7 +86,7 @@ var REQUEST_REPETITION_INTERVAL = 8*1000; //milliseconds
 
 
 
-var param = window.location.hash.replace(/\W/g, '');
+var param = REFERENCE_NODE;
 
 var alreadyFailed = false;
 var focalNode;
@@ -107,6 +108,7 @@ if (param === "") {
   focalNode = REFERENCE_NODE;
 }
 
+console.log(transaction_id);
 
 function gotoThing() {
   var string = $('#focus').val().replace(/\s+/g, '');
@@ -139,54 +141,6 @@ var expandedNodes = {};
 var provisionallyExpandedNodes = {};
 var txx;
 var firstTime = true;
-
-
-
-
-// Setup ripple-lib
-var Remote = ripple.Remote;
-var remote = new Remote({
-  trace: false,
-  trusted: true,
-  local_signing: true,
-  connection_offest: 60,
-  servers: [{ 
-    host: 's1.ripple.com'
-    , port: 443
-    , secure: true, pool: 3
-  }]
-});
-
-
-//Opening sequence:
-remote.connect(function() {
-  //Subscriptions
-  remote.on('ledger_closed', function(x,y){
-    currentLedger = x;
-    $("#ledgernumber").text(commas(parseInt(currentLedger.ledger_index, 10)));
-    remote.request_ledger('closed', handleLedger);
-  });
-  remote.on('transaction_all', handleTransaction);
-  
-  //Get current ledger
-  remote.request_ledger('closed', handleLedger);
-
-  if (firstTime) {
-    if (transaction_id && transaction_id !== "") {
-      nodeMap = {};
-      degreeMap = {};
-      nodes = [];
-      $('#focus').val(transaction_id);
-      remote.request_tx(transaction_id, handleIndividualTransaction);
-    } else {
-      lastFocalNode = REFERENCE_NODE;
-      expandNode(focalNode);
-      addNodes(0);
-      serverGetInfo(focalNode);
-    }
-  }
-  firstTime = false;
-});
 
 var pendingRequests = {};
 
@@ -1024,6 +978,8 @@ var force = d3.layout.force()
 
 function expandNode(address) {
   var nutl;
+  
+  store.set("graphID", address);
   
   if (typeof(nodes[nodeMap[address]]) !== "undefined") {
     nutl = numberOfUnseenTrustLines(nodes[nodeMap[address]]);
@@ -2099,13 +2055,61 @@ window.onhashchange = function(){
   updateInformation(focalNode);
   
   function resizeGraph () {
-    console.log(translationX, translationY);
     //translationX = parseInt(svg.style("width"),10)/4; 
     //translationY = parseInt(svg.style("height"),10)/4;
     translationX = translationY = 0;
-    console.log(translationX, translationY);
     panAndZoom();
   }
   
   addResizeListener(window, resizeGraph);
+  this.suspend = function (){
+    removeResizeListener(window, resizeGraph); 
+  }
+  
+  function isConnected(remote) {
+    var server;
+    
+    return remote._connected
+    && (server = remote._getServer())
+    && (Date.now() - server._lastLedgerClose <= 1000 * 20);
+  }
+  
+  function init () {
+      //Subscriptions
+      remote.on('ledger_closed', function(x,y){
+        currentLedger = x;
+        $("#ledgernumber").text(commas(parseInt(currentLedger.ledger_index, 10)));
+        remote.request_ledger('closed', handleLedger);
+      });
+      remote.on('transaction_all', handleTransaction);
+      
+      //Get current ledger
+      remote.request_ledger('closed', handleLedger);
+    
+      if (firstTime) {
+        if (transaction_id && transaction_id !== "") {
+          nodeMap = {};
+          degreeMap = {};
+          nodes = [];
+          $('#focus').val(transaction_id);
+          remote.request_tx(transaction_id, handleIndividualTransaction);
+        } else {
+          lastFocalNode = REFERENCE_NODE;
+          expandNode(focalNode);
+          addNodes(0);
+          serverGetInfo(focalNode);
+        }
+      }
+      firstTime = false;    
+  }
+  
+  if (isConnected(remote)) {
+    init();
+      
+  } else {
+    //Opening sequence:
+    remote.connect(function() {
+      init();
+    });
+  }
 } 

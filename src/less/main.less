@@ -315,7 +315,7 @@ h1, h2, h3, h4 {
   display: inline-block;
   text-decoration: none;
   color:#666;
-  margin:1px 4px;
+  margin:0 4px;
   border-bottom:3px solid transparent;
   cursor:pointer;
 }
@@ -387,6 +387,23 @@ h1, h2, h3, h4 {
   margin-top:5px;
 }
 
+.helpbox a {
+  color:#999;
+  font-family:"Open Sans";
+  text-decoration:underline;
+}
+
+.helpbox a:hover {
+  color:#aaa;
+}
+
+.dark .helpbox a {
+  color:#bbb;
+}
+
+.dark .helpbox a:hover {
+  color:#ddd;
+}
 
 /* animation for png loader */
 @keyframes rotating {
@@ -448,7 +465,7 @@ footer .footerInner {
 }
 
 footer .footerInner .disclaimer {
-  margin:10px 0;
+  margin:5px 0 20px;
   font-size:10px;
 }
 
@@ -525,7 +542,11 @@ footer .links a:hover {
   footer .links a:first-child {margin:0 10px}  
   footer .links a {
     display: inline-block;
-    width: 40%;
+    width: 35%;
+  }
+  
+  footer .footerInner {
+    width:90%
   }
 }
 

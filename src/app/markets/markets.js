@@ -41,7 +41,7 @@ angular.module( 'ripplecharts.markets', [
     store.set('trade', trade);
     store.session.set('base',  base);
     store.session.set('trade', trade);  
-    $location.path("/markets").replace();
+    $location.path("/markets").replace(); //to remove the data from the URL
   }
   
 //load settings from session, local storage, options, or defaults  

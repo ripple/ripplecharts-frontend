@@ -55,6 +55,7 @@ var TotalAccounts = function (options) {
   }
   
   this.update = function (increment, start, end) {
+    chart.loading = true;
     chart.fadeOut();
     
     if (start.getFullYear()<2005) { //because of bug in API for earlier dates   
@@ -102,9 +103,12 @@ var TotalAccounts = function (options) {
           y2 : d[1]}
       });
       
+      chart.loading = false;
       chart.redraw(params.timeIncrement, lineData);
     }, function (error) {
-      
+      console.log(error);
+      chart.loading = false;
+      chart.setStatus(error.text ? error.text : "Unable to load data");
     });
   } 
   

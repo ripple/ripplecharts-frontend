@@ -68,31 +68,34 @@
 #toCSV {
   display:inline-block;
   cursor:pointer; 
-  margin:5px;
-  font-weight:bold; 
-  font-size:10px;
-  padding:3px 10px;
-  border-radius:3px;
-  background:rgba(150,150,150,.3);
+  margin:2px 5px;
+  padding:0 5px;
   color:#ccc;
   text-decoration:none;
   opacity:0.3;
-  width:35px;
+  width:30px;
+  text-align:center;
 }
 
+
+
 #flip {
-  margin: 0 5px;
+  margin:3px 5px;
   font-size:12px; 
   cursor:pointer;
   color:#666;
   display:inline-block;
-  padding:5px;
+  width:40px;
   text-align:center;
   font-family:"Open Sans";
 }
 
 #flip span {
   border-bottom:3px solid transparent;
+}
+
+#flip:hover span {
+  border-color:#666;  
 }
 
 .rippleStatus {
@@ -156,7 +159,7 @@
  */
 
 .markets .span3 {
-  width: 24.5% !important;
+  width: 26.5% !important;
   margin-left: 1% !important;
 }
 
@@ -166,13 +169,15 @@
 }
 
 .markets .span9 {
-  margin:0 !important
+  margin:0 !important;
+  width: 72% !important;
 }
 
 .markets .span9 .helpbox {
   margin-left:60px;
   margin-right:60px;
 }
+
 @media (max-width:1100px) {
   .markets .dropdowns, .markets #flip, .markets #toCSV {
     float:left;
@@ -246,14 +251,17 @@
 
   .markets .span3 {
     display:block;
+    border-bottom:none;
   }
   
   .markets .span3 .helpbox {
-    display:block;
+    display:inline-block;
+    width:80%;
   }
 
   #tradeFeed {
-    display:block;  
+    display:block; 
+    margin-bottom:0; 
   } 
      
   #tradeFeed .summary {
@@ -270,12 +278,8 @@
   
   #currencyPair {
     display:inline-block;
-    width:420px;
+    width:400px;
     margin-bottom:20px;
-  }
-  
-  #flip {
-    width:45px;
   }
 }
 
@@ -283,12 +287,12 @@
 @media (max-width: 480px) {
   #currencyPair select{
     padding: 5px 40px 5px 5px;
-    font-size: 18px;
+    font-size: 16px;
     background-size: 20px;
   }  
   
   #currencyPair .gateway {
-    min-width:220px;  
+    min-width:200px;  
   }
   
   .dark #currencyPair select {
@@ -302,10 +306,17 @@
   #interval {margin-left:20px; zoom:1.25}
   #interval label {display:none}
   #chartType {margin-right:20px; zoom:1.25}
-  #flip, #toCSV {
-    width:50px;
-    padding:5px 10px;
+  #flip {
     font-size:16px;
+    width:50px
+  }
+  
+  #toCSV {
+    width:40px;
+  }
+  
+  #toCSV img {
+    width:35px;
   }
   
   .markets .wrap .showHelp {

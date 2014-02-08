@@ -9,15 +9,15 @@
       </p>
       <p>  
         The large number at the top
-        is the last trade price. It is expressed as a currency pair. 
-        The number represents how much of the second currency (counter currency) 
-        you can get for one unit of the first currency (base currency).       
+        is the latest trade price. It is expressed as a currency pair. 
+        The number represents how much of the currency listed second (counter currency) 
+        you can get for one unit of the currency listed first (base currency).       
       </p>
       <p>  
-        The table below this is a live updating ticker of the latest trades.   
+        The table below is a real-time ticker of the latest trades.   
         The colored bar shows if the trade price was higher, lower or the 
-        same as the previous trade. Left column: amount traded. 
-        Right column: the trade price.
+        same as the previous trade listed directly below. The left column shows the
+        amount traded and the right column shows the trade price.
       </p>   
       <table>
         <tr><td class="type ask"></td><th>Higher than previous price</th></tr>
@@ -66,7 +66,9 @@
       </p>
       <p>
         Hover your mouse over the chart to see open, high, low, and close values
-        for each of the data points.
+        for each of the data points.  To download a csv file of the data from the 
+        current chart, click the <img src="assets/images/download.svg" /> icon to 
+        the right of the currency dropdowns.
       </p>
     </div>  
     <div id="currencyPair">
@@ -85,7 +87,9 @@
       <div id="base" class="dropdowns"></div>
       <div id="flip"><span>Flip</span></div>
       <div id="quote" class="dropdowns"></div>
-      <a id="toCSV" disabled="true" title="Export to CSV">Export</a>
+      <a id="toCSV" disabled="true" title="Export to CSV">
+        <img src="assets/images/download.svg"/>
+      </a>
     </div>
     
     
@@ -96,12 +100,15 @@
       <h5>Order Book</h5>
       <p>
         The current order book for the selected currency pair is below - 
-        these are orders that have been placed but not filled yet. 
-        Bids are orders to buy the base currency, and asks are orders 
-        to sell the base currency. The “total” column shows the total 
-        amount of currency you could get at that price. The blue line 
-        shows the depth of the order book, and the vertical line represents
-        the midpoint between the best bid and ask price.       
+        these are orders across the Ripple Network that have been placed
+        but not yet filled. "Bids" are orders to buy the base currency, and 
+        "Asks" are orders to sell the base currency. The “Total” column shows 
+        the total amount of currency anyone can get at that price. The "Size"
+        columns show the amount of base currency available to buy or sell at
+        "Bid Price" or "Ask Price." The blue line shows the depth of the order 
+        book - the amount of base currency available at different rates. The 
+        vertical line represents the midpoint between the best bid and ask price
+        which is the current market price.       
       </p>
     </div> 
     <div id="bookChart"  data-snap-ignore="true"></div>
@@ -110,8 +117,7 @@
 </div>
 <style>
   footer .footerInner {
-    width:98%;
-    padding-left:1%;
-    padding-right:1%;
+    width:94% !important;
+    padding:10px 3% !important;
   }
 </style>

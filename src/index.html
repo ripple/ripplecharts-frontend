@@ -63,28 +63,28 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             </li>
           </ul>
         </li> 
-        <li ui-route="/markets"  class="category">
+        <li class="category">
           <a href="#/markets" snap-close><img src="assets/icons/999_markets.svg">Markets</a>
         </li> 
         <li class="page">
           <ul>
-            <li ui-route="/markets" ng-class="{active:$uiRoute}">
+            <li ui-route="/markets(/.+)?" ng-class="{active:$uiRoute !== false}">
               <a href="#/markets" snap-close>Live Chart</a>
             </li>
-            <li ui-route="/multimarkets" ng-class="{active:$uiRoute}">
+            <li ui-route="/multimarkets" ng-class="{active:$uiRoute !== false}">
               <a href="#/multimarkets" snap-close>Multi Markets</a>
             </li>
           </ul>
         </li>  
-        <li ui-route="/graph" class="category">
+        <li class="category">
           <a href="#/graph" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
         </li> 
         <li class="page">
           <ul>
-            <li ui-route="/graph" ng-class="{active:$uiRoute}">
+            <li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
               <a href="#/graph" snap-close>Account Explorer</a>
             </li>
-            <li ui-route="/accounts" ng-class="{active:$uiRoute}">
+            <li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
               <a href="#/accounts" snap-close>Accounts Created</a>
             </li>
           </ul>
@@ -97,11 +97,12 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
       <div ui-view="main"></div>
       <footer class="footer">
         <div class="footerInner container">
-          Ripple Charts is built on data from the ripple network.
+          Ripple Charts is built and maintained by Ripple Labs, based on data from the Ripple Network.
           <div class="disclaimer">
-            Information is provided "as is" and soley for informational purposes, not for trading purposes or advice, and may be delayed, or incorrect.
-            <br />
-            To see all exchange delays, please see disclaimer
+            Information is provided "as is" and solely as an informative resource.  
+            Ripple Charts is not a trading advisor. Data may be delayed or incorrect.
+            
+
           </div>
           <div class="links">
             <a href="https://ripple.com/client">Ripple Wallet</a>
@@ -115,6 +116,11 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             <a href="https://ripple.com/privacy-policy/">Privacy Policy</a>
             &middot;
             <a href="https://ripple.com/terms/">Terms of Service</a>
+            &middot;
+            <a href="https://github.com/ripple/ripplecharts-frontend">Github</a>
+            &middot;
+            <a href="https://ripplelabs.atlassian.net/browse/RC">Bug Reports</a>            
+            
           </div>  
           <small><a style="display:none" href="">v<%= version %></a></small>
         </div>
