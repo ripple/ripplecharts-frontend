@@ -65,7 +65,7 @@ ApiHandler = function (url) {
       })
       .on('error', function(xhr){
         console.log(xhr.response);
-        error({status:xhr.status,text:xhr.statusText,message:xhr.response})
+        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
       });
       
     return request;    
@@ -96,7 +96,7 @@ ApiHandler = function (url) {
       })
       .on('error', function(xhr){
         console.log(xhr.response);
-        error({status:xhr.status,text:xhr.statusText,message:xhr.response})
+        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
       });
       
     return request;        
@@ -133,7 +133,7 @@ ApiHandler = function (url) {
       
     }).on('error', function(xhr){
       console.log(xhr.response);
-      error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });
     
     return request;
@@ -151,7 +151,7 @@ ApiHandler = function (url) {
       
     }).on('error', function(xhr){
       console.log(xhr.response);
-      error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });    
   }
   
@@ -164,7 +164,7 @@ ApiHandler = function (url) {
       
     }).on('error', function(xhr){
       console.log(xhr.response);
-      error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });
     
     return request;    

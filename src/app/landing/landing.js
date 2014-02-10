@@ -22,10 +22,11 @@ angular.module( 'ripplecharts.landing', [
  
 //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
-    url       : API+"/offersExercised",  
-    id        : "topMarkets",
-    fixed     : true,
-    clickable : true
+    url            : API+"/offersExercised",  
+    id             : "topMarkets",
+    fixed          : true,
+    clickable      : true,
+    updateInterval : 300 //5 minutes
   });
   
   markets.list([

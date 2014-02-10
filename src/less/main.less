@@ -95,6 +95,10 @@ h1, h2, h3, h4 {
   border-bottom:5px solid #f9f9f9;
 }
 
+.headerPad {
+  height:55px;  
+}
+
 /**
  * Navigation
  */
@@ -287,7 +291,6 @@ h1, h2, h3, h4 {
   border-left:1px solid #e8e8e8;
   margin-left:-1px;
   width:100%;
-  margin-top:55px;
   top:0;
   bottom:inherit;
   left:inherit;
@@ -450,9 +453,16 @@ h1, h2, h3, h4 {
  * Footer
  */
 
+.footerPad {
+  height:120px;  
+}
+
 footer {
   border-top:1px solid #eee;
   text-align:center;  
+  position:absolute;
+  bottom:0;
+  width:100%;
 }
 
 footer .footerInner {
@@ -473,19 +483,22 @@ footer .links {
   margin-top:15px;
   font-weight:bold;
 }
+footer a {
+  color:#999;
+  
+}
+
+footer a:hover {
+  color:#bbb;
+}
 
 footer .links a {
   margin:0 10px;
-  color:#999;
   font-weight:normal;
 }
 
 footer .links a:first-child {
   margin-left:0;
-}
-
-footer .links a:hover {
-  color:#bbb;
 }
 
 @import 'light.less';
@@ -520,15 +533,19 @@ footer .links a:hover {
 @import 'lineChart.less';
 @import 'capChart.less';
 
-
+@media (max-width: 600px) {
+  .footerPad {
+    height:150px;
+  }
+}
 
 @media (max-width: 480px) {
   .header, .markets .wrap {
     zoom: 0.75;  //zoom 75% for phones
   }
   
-  .snap-content {
-    margin-top:41.5px; //header height * 0.75
+  .headerPad {
+    height:41.5px; //header height * 0.75
   }
   
   .nav .top {
@@ -539,6 +556,10 @@ footer .links a:hover {
     height:39.5px;  //header height *.75 - 2px;
   }
 
+  .footerPad {
+    height:200px;  
+  }
+  
   footer .links a:first-child {margin:0 10px}  
   footer .links a {
     display: inline-block;

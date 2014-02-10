@@ -168,16 +168,18 @@ var MiniChart = function(base, trade, markets) {
     if (update) markets.updateListHandler();
   } 
           
-  this.load  = function () {
+  this.load  = function (update) {
     markets.updateListHandler();
     if (!self.base || !self.trade ||
       (self.base.currency == self.trade.currency &&
       self.trade.currency == "XRP")) return self.setStatus("Select a currency pair."); 
 
-    self.setStatus("");
 
-    loader.transition().style("opacity",1);
-    isLoading = true;
+    if (!update) {
+      self.setStatus("");
+      loader.transition().style("opacity",1);
+      isLoading = true;  
+    }
     
     if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
       "Base Currency"  : self.base.currency,
@@ -360,7 +362,7 @@ var MiniChart = function(base, trade, markets) {
 
 var MultiMarket = function (options) {
   var self = this;
-  var add;
+  var add, interval;
   
   self.charts     = [];  
   self.el         = d3.select("#"+options.id).attr("class","multiMarket");
@@ -385,7 +387,17 @@ var MultiMarket = function (options) {
     height += 83; //add height of details, dropdowns, borders
     add.style({height: height+"px", "line-height":height+"px"});
   }
+  
+  if (options.updateInterval && 
+      typeof options.updateInterval === 'number') {
     
+    interval = setInterval(function(){
+      for (var i=0; i<self.charts.length; i++) {
+        self.charts[i].load(true);
+      }      
+    }, options.updateInterval*1000);      
+  }
+         
   this.addChart = function (base, trade) {
     new MiniChart(base, trade, self); 
   }
@@ -424,6 +436,9 @@ var MultiMarket = function (options) {
     if (!charts.length && !options.fixed) 
       removeResizeListener(window, resizeButton);
     
+    if (!charts.length && interval)
+      clearInterval(interval);
+      
     for (var j=0; j<charts.length; j++) {
       self.addChart(charts[j].base, charts[j].trade);
     }
