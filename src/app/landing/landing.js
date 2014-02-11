@@ -16,7 +16,7 @@ angular.module( 'ripplecharts.landing', [
 })
 
 
-.controller( 'LandingCtrl', function LandingCtrl( $scope, $location ) {
+.controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
   var feed = new TransactionFeed({id : 'liveFeed'});
   remote.on('transaction_all', feed.handleTransaction);
  
@@ -49,9 +49,21 @@ angular.module( 'ripplecharts.landing', [
     $location.path(path);
     $scope.$apply();  
   });
-      
+         
+  console.log($scope);       
+  if (!store.get("returning")) setTimeout(function(){
+    d3.select("#helpButton").node().click();
+  }, 100);
+     
   $scope.$on("$destroy", function(){
     markets.list([]);
+    
+    if (!store.get("returning") &&
+      $scope.showHelp) setTimeout(function(){
+        d3.select("#helpButton").node().click();
+      }, 50);
+      
+    store.set("returning", true);
   });
 
   
