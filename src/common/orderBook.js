@@ -18,89 +18,105 @@ var OrderBook = function (options) {
     yScale   = d3.scale.linear(),
     lineData = [];
     
- 
-  this.suspend = function () {
-    if (options.resize && typeof removeResizeListener === 'function')
-    removeResizeListener(window, resizeChart);   
+  if (options.resize && typeof addResizeListener === 'function') {
+    addResizeListener(window, resizeChart);
+  } else {
+    var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
+    details.style("width", (options.width-padding)+"px").style("right","auto");
   }
-  
-  function resizeChart() {
-    old = options.width;
-    w = parseInt(chart.style('width'), 10);
-    options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/4;
-    
-    if (old != options.width) {
-      drawChart(); 
-      drawData();
-    }
 
-  }
-  
-  function drawChart() {
-    chart.html("");  
-    svg   = chart.selectAll("svg").data([0]);       
-    depth = svg.enter().append("svg")
-      .attr("width", options.width + options.margin.left + options.margin.right)
-      .attr("height", options.height + options.margin.top + options.margin.bottom) 
-      .on("mousemove", mousemove);
+//set up the order book  
+  var bookTables = d3.select("#"+options.tableID).attr("class","bookTables");
+  var bidsTable = bookTables.append("table").attr("class","bidsTable"),
+    bidsHead    = bidsTable.append("thead"),
+    bidsBody    = bidsTable.append("tbody");
 
-    gEnter = depth.append("g")
-      .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")")
+  // append the top header
+  bidsHead.append("tr").selectAll("th")
+    .data(["Bids"])
+    .enter().append("th")
+    .attr("class","type")
+    .attr("colspan",3)
+    .text(function(d) {return d;}); 
+  
+  //append second header      
+  bidsHead.append("tr").attr("class","headerRow").selectAll("th")
+    .data(["Total","Size","Bid Price"])
+    .enter().append("th")
+    .text(function(d) {return d;})
+    .append("span"); 
     
-    
-    xAxis      = gEnter.append("g").attr("class", "x axis");
-    leftAxis   = gEnter.append("g").attr("class", "y axis");
-    rightAxis  = gEnter.append("g").attr("class", "y axis");
-    xTitle     = xAxis.append("text").attr("class", "title").attr("y",-5).attr("x",5);
-    leftTitle  = leftAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",15).attr("x",-options.height*0.85);
-    rightTitle = rightAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",-5).attr("x",-options.height*0.85);  
-    
-    hover      = gEnter.append("line").attr("class", "hover").attr("y2", options.height).style("opacity",0);   
-    focus      = gEnter.append("circle").attr("class", "focus dark").attr("r",3).style("opacity",0);
-    centerline = gEnter.append("line").attr("class", "centerline").attr("y2", options.height).style("opacity",0);
-    path       = gEnter.append("path").attr("class","line");
-    status     = chart.append("h4").attr("class", "status");
+  var asksTable = bookTables.append("table").attr("class","asksTable"),
+    asksHead    = asksTable.append("thead"),
+    asksBody    = asksTable.append("tbody");
+
+  // append the top header
+  asksHead.append("tr").selectAll("th")
+    .data(["Asks"])
+    .enter().append("th")
+    .attr("class","type")
+    .attr("colspan",3)
+    .text(function(d) {return d;}); 
   
-    details   = chart.append("div")   
-      .attr("class", "chartDetails")  
-      .style("left", options.margin.left+"px")   
-      .style("right", options.margin.right+"px")           
-      .style("opacity", 0);  
-  
-    gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);  
-  
-    loader = chart.append("img")
-      .attr("class", "loader")
-      .attr("src", "assets/images/rippleThrobber.png")
-      .style("opacity", 0); 
-      
-    if (isLoading) {
-      depth.style("opacity", 0.5); 
-      loader.style("opacity", 1);
-    }
-  }
-  
-  function setStatus (string) {
-    status.html(string).style("opacity",1); 
-    if (string) {
-      loader.transition().style("opacity",0);
-      path.transition().style("opacity",0);   
-      centerline.transition().style("opacity",0);  
-    }
-  }
-  
-  function valueFilter (price, opts) {
-    return ripple.Amount.from_json(price).to_human(
-      opts ? opts : {
-        precision      : 8,
-        min_precision  : 0,
-        max_sig_digits : 8,
-        group_sep      : false
-    });  
-  }
+  //append second header      
+  asksHead.append("tr").attr("class","headerRow").selectAll("th")
+    .data(["Ask Price","Size","Total"])
+    .enter().append("th")
+    .text(function(d) {return d;})
+    .append("span");  
   
 
+  drawChart(); //draw the blank chart
+
+
+//subscribe to market data for trading pair
+  this.getMarket = function (base, trade) {
+    options.base  = base;
+    options.trade = trade;
+    lineData      = [];
+    self.offers   = {};
+
+    bookTables.transition().style("opacity", 0.5);
+    fadeChart();
+    isLoading = true;
+    
+    if (asks) {
+      asks.removeListener('model', handleAskModel);
+      r.request_unsubscribe()
+        .books([asks.to_json()])
+        .request();
+    }
+    if (bids) {
+      bids.removeListener('model', handleBidModel); 
+      r.request_unsubscribe()
+        .books([bids.to_json()])
+        .request();
+      }  
+     
+    r._books = {};
+    r._events.prepare_subscribe = [];
+    
+    asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
+    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
+    
+    function handleAskModel (offers) {
+      self.offers.asks = handleBook(offers,'asks');
+      drawData(); 
+      redrawBook();     
+    }
+    
+    function handleBidModel (offers) {
+      self.offers.bids = handleBook(offers,'bids');
+      drawData(); 
+      redrawBook();      
+    }
+    
+    asks.on('model', handleAskModel);   
+    bids.on('model', handleBidModel); 
+  }
+
+
+//handle data returned from ripple-lib
   function handleBook (data,action) {
     var max_rows = options.max_rows || 100,
       rowCount   = 0,
@@ -152,63 +168,65 @@ var OrderBook = function (options) {
 
     return offers;
   }
+ 
   
-
-  //subscribe to market data for trading pair
-  this.getMarket = function (base, trade) {
-    options.base  = base;
-    options.trade = trade;
-    lineData      = [];
-    self.offers   = {};
-
-    bookTables.transition().style("opacity", 0.5);
-    self.resetChart();
-    isLoading = true;
-    
-    if (asks) {
-      asks.removeListener('model', handleAskModel);
-      r.request_unsubscribe()
-        .books([asks.to_json()])
-        .request();
-    }
-    if (bids) {
-      bids.removeListener('model', handleBidModel); 
-      r.request_unsubscribe()
-        .books([bids.to_json()])
-        .request();
-      }  
-     
-    r._books = {};
-    r._events.prepare_subscribe = [];
-    
-    asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
-    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
-    
-    function handleAskModel (offers) {
-      self.offers.asks = handleBook(offers,'asks');
-      drawData(); 
-      redrawBook();     
-    }
-    
-    function handleBidModel (offers) {
-      self.offers.bids = handleBook(offers,'bids');
-      drawData(); 
-      redrawBook();      
-    }
-    
-    asks.on('model', handleAskModel);   
-    bids.on('model', handleBidModel); 
-  }
-            
-  this.resetChart =  function () {
+//fade the chart to indicate loading new data             
+  function fadeChart () {
     depth.transition().style("opacity", 0.5); 
     loader.transition().style("opacity", 1);
     details.style("opacity", 0);
     hover.style("opacity", 0);
     focus.style("opacity", 0); 
     setStatus("");
-  }  
+  }
+ 
+ 
+//draw the chart not including data    
+  function drawChart() {
+    chart.html("");  
+    svg   = chart.selectAll("svg").data([0]);       
+    depth = svg.enter().append("svg")
+      .attr("width", options.width + options.margin.left + options.margin.right)
+      .attr("height", options.height + options.margin.top + options.margin.bottom) 
+      .on("mousemove", mousemove);
+
+    gEnter = depth.append("g")
+      .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")")
+       
+    xAxis      = gEnter.append("g").attr("class", "x axis");
+    leftAxis   = gEnter.append("g").attr("class", "y axis");
+    rightAxis  = gEnter.append("g").attr("class", "y axis");
+    xTitle     = xAxis.append("text").attr("class", "title").attr("y",-5).attr("x",5);
+    leftTitle  = leftAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",15).attr("x",-options.height*0.85);
+    rightTitle = rightAxis.append("text").attr("class", "title").attr("transform", "rotate(-90)").attr("y",-5).attr("x",-options.height*0.85);  
+    
+    hover      = gEnter.append("line").attr("class", "hover").attr("y2", options.height).style("opacity",0);   
+    focus      = gEnter.append("circle").attr("class", "focus dark").attr("r",3).style("opacity",0);
+    centerline = gEnter.append("line").attr("class", "centerline").attr("y2", options.height).style("opacity",0);
+    path       = gEnter.append("path").attr("class","line");
+    status     = chart.append("h4").attr("class", "status");
   
+    details   = chart.append("div")   
+      .attr("class", "chartDetails")  
+      .style("left", options.margin.left+"px")   
+      .style("right", options.margin.right+"px")           
+      .style("opacity", 0);  
+  
+    gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);  
+  
+    loader = chart.append("img")
+      .attr("class", "loader")
+      .attr("src", "assets/images/rippleThrobber.png")
+      .style("opacity", 0); 
+      
+    if (isLoading) {
+      depth.style("opacity", 0.5); 
+      loader.style("opacity", 1);
+    }
+  }
+
+
+//draw the chart data loaded from ripple-lib  
   function drawData () {
     if (!self.offers.bids || !self.offers.asks) return; //wait for both to load
     if (!self.offers.bids.length || !self.offers.asks.length) {
@@ -270,7 +288,8 @@ var OrderBook = function (options) {
     loader.transition().style("opacity",0);   
    
   }
-  
+
+//show details on mouseover  
   function mousemove () {
     var tx = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
         i = d3.bisect(lineData.map(function(d) { return d.showPrice; }), xScale.invert(tx-options.margin.left));
@@ -289,55 +308,9 @@ var OrderBook = function (options) {
         .style("opacity",1);
     }
   }
-  
-  drawChart();
-  if (options.resize && typeof addResizeListener === 'function') {
-    addResizeListener(window, resizeChart);
-  } else {
-    var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
-    details.style("width", (options.width-padding)+"px").style("right","auto");
-  }
-  
-  var bookTables = d3.select("#"+options.tableID).attr("class","bookTables");
-  var bidsTable = bookTables.append("table").attr("class","bidsTable"),
-    bidsHead    = bidsTable.append("thead"),
-    bidsBody    = bidsTable.append("tbody");
-
-  // append the top header
-  bidsHead.append("tr").selectAll("th")
-    .data(["Bids"])
-    .enter().append("th")
-    .attr("class","type")
-    .attr("colspan",3)
-    .text(function(d) {return d;}); 
-  
-  //append second header      
-  bidsHead.append("tr").attr("class","headerRow").selectAll("th")
-    .data(["Total","Size","Bid Price"])
-    .enter().append("th")
-    .text(function(d) {return d;})
-    .append("span"); 
-    
-  var asksTable = bookTables.append("table").attr("class","asksTable"),
-    asksHead    = asksTable.append("thead"),
-    asksBody    = asksTable.append("tbody");
-
-  // append the top header
-  asksHead.append("tr").selectAll("th")
-    .data(["Asks"])
-    .enter().append("th")
-    .attr("class","type")
-    .attr("colspan",3)
-    .text(function(d) {return d;}); 
-  
-  //append second header      
-  asksHead.append("tr").attr("class","headerRow").selectAll("th")
-    .data(["Ask Price","Size","Total"])
-    .enter().append("th")
-    .text(function(d) {return d;})
-    .append("span");  
-  
-  
+ 
+ 
+//redraw the order book below the depth chart  
   function redrawBook () {
     // create a row for each object in the data
     if (!self.offers.bids || !self.offers.asks) return;
@@ -394,6 +367,47 @@ var OrderBook = function (options) {
     
     emitSpread();
   }
+
+
+//suspend the resize listener, if the orderbook is resizable  
+  this.suspend = function () {
+    if (options.resize && typeof removeResizeListener === 'function')
+    removeResizeListener(window, resizeChart);   
+  }
+
+
+//resize the chart when   
+  function resizeChart() {
+    old = options.width;
+    w = parseInt(chart.style('width'), 10);
+    options.width  = w-options.margin.left - options.margin.right;
+    options.height = options.width/4;
+    
+    if (old != options.width) {
+      drawChart(); 
+      drawData();
+    }
+  }
+    
+  function setStatus (string) {
+    status.html(string).style("opacity",1); 
+    if (string) {
+      loader.transition().style("opacity",0);
+      path.transition().style("opacity",0);   
+      centerline.transition().style("opacity",0);  
+    }
+  }
+  
+  function valueFilter (price, opts) {
+    return ripple.Amount.from_json(price).to_human(
+      opts ? opts : {
+        precision      : 8,
+        min_precision  : 0,
+        max_sig_digits : 8,
+        group_sep      : false
+    });  
+  }
+  
   
   function pad(data, length) {
     length -= data.length;

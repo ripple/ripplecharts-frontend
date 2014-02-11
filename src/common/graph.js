@@ -108,7 +108,6 @@ if (param === "") {
   focalNode = REFERENCE_NODE;
 }
 
-console.log(transaction_id);
 
 function gotoThing() {
   var string = $('#focus').val().replace(/\s+/g, '');
@@ -979,7 +978,8 @@ var force = d3.layout.force()
 function expandNode(address) {
   var nutl;
   
-  store.set("graphID", address);
+  store.session.set("graphID", address);
+  console.log(store.session.get("graphID"));
   
   if (typeof(nodes[nodeMap[address]]) !== "undefined") {
     nutl = numberOfUnseenTrustLines(nodes[nodeMap[address]]);
@@ -1432,7 +1432,8 @@ function refocus(focus, erase, noExpand) {
   if (erase) {
     eraseGraph();
   }
-  //window.location.hash = focus;
+  
+  store.session.set("graphID", focus);
   lastFocalNode = focalNode;
   focalNode = focus;
   nodeMap[focalNode] = nodes.length;

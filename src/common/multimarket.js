@@ -77,7 +77,72 @@ var MiniChart = function(base, trade, markets) {
       markets.chartClickHandler(self);
     });
   }
+
+  loaded = true;
+  drawChart();
+  load();
+  addResizeListener(window, resizeChart); 
+
+
+//show status to the user, or remove it    
+  function setStatus (string) {
+    status.html(string); 
+    if (string && !isLoading) {
+      loader.transition().style("opacity",0);  
+      details.selectAll("td").transition().style("opacity",0);
+      gEnter.transition().style("opacity",0);
+      pointer.transition().attr('transform',"translate("+(width+margin.left)+", "+height+")").style({fill:"#aaa"});
+    }
+  } 
+
+  this.load = load; //make it externally available
+  
+//load the chart data from the API       
+  function load (update) {
+    markets.updateListHandler();
+    if (!self.base || !self.trade ||
+      (self.base.currency == self.trade.currency &&
+      self.trade.currency == "XRP")) return setStatus("Select a currency pair."); 
+
+    if (!update) {
+      setStatus("");
+      loader.transition().style("opacity",1);
+      isLoading = true;  
+    }
+    
+    if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
+      "Base Currency"  : self.base.currency,
+      "Base Issuer"    : self.base.issuer || "",
+      "Trade Currency" : self.trade.currency,
+      "Trade Issuer"   : self.trade.issuer || ""
+    });
+    
+    if (self.request) self.request.abort();
+    self.request = self.markets.apiHandler.offersExercised({
+      startTime     : new Date(),
+      endTime       : d3.time.day.offset(new Date(), -1),
+      timeIncrement : "hour",
+      timeMultiple  : 1,
+      descending    : false,
+      base          : self.base,
+      trade         : self.trade
+
+    }, function(data){
       
+      self.lineData = data;
+      isLoading     = false;
+      drawData(true);
+      
+    }, function (error){
+      
+      console.log(error);
+      isLoading = false;
+      setStatus(error.text ? error.text : "Unable to load data" );
+    });  
+  }  
+ 
+  
+//draw the chart, not including data     
   function drawChart() {            
     details.html("");
     wrap.html("");
@@ -111,7 +176,6 @@ var MiniChart = function(base, trade, markets) {
     
     gEnter.append("g").attr("class", "x axis");  
     gEnter.append("g").attr("class", "price axis").attr("transform", "translate("+width+", 0)")
-  
   
     flipping = false;
     flip = svg.append("g").attr("class","flip")
@@ -150,85 +214,17 @@ var MiniChart = function(base, trade, markets) {
     
     //if (isLoading) loader.transition().duration(10).style("opacity",1);
   }
-    
-  this.setStatus = function (string) {
-    status.html(string); 
-    if (string && !isLoading) {
-      loader.transition().style("opacity",0);  
-      details.selectAll("td").transition().style("opacity",0);
-      gEnter.transition().style("opacity",0);
-      pointer.transition().attr('transform',"translate("+(width+margin.left)+", "+height+")").style({fill:"#aaa"});
-    }
-  } 
   
-  this.remove = function (update) {
-    removeResizeListener(window, resizeChart);
-    self.div.remove();
-    markets.charts[self.index] = {};
-    if (update) markets.updateListHandler();
-  } 
-          
-  this.load  = function (update) {
-    markets.updateListHandler();
-    if (!self.base || !self.trade ||
-      (self.base.currency == self.trade.currency &&
-      self.trade.currency == "XRP")) return self.setStatus("Select a currency pair."); 
 
-
-    if (!update) {
-      self.setStatus("");
-      loader.transition().style("opacity",1);
-      isLoading = true;  
-    }
-    
-    if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
-      "Base Currency"  : self.base.currency,
-      "Base Issuer"    : self.base.issuer || "",
-      "Trade Currency" : self.trade.currency,
-      "Trade Issuer"   : self.trade.issuer || ""
-    });
-    
-    if (self.request) self.request.abort();
-    self.request = self.markets.apiHandler.offersExercised({
-      startTime     : new Date(),
-      endTime       : d3.time.day.offset(new Date(), -1),
-      timeIncrement : "hour",
-      timeMultiple  : 1,
-      descending    : false,
-      base          : self.base,
-      trade         : self.trade
-
-    }, function(data){
-      
-      self.lineData = data;
-      isLoading     = false;
-      drawData(true);
-      
-    }, function (error){
-      
-      console.log(error);
-      isLoading = false;
-      self.setStatus(error.text ? error.text : "Unable to load data" );
-    });  
-  }  
-  
-  function amountToHuman (d, opts) {
-    if (!opts) opts = {
-          precision      : 6,
-          min_precision  : 2,
-          max_sig_digits : 7
-      }
-    return ripple.Amount.from_human(d).to_human(opts);     
-  }
-  
+//Draw the data on the chart
   function drawData(update) {
         
     if (!isLoading) {
       loader.transition().style("opacity",0);
     
       //if there is no data, hide the old chart and details
-      if (!self.lineData.length) return self.setStatus("No Data");  
-      else self.setStatus("");
+      if (!self.lineData.length) return setStatus("No Data");  
+      else setStatus("");
     }
     
     var area = d3.svg.area()
@@ -337,7 +333,9 @@ var MiniChart = function(base, trade, markets) {
     details.selectAll("td").style("opacity",1);
     gEnter.transition().style("opacity",1);
   }
-  
+ 
+
+//resize the chart whenever the window is resized  
   function resizeChart() {
     old    = width;
     width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
@@ -349,17 +347,31 @@ var MiniChart = function(base, trade, markets) {
     }
   }
   
-  this.suspend = function ()
-  {
-    removeResizeListener(window, resizeChart);
-  }
   
-  loaded = true;
-  drawChart();
-  self.load();
-  addResizeListener(window, resizeChart);
+//properly remove the chart by removing the resize listener  
+  this.remove = function (update) {
+    removeResizeListener(window, resizeChart);
+    self.div.remove();
+    markets.charts[self.index] = {};
+    if (update) markets.updateListHandler();
+  } 
+     
+
+//present amount in human readable format  
+  function amountToHuman (d, opts) {
+    if (!opts) opts = {
+          precision      : 6,
+          min_precision  : 2,
+          max_sig_digits : 7
+      }
+    return ripple.Amount.from_human(d).to_human(opts);     
+  }
 }
 
+
+
+
+//container object for the complete list of charts
 var MultiMarket = function (options) {
   var self = this;
   var add, interval;
@@ -381,6 +393,7 @@ var MultiMarket = function (options) {
     addResizeListener(window, resizeButton);   
   }
 
+//resize the "add chart" button to keep the same dimensions as the charts
   function resizeButton() {
     width   = parseInt(add.style('width'), 10)-40; //subtract chart margin
     height  = width/1.5>200 ? width/1.5 : 200;
@@ -397,16 +410,21 @@ var MultiMarket = function (options) {
       }      
     }, options.updateInterval*1000);      
   }
-         
+      
+//new chart from list initialization or add chart button click         
   this.addChart = function (base, trade) {
     new MiniChart(base, trade, self); 
   }
   
+//remove chart from list initialization or remove button click  
   this.removeChart = function (index) {
     if (options.fixed) return;
     self.charts[index].remove(true);
   }
-  
+ 
+ 
+//function run whenever the list of charts changes to return
+//the complete list, if a callback is provided
   this.updateListHandler = function () {
     if (self.updateListCallback) {
       var data = [];
@@ -423,11 +441,15 @@ var MultiMarket = function (options) {
     }
   }
   
+//function to return the chart on click if 
+//a callback function is provided 
   this.chartClickHandler = function (chart) {
     if (self.chartClickCallback) self.chartClickCallback(chart);
   }
   
-  
+
+//initialize charts with a list of currency pairs,
+//or remove them all with an empty array  
   this.list = function (charts) {
     for (var i=0; i<self.charts.length; i++) {
       self.charts[i].remove(false);
@@ -443,18 +465,10 @@ var MultiMarket = function (options) {
       self.addChart(charts[j].base, charts[j].trade);
     }
   }
-  
+ 
+//function for initializing callbacks  
   this.on = function(type, callback) {
     if      (type=='updateList') self.updateListCallback = callback;
     else if (type=='chartClick') self.chartClickCallback = callback;
   }
-}
-
-function params(o) {
-  var s = [];
-  for (var key in o) {
-    s.push(key + "=" + encodeURIComponent(o[key]));
-  }
-
-    return s.join("&");
 }
