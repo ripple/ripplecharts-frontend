@@ -16,7 +16,7 @@ var TradeFeed = function (options) {
   daily.append('span').attr('class','volume').html('VOL: --');
   daily.append('label').html('(Last 24 hours)');
   
-  var tableWrap = div.append('div').attr('class','table')
+  var tableWrap = div.append('div').attr('class','table').append("div").attr("class","tableWrap");
   var table     = tableWrap.append('table');
   table.append('thead');
   table.append('tbody');
@@ -35,7 +35,7 @@ var TradeFeed = function (options) {
     if (listener) listener.updateViewOpts({base:base,trade:trade});
     else listener = new OffersExercisedListener({base:base,trade:trade}, handleTransaction);
 
-/*    
+/*   
     //mock data
     transactions = [
       {time:moment(new Date()), amount:100, price:50, type:""},
@@ -53,7 +53,7 @@ var TradeFeed = function (options) {
       {time:moment(new Date()), amount:100, price:50, type:"bid"},
       {time:moment(new Date()), amount:110, price:200, type:"bid"}
     ];
-*/    
+*/   
     transactions = [];
     updateTrades();     //reset the last trade list
     updateDailyStats(); //reset the daily stats

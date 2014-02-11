@@ -7,7 +7,7 @@ var OrderBook = function (options) {
     svg, depth, gEnter, 
     xAxis, leftAxis, rightAxis,
     xTitle, leftTitle, rightTitle,
-    hover, focus, centerline, path,
+    hover, focus, centerline, path, midpoint,
     status, details, loader;
     
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
@@ -218,6 +218,8 @@ var OrderBook = function (options) {
 
     var bestBid = self.offers.bids[0].showPrice,
       bestAsk   = self.offers.asks[0].showPrice;
+      
+    midpoint = (bestBid+bestAsk)/2;  
          
     //add 0 size at best bid and ask
     lineData = self.offers.bids.slice(0).reverse();
@@ -244,7 +246,8 @@ var OrderBook = function (options) {
     
     xScale.domain(d3.extent(lineData, function(d) { return d.showPrice; })).range([0, options.width]);
     yScale.domain([0, d3.max(lineData, function(d) { return d.showSum; })*1.1]).range([options.height, 0]);
-    center = xScale((bestBid+bestAsk)/2);
+    
+    var center = xScale(midpoint);
     
     path.datum(lineData)
         .transition()
@@ -274,7 +277,7 @@ var OrderBook = function (options) {
         d = lineData[i];
         
         //prevent 0 sum numbers at best bid/ask from displaying
-        if (d && !d.showSum) d = d.showPrice==bestBid ? lineData[i-1] : lineData[i+1]; 
+        if (d && !d.showSum) d = d.showPrice<midpoint ? lineData[i-1] : lineData[i+1]; 
 
     if (d) {
       var quantity = d.showTakerPays ? d.showTakerPays : d.showTakerGets;

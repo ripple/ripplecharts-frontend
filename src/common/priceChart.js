@@ -122,7 +122,7 @@ PriceChart = function (options) {
   //fade to throber when reloading from history
   this.fadeOut = function () {
     div.selectAll("svg").transition().duration(100).style("opacity", 0.5);
-    svg.on("mousemove.hover", "");
+    svg.on("mousemove", null).on("touchmove", null);
     details.style("opacity", 0);
     status.style("opacity", 0);
     div.selectAll(".hover").style("opacity", 0);
@@ -335,7 +335,9 @@ PriceChart = function (options) {
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
-    svg.datum(lineData).on("mousemove.hover", mousemove);
+    svg.datum(lineData)
+      .on("mousemove", showDetails)
+      .on("touchmove", showDetails);
 
     gEnter.select(".axis.price").select("text").text("Price ("+trade.currency+")");
     gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
@@ -442,10 +444,11 @@ PriceChart = function (options) {
 
   }
 
-  function mousemove() {
-    var tx = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
-      x    = d3.bisect(lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
-      d    = lineData[x],
+  function showDetails() {
+    var x  = d3.mouse(this)[0],
+      tx   = Math.max(0, Math.min(options.width+options.margin.left, x)),
+      i    = d3.bisect(lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
+      d    = lineData[i],
       o, h, l, c, v;
 
     if (d) {

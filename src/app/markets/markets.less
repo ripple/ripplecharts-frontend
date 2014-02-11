@@ -222,7 +222,10 @@
     vertical-align:top;
   }
   
-  #tradeFeed table tr:nth-of-type(n+6) {display: none;}
+  #tradeFeed .tableWrap {
+    height:120px;
+    overflow:auto;
+  }
   
   .markets .dropdowns, .markets #flip, .markets #toCSV {
     float:none;
@@ -251,17 +254,25 @@
 
   .markets .span3 {
     display:block;
-    border-bottom:none;
+    border-color:#ccc;
   }
   
   .markets .span3 .helpbox {
-    display:inline-block;
+    display:inherit;
   }
 
   #tradeFeed {
     display:block; 
-    margin-bottom:0; 
   } 
+  
+  #tradeFeed .tableWrap {
+    border-top: 1px solid #ccc;
+    height:73px;
+  }
+     
+  .dark #tradeFeed .tableWrap,  .dark .markets .span3 {
+    border-color:#444;
+  }
      
   #tradeFeed .summary {
     width:100% !important;
@@ -272,8 +283,6 @@
   #tradeFeed .table {
     display:block;
   }
-  
-  #tradeFeed table tr:nth-of-type(n+4) {display: none;}
   
   #currencyPair {
     display:inline-block;
@@ -307,11 +316,13 @@
   #chartType {margin-right:20px; zoom:1.25}
   #flip {
     font-size:16px;
-    width:50px
+    margin-right:-5px;
   }
   
   #toCSV {
     width:40px;
+    padding:0;
+    margin-right:-5px;
   }
   
   #toCSV img {

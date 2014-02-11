@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-controller="AppCtrl">
   <head>
     <title ng-bind="pageTitle">Ripple Charts</title>
     <link rel="icon" type="image/ico" href="assets/images/favicon.ico"/>
@@ -17,19 +17,13 @@
     <meta name="twitter:image:src" content="">
     <meta property="og:title" content="Ripple Charts" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.ripplecharts.com" />
+    <meta property="og:url" content="https:/ripplecharts.com" />
     <meta property="og:image" content="" />
     <meta property="og:description" content="Ripple Network Data Visualization.">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- Open Sans from google -->
-    <link href='//fonts.googleapis.com/css?family=Open+Sans:300,700' rel='stylesheet' type='text/css'>
-    
-    <!-- font awesome from BootstrapCDN -->
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
@@ -42,11 +36,14 @@ b._i.push([a,e,d])};b.__SV=1.2}})(document,window.mixpanel||[]);
 mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
 
   </head>
-  <body ng-controller="AppCtrl" ng-class="theme">
+  <body ng-class="theme">
     <div class="header">
       <div class="wrapper">
-        <i class="fa fa-align-justify nav-toggle" snap-toggle></i>
+        <i class="nav-toggle" snap-toggle>
+          <img src="assets/images/menu.svg"/>
+        </i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
+        <div id="helpButton" ng-click="showHelp = !showHelp"><span>?</span></div>
         <div class="theme selectList">
           <a ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</a>
           <a ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</a>
@@ -58,46 +55,36 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
       <ul class="nav">
         <li class="top">
         </li>
-        <li ui-route="/markets"  class="category">
+        <li class="page">
+          <ul>
+            <li ui-route="/" ng-class="{active:$uiRoute}">
+              <a href="#/" snap-close>Dashboard</a>
+            </li>
+          </ul>
+        </li> 
+        <li class="category">
           <a href="#/markets" snap-close><img src="assets/icons/999_markets.svg">Markets</a>
         </li> 
         <li class="page">
           <ul>
-            <li ui-route="/markets" ng-class="{active:$uiRoute}">
+            <li ui-route="/markets(/.+)?" ng-class="{active:$uiRoute !== false}">
               <a href="#/markets" snap-close>Live Chart</a>
             </li>
-            <li ui-route="/multimarkets" ng-class="{active:$uiRoute}">
+            <li ui-route="/multimarkets" ng-class="{active:$uiRoute !== false}">
               <a href="#/multimarkets" snap-close>Multi Markets</a>
             </li>
           </ul>
-        </li>
-        <li ui-route="/capitalization" class="category value">
-          <a href="#/capitalization" snap-close><img src="assets/icons/999_value.svg"></i>Value</a>
-        </li> 
-        <li class="page">
-          <ul>
-            <li ui-route="/capitalization" ng-class="{active:$uiRoute}">
-              <a href="#/capitalization" snap-close>Capitalization</a>
-            </li>
-          </ul>
-        </li>    
-        <li ui-route="/graph" class="category graph">
+        </li>  
+        <li class="category">
           <a href="#/graph" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
         </li> 
         <li class="page">
           <ul>
-            <li ui-route="/graph" ng-class="{active:$uiRoute}">
+            <li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
               <a href="#/graph" snap-close>Account Explorer</a>
             </li>
-          </ul>
-        </li> 
-        <li ui-route="/accounts" class="category network">
-          <a href="#/accounts" snap-close><img src="assets/icons/999_stats.svg"></i>Network</a>
-        </li> 
-        <li class="page">
-          <ul>
-            <li ui-route="/accounts" ng-class="{active:$uiRoute}">
-              <a href="#/accounts" snap-close>Accounts</a>
+            <li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
+              <a href="#/accounts" snap-close>Accounts Created</a>
             </li>
           </ul>
         </li> 
@@ -106,11 +93,39 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
     
     <div snap-content class="snap-content" snap-options="snapOptions">    
       
+      <div class="headerPad"></div>
       <div ui-view="main"></div>
-      <footer class="footer row">
-        <div class="footer-inner"></div>
-        <small><a href="">v<%= version %></a></small>
-      </div>
+      <div class="footerPad"></div>
+      
+      <footer class="footer">
+        <div class="footerInner container">
+          Ripple Charts is built and maintained by Ripple Labs, based on data from the Ripple Network.
+          <div class="disclaimer">
+            Information is provided "as is" and solely as an informative resource.  
+            Ripple Charts is not a trading advisor. Data may be delayed or incorrect.
+            
+
+          </div>
+          <div class="links">
+            <a href="https://ripple.com/client">Ripple Wallet</a>
+            &middot;
+            <a href="https://ripple.com/blog">Blog</a>
+            &middot;
+            <a href="https://ripplelabs.com">Ripple Labs</a>
+            &middot;
+            <a href="https://ripple.com">Ripple.com</a>
+            &middot;
+            <a href="https://ripple.com/privacy-policy/">Privacy Policy</a>
+            &middot;
+            <a href="https://ripple.com/terms/">Terms of Service</a>
+            &middot;
+            <a href="https://github.com/ripple/ripplecharts-frontend">Github</a>
+            &middot;
+            <a href="https://ripplelabs.atlassian.net/browse/RC">Bug Reports</a>            
+            
+          </div>  
+          <small><a style="display:none" href="">v<%= version %></a></small>
+        </div>
       </footer>
     </div>    
   </body>

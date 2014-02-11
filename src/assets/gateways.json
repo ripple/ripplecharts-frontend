@@ -45,7 +45,7 @@
         "name": "WisePass",
         "accounts": [{
             "address": "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
-            "currencies": ["BTC", "GBP", "JPY", "LTC", "NOK", "SEK", "USD"],
+            "currencies": ["BTC", "LTC", "USD"],
             "hotwallets": ["r9xAQUyqs53QH2PLxe7iFbNbpU2RA9QtZx"]
             }]
     }, {
@@ -101,7 +101,7 @@
         "name": "Ripple Singapore",
         "accounts": [{
             "address": "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
-            "currencies": ["XAU"],
+            "currencies": ["XAU","XAG", "USD"],
             "hotwallets": []
             }]
     }
