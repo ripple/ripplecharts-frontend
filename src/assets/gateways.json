@@ -31,7 +31,7 @@
         "name": "SnapSwap",
         "accounts": [{
             "address": "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
-            "currencies": ["USD"],
+            "currencies": ["USD","BTC"],
             "hotwallets": ["rUQTpMqAF5jhykj4FExVeXakrZpiKF6cQV", "rhasPLL5GaXzBh5amQkN7Dr1SNF4Whb2ZT"]
             }]
     }, {

@@ -181,7 +181,6 @@ angular.module( 'ripplecharts.markets', [
     emit    : emitHandler
   });
   
-  book.resetChart();
   book.getMarket($scope.base, $scope.trade); 
 
 //set up trades feed  

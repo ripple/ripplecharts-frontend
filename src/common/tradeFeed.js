@@ -187,7 +187,8 @@ var TradeFeed = function (options) {
       endTime   : now.toDate(),
       reduce    : false,
       base      : self.base,
-      trade     : self.trade
+      trade     : self.trade,
+      limit     : 50
       
     }, function(data){
 

@@ -8,7 +8,9 @@ PriceChart = function (options) {
     priceAxis   = d3.svg.axis().scale(priceScale).orient("right"),
     apiHandler  = new ApiHandler(options.url),
     liveFeed, isLoading;
-  
+ 
+//this can be a function that will return whenever the state changes,
+//such as when we start loading historical data, or stop  
   self.onStateChange = null;
    
   type = options.type ? options.type : "line";  //default to line  	
@@ -26,6 +28,16 @@ PriceChart = function (options) {
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
   if (!options.height) options.height = options.width/2>400 ? options.width/2 : 400;
  
+  if (options.resize && typeof addResizeListener === 'function') {
+    addResizeListener(window, resizeChart);
+  } else {
+    var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
+    details.style("width", (options.width-padding)+"px").style("right","auto");
+  }
+ 
+  drawChart();
+  
+//draw the chart at the beginning and whenever it is resized (if resizable)
   function drawChart() {
     div.html("");
     svg = div.selectAll("svg").data([0])
@@ -38,12 +50,23 @@ PriceChart = function (options) {
   
     gEnter = svg.append("g")
       .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
-    gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);
-    gEnter.append("g").attr("class", "volumeBars").attr("clip-path", "url(#clip)");   
-    gEnter.append("g").attr("class", "candlesticks").attr("clip-path", "url(#clip)");
+      
+    gEnter.append("rect")
+      .attr("class", "background")
+      .attr("width", options.width)
+      .attr("height", options.height);
+      
+    gEnter.append("g")
+      .attr("class", "volumeBars")
+      .attr("clip-path", "url(#clip)");   
+      
+    gEnter.append("g")
+      .attr("class", "candlesticks")
+      .attr("clip-path", "url(#clip)");
+      
     gEnter.append("path").attr("class", "line");
     gEnter.append("g").attr("class", "x axis");
-  
+     
     gEnter.append("g").attr("class", "volume axis")   
       .append("text").text("Volume")
       .attr("class", "title")
@@ -57,7 +80,7 @@ PriceChart = function (options) {
         .attr("transform", "rotate(-90)")
         .attr("y",-10).attr("x",-100);
           
-    // gradient for volume bars	    
+//  gradient for volume bars	    
     gradient = svg.append("svg:defs")
       .append("svg:linearGradient")
       .attr("id", "gradient")
@@ -99,6 +122,7 @@ PriceChart = function (options) {
     }
   }
   
+//function called whenever the window is resized (if resizable)    
   function resizeChart () {
     old = options.width;
     w = parseInt(div.style('width'), 10);
@@ -111,15 +135,8 @@ PriceChart = function (options) {
     } 
   }
   
-  drawChart();
-  if (options.resize && typeof addResizeListener === 'function') {
-    addResizeListener(window, resizeChart);
-  } else {
-    var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
-    details.style("width", (options.width-padding)+"px").style("right","auto");
-  }
     
-  //fade to throber when reloading from history
+//fade to throber when loading historical data
   this.fadeOut = function () {
     div.selectAll("svg").transition().duration(100).style("opacity", 0.5);
     svg.on("mousemove", null).on("touchmove", null);
@@ -130,7 +147,8 @@ PriceChart = function (options) {
     loader.transition().duration(100).style("opacity",1);	
   }
 
-    //set to line or candlestick  	
+
+//set to line or candlestick  	
   this.setType = function (newType) {
     type = newType;
 
@@ -142,12 +160,15 @@ PriceChart = function (options) {
       gEnter.select(".candlesticks").style("opacity",1);	
     }
   };
-  
+
+
+//function for getting the raw data for csv output or whatever  
   this.getRawData = function() {
     return lineData;
   }
 
-  //load historical from API  	  	      			
+
+//load historical from API  	  	      			
   this.load = function (b, t, d) {
 
     if (self.onStateChange) self.onStateChange("loading");
@@ -172,14 +193,10 @@ PriceChart = function (options) {
     }
     
     intervalSeconds *= multiple;  
-    lastCandle     = getAlignedCandle();
-    endTime      = moment(lastCandle).add('seconds', intervalSeconds);
-    startTime    = moment.utc(d.offset(endTime));
+    lastCandle       = getAlignedCandle();
+    endTime          = moment(lastCandle).add('seconds', intervalSeconds);
+    startTime        = moment.utc(d.offset(endTime));
      
-    //console.log(moment.utc().format("HH:mm:ss")); 
-    //console.log(lastCandle.format("HH:mm:ss")); 
-    //console.log(endTime.format("HH:mm:ss")); 
-    
     if (liveFeed) liveFeed.stopListener();
     setLiveFeed();
     
@@ -201,7 +218,6 @@ PriceChart = function (options) {
         var candle = data[data.length-1];
         var volume = candle.volume + first.volume;
         //candle.open will be from historic
-        //vwap should be recalculated?
         if (candle.high>first.high) candle.high = first.high;
         if (candle.low<first.low)   candle.low  = first.low;
         candle.vwap   = (candle.vwap*candle.volume+first.vwap*first.volume)/volume;
@@ -223,12 +239,15 @@ PriceChart = function (options) {
     });     
   }
   
+  
+//report status to the user, or hide it  
   function setStatus (string) {
     status.html(string).style("opacity",1); 
     if (string) loader.transition().duration(10).style("opacity",0);
-
   }
 
+
+//enable the live feed via ripple-lib
   function setLiveFeed () {
     var candle = {
         time   : lastCandle,
@@ -251,13 +270,17 @@ PriceChart = function (options) {
     if (liveFeed) liveFeed.updateViewOpts(viewOptions);
     else liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
   }
-  
+
+
+//suspend the live feed  
   this.suspend = function () {
     if (liveFeed) liveFeed.stopListener();
     if (options.resize && typeof removeResizeListener === 'function')
       removeResizeListener(window, resizeChart);   
   }
   
+  
+//add new data from the live feed to the chart  
   function liveUpdate (data) {
 
     var first = lineData.length ? lineData[0] : null;
@@ -273,12 +296,9 @@ PriceChart = function (options) {
         live   : true
       }; 
       
-    //if (last) console.log("last:", last.time.local().format("HH:mm:ss"));
-    //console.log("time:", candle.time.local().format("HH:mm:ss"));
-    //console.log(data.closePrice, data.baseCurrVol);
     
     if (last && candle.volume && last.time.unix()===candle.time.unix()) {
-      //console.log('replace');
+
       if (!last.live) {  //historical data
         var volume = candle.volume + last.volume;
         if (candle.high<last.high) candle.high = last.high;
@@ -295,10 +315,9 @@ PriceChart = function (options) {
       
       //new candle, only add it if something happened
       if (candle.volume) {
-        //console.log('append');
-        //console.log(candle);
         lineData.push(candle); //append the candle    
       }
+      
       //adjust the range  
       startTime.add(intervalSeconds,"seconds");
       endTime.add(intervalSeconds,"seconds");
@@ -328,24 +347,27 @@ PriceChart = function (options) {
       .x(function(d) { return xScale(d.time); })
       .y(function(d) { return priceScale(d.close); });
     
+    //aiming for around 100-200 here    
     var num = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
-    
-    //console.log(num); //aiming for around 100-200 here
-    
+   
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
-    svg.datum(lineData)
+    svg.datum(lineData, function(d){return d.time;})
       .on("mousemove", showDetails)
       .on("touchmove", showDetails);
 
     gEnter.select(".axis.price").select("text").text("Price ("+trade.currency+")");
     gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
-    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData);
+    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData, function(d){return d.time;});
     bars.enter().append("rect"); 
 
     // add the candlesticks.
-    var candle = gEnter.select(".candlesticks").selectAll("g").data(lineData);
+    var candle = gEnter.select(".candlesticks").selectAll("g")
+      .data(lineData, function(d){
+        return d.time;  
+      });
+      
     var candleEnter = candle.enter().append("g")
       .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; });
     candleEnter.append("line").attr("class","extent");
@@ -371,10 +393,13 @@ PriceChart = function (options) {
       .range([options.height, 0]);
 
     //add the price line
-    gEnter.select(".line").datum(lineData).transition().attr("d", line);	
+    gEnter.select(".line")
+      .datum(lineData, function(d){return d.time;})
+      .transition()
+      .attr("d", line);	
 
     //add the volume bars
-    bars.data(lineData)
+    bars.data(lineData, function(d){return d.time;})
       .transition()
       .attr("x", function(d){return xScale(d.time)-candleWidth/3})
       .attr("y", function(d){return volumeScale(d.volume)})
@@ -441,9 +466,10 @@ PriceChart = function (options) {
       svg.transition().duration(300).style("opacity", 1);
       loader.transition().duration(300).style("opacity", 0);
     }
-
   }
 
+
+//show the details of the candle on mouseover, touch
   function showDetails() {
     var x  = d3.mouse(this)[0],
       tx   = Math.max(0, Math.min(options.width+options.margin.left, x)),
@@ -490,6 +516,8 @@ PriceChart = function (options) {
     }
   }
 
+
+//apply rules to get the start times to line up nicely
   function getAlignedCandle() {
     var now = moment().utc(), aligned;
     now.subtract("milliseconds", now.milliseconds());
@@ -539,7 +567,9 @@ PriceChart = function (options) {
       
     return aligned;  
   }
-  
+
+
+//display the date in a nice format  
   function parseDate (date, increment) {
     var monthNames = [ "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December" ];
