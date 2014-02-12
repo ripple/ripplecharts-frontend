@@ -342,7 +342,7 @@ h1, h2, h3, h4 {
   border:1.5px solid @rippleBlue;
   color: @rippleBlue;
   background:none;
-  -webkit-appearance:none;
+
   padding: 2px 20px 2px 4px;
   line-height:1.2em;
   background-image:url('images/dropdownBlue.png');
@@ -350,6 +350,17 @@ h1, h2, h3, h4 {
   background-position: 95% 50%;
   background-size: 13px;
   font-weight:bold;
+
+  -webkit-appearance:none;  
+  -moz-appearance:none!important;
+  -o-appearance:none;
+  appearance: none;
+  text-indent: 0.01px;
+  text-overflow: "";
+}
+
+.dropdowns select::-ms-expand {
+  display: none;
 }
 
 .dropdowns select:disabled {

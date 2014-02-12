@@ -1,5 +1,3 @@
-
-
 var TransactionFeed = function (options) {
   var self = this;
   var transactions = [];
@@ -25,15 +23,14 @@ var TransactionFeed = function (options) {
   }; 
    
   self.div = d3.select('#'+options.id).attr('class','transactionFeed');
-     
+
+//process incoming transaction from ripple-lib     
   this.handleTransaction = function (data) {
     addTransaction(data.transaction);
  
     var rows     = self.div.selectAll('.transaction').data(transactions);
     var rowEnter = rows.enter().append('div').attr('class','transaction');
-    
-    
-    
+        
     rowEnter.append("span").attr("class","time");
     rowEnter.append("span").attr("class","icon");
     rowEnter.append("span").attr("class","details");
@@ -43,6 +40,7 @@ var TransactionFeed = function (options) {
     rows.select('.icon')
       .attr('class', function(d){return d.type + " icon"})
       .attr('title', function(d){return txAltText[d.type]});
+      
     rows.select('.details').html(function(d){
       var html = self.prepareAmount(d.amount1, d.currency1);
       if (d.amount2) html += "<i>for</i>" + self.prepareAmount(d.amount2, d.currency2);  
@@ -158,7 +156,6 @@ var TransactionFeed = function (options) {
       self.absoluteDateOnly(secondsSince2000)+'">'+
       self.absoluteTimeOnly(secondsSince2000)+'</span>';
   }
-  
   
   this.commas = function (number, precision) {
     var parts = number.toString().split(".");

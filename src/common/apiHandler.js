@@ -4,12 +4,11 @@ ApiHandler = function (url) {
   
   function apiRequest (route) {
     var request = d3.xhr(self.url+"/"+route);
-    //request.header("Content-type","application/x-www-form-urlencoded");
     request.header('Content-Type', 'application/json');
     return request;
   }
   
-  
+    
   this.offersExercised = function (params, load, error) {
     var request = apiRequest("offersExercised");
 
@@ -74,20 +73,7 @@ ApiHandler = function (url) {
   
   this.issuerCapitalization = function (params, load, error) {
     
-    var request = apiRequest("issuerCapitalization");
-/*  
-    params = {
-      pairs : [{
-      currency: 'USD',
-      issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"  
-      }],
-    
-      startTime : moment.utc().subtract("minutes",1),
-      endTime : moment.utc(),
-      timeIncrement : "minutes" 
-    }
-*/        
-        
+    var request = apiRequest("issuerCapitalization");        
     request.post(JSON.stringify(params))
       .on('load', function(xhr) {
         var response = JSON.parse(xhr.response);  
