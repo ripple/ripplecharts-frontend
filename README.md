@@ -4,9 +4,6 @@ This is the frontend for ripplecharts.com data visualization using angular.js an
 
 ##Installation Instructions:
 
-clone the repository: git clone https://github.com/ripple/ripplecharts-frontend
-
-
 1. Install [node.js and npm](http://nodejs.org/).
 2. Install [bower](http://bower.io/)
 
@@ -16,7 +13,7 @@ clone the repository: git clone https://github.com/ripple/ripplecharts-frontend
 
         $ sudo npm install -g grunt-cli
     
-3. Install Ripple Client.
+3. Install the Ripple Charts frontend.
     
         $ git clone https://github.com/ripple/ripplecharts-frontend
         $ cd ripplecharts-frontend
