@@ -49,8 +49,7 @@ angular.module( 'ripplecharts.landing', [
     $location.path(path);
     $scope.$apply();  
   });
-         
-  console.log($scope);       
+               
   if (!store.get("returning")) setTimeout(function(){
     d3.select("#helpButton").node().click();
   }, 100);

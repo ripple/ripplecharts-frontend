@@ -5,7 +5,6 @@ var UNIX_RIPPLE_TIME = 946684800;
 var RECURSION_DEPTH = 1;
 var MAX_NUTL = 360;
 var REFERENCE_NODE = store.session.get('graphID') || 'r3kmLJN5D28dHuH8vZNUZpMC43pEHpaocV';
-console.log(REFERENCE_NODE);
 var HALO_MARGIN = 6;
 var COLOR_TABLE = {
 //currency  |  center  |   rim  |
@@ -979,7 +978,6 @@ function expandNode(address) {
   var nutl;
   
   store.session.set("graphID", address);
-  console.log(store.session.get("graphID"));
   
   if (typeof(nodes[nodeMap[address]]) !== "undefined") {
     nutl = numberOfUnseenTrustLines(nodes[nodeMap[address]]);
@@ -2063,7 +2061,9 @@ window.onhashchange = function(){
   }
   
   addResizeListener(window, resizeGraph);
+  
   this.suspend = function (){
+    force.stop();
     removeResizeListener(window, resizeGraph); 
   }
   

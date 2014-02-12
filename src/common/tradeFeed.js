@@ -26,7 +26,9 @@ var TradeFeed = function (options) {
       .attr("class", "loader")
       .attr("src", "assets/images/rippleThrobber.png")
       .style("opacity", 0); 
-      
+ 
+ 
+//load the latest trade feed for the given pair   
   this.loadPair = function (base, trade) {
     self.base  = base;
     self.trade = trade;
@@ -60,8 +62,9 @@ var TradeFeed = function (options) {
     loadHistoricalData();
   }
   
+  
+//process incoming transaction from the live feed handler  
   function handleTransaction (data) {
-    //console.log(data);
     
     var last = transactions[0];
     
@@ -74,7 +77,7 @@ var TradeFeed = function (options) {
     
     if (last && last.price<trade.price)      trade.type = 'ask';
     else if (last && last.price>trade.price) trade.type = 'bid';
-    //else if (last)                           trade.type = last.type;
+    //else if (last)                         trade.type = last.type;
     
     transactions.unshift(trade);  //prepend trade
     transactions = transactions.slice(0,50);  //keep last 50
@@ -89,6 +92,8 @@ var TradeFeed = function (options) {
     loader.style('opacity', 0);    
   }
   
+  
+//update the display with new data  
   function updateTrades () {
     status.html(transactions.length ? "" : "no recent trades");
     
@@ -108,7 +113,9 @@ var TradeFeed = function (options) {
     rows.select(".time").html(function(d){return d.time.local().format('h:mm:ss a')});
     rows.select(".price").html(function(d){return valueFilter(d.price)}); 
   }
-  
+ 
+ 
+//make values human readable  
   function valueFilter (d) {
     if (!d) return "&nbsp";
     value = ripple.Amount.from_human(d).to_human({
@@ -125,7 +132,9 @@ var TradeFeed = function (options) {
     value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
     return value;        
   }
-  
+ 
+ 
+//load price and volume stats from the last 24hours  
   function loadDailyStats () {
     var now  = moment();
     var then = moment().subtract(1, 'days');
@@ -135,14 +144,8 @@ var TradeFeed = function (options) {
       startTime     : then.toDate(),
       endTime       : now.toDate(),
       timeIncrement : 'all',
-      
-//      "trade[currency]" : self.trade.currency,
-//      "trade[issuer]"   : self.trade.issuer ? self.trade.issuer : "",
-//      "base[currency]"  : self.base.currency,
-//      "base[issuer]"    : self.base.issuer  ? self.base.issuer : ""
-
-      base  : self.base,
-      trade : self.trade
+      base          : self.base,
+      trade         : self.trade
       
     }, function(data){
 
@@ -160,6 +163,9 @@ var TradeFeed = function (options) {
       console.log(error);
     });     
   }
+
+
+//display 24 hour stats from the known values
   function updateDailyStats () {
       daily.select(".high").html("<small>H:</small> "+valueFilter(high));
       daily.select(".low").html("<small>L:</small> "+valueFilter(low));
@@ -167,7 +173,9 @@ var TradeFeed = function (options) {
       price.select(".amount").html(valueFilter(close));
       price.select(".pair").html(self.base.currency+"/"+self.trade.currency);
   }
-  
+
+
+//load latest trades historical data from the API  
   function loadHistoricalData() {
     if (dailyTimer) clearInterval(dailyTimer);
     dailyTimer = setInterval(loadDailyStats, 180000);
@@ -179,8 +187,7 @@ var TradeFeed = function (options) {
     var now  = moment();
     var then = moment().subtract(1, 'days');
         
-//  for now, just use last 24 hours - in the future there should be a
-//  parameter for max returned transactions, so we will set that instead    
+
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
       startTime : then.toDate(),
@@ -206,6 +213,8 @@ var TradeFeed = function (options) {
     }); 
   }
   
+  
+//stop the live feed and the daily stats updater  
   this.suspend = function () {
     if (listener) listener.stopListener();
     if (dailyTimer) clearInterval(dailyTimer);
