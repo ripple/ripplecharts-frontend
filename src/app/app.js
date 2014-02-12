@@ -61,7 +61,7 @@ angular.element(document).ready(function() {
     remote.on('ledger_closed', function(x){
       
       $scope.ledgerLabel = "Ledger #:";
-      $scope.ledgerIndex = Number(parseInt(x.ledger_index,10)).toLocaleString();
+      $scope.ledgerIndex = commas(parseInt(x.ledger_index,10));
       remote.request_ledger('closed', handleLedger);
       $scope.$apply();
        
