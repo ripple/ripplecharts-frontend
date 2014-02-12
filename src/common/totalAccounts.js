@@ -12,7 +12,6 @@ var TotalAccounts = function (options) {
   list.append("label").html("Range:");
   var interval = list.selectAll("a")
     .data([
-      //{name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
       {name: "month",  interval:"hour",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
@@ -31,7 +30,9 @@ var TotalAccounts = function (options) {
         //$('#range').slideToggle();    
       } else selectRange (d);
     });
-    
+  
+  
+//create new line chart    
   var chart = new LineChart({
     id         : options.id+"Chart",
     title      : "Total Accounts",
@@ -45,16 +46,18 @@ var TotalAccounts = function (options) {
       }
   });
   
+  
   function selectRange (d) {
     var end   = new Date();
     var start = d.offset(end);
 
     //$('#startTime').datepicker('setValue', start);
     //$('#endTime').datepicker('setValue', end);
-    self.update(d.interval, start, end);
+    update(d.interval, start, end);
   }
   
-  this.update = function (increment, start, end) {
+  
+  function update (increment, start, end) {
     chart.loading = true;
     chart.fadeOut();
     

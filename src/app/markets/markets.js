@@ -149,8 +149,14 @@ angular.module( 'ripplecharts.markets', [
   var toCSV = d3.select("#toCSV");
   toCSV.on('click', function(){
     if (toCSV.attr("disabled")) return;
-    var data  = priceChart.getRawData();  
-    var csv   = jsonToCSV(data); 
+    var data = priceChart.getRawData();  
+    var list = [];
+    
+    for (var i=0; i<data.length; i++) {
+      list.push(JSON.parse(JSON.stringify(data[i])));
+    }
+    
+    var csv   = jsonToCSV(list); 
     var title = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv"; 
     toCSV.attr("href", "data:text/csv;charset=utf-8," + escape(csv));
     toCSV.attr("download", title);
