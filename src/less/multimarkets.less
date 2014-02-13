@@ -38,6 +38,12 @@
   border-bottom:1px solid #ddd;
 }
 
+@-moz-document url-prefix() {
+  .multiMarket .chartDetails {
+    height:40px;
+  }
+}  
+  
 .multiMarket .chartDetails label {display:inline}
 .multiMarket .chartDetails td {vertical-align:bottom}
 .multiMarket .chartDetails .range {text-align:left; padding: 2px 5px; font-size:12px; font-weight:bold;}
@@ -159,7 +165,6 @@
   fill: #456;  
 }
 
-
 .multiMarket .chart .flip text {
   fill:#fff;
 }
@@ -200,6 +205,7 @@
   display:inline;
   color:#666;
 }
+
 .multiMarket .chart .dropdowns .currency {
   font-size:16px;  
   width:60px;
@@ -211,6 +217,12 @@
   border:none;
 }
 
+@-moz-document url-prefix() {
+  .multiMarket .chart .dropdowns select {
+    padding:3px 0;
+    height:21px;
+  }
+}
 
 .multiMarket .chart .status {
   position:absolute;
