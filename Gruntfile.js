@@ -19,6 +19,7 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-ngmin');
   grunt.loadNpmTasks('grunt-html2js');
   grunt.loadNpmTasks('grunt-aws');
+  grunt.loadNpmTasks('grunt-cloudflare');
 
   /**
    * Load in our build configuration file.
@@ -49,6 +50,15 @@ module.exports = function ( grunt ) {
       build: {
         cwd: "bin/",
         src: "**"
+      }
+    },
+    cloudflare: {
+      options: {
+        /* purge the cache */
+        a: 'fpurge_ts',
+        tkn: deploymentConfig.cloudflare.api_key,
+        email: deploymentConfig.cloudflare.email,
+        z: deploymentConfig.cloudflare.domain
       }
     },
 
@@ -572,7 +582,7 @@ module.exports = function ( grunt ) {
   /**
    * Deployment Tasks
    */
-  grunt.registerTask( 'deploy', [ 'default', 's3' ] );
+  grunt.registerTask( 'deploy', [ 'default', 's3', 'cloudflare' ] );
 
   /**
    * In order to make it safe to just compile or copy *only* what was changed,
