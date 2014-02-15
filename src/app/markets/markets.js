@@ -5,7 +5,7 @@ angular.module( 'ripplecharts.markets', [
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'markets2', {
+  $stateProvider.state( 'markets-custom', {
     url: '/markets/:base/:trade',
     views: {
       "main": {
@@ -30,7 +30,6 @@ angular.module( 'ripplecharts.markets', [
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location) {
 
   if ($state.params.base && $state.params.trade) {
-    console.log($state);
     
     var base = $state.params.base.split(":");
     base = {currency:base[0],issuer:base[1] ? base[1]:""};

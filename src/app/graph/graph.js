@@ -4,7 +4,7 @@ angular.module( 'ripplecharts.graph', [
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'graph2', {
+  $stateProvider.state( 'graph-id', {
     url: '/graph/:id',
     views: {
       "main": {

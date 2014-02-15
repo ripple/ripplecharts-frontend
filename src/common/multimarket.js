@@ -28,7 +28,7 @@ var MiniChart = function(base, trade, markets) {
       .attr("class","closeButton")
       .html("x")
       .on("click", function(){
-        event.stopPropagation();
+        d3.event.stopPropagation();
         self.remove(true);
     });
   }
@@ -71,7 +71,7 @@ var MiniChart = function(base, trade, markets) {
    
   if (markets.options.clickable) { 
     dropdowns.on("click", function(){
-      event.stopPropagation();
+      d3.event.stopPropagation();
     });
     self.div.classed("clickable", true).on("click", function(){
       markets.chartClickHandler(self);
@@ -183,7 +183,7 @@ var MiniChart = function(base, trade, markets) {
       .attr("height", margin.bottom)  
       .attr("transform", "translate("+(width+margin.left)+","+(height+margin.top)+")")
       .on("click", function(){
-        event.stopPropagation();
+        d3.event.stopPropagation();
         flipping = true;
         dropdownA.selected(self.trade);
         dropdownB.selected(self.base);
