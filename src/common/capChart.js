@@ -1,12 +1,14 @@
 function CapChart(options) {
-  var self     = this,
-    apiHandler = new ApiHandler(options.url);
+  var self       = this,
+    apiHandler   = new ApiHandler(options.url);
     
-  var div       = d3.select(options.id).attr("class", "capChart");
-  var controls  = div.append("div").attr("class","controls");
-  var dropdowns = controls.append("div").attr("class","dropdownBox");
-  var chart     = div.append("div").attr("class","chart");
-
+  var div        = d3.select(options.id).attr("class", "capChart");
+  var controls   = div.append("div").attr("class","controls");
+  var dropdowns  = controls.append("div").attr("class","dropdownBox");
+  var chart      = div.append("div").attr("class","chart");
+  var DATEFORMAT = "MMM D YYYY h:mm a (z)";
+  //var DATEFORMAT = null;
+  
   if (!options.margin) options.margin = {top: 5, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
   if (!options.height) options.height = options.width/2.25>400 ? options.width/2.25 :400;
@@ -14,7 +16,7 @@ function CapChart(options) {
   self.currency = options.currency || "USD";
   self.format   = options.format   || "stacked";
   self.dataType = options.dataType || "Capitalization";
-  self.range    = options.range    || "week";
+  self.range    = options.range    || "max";
 
 //add data type dropdown
   dropdowns.append("div").attr("class","dropdowns dataType").append("select").selectAll("option")
@@ -216,7 +218,7 @@ function CapChart(options) {
     
     var end     = moment.utc();
     var issuers = currencyDropdown.getIssuers(currency);    
-    var pairs = issuers.map(function(d){
+    var pairs   = issuers.map(function(d){
       return {
         currency : currency,
         issuer   : d
@@ -243,6 +245,7 @@ function CapChart(options) {
       endTime    : end
       
     }, function(data){
+      
       if (!capDataCache[self.currency]) capDataCache[self.currency] = {};
       capDataCache[self.currency][self.range] = {raw : data};
       
@@ -313,7 +316,7 @@ function CapChart(options) {
 
       stacked[i] = {
         name    : series.name,
-        address : series.address,
+        address : series.address || series.issuer,
         data    : {}
       };
       
@@ -334,7 +337,7 @@ function CapChart(options) {
       stacked[k].values = [];
       for (var m=0; m<timestamps.length; m++) {
         stacked[k].values.push({
-          date : moment(parseInt(timestamps[m], 10)),
+          date : moment(parseInt(timestamps[m], 10)).utc(),
           y    : data[timestamps[m]] || last
         });
         
@@ -490,7 +493,7 @@ function CapChart(options) {
 
 //    determine position of tooltip      
       position = getTooltipPosition(cx, cy);
-      date     = top[i].date.utc().format("MMMM D YYYY");
+      date     = top[i].date.utc().format(DATEFORMAT);
       amt      = commas(top[i].y+top[i].y0, 2);  
       
       handleTooltip("Total", null, date, amt, position);
@@ -519,7 +522,7 @@ function CapChart(options) {
 
 //    determine position of tooltip      
       position = getTooltipPosition(cx, cy);
-      date     = moment(line.results[j][0]).utc().format("MMMM D YYYY");
+      date     = moment(line.results[j][0]).utc().format(DATEFORMAT);
       amt      = commas(line.results[j][1], 2);  
       var name = currencyDropdown.getName(line.address) || line.name;
       
@@ -545,7 +548,7 @@ function CapChart(options) {
     var position = getTooltipPosition(cx, cy);
     var name     = currencyDropdown.getName(section.address);
     var amount   = commas(section.values[i].y, 2);
-    date = section.values[i].date.utc().format("MMMM D YYYY");
+    date = section.values[i].date.format(DATEFORMAT);
         
     handleTooltip(name, section.address, date, amount, position);
     handleTracer(cx, cy, c2y);
@@ -567,7 +570,7 @@ function CapChart(options) {
     var position = getTooltipPosition(cx, cy);
     var name     = currencyDropdown.getName(line.address);
     var amount   = commas(line.results[i][1], 2);
-    date = moment(line.results[i][0]).utc().format("MMMM D YYYY");
+    date = moment(line.results[i][0]).utc().format(DATEFORMAT);
         
     handleTooltip(name, line.address, date, amount, position);
     handleTracer(cx, cy);

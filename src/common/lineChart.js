@@ -55,10 +55,10 @@ var LineChart = function (options){
     if (!self.loading) loader.style("opacity",0);
   }	
 
+  
   function drawData() {
     if (!self.loading && !self.lineData.length) {
-      loader.style("opacity",0);
-      status.html("No Data for this Period").style("opacity",1);
+      self.setStatus("No Data for this Period");
       return; 
     }
 
@@ -166,6 +166,11 @@ var LineChart = function (options){
     }
 
     svg.on("mousemove.hover", mousemove);    
+  }
+  
+  this.setStatus = function (string) {
+    status.html(string).style("opacity",1); 
+    loader.transition().style("opacity",0); 
   }
   
   this.fadeOut = function () {
