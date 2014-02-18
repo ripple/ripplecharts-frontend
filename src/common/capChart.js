@@ -6,6 +6,8 @@ function CapChart(options) {
   var controls   = div.append("div").attr("class","controls");
   var dropdowns  = controls.append("div").attr("class","dropdownBox");
   var chart      = div.append("div").attr("class","chart");
+  var legend     = div.append("div").attr("class","legend");
+  
   var DATEFORMAT = "MMM D YYYY h:mm a (z)";
   //var DATEFORMAT = null;
   
@@ -156,6 +158,7 @@ function CapChart(options) {
           
       isLoading = false;
       drawData();
+      drawLegend();
       return;  
     } 
 
@@ -190,13 +193,15 @@ function CapChart(options) {
       
 
       prepareStackedData(base.currency, range); 
+      prepareLegend(base.currency, range);
+      
       if ((self.dataType=="Trade Volume" || self.dataType=="# of Trades") &&
         self.currency==base.currency &&
         self.range==range.name) {
       
         if (tradeDataCache[base.currency][range.name]['raw'].length == count) isLoading = false;
         drawData(); //may have been changed after loading started
-      
+        drawLegend();
       }
     }, function (error){
       console.log(error);
@@ -213,6 +218,7 @@ function CapChart(options) {
           
       isLoading = false;
       drawData();
+      drawLegend();
       return;  
     } 
     
@@ -250,6 +256,8 @@ function CapChart(options) {
       capDataCache[self.currency][self.range] = {raw : data};
       
       prepareStackedData(currency, range);
+      prepareLegend(currency, range);
+      
       //prepareLineData();
       
       if (self.dataType=="Capitalization" &&
@@ -258,6 +266,7 @@ function CapChart(options) {
         
         isLoading = false;
         drawData(); //may have been changed after loading started
+        drawLegend();
       }
       
     }, function (error){
@@ -267,7 +276,8 @@ function CapChart(options) {
   }
   
   function sortTime(a,b){return a[0]-b[0]}
-  
+
+/*  
   function prepareLineData() {
     var raw = capDataCache[self.currency][self.range].raw;
     var totals = {}, series;
@@ -276,6 +286,7 @@ function CapChart(options) {
     for (var i=0; i<raw.length; i++) {
       series = raw[i];
       series.results.sort(sortTime);//necessary?
+
       for (var j=0; j<series.results.length; j++) {
         var timestamp = series.results[j][0];
         totals[timestamp]  = (totals[timestamp] || 0) + series.results[j][1];
@@ -295,7 +306,7 @@ function CapChart(options) {
     };  
   }
   
-
+*/
   
   function prepareStackedData(currency, range) {
 
@@ -353,6 +364,36 @@ function CapChart(options) {
     }
   }
   
+  
+  function prepareLegend(currency, range) {
+    var raw, legend;
+    
+    if (self.dataType=='Capitalization') {
+      raw = capDataCache[currency][range.name].raw;    
+    } else {
+      raw = tradeDataCache[currency][range.name].raw;
+    }
+    
+    legend = raw.map(function(d){
+      var amount; 
+      var address = d.address || d.issuer;
+      if (d.values) amount = d.values.length ? commas(d.values[d.values.length-1].y,2) : 0;   
+      else amount = d.results.length ? commas(d.results[d.results.length-1][1],2) : 0;
+      return {
+        name    : currencyDropdown.getName(address) || d.name,
+        address : address,
+        amount  : amount,
+        hide    : false
+      }
+    });
+    
+    if (self.dataType=='Capitalization') {
+      capDataCache[currency][range.name].legend = legend;
+    } else {
+      tradeDataCache[currency][range.name].legend = legend;
+    }
+  }
+  
   function drawChart() {
     chart.html("");
     svg = chart.append("svg").attr({
@@ -394,86 +435,127 @@ function CapChart(options) {
   }
   
   function drawData() {
-  
+    var data, legend;
+    
     if (!isLoading) loader.transition().style("opacity",0);
-    if      (self.dataType=='Capitalization') drawCapData(); 
-    else if (self.dataType=='Trade Volume')   drawCapData();  
-  }
-  
-  
-  function drawCapData() {
     if (self.format=="stacked") {
       svg.selectAll('.line').remove();
-      var data;
-
-      if (self.dataType=='Capitalization') 
-        data = capDataCache[self.currency][self.range].stacked;
-        
-      else if (self.dataType=='Trade Volume')   
-       data = tradeDataCache[self.currency][self.range].stacked;
-          
-      sections = stack(data);
       
-      color.domain(data.map(function(d){return d.address}));  
-      xScale.domain(d3.extent(data[0].values, function(d){return d.date}));
-      yScale.domain([0, d3.sum(data, function(d){
-        return d3.max(d.values, function(v){return v.y});
-      })]);
-    
-      var section = g.selectAll("g.section").data(sections);
-      section.enter().append("g").attr("class","section");
-      section.exit().remove();
-  
-      var path = section.selectAll("path").data(function(d){return[d]});
-      path.enter().append("path")
-        .on("mousemove", movingInGround)
-        .style("fill", function(d) { return color(d.address); });
-      path.transition().attr({class: "area", d: function(d) { return area(d.values); } });
 
-      path.exit().remove();
+      if (self.dataType=='Capitalization') {
+        data   = capDataCache[self.currency][self.range].stacked;
+        legend = capDataCache[self.currency][self.range].legend;
+      } else if (self.dataType=='Trade Volume') {  
+        data   = tradeDataCache[self.currency][self.range].stacked;
+        legend = tradeDataCache[self.currency][self.range].legend;
+      }
+          
+      color.domain(legend.map(function(d){return d.address}));   
+      data = filterByLegend(data, legend); 
+      if (data.length) { 
+        sections = stack(data);
+
+        xScale.domain(d3.extent(data[0].values, function(d){return d.date}));
+        yScale.domain([0, d3.sum(data, function(d){
+          return d3.max(d.values, function(v){return v.y});
+        })]);
+      
+        var section = g.selectAll("g.section").data(sections);
+        section.enter().append("g")
+          .attr("class","section")
+          .style("display",function(d) {return d.hide ? "none" : "inherit"});
+        section.exit().remove();
+    
+        var path = section.selectAll("path").data(function(d){return[d]});
+        path.enter().append("path")
+          .on("mousemove", movingInGround);
+        path.transition()
+          .attr({class: "area", d: function(d) { return area(d.values); } });
+          
+        path.style("fill", function(d) { return color(d.address); });
+        path.exit().remove();
+      
+      } else {
+
+        tracer.transition().duration(50).style("opacity",0); 
+        tooltip.transition().duration(50).style("opacity",0);         
+        xScale.domain([0,0]);
+        yScale.domain([0,0]);
+        g.selectAll("g.section").data([]).exit().remove();
+      } 
       
     } else {
       svg.selectAll('.section').remove();
       if (self.dataType=='Capitalization') {
-        lines = capDataCache[self.currency][self.range].raw;
+        lines  = capDataCache[self.currency][self.range].raw;
+        legend = capDataCache[self.currency][self.range].legend;
         
       } else if (self.dataType=='Trade Volume')   {
-        lines = tradeDataCache[self.currency][self.range].raw;
+        lines  = tradeDataCache[self.currency][self.range].raw;
+        legend = tradeDataCache[self.currency][self.range].legend;
       }
        
-      
-      color.domain(lines.map(function(d){return d.address})); 
+      color.domain(legend.map(function(d){return d.address})); 
+      lines = filterByLegend(lines, legend);
       
       xScale.domain(getExtents("x", lines));
       yScale.domain(getExtents("y", lines));
 
-      var line = g.selectAll("g.line").data(lines);
+      var line = g.selectAll("g.line").data(lines, function(d){return d.address || d.issuer});
       line.enter().append("g").attr("class","line");
       line.exit().remove();
       
       var p = line.selectAll("path").data(function(d){return[d]});
       p.enter().append("path")
-        .on("mouseover", movingOnLine)
-        .style("stroke", function(d) { return color(d.address); });
+        .on("mouseover", movingOnLine);
         
       p.transition().attr("d", function(d) {
          var l = d3.svg.line()
           .x(function(d) { return xScale(d[0]); })
           .y(function(d) { return yScale(d[1]); }); 
           return l(d.results);
-      });
+      }).style("stroke", function(d) { return color(d.address || d.issuer); });
         
       p.exit().remove();
     }
     
     var ticks = options.width/60-(options.width/60)%2;
 
-    timeAxis.call(xAxis.ticks(ticks).scale(xScale));
-    amountAxis.call(yAxis.scale(yScale));
+    timeAxis.transition().call(xAxis.ticks(ticks).scale(xScale));
+    amountAxis.transition().call(yAxis.scale(yScale));
     amountLabel.text(self.currency);
  
   } 
   
+  function drawLegend() {
+    var data;
+    if (self.dataType=='Capitalization') 
+      data = capDataCache[self.currency][self.range].legend;    
+    else if (self.dataType=='Trade Volume')   
+      data = tradeDataCache[self.currency][self.range].legend;   
+    
+        
+    var items = legend.selectAll(".item").data(data);
+    var enter = items.enter().append("div").attr("class","item");
+
+    enter.append("h5").attr("class","gateway");
+    enter.append("div").attr("class","issuer");
+    enter.append("div").attr("class","amount");
+    enter.on('click', function(data){
+      data.hide = !data.hide;
+      //drawChart();
+      drawData();
+      drawLegend();
+      d3.select(this).transition().style("opacity", data.hide ? 0.3 : 1);
+    });
+
+    items.style("color", function(d){return color(d.address)})
+      .style("opacity", function(d){return d.hide ? 0.3 : 1});
+    items.select(".gateway").html(function(d){return d.name});
+    items.select(".issuer").html(function(d){return d.address});
+    items.select(".amount").html(function(d){return d.amount + " <small>"+self.currency+"</small"});
+    items.exit().remove();  
+  }
   
   function movingInSky() {
     var top, date, i, j, cx, cy, position;
@@ -524,9 +606,9 @@ function CapChart(options) {
       position = getTooltipPosition(cx, cy);
       date     = moment(line.results[j][0]).utc().format(DATEFORMAT);
       amt      = commas(line.results[j][1], 2);  
-      var name = currencyDropdown.getName(line.address) || line.name;
+      var name = currencyDropdown.getName(line.address || line.issuer) || line.name;
       
-      handleTooltip(name, line.address, date, amt, position);
+      handleTooltip(name, line.address || line.issuer, date, amt, position);
       handleTracer(cx, cy);
     }
   }
@@ -610,6 +692,19 @@ function CapChart(options) {
       .style("top", position[1] + "px") 
       .style("opacity",1);    
   }
+ 
+ 
+//filter data to remove hidden items
+  function filterByLegend (data, legend) {
+    
+    var filtered = [];
+    for (var i=0; i<legend.length; i++) {
+      if (legend[i].hide) continue;
+      filtered.push(data[i]);
+    }
+    
+    return filtered;  
+  }
   
   
   function getTooltipPosition(cx,cy) {
@@ -618,8 +713,8 @@ function CapChart(options) {
     else if (cx-120<options.margin.left) tx = cx+20;
     else tx = cx-120;
     
-    if (cy-130<options.margin.top) ty = cy+100;
-    else ty = cy-100;
+    if (cy-120<options.margin.top) ty = cy+120;
+    else ty = cy-120;
     return [tx,ty];
   }
   

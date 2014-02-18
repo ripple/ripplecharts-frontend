@@ -4,6 +4,7 @@
 
 .capChart .controls {
   margin:20px 60px 0 60px;  
+  overflow:hidden;
 }
 
 .capChart .controls .dropdownBox {
@@ -41,12 +42,17 @@
     shape-rendering: crispEdges;
 }
 
+.capChart .chart {
+  position:relative;  
+}
+
 .capChart .loader {
     width:40px;
     position:absolute;
     top:50%;
     left:50%; 
     margin-left:-20px;
+    margin-top:-30px;
     opacity:0;
 }
 
@@ -124,6 +130,43 @@
 .capChart div.tooltip .amount {
   font-size:18px;  
   padding:2px;
+}
+
+.capChart .legend {
+  overflow:hidden;
+  margin:20px 60px;  
+  text-align:center;
+}
+
+.capChart .legend .item {
+  display:inline-block;
+  text-align:left;
+  width:260px;
+  padding:5px 10px; 
+  margin:5px;
+  border:1px solid rgba(200,200,200,.15); 
+  border-radius:2px;
+  cursor:pointer;
+  background:rgba(200,200,200,.1);
+}
+
+.capChart .legend .item:hover {
+  border-color: rgba(170,170,170,.35);
+}
+
+.capChart .legend .item h5 {
+  margin:3px 0; 
+  font-size:18px;
+  min-height:18px;
+}
+
+.capChart .legend .item .issuer {
+  font-size:11px;  
+}
+
+.capChart .legend .item .amount {
+  color:#888;
+  font-size:15px;
 }
 
 /*
