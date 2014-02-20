@@ -17,17 +17,26 @@ angular.module( 'ripplecharts.landing', [
 
 
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
+  var totalAccounts = 0;
   var feed = new TransactionFeed({id : 'liveFeed'});
-  remote.on('transaction_all', feed.handleTransaction);
- 
+  var api  = new ApiHandler(API);
+  
+  remote.on('transaction_all', feed.handleTransaction); //display transaction feed
+  remote.on('transaction_all', handleNewAccount); //add to new accounts total
+  
+  remote.on("connect", function(){
+    getTotalAccounts();  //we want to retreive this number every time we reconnect
+  });
+   
 //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
     url            : API+"/offersExercised",  
     id             : "topMarkets",
     fixed          : true,
     clickable      : true,
-    updateInterval : 300 //5 minutes
+    updateInterval : 60 //1 minute
   });
+  
   
   markets.list([
     {
@@ -41,6 +50,7 @@ angular.module( 'ripplecharts.landing', [
       trade : {currency:"XRP"}}
     ]);
 
+
   markets.on('chartClick', function(chart){
     var path = "/markets/"+chart.base.currency+
       (chart.base.issuer ? ":"+chart.base.issuer : "")+
@@ -49,10 +59,12 @@ angular.module( 'ripplecharts.landing', [
     $location.path(path);
     $scope.$apply();  
   });
-               
+      
+//show the helper text the first time we visit the page               
   if (!store.get("returning")) setTimeout(function(){
     d3.select("#helpButton").node().click();
   }, 100);
+  
      
   $scope.$on("$destroy", function(){
     markets.list([]);
@@ -63,26 +75,51 @@ angular.module( 'ripplecharts.landing', [
       }, 50);
       
     store.set("returning", true);
+    clearInterval(topInterval);
   });
 
   
 //get num accounts
-  api = new ApiHandler(API);
-  api.getTotalAccounts(null, function(total){
-    $scope.totalAccounts = commas(total);
-    $scope.$apply();
-  });
+  function getTotalAccounts () {
+    api.getTotalAccounts(null, function(total){
+      totalAccounts = total;
+      $scope.totalAccounts = commas(totalAccounts);
+      $scope.$apply();
+    });    
+  }
   
-//get trade volume of top markets  
-  api.getTopMarkets(function(data){
-    var volume = 0;
-    for (var i=0; i<data.length; i++) {
-      volume += data[i][3];
-    }
+//look for new accounts from the websocket feed  
+  function handleNewAccount (tx) {
+    var meta = tx.meta;
+    if (meta.TransactionResult !== "tesSUCCESS") return;
     
-    $scope.tradeVolume = "$"+commas(volume,2);
-    $scope.$apply();
-  });
+    meta.AffectedNodes.forEach( function( affNode ) {
+      
+      if (affNode.CreatedNode && 
+          affNode.CreatedNode.LedgerEntryType === "AccountRoot" ) {
+
+          $scope.totalAccounts = commas(++totalAccounts);
+          $scope.$apply();
+      }
+    });    
+  } 
+   
+//get trade volume of top markets  
+  function getTopMarkets() {
+    
+    api.getTopMarkets(function(data){
+      var volume = 0;
+      for (var i=0; i<data.length; i++) {
+        volume += data[i][3];
+      }
+      
+      $scope.tradeVolume = volume ? "$"+commas(volume,2) : "";
+      $scope.$apply();
+    });
+  }
   
+  
+  getTopMarkets();
+  var topInterval = setInterval (getTopMarkets, 60000);
 });
 

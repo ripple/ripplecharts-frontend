@@ -1,5 +1,5 @@
 <div class="row-fluid">
-  <div class="main">
+  <div class="main mmpage">
     <div id="multimarkets">
       <div class="helpbox" ng-class="{showHelp : showHelp}">
        <h5>Multi Market Charts</h5>
@@ -8,7 +8,7 @@
          chart color indicates whether the price has moved up, down, or remained
          unchanged over the last 24 hours.  The middle line and number indicates
          the current price.  Click on any chart to see the live market data for 
-         that currency pair. These charts update every 5 minutes with the latest
+         that currency pair. These charts update every 60 seconds with the latest
          data from the Ripple Network.
        </p>
        <p>
@@ -18,6 +18,9 @@
          order by clicking the "Flip" button.
        </p>
       </div>
+    </div>
+    <div class="disclaimer">
+      Charts are updated every 60 seconds.
     </div>
   </div>
 </div>

@@ -3,11 +3,18 @@
   display:inline-block;
   overflow:hidden;
   width:1000px;
-  margin:20px 0;
+  margin-top:20px;
+}
+
+.mmpage .disclaimer {
+  text-align:left;  
+  display:inline-block;
+  padding-left:10px;
+  width:1000px;
 }
 
 @media (min-width: 1200px) {
-  #multimarkets {
+  #multimarkets, .mmpage .disclaimer {
     width:1170px;
   }
   
@@ -17,7 +24,7 @@
 }
 
 @media (max-width: 979px) {
-  #multimarkets {
+  #multimarkets, .mmpage .disclaimer  {
     width:94%;
     text-align:left;
     margin-left:3%;
@@ -31,7 +38,7 @@
 }
 
 @media (max-width: 725px) {
-  #multimarkets {
+  #multimarkets, .mmpage .disclaimer {
     width: 90%;
     display:inline-block;
   }

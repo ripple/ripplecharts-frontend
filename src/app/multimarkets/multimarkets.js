@@ -33,9 +33,9 @@ angular.module( 'ripplecharts.multimarkets', [
     
     
   var markets = new MultiMarket ({
-    url            : API+"/offersExercised",  
+    url            : API,  
     id             : "multimarkets",
-    updateInterval : 300, //5 minutes
+    updateInterval : 60, //5 minutes
     clickable      : true
   });
   

@@ -1,3 +1,5 @@
+/* config vars must be global */
+
 //API url to backend
 API      = ""; 
 MIXPANEL = "";
