@@ -1,10 +1,20 @@
 {
+  "development": {
+    "mixpanel" : "REPLACEME",
+    "api"      : "REPLACEME",
+  },
+  
   "staging": {
-    "bucket": "staging-bucket"
+    "mixpanel" : "REPLACEME",
+    "api"      : "REPLACEME",
+    "bucket"   : "staging-bucket"
     "cloudflare_domain": "REPLACEME"
   },
+  
   "production": {
-    "bucket": "production-bucket",
+    "mixpanel" : "REPLACEME",
+    "api"      : "REPLACEME",
+    "bucket"   : "production-bucket",
     "cloudflare_domain": "REPLACEME"
   }
 }

@@ -1,8 +1,7 @@
 /* config vars must be global */
 
-//API url to backend
-API      = ""; 
-MIXPANEL = "";
+//API      = "" //moved to deployment.environments.json; 
+//MIXPANEL = "" //moved to deployment.environments.json;
 
 Options = {
   theme     : "light",

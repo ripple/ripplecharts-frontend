@@ -26,7 +26,7 @@ module.exports = function ( grunt ) {
    */
   var userConfig = require( './build.config.js' );
 
-  var deploymentEnvironment = process.env.NODE_ENV || "staging";
+  var deploymentEnvironment = process.env.NODE_ENV || "development";
 
   var deploymentConfig = require( './deployment.config.js' )(deploymentEnvironment);
 
@@ -656,6 +656,8 @@ module.exports = function ( grunt ) {
           data: {
             scripts  : jsFiles,
             styles   : cssFiles,
+            mixpanel : deploymentConfig.mixpanel,
+            api      : deploymentConfig.api,
             version  : grunt.config( 'pkg.version' )
           }
         });

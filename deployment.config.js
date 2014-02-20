@@ -10,19 +10,23 @@ var envCfg = function(environment) {
 }
 
 module.exports = function(env) {
+  var config = envCfg(env);
   return {
     aws: {
       accessKeyId: awsCredentials.accessKeyId,
       secretAccessKey: awsCredentials.secretAccessKey,
     },
     s3: {
-      bucket: envCfg(env).bucket,
+      bucket: config.bucket,
       enableWeb: true
     },
     cloudflare: {
       email: cloudflareCredentials.email,
       api_key: cloudflareCredentials.api_key,
-      domain: envCfg(env).cloudflare_domain
-    }
+      domain: config.cloudflare_domain
+    },
+    
+    api: config.api ? config.api : "",
+    mixpanel: config.mixpanel ? config.mixpanel : ""
   };
 }
