@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ripple Charts Embedded Chart</title>
+    
+    <!-- D3 needs this -->
+    <meta charset="utf-8">
+    
+    <script>
+      API = "<%= api %>";  
+    </script>
+    
+    <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
+    <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+
+    <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script><% }); %>
+  </head>
+  <body>
+    <div id="priceChart"></div>
+    <script>
+      
+      var priceChart = new PriceChart ({
+        id     : "#priceChart",
+        url    : API,  
+        type   : "line",
+      }); 
+     
+      d3.select("body").attr("class", theme);
+      priceChart.setType(type);
+      priceChart.load(base, trade, range);
+        
+    </script>
+  </body>
+</html>    

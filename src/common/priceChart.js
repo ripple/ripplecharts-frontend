@@ -28,14 +28,17 @@ PriceChart = function (options) {
   if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
   if (!options.height) options.height = options.width/2>400 ? options.width/2 : 400;
  
+  drawChart(); //have to do this here so that the details div is drawn
+  
   if (options.resize && typeof addResizeListener === 'function') {
     addResizeListener(window, resizeChart);
   } else {
     var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
     details.style("width", (options.width-padding)+"px").style("right","auto");
+    div.style("width", (options.width+options.margin.left+options.margin.right)+"px");
+    //div.style("height",(options.height+options.margin.top+options.margin.bottom)+"px");
   }
  
-  drawChart();
   
 //draw the chart at the beginning and whenever it is resized (if resizable)
   function drawChart() {
@@ -176,29 +179,29 @@ PriceChart = function (options) {
     self.fadeOut();
     base     = b;
     trade    = t;
-    chartInterval = d.interval;
+    chartInterval = d.interval.slice(0,2);
     multiple = d.multiple;
     lineData = [];
     isLoading     = true;
     
-    if      (chartInterval=="second") intervalSeconds = 1;
-    else if (chartInterval=="minute") intervalSeconds = 60;
-    else if (chartInterval=="hour")   intervalSeconds = 60*60;
-    else if (chartInterval=="day")    intervalSeconds = 60*60*24;
-    else if (chartInterval=="week")   intervalSeconds = 60*60*24*7;
-    else if (chartInterval=="month")  intervalSeconds = 60*60*24*30.5; //approx
+    if      (chartInterval=="se") intervalSeconds = 1;
+    else if (chartInterval=="mi") intervalSeconds = 60;
+    else if (chartInterval=="ho") intervalSeconds = 60*60;
+    else if (chartInterval=="da") intervalSeconds = 60*60*24;
+    else if (chartInterval=="we") intervalSeconds = 60*60*24*7;
+    else if (chartInterval=="mo") intervalSeconds = 60*60*24*30.5; //approx
     else {
       //TODO: unacceptable!
       intervalSeconds = 60*60;
     }
     
     intervalSeconds *= multiple;  
-    lastCandle       = getAlignedCandle();
-    endTime          = moment(lastCandle).add('seconds', intervalSeconds);
-    startTime        = moment.utc(d.offset(endTime));
+    lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
+    endTime          = moment.utc(lastCandle).add('seconds', intervalSeconds);
+    startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
      
     if (liveFeed) liveFeed.stopListener();
-    setLiveFeed();
+    if (options.live) setLiveFeed();
     
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
@@ -259,10 +262,20 @@ PriceChart = function (options) {
         low    : 0
       };
       
+    var interval;
+    if      (chartInterval=='se') interval = "second";
+    else if (chartInterval=='mi') interval = "minute";
+    else if (chartInterval=='ho') interval = "hour";
+    else if (chartInterval=='da') interval = "day";
+    else if (chartInterval=='we') interval = "week";
+    else if (chartInterval=='mo') interval = "month";
+    else if (chartInterval=='ye') interval = "year";
+    else interval = chartInterval;
+    
     var viewOptions = {
       base  : base,
       trade : trade,
-      timeIncrement    : chartInterval,
+      timeIncrement    : interval,
       timeMultiple     : multiple,
       incompleteApiRow : candle
     }
@@ -349,7 +362,7 @@ PriceChart = function (options) {
     
     //aiming for around 100-200 here    
     var num = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
-   
+    
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
@@ -518,50 +531,52 @@ PriceChart = function (options) {
 
 
 //apply rules to get the start times to line up nicely
-  function getAlignedCandle() {
-    var now = moment().utc(), aligned;
-    now.subtract("milliseconds", now.milliseconds());
+  function getAlignedCandle(time) {
+    var aligned;
+    
+    if (!time) time = moment().utc();
+    time.subtract("milliseconds", time.milliseconds());
      
-    if (chartInterval=='second') {
-      aligned = now.subtract("seconds", now.seconds()%multiple);
+    if (chartInterval=='se') {
+      aligned = time.subtract("seconds", time.seconds()%multiple);
       
-    } else if (chartInterval=='minute') {
-      aligned = now.subtract({
-        seconds : now.seconds(), 
-        minutes : now.minutes()%multiple
+    } else if (chartInterval=='mi') {
+      aligned = time.subtract({
+        seconds : time.seconds(), 
+        minutes : time.minutes()%multiple
       });
             
-    } else if (chartInterval=='hour') {
-      aligned = now.subtract({
-        seconds : now.seconds(), 
-        minutes : now.minutes(),
-        hours   : now.hours()%multiple
+    } else if (chartInterval=='ho') {
+      aligned = time.subtract({
+        seconds : time.seconds(), 
+        minutes : time.minutes(),
+        hours   : time.hours()%multiple
       });   
              
-    } else if (chartInterval=='day') {
-      aligned = now.subtract({
-        seconds : now.seconds(), 
-        minutes : now.minutes(),
-        hours   : now.hours(),
-        days    : now.dayOfYear()%multiple
+    } else if (chartInterval=='da') {
+      aligned = time.subtract({
+        seconds : time.seconds(), 
+        minutes : time.minutes(),
+        hours   : time.hours(),
+        days    : time.dayOfYear()%multiple
       }); 
 
-    } else if (chartInterval=='week') {
-      aligned = now.subtract({
-        seconds : now.seconds(), 
-        minutes : now.minutes(),
-        hours   : now.hours(),
-        days    : now.day(),
-        weeks   : now.isoWeek()%multiple
+    } else if (chartInterval=='we') {
+      aligned = time.subtract({
+        seconds : time.seconds(), 
+        minutes : time.minutes(),
+        hours   : time.hours(),
+        days    : time.day(),
+        weeks   : time.isoWeek()%multiple
       }); 
       
-    } else if (chartInterval=='month') {
-      aligned = now.subtract({
-        seconds : now.seconds(), 
-        minutes : now.minutes(),
-        hours   : now.hours(),
-        days    : now.date()-1,
-        months  : now.months()%multiple
+    } else if (chartInterval=='mo') {
+      aligned = time.subtract({
+        seconds : time.seconds(), 
+        minutes : time.minutes(),
+        hours   : time.hours(),
+        days    : time.date()-1,
+        months  : time.months()%multiple
       }); 
     } 
       
@@ -575,9 +590,9 @@ PriceChart = function (options) {
       "July", "August", "September", "October", "November", "December" ];
     
     
-    if      (increment == "month") return monthNames[date.month()] + " " + date.year();
-    else if (increment == "day")   return monthNames[date.month()] + " " + date.date();
-    else if (increment == "hour")  return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm A");
+    if      (increment == "mo") return monthNames[date.month()] + " " + date.year();
+    else if (increment == "da")   return monthNames[date.month()] + " " + date.date();
+    else if (increment == "ho")  return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm A");
     else return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm:ss A");
   }
 }

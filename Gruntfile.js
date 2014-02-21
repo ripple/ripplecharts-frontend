@@ -437,6 +437,18 @@ module.exports = function ( grunt ) {
         ]
       }
     },
+    
+    embed: {
+      build: {
+        dir  : '<%= build_dir %>/embed/',
+        src  : [ 'src/embed/**/*.config.js' ]
+      },
+      
+      compile: {
+        dir  : '<%= compile_dir %>/embed/',
+        src  : [ 'src/embed/**/*.config.js' ]
+      }     
+    },
 
     /**
      * This task compiles the karma template so that changes to its file array
@@ -495,7 +507,12 @@ module.exports = function ( grunt ) {
         files: [ 
           '<%= app_files.js %>'
         ],
-        tasks: [ 'jshint:src', 'karma:unit:run', 'copy:build_appjs' ]
+        tasks: [ 'jshint:src', 'karma:unit:run', 'copy:build_appjs', 'embed:build' ]
+      },
+      
+      embed: {
+        files: ['src/embed/**/*.js', 'src/embed/**/*.html'],
+        tasks: ['embed:build']
       },
 
       /**
@@ -543,8 +560,13 @@ module.exports = function ( grunt ) {
        * When the CSS files change, we need to compile and minify them.
        */
       less: {
-        files: [ 'src/**/*.less' ],
+        files: [ 'src/**/*.less', '!src/embed/**/*.less' ],
         tasks: [ 'recess:build', 'concat:build_css' ]
+      },
+      
+      embed_less: {
+        files: [ 'src/embed/**/*.less' ],
+        tasks: [ 'embed:build' ]        
       },
 
       /**
@@ -603,10 +625,10 @@ module.exports = function ( grunt ) {
    * The `build` task gets your app ready to run for development and testing.
    */
   grunt.registerTask( 'build', [
-    'clean', 'html2js', 'jshint', 'coffeelint', 'coffee', 'recess:build',
+    'clean', 'html2js', 'jshint', 'coffeelint',  'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
-    'copy:build_appjs', 'copy:build_vendorjs', 'index:build', 'karmaconfig',
-    'karma:continuous' 
+    'copy:build_appjs', 'copy:build_vendorjs',   'index:build', 
+    'embed:build',      'karmaconfig',           'karma:continuous' 
   ]);
 
   /**
@@ -614,7 +636,8 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'recess:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 'index:compile'
+    'recess:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 
+    'index:compile',  'embed:compile'
   ]);
 
   /**
@@ -634,7 +657,7 @@ module.exports = function ( grunt ) {
       return file.match( /\.css$/ );
     });
   }
-
+  
   /** 
    * The index.html template includes the stylesheet and javascript sources
    * based on dynamic names calculated in this Gruntfile. This task assembles
@@ -664,6 +687,108 @@ module.exports = function ( grunt ) {
       }
     });
   });
+  
+
+  grunt.registerMultiTask( 'embed', 'Process embeds', function () {
+    //var dirRE = new RegExp( '^('+grunt.config('build_dir')+'|'+grunt.config('compile_dir')+')\/', 'g' );    
+    var type  = this.target;
+    var embed = this.data.dir;   
+    
+    this.filesSrc.forEach(function(file){
+      var config  = require("./"+file);
+      var dir     = embed+config.name+"/";
+      var css     = 'stylesheet.css';
+      var jsFiles = [], cssFiles = [];
+         
+         
+      //copy assets
+      config.files.images.forEach(function(file) {
+        var filename = file.split("/").pop();
+        grunt.log.writeln('copying '+file+" to "+dir+"assets/images/"+filename);
+        grunt.file.copy(file, dir+"assets/images/"+filename);
+      });      
+            
+      //compile less
+      grunt.config.set('recess.embed_'+config.name, {
+        src: config.files.less,
+        dest: dir+css,
+        options: {
+          compile       : true,
+          compress      : false,
+          noUnderscores : false,
+          noIDs         : false,
+          zeroUnits     : false
+        }});
+        
+      grunt.task.run("recess:embed_"+config.name);
+      cssFiles.push(css);
+      
+      if (type=="build") {
+        //copy to build/embed
+        config.files.js.forEach(function(file) {
+          var filename = file.split("/").pop();
+          grunt.log.writeln('copying '+file+" to "+dir+filename);
+          grunt.file.copy(file, dir+filename);
+          jsFiles.push(filename);
+        });
+        
+      } else {
+        //compile to bin/embed
+        var jsFile = dir+"script.js";
+        var files = {};
+        files[jsFile] = jsFile; //for uglify
+        jsFiles.push("script.js"); //for index template;
+        
+        grunt.config.set('concat.embed_'+config.name, {
+          options: {
+            banner: '<%= meta.banner %>'
+          },
+          src: config.files.js,
+          dest: jsFile
+        });
+        
+        grunt.config.set('ngmin.embed_'+config.name, {
+          files: [
+            {
+              src: [ jsFile ],
+              cwd: dir,
+              dest: dir,
+              expand: true
+            }
+          ]
+                   
+        });
+        
+        grunt.config.set('uglify.embed_'+config.name, {
+          options: {
+            banner: '<%= meta.banner %>'
+          },
+          files:files     
+        }); 
+               
+        grunt.task.run('concat:embed_'+config.name);
+        grunt.task.run('ngmin:embed_'+config.name);
+        grunt.task.run('uglify:embed_'+config.name);
+      }
+      
+
+      grunt.file.copy(config.files.html, dir + 'index.html', { 
+        process: function ( contents, path ) {
+
+          return grunt.template.process( contents, {
+            data: {
+              scripts  : jsFiles,
+              styles   : cssFiles,
+              mixpanel : deploymentConfig.mixpanel,
+              api      : deploymentConfig.api,
+              version  : grunt.config( 'pkg.version' )              
+            }
+          });
+        }
+      });   
+    });
+  });  
+  
 
   /**
    * In order to avoid having to specify manually the files needed for karma to

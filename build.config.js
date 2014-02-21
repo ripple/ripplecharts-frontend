@@ -24,7 +24,8 @@ module.exports = {
       'src/**/*.js', 
       '!src/example.config.js',
       '!src/**/*.spec.js', 
-      '!src/assets/**/*.js' 
+      '!src/assets/**/*.js',
+      '!src/embed/**/*.js'
       ],
     jsunit: [ 'src/**/*.spec.js' ],
     
@@ -33,7 +34,7 @@ module.exports = {
 
     atpl: [ 'src/app/**/*.tpl.html' ],
     ctpl: [ 'src/common/**/*.tpl.html' ],
-
+    
     html: [ 'src/index.html' ],
     less: 'src/less/main.less'
   },

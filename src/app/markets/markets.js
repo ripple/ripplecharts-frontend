@@ -142,6 +142,7 @@ angular.module( 'ripplecharts.markets', [
     id     : "#priceChart",
     url    : API,  
     type   : $scope.chartType,
+    live   : true,
     resize : true
   });   
 

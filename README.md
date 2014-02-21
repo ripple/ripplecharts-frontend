@@ -29,6 +29,6 @@ This is the frontend for ripplecharts.com data visualization using angular.js an
 
 1. Run the following command to build the client.    
 
-    $ grunt
+        $ grunt
 
 2. Navigate your browser to the /build directory for the development version, or to the /bin directory for the compiled version
