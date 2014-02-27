@@ -2,22 +2,8 @@
  * of loading from the query string or from custom parameters.
  * 
  * 
- * Usage
+ * How to Use:
  * 
- * Embedded IFRAME:
- * 
- * <iframe src='http://ripplecharts.com/embed/pricechart?theme=dark&type=line&trade={"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}&base={"currency":"XRP"}'/>
-
- * 
- * Include this line in the document head:
- * <script type="text/javascript" src="http://ripplecharts.com/embed/pricechart/script.js"></script>
- * <script>
- * 
- * //load from the query string
- * PriceChartWidget().loadFromQS();
- * 
- * 
- * </script>
  * 
  * Configuration options:
  *  
@@ -39,6 +25,81 @@
  *  end      : e.g "Feb 12, 2014"             - moment.js readable date/time
  *  interval : "second","minute","hour","day","week","month"
  *  multiple : e.g 1,5  - integer applied to interval, such as 5 minutes, 4 hours, etc.
+ * 
+ * 
+ * 
+ * 
+ * EXAMPLES:
+ * 
+ * Embedded IFRAME:
+ * 
+ * <iframe src='http://ripplecharts.com/embed/pricechart?theme=dark&type=line&trade={"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}&base={"currency":"XRP"}'/>
+ * 
+ * 
+ * 
+ * 
+ * Javascript object:
+ * 
+ * <script type="text/javascript" src="http://ripplecharts.com/embed/pricechart/script.js"></script>
+ * <script>
+ * 
+ *  //load from the query string
+ *  PriceChartWidget().loadFromQS();
+ * 
+ * 
+ *  //load from params
+ *  var chart = PriceChartWidget({ 
+ *    id     : "priceChart",
+ *    width  : 400,
+ *    height : 500,
+ *    margin : {top:50, bottom:70, left:80, right:80}
+ *    })
+ * 
+ *  chart.load({
+ *    base : {
+ *      "currency":"XRP"
+ *    },
+ *    trade : {
+ *      "currency":"USD",
+ *      "issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+ *    },
+ *      
+ *    interval : "hour",
+ *    theme    : "dark",         
+ *  }); 
+ * 
+ *  
+ *  //multiple charts
+ *  var one = new PriceChartWidget({id:"FirstChart"});
+ *  var two = new PriceChartWidget();
+ *  
+ *  one.load({
+ *    base:{
+ *      "currency":"XRP"
+ *    },
+ *    trade: {
+ *      "currency":"USD",
+ *      "issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+ *    },
+ *    
+ *    interval:"hour",
+ *    theme:"dark",
+ *  });
+ *
+ *
+ *  two.load({
+ *    base:{
+ *      "currency":"XRP"
+ *    },
+ *    trade: {
+ *      "currency":"USD",
+ *      "issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"
+ *    },
+ *    
+ *    interval:"hour",
+ *    theme:"light",
+ *    type:"line"
+ *  });
  * 
  */
 

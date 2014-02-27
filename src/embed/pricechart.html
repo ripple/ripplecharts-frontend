@@ -16,6 +16,15 @@
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
+  
+    <style>
+      body {
+        font-family:Arial, Helvetica, sans-serif;
+        text-align:center;  
+        margin:0;
+        background:#fff;
+      }
+    </style>
   </head>
   <body>
     <div id="priceChart"></div>
