@@ -86,7 +86,7 @@ module.exports = {
       'vendor/jscrollpane/script/jquery.jscrollpane.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
-      'deps/ripple-0.7.31.js',
+      'deps/ripple-0.7.32.js',
       'deps/offersExercisedListener.js',
       'deps/onResize.js'
     ],
