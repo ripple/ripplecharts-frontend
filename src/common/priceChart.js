@@ -1,3 +1,9 @@
+
+if (typeof LOADER_PNG == 'undefined') 
+      LOADER_PNG = "assets/images/rippleThrobber.png";
+else  LOADER_PNG = "data:image/png;base64," + LOADER_PNG;
+
+
 PriceChart = function (options) {
   var self      = this,
     xScale      = d3.time.scale(),
@@ -12,10 +18,8 @@ PriceChart = function (options) {
 //this can be a function that will return whenever the state changes,
 //such as when we start loading historical data, or stop  
   self.onStateChange = null;
-   
-  type = options.type ? options.type : "line";  //default to line  	
-  
-  var div = d3.select(options.id).attr("class","priceChart"),
+       
+  var wrap, div, h, w, staticHeight,
     svg, svgEnter, gEnter, gradient, 
     hover, horizontal, focus, 
     status, details, loader,
@@ -24,10 +28,22 @@ PriceChart = function (options) {
     chartInterval, intervalSeconds, 
     multiple, lastCandle;
     
-  if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
-  if (!options.width)  options.width  = parseInt(div.style('width'), 10) - options.margin.left - options.margin.right;
-  if (!options.height) options.height = options.width/2>400 ? options.width/2 : 400;
- 
+  type = options.type ? options.type : "line";  //default to line  
+  wrap = options.id ? d3.select("#"+options.id) : d3.select("body").append("div");
+  h    = parseInt(wrap.style('height'), 10);
+  w    = parseInt(wrap.style('width'), 10); 
+  div  = wrap.append("div").attr("class","priceChart");     
+  wrap.classed("priceChartWrap");
+
+  
+  if (!options.margin)  options.margin = {top: 2, right: 60, bottom: 20, left: 60};
+  if (!options.width)   options.width  = w - options.margin.left - options.margin.right;
+  if (options.height)   staticHeight   = options.height - options.margin.top - options.margin.bottom;
+  else if (h)           staticHeight   = options.height = h - options.margin.top - options.margin.bottom;
+  else                  options.height = options.width/2>400 ? options.width/2 : 400;
+  
+  if (options.width<0) options.width  = 0; //if the div is less than the margin, we will get errors
+
   drawChart(); //have to do this here so that the details div is drawn
   
   if (options.resize && typeof addResizeListener === 'function') {
@@ -35,8 +51,8 @@ PriceChart = function (options) {
   } else {
     var padding = parseInt(details.style('padding-left'), 10)+parseInt(details.style('padding-right'), 10);
     details.style("width", (options.width-padding)+"px").style("right","auto");
-    div.style("width", (options.width+options.margin.left+options.margin.right)+"px");
-    //div.style("height",(options.height+options.margin.top+options.margin.bottom)+"px");
+    div.style("width",  (options.width+options.margin.left+options.margin.right)+"px");
+    div.style("height", ((options.height || staticHeight)+options.margin.top+options.margin.bottom)+"px");
   }
  
   
@@ -111,12 +127,13 @@ PriceChart = function (options) {
     details = div.append("div")   
       .attr("class", "chartDetails")   
       .style("left", options.margin.left+"px")
-      .style("right", options.margin.right+"px")            
+      .style("right", options.margin.right+"px")  
+      .style("top", (options.margin.top-1)+"px")          
       .style("opacity", 0);      
   
     loader = div.append("img")
       .attr("class", "loader")
-      .attr("src", "assets/images/rippleThrobber.png")
+      .attr("src", LOADER_PNG)
       .style("opacity", 0);	
       
     if (isLoading) {
@@ -130,7 +147,7 @@ PriceChart = function (options) {
     old = options.width;
     w = parseInt(div.style('width'), 10);
     options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/2>400 ? options.width/2 : 400;
+    if (!staticHeight) options.height = options.width/2>400 ? options.width/2 : 400;
     
     if (old != options.width) {
       drawChart(); 
@@ -154,14 +171,7 @@ PriceChart = function (options) {
 //set to line or candlestick  	
   this.setType = function (newType) {
     type = newType;
-
-    if (type == 'line') {
-      gEnter.select(".line").style("opacity",1); 
-      gEnter.select(".candlesticks").style("opacity",0);				
-    } else {
-      gEnter.select(".line").style("opacity",0); 
-      gEnter.select(".candlesticks").style("opacity",1);	
-    }
+    if (lineData.length) drawData(); //dont draw unless its been loaded
   };
 
 
@@ -174,15 +184,11 @@ PriceChart = function (options) {
 //load historical from API  	  	      			
   this.load = function (b, t, d) {
 
-    if (self.onStateChange) self.onStateChange("loading");
-    
-    self.fadeOut();
-    base     = b;
-    trade    = t;
+    if (!b) return setStatus("Base currency is required.");
+    if (!t) return setStatus("Counter currency is required.");
+    if (!d || !d.interval) return setStatus("Interval is required.");
+
     chartInterval = d.interval.slice(0,2);
-    multiple = d.multiple;
-    lineData = [];
-    isLoading     = true;
     
     if      (chartInterval=="se") intervalSeconds = 1;
     else if (chartInterval=="mi") intervalSeconds = 60;
@@ -190,10 +196,16 @@ PriceChart = function (options) {
     else if (chartInterval=="da") intervalSeconds = 60*60*24;
     else if (chartInterval=="we") intervalSeconds = 60*60*24*7;
     else if (chartInterval=="mo") intervalSeconds = 60*60*24*30.5; //approx
-    else {
-      //TODO: unacceptable!
-      intervalSeconds = 60*60;
-    }
+    else return setStatus("Invalid Interval");
+       
+    if (self.onStateChange) self.onStateChange("loading");
+    
+    self.fadeOut();
+    base      = b;
+    trade     = t;
+    multiple  = d.multiple || 1;
+    lineData  = [];
+    isLoading = true;
     
     intervalSeconds *= multiple;  
     lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
@@ -348,46 +360,18 @@ PriceChart = function (options) {
       setStatus("No Data for this Period");
     } else setStatus("");
 
-    if (type == 'line') {
-      gEnter.select(".line").style("opacity",1); 
-      gEnter.select(".candlesticks").style("opacity",0);				
-    } else {
-      gEnter.select(".line").style("opacity",0); 
-      gEnter.select(".candlesticks").style("opacity",1);	
-    }
-
-    var line = d3.svg.line()
-      .x(function(d) { return xScale(d.time); })
-      .y(function(d) { return priceScale(d.close); });
-    
     //aiming for around 100-200 here    
-    var num = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
-    
+    var num         = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
+    gEnter.select(".axis.price").select("text").text("Price ("+trade.currency+")");
+    gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
+        
     svg.datum(lineData, function(d){return d.time;})
       .on("mousemove", showDetails)
       .on("touchmove", showDetails);
 
-    gEnter.select(".axis.price").select("text").text("Price ("+trade.currency+")");
-    gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
-    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData, function(d){return d.time;});
-    bars.enter().append("rect"); 
-
-    // add the candlesticks.
-    var candle = gEnter.select(".candlesticks").selectAll("g")
-      .data(lineData, function(d){
-        return d.time;  
-      });
-      
-    var candleEnter = candle.enter().append("g")
-      .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; });
-    candleEnter.append("line").attr("class","extent");
-    candleEnter.append("line").attr("class", "high");
-    candleEnter.append("line").attr("class", "low");    
-    candleEnter.append("rect");	
-        
     // Update the x-scale.
     xScale
       .domain([startTime, endTime])
@@ -397,30 +381,47 @@ PriceChart = function (options) {
     volumeScale
       .domain([0, d3.max(lineData, function (d) {return d.volume})*2])
       .range([options.height, 0]);
+            
+    if (type == 'line') {
+      gEnter.select(".line").style("opacity",1); 
+      gEnter.select(".candlesticks").style("opacity",0);				
 
-    // Update the y-scale.
-    priceScale
-      .domain([
-        d3.min(lineData, function(d) { return Math.min(d.open, d.close, d.high, d.low); })*0.975,
-        d3.max(lineData, function(d) { return Math.max(d.open, d.close, d.high, d.low); })*1.025])
-      .range([options.height, 0]);
+      //update the price scale
+      priceScale
+        .domain([
+          d3.min(lineData, function(d) { return Math.min(d.close) })*0.975,
+          d3.max(lineData, function(d) { return Math.max(d.close) })*1.025])
+        .range([options.height, 0]);
+              
+    } else {
+      gEnter.select(".line").style("opacity",0); 
+      gEnter.select(".candlesticks").style("opacity",1);	
 
+      priceScale
+        .domain([
+          d3.min(lineData, function(d) { return Math.min(d.open, d.close, d.high, d.low) })*0.975,
+          d3.max(lineData, function(d) { return Math.max(d.open, d.close, d.high, d.low) })*1.025])
+        .range([options.height, 0]);
+              
+    }
+
+
+    var line = d3.svg.line()
+      .x(function(d) { return xScale(d.time); })
+      .y(function(d) { return priceScale(d.close); });
+      
     //add the price line
     gEnter.select(".line")
       .datum(lineData, function(d){return d.time;})
       .transition()
-      .attr("d", line);	
+      .attr("d", line); 
+          
 
-    //add the volume bars
-    bars.data(lineData, function(d){return d.time;})
-      .transition()
-      .attr("x", function(d){return xScale(d.time)-candleWidth/3})
-      .attr("y", function(d){return volumeScale(d.volume)})
-      .attr("width", candleWidth/1.2)
-      .attr("height", function(d){return options.height - volumeScale(d.volume)})
-      .style("fill", "url(#gradient)")
-        
-    bars.exit().remove();
+    // add the candlesticks.
+    var candle = gEnter.select(".candlesticks").selectAll("g")
+      .data(lineData, function(d){
+        return d.time;  
+      });
 
      /*
          * Candlestick rules: 
@@ -429,7 +430,14 @@ PriceChart = function (options) {
          * current.close<current.open = filled
          * current.close>current.open = hollow
      */
-                    
+          
+    var candleEnter = candle.enter().append("g")
+      .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; });
+    candleEnter.append("line").attr("class","extent");
+    candleEnter.append("line").attr("class", "high");
+    candleEnter.append("line").attr("class", "low");    
+    candleEnter.append("rect");	
+
     var candleUpdate = candle.classed("up", function(d, i) { 
       if (i>0) {
         var prev = lineData[i-1];
@@ -464,15 +472,34 @@ PriceChart = function (options) {
     d3.transition(candle.exit())
       .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; })
       .style("opacity", 1e-6).remove();
+      
+      
+    //add the volume bars
+    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData, function(d){return d.time;});
+    bars.enter().append("rect"); 
+
+    bars.data(lineData, function(d){return d.time;})
+      .transition()
+      .attr("x", function(d){return xScale(d.time)-candleWidth/3})
+      .attr("y", function(d){return volumeScale(d.volume)})
+      .attr("width", candleWidth/1.2)
+      .attr("height", function(d){return options.height - volumeScale(d.volume)})
+      .style("fill", "url(#gradient)")
+        
+    bars.exit().remove();
 
     // Update the x-axis.
-    gEnter.select(".x.axis").call(xAxis).attr("transform", "translate(0," + priceScale.range()[0] + ")")
+    gEnter.select(".x.axis").transition()
+      .call(xAxis)
+      .attr("transform", "translate(0," + priceScale.range()[0] + ")");
 
     // Update the y-axis.
-    gEnter.select(".price.axis").call(priceAxis).attr("transform", "translate(" + xScale.range()[1] + ", 0)")
-
+    gEnter.select(".price.axis").transition()
+      .call(priceAxis)
+      .attr("transform", "translate(" + xScale.range()[1] + ", 0)");
+      
     // Update the left axis.
-    gEnter.select(".volume.axis").call(volumeAxis);
+    gEnter.select(".volume.axis").transition().call(volumeAxis);
 
     //hide the loader, show the chart
     if (!isLoading) {

@@ -27,6 +27,7 @@ module.exports = function(env) {
     },
     
     api: config.api ? config.api : "",
-    mixpanel: config.mixpanel ? config.mixpanel : ""
+    mixpanel: config.mixpanel ? config.mixpanel : "",
+    domain: config.domain ? config.domain : ""
   };
 }

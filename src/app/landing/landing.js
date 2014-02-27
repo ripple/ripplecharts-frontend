@@ -30,7 +30,7 @@ angular.module( 'ripplecharts.landing', [
    
 //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
-    url            : API+"/offersExercised",  
+    url            : API,  
     id             : "topMarkets",
     fixed          : true,
     clickable      : true,

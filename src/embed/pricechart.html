@@ -7,7 +7,8 @@
     <meta charset="utf-8">
     
     <script>
-      API = "<%= api %>";  
+      API    = "<%= api %>";  
+      DOMAIN = "<%= domain %>"; 
     </script>
     
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
@@ -19,17 +20,18 @@
   <body>
     <div id="priceChart"></div>
     <script>
+      var margin = {top: 30, right: 60, bottom: 50, left: 60};
+      var width  = window.innerWidth  - margin.left - margin.right;
+      var height = window.innerHeight - margin.top  - margin.bottom;
       
-      var priceChart = new PriceChart ({
-        id     : "#priceChart",
-        url    : API,  
-        type   : "line",
-      }); 
-     
-      d3.select("body").attr("class", theme);
-      priceChart.setType(type);
-      priceChart.load(base, trade, range);
-        
+      PriceChartWidget({ 
+        id        : "priceChart", 
+        bodyTheme : true, 
+        margin    : margin, 
+        height    : height,
+        width     : width
+      }).loadFromQS();  
+           
     </script>
   </body>
 </html>    

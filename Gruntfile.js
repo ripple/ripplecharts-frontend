@@ -447,8 +447,19 @@ module.exports = function ( grunt ) {
       compile: {
         dir  : '<%= compile_dir %>/embed/',
         src  : [ 'src/embed/**/*.config.js' ]
-      }     
+      },  
+
+      build_css: {
+        dir  : '<%= build_dir %>/embed/',
+        src  : [ 'src/embed/**/*.config.js' ]
+      },
+       
+      compile_css: {
+        dir  : '<%= compile_dir %>/embed/',
+        src  : [ 'src/embed/**/*.config.js' ]
+      }                 
     },
+    
 
     /**
      * This task compiles the karma template so that changes to its file array
@@ -566,7 +577,7 @@ module.exports = function ( grunt ) {
       
       embed_less: {
         files: [ 'src/embed/**/*.less' ],
-        tasks: [ 'embed:build' ]        
+        tasks: [ 'embed:build_css' ]        
       },
 
       /**
@@ -628,7 +639,8 @@ module.exports = function ( grunt ) {
     'clean', 'html2js', 'jshint', 'coffeelint',  'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
     'copy:build_appjs', 'copy:build_vendorjs',   'index:build', 
-    'embed:build',      'karmaconfig',           'karma:continuous' 
+    'embed:build_css',  'embed:build',           
+    'karmaconfig',      'karma:continuous' 
   ]);
 
   /**
@@ -637,7 +649,7 @@ module.exports = function ( grunt ) {
    */
   grunt.registerTask( 'compile', [
     'recess:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 
-    'index:compile',  'embed:compile'
+    'index:compile',  'embed:compile_css', 'embed:compile'
   ]);
 
   /**
@@ -690,41 +702,48 @@ module.exports = function ( grunt ) {
   
 
   grunt.registerMultiTask( 'embed', 'Process embeds', function () {
-    //var dirRE = new RegExp( '^('+grunt.config('build_dir')+'|'+grunt.config('compile_dir')+')\/', 'g' );    
+    
     var type  = this.target;
     var embed = this.data.dir;   
     
     this.filesSrc.forEach(function(file){
       var config  = require("./"+file);
       var dir     = embed+config.name+"/";
-      var css     = 'stylesheet.css';
-      var jsFiles = [], cssFiles = [];
+
          
+      //compile and minify css         
+      if (type=='build_css' || type=='compile_css') {      
+
+        grunt.config.set('recess.embed_'+config.name, {
+          src: config.files.less,
+          dest: dir+'stylesheet.css',
+          options: {
+            compile       : true,
+            compress      : type=='compile_css'? true : false,
+            noUnderscores : false,
+            noIDs         : false,
+            zeroUnits     : false
+          }});
+      
+        grunt.task.run("recess:embed_"+config.name);
+        return;
+        
+      }
          
-      //copy assets
+      //copy images  NOTE: This is not sufficient for compiled scripts,
+      //because we dont want to depend on external links.
+/*       
       config.files.images.forEach(function(file) {
         var filename = file.split("/").pop();
         grunt.log.writeln('copying '+file+" to "+dir+"assets/images/"+filename);
         grunt.file.copy(file, dir+"assets/images/"+filename);
       });      
+*/      
+      var jsFiles = [], cssFiles = [];
             
-      //compile less
-      grunt.config.set('recess.embed_'+config.name, {
-        src: config.files.less,
-        dest: dir+css,
-        options: {
-          compile       : true,
-          compress      : false,
-          noUnderscores : false,
-          noIDs         : false,
-          zeroUnits     : false
-        }});
-        
-      grunt.task.run("recess:embed_"+config.name);
-      cssFiles.push(css);
-      
       if (type=="build") {
-        //copy to build/embed
+        
+        //copy files to build/embed
         config.files.js.forEach(function(file) {
           var filename = file.split("/").pop();
           grunt.log.writeln('copying '+file+" to "+dir+filename);
@@ -732,10 +751,20 @@ module.exports = function ( grunt ) {
           jsFiles.push(filename);
         });
         
+        if (config.files.less && config.files.less.length) 
+          cssFiles.push('stylesheet.css');
+          
+        if (config.files.loader) {
+          var filename = config.files.loader.split("/").pop();
+          grunt.log.writeln('copying '+config.files.loader+" to "+dir+"assets/images/"+filename);
+          grunt.file.copy(config.files.loader, dir+"assets/images/"+filename);         
+        }  
+        
       } else {
-        //compile to bin/embed
+        
+        //compile files to bin/embed
         var jsFile = dir+"script.js";
-        var files = {};
+        var files  = {};
         files[jsFile] = jsFile; //for uglify
         jsFiles.push("script.js"); //for index template;
         
@@ -759,16 +788,29 @@ module.exports = function ( grunt ) {
                    
         });
         
+        //get loader png
+        var loader = config.files.loader ? grunt.file.read(config.files.loader, {encoding:null}) : "";  
+        var banner = '<%= meta.banner %>'+
+          'var API="'+deploymentConfig.api+'";'+
+          'var DOMAIN="'+deploymentConfig.domain+'";';
+        
+        if (config.files.less && config.files.less.length) 
+          banner += 'var CSS="'+grunt.file.read(dir+"stylesheet.css")+'";';  
+          
+        if (loader)
+          banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
+        
         grunt.config.set('uglify.embed_'+config.name, {
-          options: {
-            banner: '<%= meta.banner %>'
-          },
+          options: {banner: banner},
           files:files     
         }); 
-               
+        
+
+          
         grunt.task.run('concat:embed_'+config.name);
         grunt.task.run('ngmin:embed_'+config.name);
         grunt.task.run('uglify:embed_'+config.name);
+        
       }
       
 
@@ -781,6 +823,7 @@ module.exports = function ( grunt ) {
               styles   : cssFiles,
               mixpanel : deploymentConfig.mixpanel,
               api      : deploymentConfig.api,
+              domain   : deploymentConfig.domain,
               version  : grunt.config( 'pkg.version' )              
             }
           });

@@ -208,8 +208,9 @@ var OrderBook = function (options) {
   
     details   = chart.append("div")   
       .attr("class", "chartDetails")  
-      .style("left", options.margin.left+"px")   
-      .style("right", options.margin.right+"px")           
+      .style("left",  options.margin.left+"px")   
+      .style("right", options.margin.right+"px") 
+      .style("top",   (options.margin.top-1)+"px")          
       .style("opacity", 0);  
   
     gEnter.append("rect").attr("class", "background").attr("width", options.width).attr("height", options.height);  

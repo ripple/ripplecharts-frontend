@@ -6,6 +6,7 @@ module.exports = {
   files: {
 
     html: "src/embed/pricechart.html",
+    loader: 'src/assets/images/rippleThrobber.png',
     
     js: [  
       'vendor/moment/moment.js',
@@ -19,11 +20,7 @@ module.exports = {
     less: [
       'src/less/priceChart.less',
       'src/embed/pricechart.less', 
-    ], 
-    
-    images: [
-      'src/assets/images/rippleThrobber.png'
-    ] 
+    ]
   }
 };
 
