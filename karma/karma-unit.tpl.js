@@ -15,6 +15,7 @@ module.exports = function ( karma ) {
       'src/**/*.coffee',
     ],
     exclude: [
+      'src/example.config.js',
       'src/assets/**/*.js'
     ],
     frameworks: [ 'jasmine' ],

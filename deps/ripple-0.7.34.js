@@ -56,15 +56,16 @@ var ripple =
 	exports.Transaction      = require(5).Transaction;
 	exports.Currency         = require(6).Currency;
 	exports.Base             = require(7).Base;
-	exports.UInt160          = require(3).UInt160;
-	exports.Seed             = require(3).Seed;
-	exports.Meta             = require(8).Meta;
-	exports.SerializedObject = require(9).SerializedObject;
-	exports.RippleError      = require(10).RippleError;
+	exports.UInt160          = require(8).UInt160;
+	exports.UInt256          = require(9).UInt256;
+	exports.Seed             = require(10).Seed;
+	exports.Meta             = require(11).Meta;
+	exports.SerializedObject = require(12).SerializedObject;
+	exports.RippleError      = require(13).RippleError;
 
-	exports.binformat        = require(11);
-	exports.utils            = require(12);
-	exports.Server           = require(13).Server;
+	exports.binformat        = require(14);
+	exports.utils            = require(15);
+	exports.Server           = require(16).Server;
 
 	// Important: We do not guarantee any specific version of SJCL or for any
 	// specific features to be included. The version and configuration may change at
@@ -73,9 +74,9 @@ var ripple =
 	// However, for programs that are tied to a specific version of ripple.js like
 	// the official client, it makes sense to expose the SJCL instance so we don't
 	// have to include it twice.
-	exports.sjcl   = require(12).sjcl;
+	exports.sjcl   = require(15).sjcl;
 
-	exports.config = require(14);
+	exports.config = require(17);
 
 	// camelCase to under_scored API conversion
 	function attachUnderscored(c) {
@@ -124,23 +125,24 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	// npm
-	var EventEmitter = require(26).EventEmitter;
-	var util         = require(27);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
+	var LRU          = require(44);
 	var Request      = require(2).Request;
-	var Server       = require(13).Server;
+	var Server       = require(16).Server;
 	var Amount       = require(3).Amount;
 	var Currency     = require(6).Currency;
-	var UInt160      = require(16).UInt160;
+	var UInt160      = require(8).UInt160;
 	var Transaction  = require(5).Transaction;
 	var Account      = require(4).Account;
-	var Meta         = require(8).Meta;
-	var OrderBook    = require(17).OrderBook;
-	var PathFind     = require(18).PathFind;
-	var RippleError  = require(10).RippleError;
-	var utils        = require(12);
-	var sjcl         = require(12).sjcl;
-	var config       = require(14);
+	var Meta         = require(11).Meta;
+	var OrderBook    = require(18).OrderBook;
+	var PathFind     = require(19).PathFind;
+	var RippleError  = require(13).RippleError;
+	var utils        = require(15);
+	var sjcl         = require(15).sjcl;
+	var config       = require(17);
+	var log          = require(20).internal.sub('remote');
 
 	/**
 	    Interface to manage the connection to a Ripple server.
@@ -188,14 +190,14 @@ var ripple =
 
 	  var self  = this;
 
-	  this.trusted               = Boolean(opts.trusted);
-	  this.local_sequence        = Boolean(opts.local_sequence); // Locally track sequence numbers
-	  this.local_fee             = (typeof opts.local_fee === 'undefined') ? true : Boolean(opts.local_fee); // Locally set fees
-	  this.local_signing         = (typeof opts.local_signing === 'undefined') ? true : Boolean(opts.local_signing);
-	  this.fee_cushion           = (typeof opts.fee_cushion === 'undefined') ? 1.2 : Number(opts.fee_cushion);
-	  this.max_fee               = (typeof opts.max_fee === 'undefined') ? Infinity : Number(opts.max_fee);
+	  this.trusted               = opts.trusted;
+	  this.local_sequence        = opts.local_sequence; // Locally track sequence numbers
+	  this.local_fee             = (typeof opts.local_fee === 'undefined') ? true : opts.local_fee; // Locally set fees
+	  this.local_signing         = (typeof opts.local_signing === 'undefined') ? true : opts.local_signing;
+	  this.fee_cushion           = (typeof opts.fee_cushion === 'undefined') ? 1.2 : opts.fee_cushion;
+	  this.max_fee               = (typeof opts.max_fee === 'undefined') ? Infinity : opts.max_fee;
 	  this.id                    = 0;
-	  this.trace                 = Boolean(opts.trace);
+	  this.trace                 = opts.trace;
 	  this._server_fatal         = false; // True, if we know server exited.
 	  this._ledger_current_index = void(0);
 	  this._ledger_hash          = void(0);
@@ -213,7 +215,7 @@ var ripple =
 	  this._connection_offset    = 1000 * (typeof opts.connection_offset === 'number' ? opts.connection_offset : 5)
 	  this._submission_timeout   = 1000 * (typeof opts.submission_timeout === 'number' ? opts.submission_timeout : 10)
 
-	  this._received_tx          = { };
+	  this._received_tx          = LRU({ max: 100 });
 	  this._cur_path_find        = null;
 
 	  // Local signing implies local fees and sequences
@@ -267,6 +269,50 @@ var ripple =
 	    ];
 	  }
 
+	  if (isNaN(this._connection_offset)) {
+	    throw new TypeError('Remote "connection_offset" configuration is not a Number');
+	  }
+
+	  if (isNaN(this._submission_timeout)) {
+	    throw new TypeError('Remote "submission_timeout" configuration is not a Number');
+	  }
+
+	  if (isNaN(this.max_fee)) {
+	    throw new TypeError('Remote "max_fee" configuration is not a Number');
+	  }
+
+	  if (isNaN(this.fee_cushion)) {
+	    throw new TypeError('Remote "fee_cushion" configuration is not a Number');
+	  }
+
+	  if (!/^(undefined|boolean)$/.test(typeof opts.trace)) {
+	    throw new TypeError('Remote "trace" configuration is not a Boolean');
+	  }
+
+	  if (typeof this.local_signing !== 'boolean') {
+	    throw new TypeError('Remote "local_signing" configuration is not a Boolean');
+	  }
+
+	  if (typeof this.local_fee !== 'boolean') {
+	    throw new TypeError('Remote "local_fee" configuration is not a Boolean');
+	  }
+
+	  if (typeof this.local_sequence !== 'boolean') {
+	    throw new TypeError('Remote "local_sequence" configuration is not a Boolean');
+	  }
+
+	  if (!Array.isArray(opts.servers)) {
+	    throw new TypeError('Remote "servers" configuration is not an Array');
+	  }
+
+	  if (!/^(undefined|number)$/.test(typeof opts.ping)) {
+	    throw new TypeError('Remote "ping" configuration is not a Number');
+	  }
+
+	  if (!/^(undefined|object)$/.test(typeof opts.storage)) {
+	    throw new TypeError('Remote "storage" configuration is not an Object');
+	  }
+
 	  opts.servers.forEach(function(server) {
 	    var pool = Number(server.pool) || 1;
 	    while (pool--) { self.addServer(server); };
@@ -301,17 +347,46 @@ var ripple =
 
 	  this.on('removeListener', listenerRemoved);
 
-	  function addPendingAccounts() {
-	    opts.storage.loadAccounts(function(err, accounts) {
-	      if (!err && Array.isArray(accounts)) {
-	        accounts.forEach(self.account.bind(self));
-	      }
+	  function getPendingTransactions() {
+	    self.storage.getPendingTransactions(function(err, transactions) {
+	      if (err || !Array.isArray(transactions)) return;
+
+	      var properties = [
+	        'submittedIDs',
+	        'clientID',
+	        'submitIndex'
+	      ];
+
+	      function resubmitTransaction(tx) {
+	        var transaction = self.transaction();
+	        transaction.parseJson(tx.tx_json);
+	        properties.forEach(function(prop) {
+	          if (typeof tx[prop] !== 'undefined') {
+	            transaction[prop] = tx[prop];
+	          }
+	        });
+	        transaction.submit();
+	      };
+
+	      transactions.forEach(resubmitTransaction);
 	    });
 	  };
 
 	  if (opts.storage) {
 	    this.storage = opts.storage;
-	    this.once('connect', addPendingAccounts);
+	    this.once('connect', getPendingTransactions);
+	  }
+
+	  function pingServers() {
+	    var pingRequest = self.requestPing();
+	    pingRequest.on('error', function(){});
+	    pingRequest.broadcast();
+	  };
+
+	  if (opts.ping) {
+	    this.once('connect', function() {
+	      self._pingInterval = setInterval(pingServers, opts.ping * 1000);
+	    });
 	  }
 	};
 
@@ -362,7 +437,9 @@ var ripple =
 	    }
 	  };
 
-	  Object.keys(config.accounts || {}).forEach(initializeAccount, config);
+	  if (config.accounts) {
+	    Object.keys(config.accounts).forEach(initializeAccount, config);
+	  }
 
 	  return remote;
 	};
@@ -370,11 +447,7 @@ var ripple =
 	Remote.prototype.addServer = function(opts) {
 	  var self = this;
 
-	  var server = new Server(this, {
-	    host:    opts.host || opts.websocket_ip,
-	    port:    opts.port || opts.websocket_port,
-	    secure:  opts.secure || opts.websocket_ssl
-	  });
+	  var server = new Server(this, opts);
 
 	  function serverMessage(data) {
 	    self._handleMessage(data, server);
@@ -456,7 +529,7 @@ var ripple =
 
 	Remote.prototype._trace = function() {
 	  if (this.trace) {
-	    utils.logObject.apply(utils, arguments);
+	    log.info.apply(log, arguments);
 	  }
 	};
 
@@ -570,8 +643,10 @@ var ripple =
 
 	      if (this._received_tx.hasOwnProperty(hash)) {
 	        break;
-	      } else if (message.validated) {
-	        this._received_tx[hash] = true;
+	      }
+
+	      if (message.validated) {
+	        this._received_tx.set(hash, true);
 	      }
 
 	      this._trace('remote: tx:', message);
@@ -933,13 +1008,14 @@ var ripple =
 	  return request;
 	};
 
-	Remote.accountRequest = function(type, account, accountIndex, ledger, callback) {
+	Remote.accountRequest = function(type, account, accountIndex, ledger, peer, callback) {
 	  if (typeof account === 'object') {
 	    var options  = account;
-	    callback     = account_index;
+	    callback     = accountIndex;
 	    ledger       = options.ledger;
-	    accountIndex = options.account_index;
+	    accountIndex = options.account_index || options.accountIndex;
 	    account      = options.accountID || options.account;
+	    peer         = options.peer;
 	  }
 
 	  var lastArg = arguments[arguments.length - 1];
@@ -962,6 +1038,10 @@ var ripple =
 	    request.ledgerChoose(ledger);
 	  }
 
+	  if (typeof peer !== 'undefined') {
+	    request.message.peer = UInt160.json_rewrite(peer);
+	  }
+
 	  request.callback(callback);
 
 	  return request;
@@ -979,7 +1059,7 @@ var ripple =
 
 	// --> account_index: sub_account index (optional)
 	// --> current: true, for the current ledger.
-	Remote.prototype.requestAccountLines = function(accountID, account_index, ledger, callback) {
+	Remote.prototype.requestAccountLines = function(accountID, account_index, ledger, peer, callback) {
 	  // XXX Does this require the server to be trusted?
 	  //utils.assert(this.trusted);
 	  var args = Array.prototype.concat.apply(['account_lines'], arguments);
@@ -1028,6 +1108,77 @@ var ripple =
 	  for (var key in options) {
 	    if (~requestFields.indexOf(key)) {
 	      request.message[key] = options[key];
+	    }
+	  }
+
+	  function accountTxFilter(fn) {
+	    if (typeof fn !== 'function') {
+	      throw new Error('Missing filter function');
+	    }
+
+	    var self = this;
+
+	    function filterHandler() {
+	      var listeners = self.listeners('success');
+
+	      self.removeAllListeners('success');
+
+	      self.once('success', function(res) {
+	        res.transactions = res.transactions.filter(fn);
+
+	        if (typeof options.map === 'function') {
+	          res.transactions = res.transactions.map(options.map);
+	        }
+
+	        if (typeof options.reduce === 'function') {
+	          res.transactions = res.transactions.reduce(options.reduce);
+	        }
+
+	        if (typeof options.pluck === 'string') {
+	          res = res[options.pluck];
+	        }
+
+	        listeners.forEach(function(listener) {
+	          listener.call(self, res);
+	        });
+	      });
+	    };
+
+	    this.once('request', filterHandler);
+
+	    return this;
+	  };
+
+	  request.filter = accountTxFilter;
+
+	  function propertiesFilter(obj, transaction) {
+	    var properties = Object.keys(obj);
+	    return function(transaction) {
+	      var result = properties.every(function(property) {
+	        return transaction.tx[property] === obj[property];
+	      });
+	      return result;
+	    };
+	  };
+
+	  if (!options.filter && (options.map || options.reduce)) {
+	    options.filter = Boolean;
+	  }
+
+	  if (options.filter) {
+	    switch (options.filter) {
+	      case 'inbound':
+	        request.filter(propertiesFilter({ Destination: options.account }));
+	        break;
+	      case 'outbound':
+	        request.filter(propertiesFilter({ Account: options.account }));
+	        break;
+	      default:
+	        if (typeof options.filter === 'object') {
+	          options.filter = propertiesFilter(options.filter);
+	        }
+
+	        request.filter(options.filter);
 	    }
 	  }
 
@@ -1314,7 +1465,7 @@ var ripple =
 	  var book;
 
 	  if (!this._books.hasOwnProperty(key)) {
-	    book = new OrderBook(this, currency_gets, issuer_gets, currency_pays, issuer_pays);
+	    book = new OrderBook(this, currency_gets, issuer_gets, currency_pays, issuer_pays, key);
 	    if (book.is_valid()) {
 	      this._books[key] = book;
 	    }
@@ -1667,6 +1818,7 @@ var ripple =
 	  return this._getServer().reserve(owner_count);
 	};
 
+	Remote.prototype.requestPing =
 	Remote.prototype.ping = function(host, callback) {
 	  var request = new Request(this, 'ping');
 
@@ -1701,15 +1853,15 @@ var ripple =
 /***/ 2:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(26).EventEmitter;
-	var util         = require(27);
-	var UInt160      = require(16).UInt160;
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
+	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
 	var Transaction  = require(5).Transaction;
 	var Account      = require(4).Account;
-	var Meta         = require(8).Meta;
-	var OrderBook    = require(17).OrderBook;
-	var RippleError  = require(10).RippleError;
+	var Meta         = require(11).Meta;
+	var OrderBook    = require(18).OrderBook;
+	var RippleError  = require(13).RippleError;
 
 	// Request events emitted:
 	//  'success' : Request successful.
@@ -2051,14 +2203,14 @@ var ripple =
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var utils = require(12);
+	var utils = require(15);
 	var sjcl  = utils.sjcl;
 	var bn    = sjcl.bn;
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt160  = require(16).UInt160;
-	var Seed     = require(19).Seed;
+	var UInt160  = require(8).UInt160;
+	var Seed     = require(10).Seed;
 	var Currency = require(6).Currency;
 
 	var consts = exports.consts = {
@@ -2125,8 +2277,8 @@ var ripple =
 	  return (new Amount()).parse_quality(q, c, i);
 	};
 
-	Amount.from_human = function (j) {
-	  return (new Amount()).parse_human(j);
+	Amount.from_human = function (j, opts) {
+	  return (new Amount()).parse_human(j, opts);
 	};
 
 	Amount.is_valid = function (j) {
@@ -2595,9 +2747,11 @@ var ripple =
 	 *   USD 100.40  => 100.4/USD/?
 	 *   100         => 100000000/XRP
 	 */
-	Amount.human_RE = /^\s*([a-z]{3})?\s*(-)?(\d+)(?:\.(\d*))?\s*([a-z]{3})?\s*$/i;
+	Amount.human_RE = /^\s*([a-z]{3})?\s*(-)?(\d+)(?:\.(\d*))?\s*([a-f0-9]{40}|[a-z0-9]{3})?\s*$/i;
 
-	Amount.prototype.parse_human = function (j) {
+	Amount.prototype.parse_human = function (j, opts) {
+	  opts = opts || {};
+
 	  var m = String(j).match(Amount.human_RE);
 
 	  if (m) {
@@ -2633,6 +2787,26 @@ var ripple =
 	    }
 
 	    this._is_negative = !!m[2];
+
+	    // Apply interest/demurrage
+	    if (opts.reference_date && this._currency.has_interest()) {
+	      var interest = this._currency.get_interest_at(opts.reference_date);
+
+	      // XXX Because the Amount parsing routines don't support some of the things
+	      //     that JavaScript can output when casting a float to a string, the
+	      //     following call sometimes does not produce a valid Amount.
+	      //
+	      //     The correct way to solve this is probably to switch to a proper
+	      //     BigDecimal for our internal representation and then use that across
+	      //     the board instead of instantiating these dummy Amount objects.
+	      var interestTempAmount = Amount.from_json(""+interest+"/1/1");
+
+	      if (interestTempAmount.is_valid()) {
+	        var ref = this.divide(interestTempAmount);
+	        this._value = ref._value;
+	        this._offset = ref._offset;
+	      }
+	    }
 	  } else {
 	    this._value = NaN;
 	  }
@@ -3008,7 +3182,7 @@ var ripple =
 	};
 
 	Amount.prototype.to_human_full = function (opts) {
-	  var opts = opts || {};
+	  opts = opts || {};
 	  var a = this.to_human(opts);
 	  var c = this._currency.to_human();
 	  var i = this._issuer.to_json(opts);
@@ -3104,12 +3278,12 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter       = require(26).EventEmitter;
-	var util               = require(27);
-	var extend             = require(36);
+	var EventEmitter       = require(30).EventEmitter;
+	var util               = require(31);
+	var extend             = require(37);
 	var Amount             = require(3).Amount;
-	var UInt160            = require(16).UInt160;
-	var TransactionManager = require(22).TransactionManager;
+	var UInt160            = require(8).UInt160;
+	var TransactionManager = require(21).TransactionManager;
 
 	/**
 	 * @constructor Account
@@ -3420,23 +3594,22 @@ var ripple =
 	//   forwarded anyway.
 	// - A malicous server can:
 	//   - give any proposed result.
-	//     - it may declare something correct as incorrect or something correct as incorrect.
+	//     - it may declare something correct as incorrect or something incorrect as correct.
 	//     - it may not communicate with the rest of the network.
 	//   - may or may not forward.
 	//
 
-	var EventEmitter     = require(26).EventEmitter;
-	var util             = require(27);
-	var sjcl             = require(12).sjcl;
+	var EventEmitter     = require(30).EventEmitter;
+	var util             = require(31);
+	var sjcl             = require(15).sjcl;
 	var Amount           = require(3).Amount;
 	var Currency         = require(3).Currency;
 	var UInt160          = require(3).UInt160;
-	var Seed             = require(19).Seed;
-	var SerializedObject = require(9).SerializedObject;
-	var RippleError      = require(10).RippleError;
-	var hashprefixes     = require(21);
-	var config           = require(14);
-
+	var Seed             = require(10).Seed;
+	var SerializedObject = require(12).SerializedObject;
+	var RippleError      = require(13).RippleError;
+	var hashprefixes     = require(24);
+	var config           = require(17);
 
 	function Transaction(remote) {
 	  EventEmitter.call(this);
@@ -3455,7 +3628,7 @@ var ripple =
 	  // Index at which transaction was submitted
 	  this.submitIndex         = void(0);
 
-	  this.state               = void(0);
+	  this.state               = 'unsubmitted';
 
 	  this.finalized           = false;
 
@@ -3466,6 +3639,35 @@ var ripple =
 	  // effecting the Fee amount). This should be populated with a transactionID
 	  // any time it goes on the network
 	  this.submittedIDs        = [ ]
+
+	  function finalize(message) {
+	    if (!self.finalized) {
+	      self.finalized = true;
+	      self.emit('cleanup', message);
+	    }
+	  };
+
+	  this.once('success', function(message) {
+	    finalize(message);
+	    self.setState('validated');
+	  });
+
+	  this.once('error', function(message) {
+	    finalize(message);
+
+	    var prefix = message.engine_result.substring(0, 3);
+	    var offlineError = (prefix === 'tej' && message.engine_result !== 'tejLost');
+
+	    self.setState(offlineError ? 'failed_offline' : 'failed');
+	  });
+
+	  this.once('submitted', function() {
+	    self.setState('submitted');
+	  });
+
+	  this.once('proposed', function() {
+	    self.setState('pending');
+	  });
 	};
 
 	util.inherits(Transaction, EventEmitter);
@@ -3505,7 +3707,7 @@ var ripple =
 	  }
 	};
 
-	Transaction.formats = require(11).tx;
+	Transaction.formats = require(14).tx;
 
 	Transaction.prototype.consts = {
 	  telLOCAL_ERROR:  -399,
@@ -3517,7 +3719,7 @@ var ripple =
 	};
 
 	Transaction.from_json = function(j) {
-	  return (new Transaction()).parse_json(j);
+	  return (new Transaction()).parseJson(j);
 	};
 
 	Transaction.prototype.parseJson = function(v) {
@@ -3555,8 +3757,9 @@ var ripple =
 
 	Transaction.prototype.setState = function(state) {
 	  if (this.state !== state) {
-	    this.state  = state;
+	    this.state = state;
 	    this.emit('state', state);
+	    this.emit('save');
 	  }
 	};
 
@@ -3689,7 +3892,7 @@ var ripple =
 	  if (this.submittedIDs.indexOf(hash) === -1) {
 	    this.submittedIDs.unshift(hash);
 	    this.emit('signed', hash);
-	    this.transactionManager()._pending.save();
+	    this.emit('save');
 	  }
 	};
 
@@ -4078,22 +4281,22 @@ var ripple =
 	Transaction.prototype.submit = function(callback) {
 	  var self = this;
 
-	  this.callback = typeof callback === 'function' ? callback : function(){};
+	  this.callback = (typeof callback === 'function') ? callback : function(){};
 
-	  function submissionError(error, message) {
+	  function transactionError(error, message) {
 	    if (!(error instanceof RippleError)) {
 	      error = new RippleError(error, message);
 	    }
 	    self.callback(error);
 	  };
 
-	  this.once('error', submissionError);
+	  this._errorHandler = transactionError;
 
-	  function submissionSuccess(message) {
+	  function transactionSuccess(message) {
 	    self.callback(null, message);
 	  };
 
-	  this.once('success', submissionSuccess);
+	  this._successHandler = transactionSuccess;
 
 	  this.on('error', function(){});
 
@@ -4115,9 +4318,33 @@ var ripple =
 
 	Transaction.prototype.abort = function(callback) {
 	  if (!this.finalized) {
-	    var callback = typeof callback === 'function' ? callback : function(){};
+	    var callback = (typeof callback === 'function') ? callback : function(){};
 	    this.once('final', callback);
 	    this.emit('abort');
+	  }
+	};
+
+	Transaction.prototype.iff = function(fn) {
+	  this._iff = fn;
+	};
+
+	Transaction.prototype.summary = function() {
+	  return Transaction.summary.call(this);
+	};
+
+	Transaction.summary = function() {
+	  return {
+	    tx_json: this.tx_json,
+	    sourceID: this.sourceID,
+	    submittedIDs: this.submittedIDs,
+	    submissionAttempts: this.attempts,
+	    state: this.state,
+	    server: this._server ? this._server._opts.url :  void(0),
+	    finalized: this.finalized,
+	    result: {
+	      engine_result: this.result ? this.result.engine_result: void(0),
+	      engine_result_message: this.result ? this.result.engine_result_message: void(0),
+	    }
 	  }
 	};
 
@@ -4132,11 +4359,11 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	
-	var extend    = require(36);
+	var extend    = require(37);
 
-	var UInt160 = require(16).UInt160;
-	var Float = require(20).Float;
-	var utils = require(12);
+	var UInt160 = require(8).UInt160;
+	var Float = require(22).Float;
+	var utils = require(15);
 
 	//
 	// Currency support
@@ -4326,11 +4553,13 @@ var ripple =
 
 	Currency.prototype.to_json = function () {
 	  if (!this.is_valid()) {
-	    // XXX This backwards compatible behavior, but probably not very good.
+	    // XXX This is backwards compatible behavior, but probably not very good.
 	    return "XRP";
 	  }
 
-	  if (/^[A-Z0-9]{3}$/.test(this._iso_code)) {
+	  // Any currency with standard properties and a valid code can be abbreviated
+	  // in the JSON wire format as the three character code.
+	  if (/^[A-Z0-9]{3}$/.test(this._iso_code) && !this.has_interest()) {
 	    return this._iso_code;
 	  }
 
@@ -4348,6 +4577,11 @@ var ripple =
 	};
 
 	Currency.prototype.to_human = function () {
+	  // to_human() will always print the human-readable currency code if available.
+	  if (/^[A-Z0-9]{3}$/.test(this._iso_code)) {
+	    return this._iso_code;
+	  }
+
 	  return this.to_json();
 	};
 
@@ -4361,9 +4595,9 @@ var ripple =
 /***/ 7:
 /***/ function(module, exports, require) {
 
-	var sjcl    = require(12).sjcl;
-	var utils   = require(12);
-	var extend  = require(36);
+	var sjcl    = require(15).sjcl;
+	var utils   = require(15);
+	var extend  = require(37);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4537,9 +4771,284 @@ var ripple =
 /***/ 8:
 /***/ function(module, exports, require) {
 
-	var extend  = require(36);
-	var utils   = require(12);
-	var UInt160 = require(16).UInt160;
+	var sjcl    = require(15).sjcl;
+	var utils   = require(15);
+	var config  = require(17);
+	var extend  = require(37);
+
+	var BigInteger = utils.jsbn.BigInteger;
+
+	var UInt = require(23).UInt;
+	var Base = require(7).Base;
+
+	//
+	// UInt160 support
+	//
+
+	var UInt160 = extend(function () {
+	  // Internal form: NaN or BigInteger
+	  this._value  = NaN;
+	  this._version_byte = void(0);
+
+	  this._update();
+	}, UInt);
+
+	UInt160.width = 20;
+	UInt160.prototype = extend({}, UInt.prototype);
+	UInt160.prototype.constructor = UInt160;
+
+	var ACCOUNT_ZERO = UInt160.ACCOUNT_ZERO = 'rrrrrrrrrrrrrrrrrrrrrhoLvTp';
+	var ACCOUNT_ONE  = UInt160.ACCOUNT_ONE  = 'rrrrrrrrrrrrrrrrrrrrBZbvji';
+	var HEX_ZERO     = UInt160.HEX_ZERO     = '0000000000000000000000000000000000000000';
+	var HEX_ONE      = UInt160.HEX_ONE      = '0000000000000000000000000000000000000001';
+	var STR_ZERO     = UInt160.STR_ZERO     = utils.hexToString(HEX_ZERO);
+	var STR_ONE      = UInt160.STR_ONE      = utils.hexToString(HEX_ONE);
+
+	UInt160.prototype.set_version = function (j) {
+	  this._version_byte = j;
+
+	  return this;
+	};
+
+	UInt160.prototype.get_version = function () {
+	  return this._version_byte;
+	};
+
+	// value = NaN on error.
+	UInt160.prototype.parse_json = function (j) {
+	  // Canonicalize and validate
+	  if (config.accounts && j in config.accounts) {
+	    j = config.accounts[j].account;
+	  }
+
+	  if (typeof j === 'number' && !isNaN(j)) {
+	    // Allow raw numbers - DEPRECATED
+	    // This is used mostly by the test suite and is supported
+	    // as a legacy feature only. DO NOT RELY ON THIS BEHAVIOR.
+	    this._value = new BigInteger(String(j));
+	    this._version_byte = Base.VER_ACCOUNT_ID;
+	  } else if (typeof j !== 'string') {
+	    this._value = NaN;
+	  } else if (j[0] === 'r') {
+	    this._value = Base.decode_check(Base.VER_ACCOUNT_ID, j);
+	    this._version_byte = Base.VER_ACCOUNT_ID;
+	  } else {
+	    this.parse_hex(j);
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+	UInt160.prototype.parse_generic = function (j) {
+	  UInt.prototype.parse_generic.call(this, j);
+
+	  if (isNaN(this._value)) {
+	    if ("string" === typeof j && j[0] === 'r') {
+	      this._value = Base.decode_check(Base.VER_ACCOUNT_ID, j);
+	    }
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+	// XXX Json form should allow 0 and 1, C++ doesn't currently allow it.
+	UInt160.prototype.to_json = function (opts) {
+	  opts  = opts || {};
+
+	  if (this._value instanceof BigInteger) {
+	    // If this value has a type, return a Base58 encoded string.
+	    if ("number" === typeof this._version_byte) {
+	      var output = Base.encode_check(this._version_byte, this.to_bytes());
+	      if (opts.gateways && output in opts.gateways) {
+	        output = opts.gateways[output];
+	      }
+
+	      return output;
+	    } else {
+	      return this.to_hex();
+	    }
+	  }
+	  return NaN;
+	};
+
+	exports.UInt160 = UInt160;
+
+	// vim:sw=2:sts=2:ts=8:et
+
+
+/***/ },
+
+/***/ 9:
+/***/ function(module, exports, require) {
+
+	var sjcl    = require(15).sjcl;
+	var utils   = require(15);
+	var config  = require(17);
+	var extend  = require(37);
+
+	var BigInteger = utils.jsbn.BigInteger;
+
+	var UInt = require(23).UInt,
+	    Base = require(7).Base;
+
+	//
+	// UInt256 support
+	//
+
+	var UInt256 = extend(function () {
+	  // Internal form: NaN or BigInteger
+	  this._value  = NaN;
+	}, UInt);
+
+	UInt256.width = 32;
+	UInt256.prototype = extend({}, UInt.prototype);
+	UInt256.prototype.constructor = UInt256;
+
+	var HEX_ZERO     = UInt256.HEX_ZERO = "00000000000000000000000000000000" +
+	                                      "00000000000000000000000000000000";
+	var HEX_ONE      = UInt256.HEX_ONE  = "00000000000000000000000000000000" +
+	                                      "00000000000000000000000000000001";
+	var STR_ZERO     = UInt256.STR_ZERO = utils.hexToString(HEX_ZERO);
+	var STR_ONE      = UInt256.STR_ONE = utils.hexToString(HEX_ONE);
+
+	exports.UInt256 = UInt256;
+
+
+/***/ },
+
+/***/ 10:
+/***/ function(module, exports, require) {
+
+	//
+	// Seed support
+	//
+
+	var utils   = require(15);
+	var sjcl    = utils.sjcl;
+	var extend  = require(37);
+
+	var BigInteger = utils.jsbn.BigInteger;
+
+	var Base    = require(7).Base;
+	var UInt    = require(23).UInt;
+	var UInt256 = require(9).UInt256;
+	var KeyPair = require(25).KeyPair;
+
+	var Seed = extend(function () {
+	  // Internal form: NaN or BigInteger
+	  this._curve = sjcl.ecc.curves['c256'];
+	  this._value = NaN;
+	}, UInt);
+
+	Seed.width = 16;
+	Seed.prototype = extend({}, UInt.prototype);
+	Seed.prototype.constructor = Seed;
+
+	// value = NaN on error.
+	// One day this will support rfc1751 too.
+	Seed.prototype.parse_json = function (j) {
+	  if (typeof j === 'string') {
+	    if (!j.length) {
+	      this._value = NaN;
+	    // XXX Should actually always try and continue if it failed.
+	    } else if (j[0] === "s") {
+	      this._value = Base.decode_check(Base.VER_FAMILY_SEED, j);
+	    } else if (j.length === 32) {
+	      this._value = this.parse_hex(j);
+	    // XXX Should also try 1751
+	    } else {
+	      this.parse_passphrase(j);
+	    }
+	  } else {
+	    this._value = NaN;
+	  }
+
+	  return this;
+	};
+
+	Seed.prototype.parse_passphrase = function (j) {
+	  if (typeof j !== 'string') {
+	    throw new Error("Passphrase must be a string");
+	  }
+
+	  var hash = sjcl.hash.sha512.hash(sjcl.codec.utf8String.toBits(j));
+	  var bits = sjcl.bitArray.bitSlice(hash, 0, 128);
+
+	  this.parse_bits(bits);
+
+	  return this;
+	};
+
+	Seed.prototype.to_json = function () {
+	  if (!(this._value instanceof BigInteger)) {
+	    return NaN;
+	  }
+
+	  var output = Base.encode_check(Base.VER_FAMILY_SEED, this.to_bytes());
+
+	  return output;
+	};
+
+	function append_int(a, i) {
+	  return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
+	};
+
+	function firstHalfOfSHA512(bytes) {
+	  return sjcl.bitArray.bitSlice(
+	    sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
+	    0, 256
+	  );
+	};
+
+	function SHA256_RIPEMD160(bits) {
+	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
+	};
+
+	Seed.prototype.get_key = function (account_id) {
+	  if (!this.is_valid()) {
+	    throw new Error("Cannot generate keys from invalid seed!");
+	  }
+	  // XXX Should loop over keys until we find the right one
+
+	  var private_gen, public_gen;
+	  var curve = this._curve;
+	  var seq = 0, i = 0;
+
+	  do {
+	    private_gen = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(this.to_bytes(), i)));
+	    i++;
+	  } while (!curve.r.greaterEquals(private_gen));
+
+	  public_gen = curve.G.mult(private_gen);
+
+	  var sec;
+	  i = 0;
+
+	  do {
+	    sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(public_gen.toBytesCompressed(), seq), i)));
+	    i++;
+	  } while (!curve.r.greaterEquals(sec));
+
+	  sec = sec.add(private_gen).mod(curve.r);
+
+	  return KeyPair.from_bn_secret(sec);
+	};
+
+	exports.Seed = Seed;
+
+
+/***/ },
+
+/***/ 11:
+/***/ function(module, exports, require) {
+
+	var extend  = require(37);
+	var utils   = require(15);
+	var UInt160 = require(8).UInt160;
 	var Amount  = require(3).Amount;
 
 	/**
@@ -4563,6 +5072,9 @@ var ripple =
 	      result.fieldsPrev  = an.PreviousFields || {};
 	      result.fieldsNew   = an.NewFields || {};
 	      result.fieldsFinal = an.FinalFields || {};
+
+	      // getAffectedBooks will set this
+	      // result.bookKey   = undefined;
 
 	      self.nodes.push(result);
 	    }
@@ -4690,6 +5202,11 @@ var ripple =
 
 	    var key = [ getsKey, paysKey ].join(':');
 
+	    // Hell of a lot of work, so we are going to cache this. We can use this
+	    // later to good effect in OrderBook.notify to make sure we only process
+	    // pertinent offers.
+	    an.bookKey = key;
+
 	    books.push(key);
 	  });
 
@@ -4701,16 +5218,16 @@ var ripple =
 
 /***/ },
 
-/***/ 9:
+/***/ 12:
 /***/ function(module, exports, require) {
 
-	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(11);
-	var extend     = require(36);
-	var stypes     = require(23);
-	var UInt256    = require(24).UInt256;
-	var assert     = require(28);
+	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(14);
+	var extend     = require(37);
+	var stypes     = require(26);
+	var UInt256    = require(9).UInt256;
+	var assert     = require(32);
 
-	var utils      = require(12);
+	var utils      = require(15);
 	var sjcl       = utils.sjcl;
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -5004,15 +5521,15 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}(require, require(25).Buffer))
+	/* WEBPACK VAR INJECTION */}(require, require(27).Buffer))
 
 /***/ },
 
-/***/ 10:
+/***/ 13:
 /***/ function(module, exports, require) {
 
-	var util   = require(27);
-	var extend = require(36);
+	var util   = require(31);
+	var extend = require(37);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -5045,80 +5562,278 @@ var ripple =
 
 /***/ },
 
-/***/ 11:
+/***/ 14:
 /***/ function(module, exports, require) {
+
+	/**
+	 * Data type map.
+	 *
+	 * Mapping of type ids to data types. The type id is specified by the high
+	 */
+	var TYPES_MAP = exports.types = [
+	  void(0),
+
+	  // Common
+	  'Int16',    // 1
+	  'Int32',    // 2
+	  'Int64',    // 3
+	  'Hash128',  // 4
+	  'Hash256',  // 5
+	  'Amount',   // 6
+	  'VL',       // 7
+	  'Account',  // 8
+
+	  // 9-13 reserved
+	  void(0),    // 9
+	  void(0),    // 10
+	  void(0),    // 11
+	  void(0),    // 12
+	  void(0),    // 13
+
+	  'Object',   // 14
+	  'Array',    // 15
+
+	  // Uncommon
+	  'Int8',     // 16
+	  'Hash160',  // 17
+	  'PathSet',  // 18
+	  'Vector256' // 19
+	];
+
+	/**
+	 * Field type map.
+	 *
+	 * Mapping of field type id to field type name.
+	 */
+
+	var FIELDS_MAP = exports.fields = {
+	  // Common types
+	  1: { // Int16
+	    1: 'LedgerEntryType',
+	    2: 'TransactionType'
+	  },
+	  2: { // Int32
+	    2: 'Flags',
+	    3: 'SourceTag',
+	    4: 'Sequence',
+	    5: 'PreviousTxnLgrSeq',
+	    6: 'LedgerSequence',
+	    7: 'CloseTime',
+	    8: 'ParentCloseTime',
+	    9: 'SigningTime',
+	    10: 'Expiration',
+	    11: 'TransferRate',
+	    12: 'WalletSize',
+	    13: 'OwnerCount',
+	    14: 'DestinationTag',
+	    // Skip 15
+	    16: 'HighQualityIn',
+	    17: 'HighQualityOut',
+	    18: 'LowQualityIn',
+	    19: 'LowQualityOut',
+	    20: 'QualityIn',
+	    21: 'QualityOut',
+	    22: 'StampEscrow',
+	    23: 'BondAmount',
+	    24: 'LoadFee',
+	    25: 'OfferSequence',
+	    26: 'FirstLedgerSequence',
+	    27: 'LastLedgerSequence',
+	    28: 'TransactionIndex',
+	    29: 'OperationLimit',
+	    30: 'ReferenceFeeUnits',
+	    31: 'ReserveBase',
+	    32: 'ReserveIncrement',
+	    33: 'SetFlag',
+	    34: 'ClearFlag'
+	  },
+	  3: { // Int64
+	    1: 'IndexNext',
+	    2: 'IndexPrevious',
+	    3: 'BookNode',
+	    4: 'OwnerNode',
+	    5: 'BaseFee',
+	    6: 'ExchangeRate',
+	    7: 'LowNode',
+	    8: 'HighNode'
+	  },
+	  4: { // Hash128
+	    1: 'EmailHash'
+	  },
+	  5: { // Hash256
+	    1: 'LedgerHash',
+	    2: 'ParentHash',
+	    3: 'TransactionHash',
+	    4: 'AccountHash',
+	    5: 'PreviousTxnID',
+	    6: 'LedgerIndex',
+	    7: 'WalletLocator',
+	    8: 'RootIndex',
+	    9: 'AccountTxnID',
+	    16: 'BookDirectory',
+	    17: 'InvoiceID',
+	    18: 'Nickname',
+	    19: 'Feature'
+	  },
+	  6: { // Amount
+	    1: 'Amount',
+	    2: 'Balance',
+	    3: 'LimitAmount',
+	    4: 'TakerPays',
+	    5: 'TakerGets',
+	    6: 'LowLimit',
+	    7: 'HighLimit',
+	    8: 'Fee',
+	    9: 'SendMax',
+	    16: 'MinimumOffer',
+	    17: 'RippleEscrow',
+	    18: 'DeliveredAmount'
+	  },
+	  7: { // VL
+	    1: 'PublicKey',
+	    2: 'MessageKey',
+	    3: 'SigningPubKey',
+	    4: 'TxnSignature',
+	    5: 'Generator',
+	    6: 'Signature',
+	    7: 'Domain',
+	    8: 'FundCode',
+	    9: 'RemoveCode',
+	    10: 'ExpireCode',
+	    11: 'CreateCode'
+	  },
+	  8: { // Account
+	    1: 'Account',
+	    2: 'Owner',
+	    3: 'Destination',
+	    4: 'Issuer',
+	    7: 'Target',
+	    8: 'RegularKey'
+	  },
+	  14: { // Object
+	    1: void(0),  //end of Object
+	    2: 'TransactionMetaData',
+	    3: 'CreatedNode',
+	    4: 'DeletedNode',
+	    5: 'ModifiedNode',
+	    6: 'PreviousFields',
+	    7: 'FinalFields',
+	    8: 'NewFields',
+	    9: 'TemplateEntry'
+	  },
+	  15: { // Array
+	    1: void(0),  //end of Array
+	    2: 'SigningAccounts',
+	    3: 'TxnSignatures',
+	    4: 'Signatures',
+	    5: 'Template',
+	    6: 'Necessary',
+	    7: 'Sufficient',
+	    8: 'AffectedNodes'
+	  },
+
+	  // Uncommon types
+	  16: { // Int8
+	    1: 'CloseResolution',
+	    2: 'TemplateEntryType',
+	    3: 'TransactionResult'
+	  },
+	  17: { // Hash160
+	    1: 'TakerPaysCurrency',
+	    2: 'TakerPaysIssuer',
+	    3: 'TakerGetsCurrency',
+	    4: 'TakerGetsIssuer'
+	  },
+	  18: { // PathSet
+	    1: 'Paths'
+	  },
+	  19: { // Vector256
+	    1: 'Indexes',
+	    2: 'Hashes',
+	    3: 'Features'
+	  }
+	};
+
+	var INVERSE_FIELDS_MAP = exports.fieldsInverseMap = { };
+
+	Object.keys(FIELDS_MAP).forEach(function(k1) {
+	  Object.keys(FIELDS_MAP[k1]).forEach(function(k2) {
+	    INVERSE_FIELDS_MAP[FIELDS_MAP[k1][k2]] = [ Number(k1), Number(k2) ];
+	  });
+	});
+
 
 	var REQUIRED = exports.REQUIRED = 0,
 	    OPTIONAL = exports.OPTIONAL = 1,
 	    DEFAULT  = exports.DEFAULT  = 2;
 
 	var base = [
-	  [ 'TransactionType'    , REQUIRED,  2, "Int16" ],
-	  [ 'Flags'              , OPTIONAL,  2, "Int32" ],
-	  [ 'SourceTag'          , OPTIONAL,  3, "Int32" ],
-	  [ 'Account'            , REQUIRED,  1, "Account" ],
-	  [ 'Sequence'           , REQUIRED,  4, "Int32" ],
-	  [ 'Fee'                , REQUIRED,  8, "Amount" ],
-	  [ 'OperationLimit'     , OPTIONAL, 29, "Int32" ],
-	  [ 'SigningPubKey'      , REQUIRED,  3, "VariableLength" ],
-	  [ 'TxnSignature'       , OPTIONAL,  4, "VariableLength" ]
+	  [ 'TransactionType'    , REQUIRED ],
+	  [ 'Flags'              , OPTIONAL ],
+	  [ 'SourceTag'          , OPTIONAL ],
+	  [ 'Account'            , REQUIRED ],
+	  [ 'Sequence'           , REQUIRED ],
+	  [ 'Fee'                , REQUIRED ],
+	  [ 'OperationLimit'     , OPTIONAL ],
+	  [ 'SigningPubKey'      , REQUIRED ],
+	  [ 'TxnSignature'       , OPTIONAL ]
 	];
 
 	exports.tx = {
 	  AccountSet: [3].concat(base, [
-	    [ 'EmailHash'          , OPTIONAL,  1, "Hash128" ],
-	    [ 'WalletLocator'      , OPTIONAL,  7, "Hash256" ],
-	    [ 'WalletSize'         , OPTIONAL, 12, "Int32" ],
-	    [ 'MessageKey'         , OPTIONAL,  2, "VariableLength" ],
-	    [ 'Domain'             , OPTIONAL,  7, "VariableLength" ],
-	    [ 'TransferRate'       , OPTIONAL, 11, "Int32" ]
+	    [ 'EmailHash'          , OPTIONAL ],
+	    [ 'WalletLocator'      , OPTIONAL ],
+	    [ 'WalletSize'         , OPTIONAL ],
+	    [ 'MessageKey'         , OPTIONAL ],
+	    [ 'Domain'             , OPTIONAL ],
+	    [ 'TransferRate'       , OPTIONAL ]
 	  ]),
 	  TrustSet: [20].concat(base, [
-	    [ 'LimitAmount'        , OPTIONAL,  3, "Amount" ],
-	    [ 'QualityIn'          , OPTIONAL, 20, "Int32" ],
-	    [ 'QualityOut'         , OPTIONAL, 21, "Int32" ]
+	    [ 'LimitAmount'        , OPTIONAL ],
+	    [ 'QualityIn'          , OPTIONAL ],
+	    [ 'QualityOut'         , OPTIONAL ]
 	  ]),
 	  OfferCreate: [7].concat(base, [
-	    [ 'TakerPays'          , REQUIRED,  4, "Amount" ],
-	    [ 'TakerGets'          , REQUIRED,  5, "Amount" ],
-	    [ 'Expiration'         , OPTIONAL, 10, "Int32" ]
+	    [ 'TakerPays'          , REQUIRED ],
+	    [ 'TakerGets'          , REQUIRED ],
+	    [ 'Expiration'         , OPTIONAL ]
 	  ]),
 	  OfferCancel: [8].concat(base, [
-	    [ 'OfferSequence'      , REQUIRED, 25, "Int32" ]
+	    [ 'OfferSequence'      , REQUIRED ]
 	  ]),
 	  SetRegularKey: [5].concat(base, [
-	    [ 'RegularKey'         , REQUIRED,  8, "Account" ]
+	    [ 'RegularKey'         , REQUIRED ]
 	  ]),
 	  Payment: [0].concat(base, [
-	    [ 'Destination'        , REQUIRED,  3, "Account" ],
-	    [ 'Amount'             , REQUIRED,  1, "Amount" ],
-	    [ 'SendMax'            , OPTIONAL,  9, "Amount" ],
-	    [ 'Paths'              , DEFAULT ,  1, "PathSet" ],
-	    [ 'InvoiceID'          , OPTIONAL, 17, "Hash256" ],
-	    [ 'DestinationTag'     , OPTIONAL, 14, "Int32" ]
+	    [ 'Destination'        , REQUIRED ],
+	    [ 'Amount'             , REQUIRED ],
+	    [ 'SendMax'            , OPTIONAL ],
+	    [ 'Paths'              , DEFAULT  ],
+	    [ 'InvoiceID'          , OPTIONAL ],
+	    [ 'DestinationTag'     , OPTIONAL ]
 	  ]),
 	  Contract: [9].concat(base, [
-	    [ 'Expiration'         , REQUIRED, 10, "Int32" ],
-	    [ 'BondAmount'         , REQUIRED, 23, "Int32" ],
-	    [ 'StampEscrow'        , REQUIRED, 22, "Int32" ],
-	    [ 'RippleEscrow'       , REQUIRED, 17, "Amount" ],
-	    [ 'CreateCode'         , OPTIONAL, 11, "VariableLength" ],
-	    [ 'FundCode'           , OPTIONAL,  8, "VariableLength" ],
-	    [ 'RemoveCode'         , OPTIONAL,  9, "VariableLength" ],
-	    [ 'ExpireCode'         , OPTIONAL, 10, "VariableLength" ]
+	    [ 'Expiration'         , REQUIRED ],
+	    [ 'BondAmount'         , REQUIRED ],
+	    [ 'StampEscrow'        , REQUIRED ],
+	    [ 'RippleEscrow'       , REQUIRED ],
+	    [ 'CreateCode'         , OPTIONAL ],
+	    [ 'FundCode'           , OPTIONAL ],
+	    [ 'RemoveCode'         , OPTIONAL ],
+	    [ 'ExpireCode'         , OPTIONAL ]
 	  ]),
 	  RemoveContract: [10].concat(base, [
-	    [ 'Target'             , REQUIRED,  7, "Account" ]
+	    [ 'Target'             , REQUIRED ]
 	  ]),
 	  EnableFeature: [100].concat(base, [
-	    [ 'Feature'            , REQUIRED, 19, "Hash256" ]
+	    [ 'Feature'            , REQUIRED ]
 	  ]),
 	  SetFee: [101].concat(base, [
-	    [ 'Features'           , REQUIRED,  9, "Array" ],
-	    [ 'BaseFee'            , REQUIRED,  5, "Int64" ],
-	    [ 'ReferenceFeeUnits'  , REQUIRED, 30, "Int32" ],
-	    [ 'ReserveBase'        , REQUIRED, 31, "Int32" ],
-	    [ 'ReserveIncrement'   , REQUIRED, 32, "Int32" ]
+	    [ 'Features'           , REQUIRED ],
+	    [ 'BaseFee'            , REQUIRED ],
+	    [ 'ReferenceFeeUnits'  , REQUIRED ],
+	    [ 'ReserveBase'        , REQUIRED ],
+	    [ 'ReserveIncrement'   , REQUIRED ]
 	  ])
 	};
 
@@ -5134,11 +5849,126 @@ var ripple =
 	  RippleState: [114],
 	  FeeSettings: [115]
 	};
+	/*
+	TODO:
+	Need `base` factored out
+	AccountRoot needs AccountTxnID 
+
+	{
+	    'AccountRoot': [97,
+	        ['LedgerEntryType',    REQUIRED],
+	        ['Flags',              REQUIRED],
+	        ['Sequence',           REQUIRED],
+	        ['PreviousTxnLgrSeq',  REQUIRED],
+	        ['TransferRate',       OPTIONAL],
+	        ['WalletSize',         OPTIONAL],
+	        ['OwnerCount',         REQUIRED],
+	        ['EmailHash',          OPTIONAL],
+	        ['PreviousTxnID',      REQUIRED],
+	        ['LedgerIndex',        OPTIONAL],
+	        ['WalletLocator',      OPTIONAL],
+	        ['Balance',            REQUIRED],
+	        ['MessageKey',         OPTIONAL,],
+	        ['Domain',             OPTIONAL,],
+	        ['Account',            REQUIRED],
+	        ['RegularKey',         OPTIONAL]],
+	    'Contract': [99,
+	        ['LedgerEntryType',    REQUIRED],
+	        ['Flags',              REQUIRED],
+	        ['PreviousTxnLgrSeq',  REQUIRED],
+	        ['Expiration',         REQUIRED],
+	        ['BondAmount',         REQUIRED],
+	        ['PreviousTxnID',      REQUIRED],
+	        ['LedgerIndex',        OPTIONAL],
+	        ['Balance',            REQUIRED],
+	        ['FundCode',           OPTIONAL],
+	        ['RemoveCode',         OPTIONAL],
+	        ['ExpireCode',         OPTIONAL],
+	        ['CreateCode',         OPTIONAL],
+	        ['Account',            REQUIRED],
+	        ['Owner',              REQUIRED],
+	        ['Issuer',             REQUIRED]],
+	    'DirectoryNode': [100,
+	        ['LedgerEntryType',    REQUIRED],
+	        ['Flags',              REQUIRED],
+	        ['IndexNext',          OPTIONAL],
+	        ['IndexPrevious',      OPTIONAL],
+	        ['ExchangeRate',       OPTIONAL],
+	        ['LedgerIndex',        OPTIONAL],
+	        ['RootIndex',          REQUIRED],
+	        ['Owner',              OPTIONAL],
+	        ['TakerPaysCurrency',  OPTIONAL],
+	        ['TakerPaysIssuer',    OPTIONAL],
+	        ['TakerGetsCurrency',  OPTIONAL],
+	        ['TakerGetsIssuer',    OPTIONAL],
+	        ['Indexes',            REQUIRED]],
+	    'EnabledFeatures': [102,
+	        ['LedgerEntryType',    REQUIRED],
+	        ['Flags',              REQUIRED],
+	        ['LedgerIndex',        OPTIONAL],
+	        ['Features',           REQUIRED]],
+	    'FeeSettings': [115,
+	        ['LedgerEntryType',    REQUIRED],
+	        ['Flags',              REQUIRED],
+	        ['ReferenceFeeUnits',  REQUIRED],
+	        ['ReserveBase',        REQUIRED],
+	        ['ReserveIncrement',   REQUIRED],
+	        ['BaseFee',            REQUIRED],
+	        ['LedgerIndex',        OPTIONAL]],
+	    'GeneratorMap': [103,
+	        ['LedgerEntryType',    REQUIRED],
+	        ['Flags',              REQUIRED],
+	        ['LedgerIndex',        OPTIONAL],
+	        ['Generator',          REQUIRED,]],
+	    'LedgerHashes': [104,
+	        ['LedgerEntryType',      REQUIRED],
+	        ['Flags',                REQUIRED],
+	        ['FirstLedgerSequence',  OPTIONAL],
+	        ['LastLedgerSequence',   OPTIONAL],
+	        ['LedgerIndex',          OPTIONAL],
+	        ['Hashes',               REQUIRED]],
+	    'Nickname': [110,
+	        ['LedgerEntryType',     REQUIRED],
+	        ['Flags',               REQUIRED],
+	        ['LedgerIndex',         OPTIONAL],
+	        ['MinimumOffer',        OPTIONAL],
+	        ['Account',             REQUIRED]],
+	    'Offer': [111,
+	        ['LedgerEntryType',     REQUIRED],
+	        ['Flags',               REQUIRED],
+	        ['Sequence',            REQUIRED],
+	        ['PreviousTxnLgrSeq',   REQUIRED],
+	        ['Expiration',          OPTIONAL],
+	        ['BookNode',            REQUIRED],
+	        ['OwnerNode',           REQUIRED],
+	        ['PreviousTxnID',       REQUIRED],
+	        ['LedgerIndex',         OPTIONAL],
+	        ['BookDirectory',       REQUIRED],
+	        ['TakerPays',           REQUIRED],
+	        ['TakerGets',           REQUIRED],
+	        ['Account',             REQUIRED]],
+	    'RippleState': [114,
+	        ['LedgerEntryType',     REQUIRED],
+	        ['Flags',               REQUIRED],
+	        ['PreviousTxnLgrSeq',   REQUIRED],
+	        ['HighQualityIn',       OPTIONAL],
+	        ['HighQualityOut',      OPTIONAL],
+	        ['LowQualityIn',        OPTIONAL],
+	        ['LowQualityOut',       OPTIONAL],
+	        ['LowNode',             OPTIONAL],
+	        ['HighNode',            OPTIONAL],
+	        ['PreviousTxnID',       REQUIRED],
+	        ['LedgerIndex',         OPTIONAL],
+	        ['Balance',             REQUIRED],
+	        ['LowLimit',            REQUIRED],
+	        ['HighLimit',           REQUIRED]]
+	}
+	*/
 
 	exports.metadata = [
-	  [ 'TransactionIndex'     , REQUIRED, 28, "Int32" ],
-	  [ 'TransactionResult'    , REQUIRED,  3, "Int8" ],
-	  [ 'AffectedNodes'        , REQUIRED,  8, "Array" ]
+	  [ 'TransactionIndex'     , REQUIRED ],
+	  [ 'TransactionResult'    , REQUIRED ],
+	  [ 'AffectedNodes'        , REQUIRED ]
 	];
 
 	exports.ter = {
@@ -5166,40 +5996,180 @@ var ripple =
 
 /***/ },
 
-/***/ 12:
+/***/ 15:
 /***/ function(module, exports, require) {
 
-	var exports = module.exports = require(15);
-
-	// We override this function for browsers, because they print objects nicer
-	// natively than JSON.stringify can.
-	exports.logObject = function (msg, obj) {
-	  var args = Array.prototype.slice.call(arguments, 1);
-
-	  args = args.map(function(arg) {
-	    if (/MSIE/.test(navigator.userAgent)) {
-	      return JSON.stringify(arg, null, 2);
-	    } else {
-	      return arg;
-	    }
-	  });
-
-	  args.unshift(msg);
-
-	  console.log.apply(console, args);
+	Function.prototype.method = function(name, func) {
+	  this.prototype[name] = func;
+	  return this;
 	};
+
+	function filterErr(code, done) {
+	  return function(e) {
+	    done(e.code !== code ? e : void(0));
+	  };
+	};
+
+	function throwErr(done) {
+	  return function(e) {
+	    if (e) {
+	      throw e;
+	    }
+	    done();
+	  };
+	};
+
+	function trace(comment, func) {
+	  return function() {
+	    console.log("%s: %s", trace, arguments.toString);
+	    func(arguments);
+	  };
+	};
+
+	function arraySet(count, value) {
+	  var a = new Array(count);
+
+	  for (var i=0; i<count; i++) {
+	    a[i] = value;
+	  }
+
+	  return a;
+	};
+
+	function hexToString(h) {
+	  var a = [];
+	  var i = 0;
+
+	  if (h.length % 2) {
+	    a.push(String.fromCharCode(parseInt(h.substring(0, 1), 16)));
+	    i = 1;
+	  }
+
+	  for (; i<h.length; i+=2) {
+	    a.push(String.fromCharCode(parseInt(h.substring(i, i+2), 16)));
+	  }
+
+	  return a.join('');
+	};
+
+	function stringToHex(s) {
+	  var result = '';
+	  for (var i=0; i<s.length; i++) {
+	    var b = s.charCodeAt(i);
+	    result += b < 16 ? '0' + b.toString(16) : b.toString(16);
+	  }
+	  return result;
+	};
+
+	function stringToArray(s) {
+	  var a = new Array(s.length);
+
+	  for (var i=0; i<a.length; i+=1) {
+	    a[i] = s.charCodeAt(i);
+	  }
+
+	  return a;
+	};
+
+	function hexToArray(h) {
+	  return stringToArray(hexToString(h));
+	};
+
+	function chunkString(str, n, leftAlign) {
+	  var ret = [];
+	  var i=0, len=str.length;
+
+	  if (leftAlign) {
+	    i = str.length % n;
+	    if (i) {
+	      ret.push(str.slice(0, i));
+	    }
+	  }
+
+	  for(; i<len; i+=n) {
+	    ret.push(str.slice(i, n + i));
+	  }
+
+	  return ret;
+	};
+
+	function assert(assertion, msg) {
+	  if (!assertion) {
+	    throw new Error("Assertion failed" + (msg ? ": "+msg : "."));
+	  }
+	};
+
+	/**
+	 * Return unique values in array.
+	 */
+	function arrayUnique(arr) {
+	  var u = {}, a = [];
+
+	  for (var i=0, l=arr.length; i<l; i++){
+	    var k = arr[i];
+	    if (u[k]) {
+	      continue;
+	    }
+	    a.push(k);
+	    u[k] = true;
+	  }
+
+	  return a;
+	};
+
+	/**
+	 * Convert a ripple epoch to a JavaScript timestamp.
+	 *
+	 * JavaScript timestamps are unix epoch in milliseconds.
+	 */
+	function toTimestamp(rpepoch) {
+	  return (rpepoch + 0x386D4380) * 1000;
+	};
+
+	/**
+	 * Convert a JavaScript timestamp or Date to a Ripple epoch.
+	 *
+	 * JavaScript timestamps are unix epoch in milliseconds.
+	 */
+	function fromTimestamp(rpepoch) {
+	  if (rpepoch instanceof Date) {
+	    rpepoch = rpepoch.getTime();
+	  }
+
+	  return Math.round(rpepoch/1000) - 0x386D4380;
+	};
+
+	exports.trace         = trace;
+	exports.arraySet      = arraySet;
+	exports.hexToString   = hexToString;
+	exports.hexToArray    = hexToArray;
+	exports.stringToArray = stringToArray;
+	exports.stringToHex   = stringToHex;
+	exports.chunkString   = chunkString;
+	exports.assert        = assert;
+	exports.arrayUnique   = arrayUnique;
+	exports.toTimestamp   = toTimestamp;
+	exports.fromTimestamp = fromTimestamp;
+
+	// Going up three levels is needed to escape the src-cov folder used for the
+	// test coverage stuff.
+	exports.sjcl = require(28);
+	exports.jsbn = require(29);
+
+	// vim:sw=2:sts=2:ts=8:et
 
 
 /***/ },
 
-/***/ 13:
+/***/ 16:
 /***/ function(module, exports, require) {
 
-	var util         = require(27);
-	var EventEmitter = require(26).EventEmitter;
+	var util         = require(31);
+	var EventEmitter = require(30).EventEmitter;
 	var Transaction = require(5).Transaction;
 	var Amount       = require(3).Amount;
-	var utils        = require(12);
+	var utils        = require(15);
+	var log          = require(20).internal.sub('server');
 
 	/**
 	 *  @constructor Server
@@ -5215,7 +6185,29 @@ var ripple =
 	  EventEmitter.call(this);
 
 	  if (typeof opts !== 'object') {
-	    throw new Error('Invalid server configuration.');
+	    throw new TypeError('Server configuration is not an Object');
+	  }
+
+	  if (!opts.host) opts.host     = opts.websocket_ip;
+	  if (!opts.port) opts.port     = opts.websocket_port;
+	  if (!opts.secure) opts.secure = opts.websocket_ssl;
+
+	  if (typeof opts.secure === 'undefined') {
+	    opts.secure = false;
+	  }
+
+	  var domainRE = /^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?$/;
+
+	  if (!domainRE.test(opts.host)) {
+	    throw new Error('Server host is malformed, use "host" and "port" server configuration');
+	  }
+
+	  if (isNaN(opts.port)) {
+	    throw new TypeError('Server configuration "port" is not a Number');
+	  }
+
+	  if (typeof opts.secure !== 'boolean') {
+	    throw new TypeError('Server "secure" configuration is not a Boolean');
 	  }
 
 	  var self = this;
@@ -5224,7 +6216,7 @@ var ripple =
 	  this._opts          = opts;
 	  this._host          = opts.host;
 	  this._port          = opts.port;
-	  this._secure        = (typeof opts.secure === 'boolean') ? opts.secure : true;
+	  this._secure        = opts.secure;
 	  this._ws            = void(0);
 	  this._connected     = false;
 	  this._shouldConnect = false;
@@ -5232,7 +6224,6 @@ var ripple =
 	  this._id            = 0;
 	  this._retry         = 0;
 	  this._requests      = { };
-
 	  this._load_base    = 256;
 	  this._load_factor  = 256;
 	  this._fee_ref      = 10;
@@ -5301,7 +6292,7 @@ var ripple =
 
 	Server.prototype._setState = function(state) {
 	  if (state !== this._state) {
-	    this._remote._trace('server: set_state:', state);
+	    this._remote.trace && log.info('set_state:', state);
 	    this._state = state;
 	    this.emit('state', state);
 
@@ -5341,7 +6332,7 @@ var ripple =
 	Server.websocketConstructor = function() {
 	  // We require this late, because websocket shims may be loaded after
 	  // ripple-lib in the browser
-	  return require(29);
+	  return require(33);
 	};
 
 	/**
@@ -5386,7 +6377,7 @@ var ripple =
 	  // we will automatically reconnect.
 	  if (this._connected) return;
 
-	  this._remote._trace('server: connect:', this._opts.url);
+	  this._remote.trace && log.info('connect:', this._opts.url);
 
 	  // Ensure any existing socket is given the command to close first.
 	  if (this._ws) this._ws.close();
@@ -5420,7 +6411,7 @@ var ripple =
 	    // If we are no longer the active socket, simply ignore any event
 	    if (ws === self._ws) {
 	      self.emit('socket_error');
-	      self._remote._trace('server: onerror:', self._opts.url, e.data || e);
+	      self._remote.trace && log.info('onerror:', self._opts.url, e.data || e);
 
 	      // Most connection errors for WebSockets are conveyed as 'close' events with
 	      // code 1006. This is done for security purposes and therefore unlikely to
@@ -5444,7 +6435,7 @@ var ripple =
 	  ws.onclose = function onClose() {
 	    // If we are no longer the active socket, simply ignore any event
 	    if (ws === self._ws) {
-	      self._remote._trace('server: onclose:', self._opts.url, ws.readyState);
+	      self._remote.trace && log.info('onclose:', self._opts.url, ws.readyState);
 	      self._handleClose();
 	    }
 	  };
@@ -5471,7 +6462,7 @@ var ripple =
 
 	  function connectionRetry() {
 	    if (self._shouldConnect) {
-	      self._remote._trace('server: retry', self._opts.url);
+	      self._remote.trace && log.info('retry', self._opts.url);
 	      self.connect();
 	    }
 	  };
@@ -5548,9 +6539,9 @@ var ripple =
 	      delete self._requests[message.id];
 
 	      if (!request) {
-	        this._remote._trace('server: UNEXPECTED:', self._opts.url, message);
+	        this._remote.trace && log.info('UNEXPECTED:', self._opts.url, message);
 	      } else if (message.status === 'success') {
-	        this._remote._trace('server: response:', self._opts.url, message);
+	        this._remote.trace && log.info('response:', self._opts.url, message);
 
 	        request.emit('success', message.result);
 
@@ -5558,7 +6549,7 @@ var ripple =
 	          emitter.emit('response_' + request.message.command, message.result, request, message);
 	        });
 	      } else if (message.error) {
-	        this._remote._trace('server: error:', self._opts.url, message);
+	        this._remote.trace && log.info('error:', self._opts.url, message);
 
 	        request.emit('error', {
 	          error         : 'remoteError',
@@ -5569,7 +6560,7 @@ var ripple =
 	      break;
 
 	    case 'path_find':
-	      this._remote._trace('server: path_find:', self._opts.url, message);
+	      this._remote.trace && log.info('path_find:', self._opts.url, message);
 	      break;
 
 	  }
@@ -5628,7 +6619,7 @@ var ripple =
 
 	Server.prototype.sendMessage = function(message) {
 	  if (this._ws) {
-	    this._remote._trace('server: request:', this._opts.url, message);
+	    this._remote.trace && log.info('request:', this._opts.url, message);
 	    this._ws.send(JSON.stringify(message));
 	  }
 	};
@@ -5648,7 +6639,7 @@ var ripple =
 
 	  // Only bother if we are still connected.
 	  if (!this._ws) {
-	    this._remote._trace('server: request: DROPPING:', self._opts.url, request.message);
+	    this._remote.trace && log.info('request: DROPPING:', self._opts.url, request.message);
 	    return;
 	  }
 
@@ -5761,12 +6752,12 @@ var ripple =
 
 /***/ },
 
-/***/ 14:
+/***/ 17:
 /***/ function(module, exports, require) {
 
 	// This object serves as a singleton to store config options
 
-	var extend = require(36);
+	var extend = require(37);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -5778,299 +6769,7 @@ var ripple =
 
 /***/ },
 
-/***/ 15:
-/***/ function(module, exports, require) {
-
-	Function.prototype.method = function(name, func) {
-	  this.prototype[name] = func;
-	  return this;
-	};
-
-	function filterErr(code, done) {
-	  return function(e) {
-	    done(e.code !== code ? e : void(0));
-	  };
-	};
-
-	function throwErr(done) {
-	  return function(e) {
-	    if (e) {
-	      throw e;
-	    }
-	    done();
-	  };
-	};
-
-	function trace(comment, func) {
-	  return function() {
-	    console.log("%s: %s", trace, arguments.toString);
-	    func(arguments);
-	  };
-	};
-
-	function arraySet(count, value) {
-	  var a = new Array(count);
-
-	  for (var i=0; i<count; i++) {
-	    a[i] = value;
-	  }
-
-	  return a;
-	};
-
-	function hexToString(h) {
-	  var a = [];
-	  var i = 0;
-
-	  if (h.length % 2) {
-	    a.push(String.fromCharCode(parseInt(h.substring(0, 1), 16)));
-	    i = 1;
-	  }
-
-	  for (; i<h.length; i+=2) {
-	    a.push(String.fromCharCode(parseInt(h.substring(i, i+2), 16)));
-	  }
-
-	  return a.join('');
-	};
-
-	function stringToHex(s) {
-	  var result = '';
-	  for (var i=0; i<s.length; i++) {
-	    var b = s.charCodeAt(i);
-	    result += b < 16 ? '0' + b.toString(16) : b.toString(16);
-	  }
-	  return result;
-	};
-
-	function stringToArray(s) {
-	  var a = new Array(s.length);
-
-	  for (var i=0; i<a.length; i+=1) {
-	    a[i] = s.charCodeAt(i);
-	  }
-
-	  return a;
-	};
-
-	function hexToArray(h) {
-	  return stringToArray(hexToString(h));
-	};
-
-	function chunkString(str, n, leftAlign) {
-	  var ret = [];
-	  var i=0, len=str.length;
-
-	  if (leftAlign) {
-	    i = str.length % n;
-	    if (i) {
-	      ret.push(str.slice(0, i));
-	    }
-	  }
-
-	  for(; i<len; i+=n) {
-	    ret.push(str.slice(i, n + i));
-	  }
-
-	  return ret;
-	};
-
-	function logObject(msg) {
-	  var args = Array.prototype.slice.call(arguments, 1);
-
-	  args = args.map(function(arg) {
-	    return JSON.stringify(arg, null, 2);
-	  });
-
-	  args.unshift(msg);
-
-	  console.log.apply(console, args);
-	};
-
-	function assert(assertion, msg) {
-	  if (!assertion) {
-	    throw new Error("Assertion failed" + (msg ? ": "+msg : "."));
-	  }
-	};
-
-	/**
-	 * Return unique values in array.
-	 */
-	function arrayUnique(arr) {
-	  var u = {}, a = [];
-
-	  for (var i=0, l=arr.length; i<l; i++){
-	    var k = arr[i];
-	    if (u[k]) {
-	      continue;
-	    }
-	    a.push(k);
-	    u[k] = true;
-	  }
-
-	  return a;
-	};
-
-	/**
-	 * Convert a ripple epoch to a JavaScript timestamp.
-	 *
-	 * JavaScript timestamps are unix epoch in milliseconds.
-	 */
-	function toTimestamp(rpepoch) {
-	  return (rpepoch + 0x386D4380) * 1000;
-	};
-
-	/**
-	 * Convert a JavaScript timestamp or Date to a Ripple epoch.
-	 *
-	 * JavaScript timestamps are unix epoch in milliseconds.
-	 */
-	function fromTimestamp(rpepoch) {
-	  if (rpepoch instanceof Date) {
-	    rpepoch = rpepoch.getTime();
-	  }
-
-	  return Math.round(rpepoch/1000) - 0x386D4380;
-	};
-
-	exports.trace         = trace;
-	exports.arraySet      = arraySet;
-	exports.hexToString   = hexToString;
-	exports.hexToArray    = hexToArray;
-	exports.stringToArray = stringToArray;
-	exports.stringToHex   = stringToHex;
-	exports.chunkString   = chunkString;
-	exports.logObject     = logObject;
-	exports.assert        = assert;
-	exports.arrayUnique   = arrayUnique;
-	exports.toTimestamp   = toTimestamp;
-	exports.fromTimestamp = fromTimestamp;
-
-	// Going up three levels is needed to escape the src-cov folder used for the
-	// test coverage stuff.
-	exports.sjcl = require(30);
-	exports.jsbn = require(31);
-
-	// vim:sw=2:sts=2:ts=8:et
-
-
-/***/ },
-
-/***/ 16:
-/***/ function(module, exports, require) {
-
-	var sjcl    = require(12).sjcl;
-	var utils   = require(12);
-	var config  = require(14);
-	var extend  = require(36);
-
-	var BigInteger = utils.jsbn.BigInteger;
-
-	var UInt = require(32).UInt;
-	var Base = require(7).Base;
-
-	//
-	// UInt160 support
-	//
-
-	var UInt160 = extend(function () {
-	  // Internal form: NaN or BigInteger
-	  this._value  = NaN;
-	  this._version_byte = void(0);
-
-	  this._update();
-	}, UInt);
-
-	UInt160.width = 20;
-	UInt160.prototype = extend({}, UInt.prototype);
-	UInt160.prototype.constructor = UInt160;
-
-	var ACCOUNT_ZERO = UInt160.ACCOUNT_ZERO = 'rrrrrrrrrrrrrrrrrrrrrhoLvTp';
-	var ACCOUNT_ONE  = UInt160.ACCOUNT_ONE  = 'rrrrrrrrrrrrrrrrrrrrBZbvji';
-	var HEX_ZERO     = UInt160.HEX_ZERO     = '0000000000000000000000000000000000000000';
-	var HEX_ONE      = UInt160.HEX_ONE      = '0000000000000000000000000000000000000001';
-	var STR_ZERO     = UInt160.STR_ZERO     = utils.hexToString(HEX_ZERO);
-	var STR_ONE      = UInt160.STR_ONE      = utils.hexToString(HEX_ONE);
-
-	UInt160.prototype.set_version = function (j) {
-	  this._version_byte = j;
-
-	  return this;
-	};
-
-	UInt160.prototype.get_version = function () {
-	  return this._version_byte;
-	};
-
-	// value = NaN on error.
-	UInt160.prototype.parse_json = function (j) {
-	  // Canonicalize and validate
-	  if (config.accounts && j in config.accounts) {
-	    j = config.accounts[j].account;
-	  }
-
-	  if (typeof j === 'number' && !isNaN(j)) {
-	    // Allow raw numbers - DEPRECATED
-	    // This is used mostly by the test suite and is supported
-	    // as a legacy feature only. DO NOT RELY ON THIS BEHAVIOR.
-	    this._value = new BigInteger(String(j));
-	    this._version_byte = Base.VER_ACCOUNT_ID;
-	  } else if (typeof j !== 'string') {
-	    this._value = NaN;
-	  } else if (j[0] === 'r') {
-	    this._value = Base.decode_check(Base.VER_ACCOUNT_ID, j);
-	    this._version_byte = Base.VER_ACCOUNT_ID;
-	  } else {
-	    this.parse_hex(j);
-	  }
-
-	  this._update();
-
-	  return this;
-	};
-
-	UInt160.prototype.parse_generic = function (j) {
-	  UInt.prototype.parse_generic.call(this, j);
-
-	  if (isNaN(this._value)) {
-	    if ("string" === typeof j && j[0] === 'r') {
-	      this._value = Base.decode_check(Base.VER_ACCOUNT_ID, j);
-	    }
-	  }
-
-	  this._update();
-
-	  return this;
-	};
-
-	// XXX Json form should allow 0 and 1, C++ doesn't currently allow it.
-	UInt160.prototype.to_json = function (opts) {
-	  opts  = opts || {};
-
-	  if (this._value instanceof BigInteger) {
-	    // If this value has a type, return a Base58 encoded string.
-	    if ("number" === typeof this._version_byte) {
-	      var output = Base.encode_check(this._version_byte, this.to_bytes());
-	      if (opts.gateways && output in opts.gateways) {
-	        output = opts.gateways[output];
-	      }
-
-	      return output;
-	    } else {
-	      return this.to_hex();
-	    }
-	  }
-	  return NaN;
-	};
-
-	exports.UInt160 = UInt160;
-
-	// vim:sw=2:sts=2:ts=8:et
-
-
-/***/ },
-
-/***/ 17:
+/***/ 18:
 /***/ function(module, exports, require) {
 
 	// Routines for working with an orderbook.
@@ -6083,14 +6782,14 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter = require(26).EventEmitter;
-	var util         = require(27);
-	var extend       = require(36);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
+	var extend       = require(37);
 	var Amount       = require(3).Amount;
-	var UInt160      = require(16).UInt160;
+	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
 
-	function OrderBook(remote, currency_gets, issuer_gets, currency_pays, issuer_pays) {
+	function OrderBook(remote, currency_gets, issuer_gets, currency_pays, issuer_pays, key) {
 	  EventEmitter.call(this);
 
 	  var self            = this;
@@ -6101,6 +6800,7 @@ var ripple =
 	  this._currency_pays = currency_pays;
 	  this._issuer_pays   = issuer_pays;
 	  this._subs          = 0;
+	  this._key           = key;
 
 	  // We consider ourselves synchronized if we have a current copy of the offers,
 	  // we are online and subscribed to updates.
@@ -6262,7 +6962,7 @@ var ripple =
 	  var trade_pays = this.trade('pays');
 
 	  function handleTransaction(an) {
-	    if (an.entryType !== 'Offer') return;
+	    if (an.entryType !== 'Offer' || an.bookKey !== self._key) return;
 
 	    var i, l, offer;
 
@@ -6277,6 +6977,8 @@ var ripple =
 	            if (deletedNode) {
 	              self._offers.splice(i, 1);
 	            } else {
+	              // TODO: This assumes no fields are deleted, which is probably a
+	              // safe assumption, but should be checked.
 	              extend(offer, an.fieldsFinal);
 	            }
 	            changed = true;
@@ -6370,13 +7072,13 @@ var ripple =
 
 /***/ },
 
-/***/ 18:
+/***/ 19:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(26).EventEmitter;
-	var util         = require(27);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
 	var Amount       = require(3).Amount;
-	var extend       = require(36);
+	var extend       = require(37);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -6463,130 +7165,619 @@ var ripple =
 
 /***/ },
 
-/***/ 19:
+/***/ 20:
 /***/ function(module, exports, require) {
 
-	//
-	// Seed support
-	//
+	var exports = module.exports = require(34);
 
-	var utils   = require(12);
-	var sjcl    = utils.sjcl;
-	var extend  = require(36);
+	/**
+	 * Log engine for browser consoles.
+	 *
+	 * Browsers tend to have better consoles that support nicely formatted
+	 * JavaScript objects. This connector passes objects through to the logging
+	 * function without any stringification.
+	 */
+	var InteractiveLogEngine = {
+	  logObject: function (msg, obj) {
+	    var args = Array.prototype.slice.call(arguments, 1);
 
-	var BigInteger = utils.jsbn.BigInteger;
+	    args = args.map(function(arg) {
+	      if (/MSIE/.test(navigator.userAgent)) {
+	        return JSON.stringify(arg, null, 2);
+	      } else {
+	        return arg;
+	      }
+	    });
 
-	var Base    = require(7).Base;
-	var UInt    = require(32).UInt;
-	var UInt256 = require(24).UInt256;
-	var KeyPair = require(33).KeyPair;
+	    args.unshift(msg);
 
-	var Seed = extend(function () {
-	  // Internal form: NaN or BigInteger
-	  this._curve = sjcl.ecc.curves['c256'];
-	  this._value = NaN;
-	}, UInt);
-
-	Seed.width = 16;
-	Seed.prototype = extend({}, UInt.prototype);
-	Seed.prototype.constructor = Seed;
-
-	// value = NaN on error.
-	// One day this will support rfc1751 too.
-	Seed.prototype.parse_json = function (j) {
-	  if (typeof j === 'string') {
-	    if (!j.length) {
-	      this._value = NaN;
-	    // XXX Should actually always try and continue if it failed.
-	    } else if (j[0] === "s") {
-	      this._value = Base.decode_check(Base.VER_FAMILY_SEED, j);
-	    } else if (j.length === 32) {
-	      this._value = this.parse_hex(j);
-	    // XXX Should also try 1751
-	    } else {
-	      this.parse_passphrase(j);
-	    }
-	  } else {
-	    this._value = NaN;
+	    console.log.apply(console, args);
 	  }
-
-	  return this;
 	};
 
-	Seed.prototype.parse_passphrase = function (j) {
-	  if (typeof j !== 'string') {
-	    throw new Error("Passphrase must be a string");
-	  }
-
-	  var hash = sjcl.hash.sha512.hash(sjcl.codec.utf8String.toBits(j));
-	  var bits = sjcl.bitArray.bitSlice(hash, 0, 128);
-
-	  this.parse_bits(bits);
-
-	  return this;
-	};
-
-	Seed.prototype.to_json = function () {
-	  if (!(this._value instanceof BigInteger)) {
-	    return NaN;
-	  }
-
-	  var output = Base.encode_check(Base.VER_FAMILY_SEED, this.to_bytes());
-
-	  return output;
-	};
-
-	function append_int(a, i) {
-	  return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
-	};
-
-	function firstHalfOfSHA512(bytes) {
-	  return sjcl.bitArray.bitSlice(
-	    sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
-	    0, 256
-	  );
-	};
-
-	function SHA256_RIPEMD160(bits) {
-	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
-	};
-
-	Seed.prototype.get_key = function (account_id) {
-	  if (!this.is_valid()) {
-	    throw new Error("Cannot generate keys from invalid seed!");
-	  }
-	  // XXX Should loop over keys until we find the right one
-
-	  var private_gen, public_gen;
-	  var curve = this._curve;
-	  var seq = 0, i = 0;
-
-	  do {
-	    private_gen = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(this.to_bytes(), i)));
-	    i++;
-	  } while (!curve.r.greaterEquals(private_gen));
-
-	  public_gen = curve.G.mult(private_gen);
-
-	  var sec;
-	  i = 0;
-
-	  do {
-	    sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(public_gen.toBytesCompressed(), seq), i)));
-	    i++;
-	  } while (!curve.r.greaterEquals(sec));
-
-	  sec = sec.add(private_gen).mod(curve.r);
-
-	  return KeyPair.from_bn_secret(sec);
-	};
-
-	exports.Seed = Seed;
+	if (window.console && window.console.log) {
+	  exports.Log.engine = InteractiveLogEngine;
+	}
 
 
 /***/ },
 
-/***/ 20:
+/***/ 21:
+/***/ function(module, exports, require) {
+
+	var util         = require(31);
+	var EventEmitter = require(30).EventEmitter;
+	var Transaction  = require(5).Transaction;
+	var RippleError  = require(13).RippleError;
+	var PendingQueue = require(35).TransactionQueue;
+
+	/**
+	 * @constructor TransactionManager
+	 * @param {Account} account
+	 */
+
+	function TransactionManager(account) {
+	  EventEmitter.call(this);
+
+	  var self = this;
+
+	  this._account           = account;
+	  this._accountID         = account._account_id;
+	  this._remote            = account._remote;
+	  this._nextSequence      = void(0);
+	  this._maxFee            = this._remote.max_fee;
+	  this._submissionTimeout = this._remote._submission_timeout;
+	  this._pending           = new PendingQueue;
+
+	  // Query remote server for next account sequence number
+	  this._loadSequence();
+
+	  function transactionReceived(res) {
+	    var transaction = TransactionManager.normalizeTransaction(res);
+	    var sequence    = transaction.transaction.Sequence;
+	    var hash        = transaction.transaction.hash;
+
+	    if (!transaction.validated) return;
+
+	    self._pending.addReceivedSequence(sequence);
+
+	    // ND: we need to check against all submissions IDs
+	    var submission = self._pending.getSubmission(hash);
+
+	    self._remote._trace('transactionmanager: transaction_received:', transaction.transaction);
+
+	    if (submission) {
+	      // ND: A `success` handler will `finalize` this later
+	      submission.emit('success', transaction);
+	    } else {
+	      self._pending.addReceivedId(hash, transaction);
+	    }
+	  };
+
+	  this._account.on('transaction-outbound', transactionReceived);
+
+	  function adjustFees(loadData, server) {
+	    // ND: note, that `Fee` is a component of a transactionID
+	    self._pending.forEach(function(pending) {
+	      var shouldAdjust = pending._server === server
+	      && self._remote.local_fee && pending.tx_json.Fee;
+
+	      if (!shouldAdjust) return;
+
+	      var oldFee = pending.tx_json.Fee;
+	      var newFee = server.computeFee(pending);
+
+	      if (Number(newFee) > self._maxFee) {
+	        return pending.once('presubmit', function() {
+	          pending.emit('error', 'tejMaxFeeExceeded');
+	        });
+	      }
+
+	      pending.tx_json.Fee = newFee;
+	      pending.emit('fee_adjusted', oldFee, newFee);
+
+	      self._remote._trace('transactionmanager: adjusting_fees:', pending.tx_json, oldFee, newFee);
+	    });
+	  };
+
+	  this._remote.on('load_changed', adjustFees);
+
+	  function updatePendingStatus(ledger) {
+	    self._pending.forEach(function(pending) {
+	      switch (ledger.ledger_index - pending.submitIndex) {
+	        case 8:
+	          pending.emit('lost', ledger);
+	          self._remote._trace('transactionmanager: update_pending:', pending.tx_json);
+	          break;
+	        case 4:
+	          pending.emit('missing', ledger);
+	          break;
+	      }
+	    });
+	  };
+
+	  this._remote.on('ledger_closed', updatePendingStatus);
+
+	  function remoteReconnected(callback) {
+	    var callback = (typeof callback === 'function') ? callback : function(){};
+
+	    if (!self._pending.length) {
+	      return callback();
+	    }
+
+	    //Load account transaction history
+	    var options = {
+	      account: self._accountID,
+	      ledger_index_min: -1,
+	      ledger_index_max: -1,
+	      limit: 100,
+	      filter: 'outbound'
+	    }
+
+	    function accountTx(err, transactions) {
+	      if (!err && Array.isArray(transactions.transactions)) {
+	        transactions.transactions.forEach(transactionReceived);
+	      }
+
+	      self._remote.on('ledger_closed', updatePendingStatus);
+
+	      //Load next transaction sequence
+	      self._loadSequence(function sequenceLoaded() {
+	        self._resubmit();
+	      });
+
+	      callback();
+	    };
+
+	    self._remote.requestAccountTx(options, accountTx);
+
+	    self.emit('reconnect');
+	  };
+
+	  function remoteDisconnected() {
+	    self._remote.once('connect', remoteReconnected);
+	    self._remote.removeListener('ledger_closed', updatePendingStatus);
+	  };
+
+	  this._remote.on('disconnect', remoteDisconnected);
+
+	  function saveTransaction(transaction) {
+	    self._remote.storage.saveTransaction(transaction.summary());
+	  };
+
+	  if (this._remote.storage) {
+	    this.on('save', saveTransaction);
+	  }
+	};
+
+	util.inherits(TransactionManager, EventEmitter);
+
+	//Normalize transactions received from account
+	//transaction stream and account_tx
+	TransactionManager.normalizeTransaction = function(tx) {
+	  var transaction = tx;
+
+	  if (!tx.engine_result) {
+	    // account_tx
+	    transaction = {
+	      engine_result:  tx.meta.TransactionResult,
+	      transaction:    tx.tx,
+	      hash:           tx.tx.hash,
+	      ledger_index:   tx.tx.ledger_index,
+	      meta:           tx.meta,
+	      type:           'transaction',
+	      validated:      true
+	    }
+	    transaction.result         = transaction.engine_result;
+	    transaction.result_message = transaction.engine_result_message;
+	  }
+
+	  transaction.metadata = transaction.meta;
+
+	  if (!transaction.tx_json) {
+	    transaction.tx_json = transaction.transaction;
+	  }
+
+	  return transaction;
+	};
+
+	//Fill an account transaction sequence
+	TransactionManager.prototype._fillSequence = function(tx, callback) {
+	  var self = this;
+
+	  function submitFill(sequence, callback) {
+	    var fill = self._remote.transaction();
+	    fill.account_set(self._accountID);
+	    fill.tx_json.Sequence = sequence;
+	    fill.once('submitted', callback);
+	    fill.submit();
+	  };
+
+	  function sequenceLoaded(err, sequence) {
+	    if (typeof sequence !== 'number') {
+	      callback(new Error('Failed to fetch account transaction sequence'));
+	    } else {
+	      submitFill(tx.tx_json.Sequence, callback);
+	    }
+	  };
+
+	  this._loadSequence(sequenceLoaded);
+	};
+
+	TransactionManager.prototype._loadSequence = function(callback) {
+	  var self = this;
+
+	  function sequenceLoaded(err, sequence) {
+	    if (typeof sequence === 'number') {
+	      self._nextSequence = sequence;
+	      self.emit('sequence_loaded', sequence);
+	      if (typeof callback === 'function') {
+	        callback(err, sequence);
+	      }
+	    } else {
+	      setTimeout(function() {
+	        self._loadSequence(callback);
+	      }, 1000 * 3);
+	    }
+	  };
+
+	  this._account.getNextSequence(sequenceLoaded);
+	};
+
+	TransactionManager.prototype._resubmit = function(ledgers, pending) {
+	  var self = this;
+	  var pending = pending ? [ pending ] : this._pending;
+	  var ledgers = Number(ledgers) || 0;
+
+	  function resubmitTransaction(pending) {
+	    if (!pending || pending.finalized) {
+	      // Transaction has been finalized, nothing to do
+	      return;
+	    }
+
+	    var hashCached = pending.findId(self._pending._idCache);
+
+	    self._remote._trace('transactionmanager: resubmit:', pending.tx_json);
+
+	    if (hashCached) {
+	      return pending.emit('success', hashCached);
+	    }
+
+	    while (self._pending.hasSequence(pending.tx_json.Sequence)) {
+	      //Sequence number has been consumed by another transaction
+	      pending.tx_json.Sequence += 1;
+	      self._remote._trace('transactionmanager: incrementing sequence:', pending.tx_json);
+	    }
+
+	    self._request(pending);
+	  };
+
+	  function resubmitTransactions() {
+	    ;(function nextTransaction(i) {
+	      var transaction = pending[i];
+
+	      if (!(transaction instanceof Transaction)) return;
+
+	      transaction.once('submitted', function(m) {
+	        transaction.emit('resubmitted', m);
+
+	        self._loadSequence();
+
+	        if (++i < pending.length) {
+	          nextTransaction(i);
+	        }
+	      });
+
+	      resubmitTransaction(transaction);
+	    })(0);
+	  };
+
+	  this._waitLedgers(ledgers, resubmitTransactions);
+	};
+
+	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
+	  if (ledgers < 1) return callback();
+
+	  var self = this;
+	  var closes = 0;
+
+	  function ledgerClosed() {
+	    if (++closes === ledgers) {
+	      self._remote.removeListener('ledger_closed', ledgerClosed);
+	      callback();
+	    }
+	  };
+
+	  this._remote.on('ledger_closed', ledgerClosed);
+	};
+
+	TransactionManager.prototype._request = function(tx) {
+	  var self   = this;
+	  var remote = this._remote;
+
+	  if (tx.attempts > 10) {
+	    return tx.emit('error', new RippleError('tejAttemptsExceeded'));
+	  }
+
+	  if (tx.attempts > 0 && !remote.local_signing) {
+	    // && tx.submittedTxnIDs.length != tx.attempts
+	    // ^^^ Above commented out intentionally
+	    //  ^^^^ We might be a bit cleverer about allowing this in SOME cases, but
+	    // it's not really worth it, and would be prone to error. Use
+	    // `local_signing`
+
+	    var message = ''
+	    + 'It is not possible to resubmit transactions automatically safely without '
+	    + 'synthesizing the transactionID locally. See `local_signing` config option';
+
+	    return tx.emit('error', new RippleError('tejLocalSigningRequired', message));
+	  }
+
+	  tx.emit('presubmit');
+
+	  tx.submitIndex = this._remote._ledger_current_index;
+	  tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
+
+	  var submitRequest = remote.requestSubmit();
+
+	  if (remote.local_signing) {
+	    tx.sign();
+	    // TODO: We are serializing twice, when we could/should be feeding the
+	    // tx_blob to `tx.hash()` which rebuilds it to sign it.
+	    submitRequest.tx_blob(tx.serialize().to_hex());
+
+	    // ND: ecdsa produces a random `TxnSignature` field value, a component of
+	    // the hash. Attempting to identify a transaction via a hash synthesized
+	    // locally while using remote signing is inherently flawed.
+	    tx.addId(tx.hash());
+	  } else {
+	    // ND: `build_path` is completely ignored when doing local signing as
+	    // `Paths` is a component of the signed blob, the `tx_blob` is signed,
+	    // sealed and delivered, and the txn unmodified.
+	    // TODO: perhaps an exception should be raised if build_path is attempted
+	    // while local signing
+	    submitRequest.build_path(tx._build_path);
+	    submitRequest.secret(tx._secret);
+	    submitRequest.tx_json(tx.tx_json);
+	  }
+
+	  remote._trace('transactionmanager: submit:', tx.tx_json);
+
+	  function transactionProposed(message) {
+	    // If server is honest, don't expect a final if rejected.
+	    message.rejected = tx.isRejected(message.engine_result_code);
+	    tx.emit('proposed', message);
+	  };
+
+	  function transactionFailed(message) {
+	    self._fillSequence(tx, function() {
+	      switch (message.engine_result) {
+	        case 'tefPAST_SEQ':
+	          self._resubmit(1, tx);
+	          break;
+	        default:
+	          tx.emit('error', message);
+	      }
+	    });
+	  };
+
+	  function transactionRetry(message) {
+	    self._resubmit(1, tx);
+	  };
+
+	  function transactionFeeClaimed(message) {
+	    tx.emit('error', message);
+	  };
+
+	  function submissionError(error) {
+	    // Finalized (e.g. aborted) transactions must stop all activity
+	    if (tx.finalized) return;
+
+	    if (TransactionManager._isTooBusy(error)) {
+	      self._resubmit(1, tx);
+	    } else {
+	      self._nextSequence--;
+	      tx.emit('error', error);
+	    }
+	  };
+
+	  function submitted(message) {
+	    // Finalized (e.g. aborted) transactions must stop all activity
+	    if (tx.finalized) return;
+
+	    // ND: If for some unknown reason our hash wasn't computed correctly this is
+	    // an extra measure.
+	    if (message.tx_json && message.tx_json.hash) {
+	      tx.addId(message.tx_json.hash);
+	    }
+
+	    message.result = message.engine_result || '';
+
+	    tx.result = message;
+
+	    remote._trace('transactionmanager: submit_response:', message);
+
+	    tx.emit('submitted', message);
+
+	    switch (message.result.slice(0, 3)) {
+	      case 'tes':
+	        transactionProposed(message);
+	        break;
+	      case 'tec':
+	        transactionFeeClaimed(message);
+	        break;
+	      case 'ter':
+	        transactionRetry(message);
+	        break;
+	      case 'tef':
+	        transactionFailed(message);
+	        break;
+	      default:
+	        //tel, tem
+	        submissionError(message);
+	    }
+	  };
+
+	  submitRequest.once('error', submitted);
+	  submitRequest.once('success', submitted);
+
+	  if (tx._server) {
+	    submitRequest.server = tx._server;
+	  }
+
+	  if (typeof tx._iff !== 'function') {
+	    submitTransaction();
+	  } else {
+	    return tx._iff(tx.summary(), function(err, proceed) {
+	      if (err || !proceed) {
+	        tx.emit('abort');
+	      } else {
+	        submitTransaction();
+	      }
+	    });
+	  }
+
+	  function requestTimeout() {
+	    // ND: What if the response is just slow and we get a response that
+	    // `submitted` above will cause to have concurrent resubmit logic streams?
+	    // It's simpler to just mute handlers and look out for finalized
+	    // `transaction` messages.
+
+	    // ND: We should audit the code for other potential multiple resubmit
+	    // streams. Connection/reconnection could be one? That's why it's imperative
+	    // that ALL transactionIDs sent over network are tracked.
+
+	    // Finalized (e.g. aborted) transactions must stop all activity
+	    if (tx.finalized) return;
+
+	    tx.emit('timeout');
+
+	    if (remote._connected) {
+	      remote._trace('transactionmanager: timeout:', tx.tx_json);
+	      self._resubmit(3, tx);
+	    }
+	  };
+
+	  function submitTransaction() {
+	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
+	    submitRequest.request();
+	    tx.attempts++;
+	    tx.emit('save', tx.summary());
+	    tx.emit('postsubmit');
+	  };
+
+	  return submitRequest;
+	};
+
+	TransactionManager._isNoOp = function(transaction) {
+	  return (typeof transaction === 'object')
+	      && (typeof transaction.tx_json === 'object')
+	      && (transaction.tx_json.TransactionType === 'AccountSet')
+	      && (transaction.tx_json.Flags === 0);
+	};
+
+	TransactionManager._isRemoteError = function(error) {
+	  return (typeof error === 'object')
+	      && (error.error === 'remoteError')
+	      && (typeof error.remote === 'object');
+	};
+
+	TransactionManager._isNotFound = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
+	};
+
+	TransactionManager._isTooBusy = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && (error.remote.error === 'tooBusy');
+	};
+
+	/**
+	 * Entry point for TransactionManager submission
+	 *
+	 * @param {Object} tx
+	 */
+
+	TransactionManager.prototype.submit = function(tx) {
+	  var self = this;
+
+	  // If sequence number is not yet known, defer until it is.
+	  if (typeof this._nextSequence === 'undefined') {
+	    function sequenceLoaded() {
+	      self.submit(tx);
+	    };
+	    this.once('sequence_loaded', sequenceLoaded);
+	    return;
+	  }
+
+	  // Finalized (e.g. aborted) transactions must stop all activity
+	  if (tx.finalized) return;
+
+	  if (typeof tx.tx_json.Sequence !== 'number') {
+	    tx.tx_json.Sequence = this._nextSequence++;
+	  }
+
+	  function cleanup(message) {
+	    // ND: We can just remove this `tx` by identity
+	    self._pending.remove(tx);
+	    tx.emit('final', message);
+	    tx.emit('save');
+	    remote._trace('transactionmanager: finalize_transaction:', tx.tx_json);
+	  };
+
+	  tx.once('cleanup', cleanup);
+
+	  tx.on('save', function() {
+	    self.emit('save', tx);
+	  });
+
+	  tx.once('error', function(message) {
+	    tx._errorHandler(message);
+	  });
+
+	  tx.once('success', function(message) {
+	    tx._successHandler(message);
+	  });
+
+	  tx.once('abort', function() {
+	    tx.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
+	  });
+
+	  if (typeof tx.clientID === 'string') {
+	    tx.sourceID = [ this._accountID, tx.clientID ].join(':');
+	  }
+
+	  tx.attempts = 0;
+
+	  // Attach secret, associate transaction with a server, attach fee
+	  tx.complete();
+
+	  var fee = Number(tx.tx_json.Fee);
+	  var remote = this._remote;
+
+	  if (!tx._secret && !tx.tx_json.TxnSignature) {
+	    tx.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
+	  } else if (!remote.trusted && !remote.local_signing) {
+	    tx.emit('error', new RippleError('tejServerUntrusted', 'Attempt to give secret to untrusted server'));
+	  } else if (fee && fee > this._maxFee) {
+	    tx.emit('error', new RippleError('tejMaxFeeExceeded', 'Max fee exceeded'));
+	  } else {
+	    // ND: this is the ONLY place we put the tx into the queue. The
+	    // TransactionQueue queue is merely a list, so any mutations to tx._hash
+	    // will cause subsequent look ups (eg. inside 'transaction-outbound'
+	    // validated transaction clearing) to fail.
+	    this._pending.push(tx);
+	    this._request(tx);
+	    tx.emit('save');
+	  }
+	};
+
+	exports.TransactionManager = TransactionManager;
+
+
+/***/ },
+
+/***/ 22:
 /***/ function(module, exports, require) {
 
 	/**
@@ -6649,7 +7840,307 @@ var ripple =
 
 /***/ },
 
-/***/ 21:
+/***/ 23:
+/***/ function(module, exports, require) {
+
+	var utils   = require(15);
+	var sjcl    = utils.sjcl;
+	var config  = require(17);
+
+	var BigInteger = utils.jsbn.BigInteger;
+
+	var Base = require(7).Base;
+
+	//
+	// Abstract UInt class
+	//
+	// Base class for UInt??? classes
+	//
+
+	var UInt = function () {
+	  // Internal form: NaN or BigInteger
+	  this._value  = NaN;
+
+	  this._update();
+	};
+
+	UInt.json_rewrite = function (j, opts) {
+	  return this.from_json(j).to_json(opts);
+	};
+
+	// Return a new UInt from j.
+	UInt.from_generic = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_generic(j);
+	  }
+	};
+
+	// Return a new UInt from j.
+	UInt.from_hex = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_hex(j);
+	  }
+	};
+
+	// Return a new UInt from j.
+	UInt.from_json = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_json(j);
+	  }
+	};
+
+	// Return a new UInt from j.
+	UInt.from_bits = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_bits(j);
+	  }
+	};
+
+	// Return a new UInt from j.
+	UInt.from_bytes = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_bytes(j);
+	  }
+	};
+
+	// Return a new UInt from j.
+	UInt.from_bn = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_bn(j);
+	  }
+	};
+
+	// Return a new UInt from j.
+	UInt.from_number = function (j) {
+	  if (j instanceof this) {
+	    return j.clone();
+	  } else {
+	    return (new this()).parse_number(j);
+	  }
+	};
+
+	UInt.is_valid = function (j) {
+	  return this.from_json(j).is_valid();
+	};
+
+	UInt.prototype.clone = function () {
+	  return this.copyTo(new this.constructor());
+	};
+
+	// Returns copy.
+	UInt.prototype.copyTo = function (d) {
+	  d._value = this._value;
+
+	  if ("function" === typeof d._update) d._update();
+
+	  return d;
+	};
+
+	UInt.prototype.equals = function (d) {
+	  return this._value instanceof BigInteger && d._value instanceof BigInteger && this._value.equals(d._value);
+	};
+
+	UInt.prototype.is_valid = function () {
+	  return this._value instanceof BigInteger;
+	};
+
+	UInt.prototype.is_zero = function () {
+	  return this._value.equals(BigInteger.ZERO);
+	};
+
+	/**
+	 * Update any derivative values.
+	 *
+	 * This allows subclasses to maintain caches of any data that they derive from
+	 * the main _value. For example, the Currency class keeps the currency type, the
+	 * currency code and other information about the currency cached.
+	 *
+	 * The reason for keeping this mechanism in this class is so every subclass can
+	 * call it whenever it modifies the internal state.
+	 */
+	UInt.prototype._update = function () {
+	  // Nothing to do by default. Subclasses will override this.
+	};
+
+	// value = NaN on error.
+	UInt.prototype.parse_generic = function (j) {
+	  // Canonicalize and validate
+	  if (config.accounts && j in config.accounts)
+	    j = config.accounts[j].account;
+
+	  switch (j) {
+	  case undefined:
+	  case "0":
+	  case this.constructor.STR_ZERO:
+	  case this.constructor.ACCOUNT_ZERO:
+	  case this.constructor.HEX_ZERO:
+	    this._value  = BigInteger.valueOf();
+	    break;
+
+	  case "1":
+	  case this.constructor.STR_ONE:
+	  case this.constructor.ACCOUNT_ONE:
+	  case this.constructor.HEX_ONE:
+	    this._value  = new BigInteger([1]);
+
+	    break;
+
+	  default:
+	    if ('string' !== typeof j) {
+		    this._value  = NaN;
+	    }
+	    else if (this.constructor.width === j.length) {
+		    this._value  = new BigInteger(utils.stringToArray(j), 256);
+	    }
+	    else if ((this.constructor.width*2) === j.length) {
+		    // XXX Check char set!
+		    this._value  = new BigInteger(j, 16);
+	    }
+	    else {
+		    this._value  = NaN;
+	    }
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+	UInt.prototype.parse_hex = function (j) {
+	  if ('string' === typeof j &&
+	      j.length === (this.constructor.width * 2)) {
+	    this._value  = new BigInteger(j, 16);
+	  } else {
+	    this._value  = NaN;
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+	UInt.prototype.parse_bits = function (j) {
+	  if (sjcl.bitArray.bitLength(j) !== this.constructor.width * 8) {
+	    this._value = NaN;
+	  } else {
+	    var bytes = sjcl.codec.bytes.fromBits(j);
+	    this.parse_bytes(bytes);
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+
+	UInt.prototype.parse_bytes = function (j) {
+	  if (!Array.isArray(j) || j.length !== this.constructor.width) {
+		this._value = NaN;
+	  } else {
+		  this._value  = new BigInteger([0].concat(j), 256);
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+
+	UInt.prototype.parse_json = UInt.prototype.parse_hex;
+
+	UInt.prototype.parse_bn = function (j) {
+	  if (j instanceof sjcl.bn &&
+	      j.bitLength() <= this.constructor.width * 8) {
+	    var bytes = sjcl.codec.bytes.fromBits(j.toBits());
+		  this._value  = new BigInteger(bytes, 256);
+	  } else {
+	    this._value = NaN;
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+	UInt.prototype.parse_number = function (j) {
+	  this._value = NaN;
+
+	  if ("number" === typeof j &&
+	      j === +j &&
+	      j > 0) {
+	    // XXX Better, faster way to get BigInteger from JS int?
+	    this._value = new BigInteger(""+j);
+	  }
+
+	  this._update();
+
+	  return this;
+	};
+
+	// Convert from internal form.
+	UInt.prototype.to_bytes = function () {
+	  if (!(this._value instanceof BigInteger))
+	    return null;
+
+	  var bytes  = this._value.toByteArray();
+	  bytes = bytes.map(function (b) { return (b+256) % 256; });
+	  var target = this.constructor.width;
+
+	  // XXX Make sure only trim off leading zeros.
+	  bytes = bytes.slice(-target);
+	  while (bytes.length < target) bytes.unshift(0);
+
+	  return bytes;
+	};
+
+	UInt.prototype.to_hex = function () {
+	  if (!(this._value instanceof BigInteger))
+	    return null;
+
+	  var bytes = this.to_bytes();
+	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(bytes)).toUpperCase();
+	};
+
+	UInt.prototype.to_json = UInt.prototype.to_hex;
+
+	UInt.prototype.to_bits = function () {
+	  if (!(this._value instanceof BigInteger))
+	    return null;
+
+	  var bytes = this.to_bytes();
+
+	  return sjcl.codec.bytes.toBits(bytes);
+	};
+
+	UInt.prototype.to_bn = function () {
+	  if (!(this._value instanceof BigInteger))
+	    return null;
+
+	  var bits = this.to_bits();
+
+	  return sjcl.bn.fromBits(bits);
+	};
+
+	exports.UInt = UInt;
+
+	// vim:sw=2:sts=2:ts=8:et
+
+
+/***/ },
+
+/***/ 24:
 /***/ function(module, exports, require) {
 
 	/**
@@ -6679,569 +8170,110 @@ var ripple =
 
 /***/ },
 
-/***/ 22:
+/***/ 25:
 /***/ function(module, exports, require) {
 
-	var util         = require(27);
-	var EventEmitter = require(26).EventEmitter;
-	var Transaction  = require(5).Transaction;
-	var RippleError  = require(10).RippleError;
-	var PendingQueue = require(34).TransactionQueue;
+	var sjcl    = require(15).sjcl;
 
-	/**
-	 * @constructor TransactionManager
-	 * @param {Account} account
-	 */
+	var UInt160 = require(8).UInt160;
+	var UInt256 = require(9).UInt256;
+	var Base    = require(7).Base;
 
-	function TransactionManager(account) {
-	  EventEmitter.call(this);
-
-	  var self = this;
-
-	  this._account           = account;
-	  this._accountID         = account._account_id;
-	  this._remote            = account._remote;
-	  this._nextSequence      = void(0);
-	  this._maxFee            = this._remote.max_fee;
-	  this._submissionTimeout = this._remote._submission_timeout;
-	  this._pending           = new PendingQueue;
-
-	  // Query remote server for next account sequence number
-	  this._loadSequence();
-
-	  function transactionReceived(res) {
-	    var transaction = TransactionManager.normalizeTransaction(res);
-	    var sequence    = transaction.transaction.Sequence;
-	    var hash        = transaction.transaction.hash;
-
-	    if (!transaction.validated) return;
-
-	    self._pending.addReceivedSequence(sequence);
-
-	    // ND: we need to check against all submissions IDs
-	    var submission = self._pending.getSubmission(hash);
-
-	    self._remote._trace('transactionmanager: transaction_received:', transaction.transaction);
-
-	    if (submission) {
-	      // ND: A `success` handler will `finalize` this later
-	      submission.emit('success', transaction);
-	    } else {
-	      self._pending.addReceivedId(hash, transaction);
-	    }
-	  };
-
-	  this._account.on('transaction-outbound', transactionReceived);
-
-	  function adjustFees(loadData, server) {
-	    // ND: note, that `Fee` is a component of a transactionID
-	    self._pending.forEach(function(pending) {
-	      var shouldAdjust = pending._server === server
-	      && self._remote.local_fee && pending.tx_json.Fee;
-
-	      if (shouldAdjust) {
-	        var oldFee = pending.tx_json.Fee;
-	        var newFee = server.computeFee(pending);
-
-	        pending.tx_json.Fee = newFee;
-	        pending.emit('fee_adjusted', oldFee, newFee);
-
-	        self._remote._trace('transactionmanager: adjusting_fees:', pending.tx_json, oldFee, newFee);
-	      }
-	    });
-	  };
-
-	  this._remote.on('load_changed', adjustFees);
-
-	  function updatePendingStatus(ledger) {
-	    self._pending.forEach(function(pending) {
-	      pending.lastLedger = ledger;
-	      switch (ledger.ledger_index - pending.submitIndex) {
-	        case 8:
-	          pending.emit('lost', ledger);
-	          self._remote._trace('transactionmanager: update_pending:', pending.tx_json);
-	          break;
-
-	        case 4:
-	          pending.setState('client_missing');
-	          pending.emit('missing', ledger);
-	          break;
-	      }
-	    });
-	  };
-
-	  this._remote.on('ledger_closed', updatePendingStatus);
-
-	  function remoteReconnected(callback) {
-	    //Load account transaction history
-	    var options = {
-	      account: self._accountID,
-	      ledger_index_min: -1,
-	      ledger_index_max: -1,
-	      limit: 100
-	    }
-
-	    self._remote.requestAccountTx(options, function(err, transactions) {
-	      if (!err && transactions.transactions) {
-	        transactions.transactions.forEach(transactionReceived);
-	      }
-
-	      self._remote.on('ledger_closed', updatePendingStatus);
-
-	      //Load next transaction sequence
-	      self._loadSequence(function sequenceLoaded() {
-	        self._resubmit();
-	      });
-
-	      if (typeof callback === 'function') {
-	        callback();
-	      }
-	    });
-
-	    self.emit('reconnect');
-	  };
-
-	  function remoteDisconnected() {
-	    self._remote.once('connect', remoteReconnected);
-	    self._remote.removeListener('ledger_closed', updatePendingStatus);
-	  };
-
-	  this._remote.on('disconnect', remoteDisconnected);
-
-	  function resendPending() {
-	    self._remote.storage.loadAccount(self._accountID, function(err, data) {
-	      if (err || !data) return;
-
-	      (data || [ ]).forEach(function(tx) {
-	        var transaction = self._remote.transaction();
-	        transaction.parseJson(tx.tx_json);
-	        transaction.submittedIDs = tx.submittedIDs;
-	        self.submit(transaction);
-	      });
-	    });
-	  };
-
-	  function savePending(pending) {
-	    // Save the current state of the pending transaction list
-	    self._remote.storage.saveAccount(self._accountID, pending);
-	  };
-
-	  if (this._remote.storage) {
-	    remoteReconnected(resendPending);
-	    this._pending._save = savePending;
-	  }
+	function KeyPair() {
+	  this._curve  = sjcl.ecc.curves['c256'];
+	  this._secret = null;
+	  this._pubkey = null;
 	};
 
-	util.inherits(TransactionManager, EventEmitter);
-
-	//Normalize transactions received from account
-	//transaction stream and account_tx
-	TransactionManager.normalizeTransaction = function(tx) {
-	  var transaction = tx;
-
-	  if (!tx.engine_result) {
-	    // account_tx
-	    transaction = {
-	      engine_result:  tx.meta.TransactionResult,
-	      transaction:    tx.tx,
-	      hash:           tx.tx.hash,
-	      ledger_index:   tx.tx.ledger_index,
-	      meta:           tx.meta,
-	      type:           'transaction',
-	      validated:      true
-	    }
-	    transaction.result         = transaction.engine_result;
-	    transaction.result_message = transaction.engine_result_message;
-	  }
-
-	  transaction.metadata = transaction.meta;
-
-	  if (!transaction.tx_json) {
-	    transaction.tx_json = transaction.transaction;
-	  }
-
-	  return transaction;
+	KeyPair.from_bn_secret = function (j) {
+	  return j instanceof this ? j.clone() : (new this()).parse_bn_secret(j);
 	};
 
-	//Fill an account transaction sequence
-	TransactionManager.prototype._fillSequence = function(tx, callback) {
-	  var self = this;
-
-	  function submitFill(sequence, callback) {
-	    var fill = self._remote.transaction();
-	    fill.account_set(self._accountID);
-	    fill.tx_json.Sequence = sequence;
-	    fill.once('submitted', callback);
-	    fill.submit();
-	  };
-
-	  function sequenceLoaded(err, sequence) {
-	    if (typeof sequence !== 'number') {
-	      callback(new Error('Failed to fetch account transaction sequence'));
-	      return;
-	    }
-
-	    var sequenceDif = tx.tx_json.Sequence - sequence;
-	    var submitted = 0;
-
-	    for (var i=sequence; i<tx.tx_json.Sequence; i++) {
-	      submitFill(i, function() {
-	        if (++submitted === sequenceDif) {
-	          callback();
-	        }
-	      });
-	    }
-	  };
-
-	  this._loadSequence(sequenceLoaded);
-	};
-
-	TransactionManager.prototype._loadSequence = function(callback) {
-	  var self = this;
-
-	  function sequenceLoaded(err, sequence) {
-	    if (typeof sequence === 'number') {
-	      self._nextSequence = sequence;
-	      self.emit('sequence_loaded', sequence);
-	      if (typeof callback === 'function') {
-	        callback(err, sequence);
-	      }
-	    } else {
-	      setTimeout(function() {
-	        self._loadSequence(callback);
-	      }, 1000 * 3);
-	    }
-	  };
-
-	  this._account.getNextSequence(sequenceLoaded);
-	};
-
-	TransactionManager.prototype._resubmit = function(ledgers, pending) {
-	  var self = this;
-	  var pending = pending ? [ pending ] : this._pending;
-	  var ledgers = Number(ledgers) || 0;
-
-	  function resubmitTransaction(pending) {
-	    if (!pending || pending.finalized) {
-	      // Transaction has been finalized, nothing to do
-	      return;
-	    }
-
-	    var hashCached = pending.findId(self._pending._idCache);
-
-	    self._remote._trace('transactionmanager: resubmit:', pending.tx_json);
-
-	    if (hashCached) {
-	      return pending.emit('success', hashCached);
-	    }
-
-	    while (self._pending.hasSequence(pending.tx_json.Sequence)) {
-	      //Sequence number has been consumed by another transaction
-	      self._remote._trace('transactionmanager: incrementing sequence:', pending.tx_json);
-	      pending.tx_json.Sequence += 1;
-	    }
-
-	    self._request(pending);
-	  };
-
-	  function resubmitTransactions() {
-	    ;(function nextTransaction(i) {
-	      var transaction = pending[i];
-
-	      if (!(transaction instanceof Transaction)) return;
-
-	      transaction.once('submitted', function(m) {
-	        transaction.emit('resubmitted', m);
-
-	        self._loadSequence();
-
-	        if (++i < pending.length) {
-	          nextTransaction(i);
-	        }
-	      });
-
-	      resubmitTransaction(transaction);
-	    })(0);
-	  };
-
-	  this._waitLedgers(ledgers, resubmitTransactions);
-	};
-
-	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
-	  if (ledgers < 1) {
-	    return callback();
-	  }
-
-	  var self = this;
-	  var closes = 0;
-
-	  function ledgerClosed() {
-	    if (++closes === ledgers) {
-	      callback();
-	      self._remote.removeListener('ledger_closed', ledgerClosed);
-	    }
-	  };
-
-	  this._remote.on('ledger_closed', ledgerClosed);
-	};
-
-	TransactionManager.prototype._request = function(tx) {
-	  var self   = this;
-	  var remote = this._remote;
-
-	  if (tx.attempts > 10) {
-	    return tx.emit('error', new RippleError('tejAttemptsExceeded'));
-	  }
-
-	  if (tx.attempts > 0 && !remote.local_signing) {
-	    // && tx.submittedTxnIDs.length != tx.attempts
-	    // ^^^ Above commented out intentionally
-	    //  ^^^^ We might be a bit cleverer about allowing this in SOME cases, but
-	    // it's not really worth it, and would be prone to error. Use
-	    // `local_signing`
-
-	    var message = ''
-	    + 'It is not possible to resubmit transactions automatically safely without '
-	    + 'synthesizing the transactionID locally. See `local_signing` config option';
-
-	    return tx.emit('error', new RippleError('tejLocalSigning', message));
-	  }
-
-	  var submitRequest = remote.requestSubmit();
-
-	  if (remote.local_signing) {
-	    tx.sign();
-	    // TODO: We are serializing twice, when we could/should be feeding the
-	    // tx_blob to `tx.hash()` which rebuilds it to sign it.
-	    submitRequest.tx_blob(tx.serialize().to_hex());
-	    // ND: ecdsa produces a random `TxnSignature` field value, a component of
-	    // the hash. Attempting to identify a transaction via a hash synthesized
-	    // locally while using remote signing is inherently flawed.
-	    tx.addId(tx.hash());
-	  } else {
-	    // ND: `build_path` is completely ignored when doing local signing as
-	    // `Paths` is a component of the signed blob, the `tx_blob` is signed,
-	    // sealed and delivered, and the txn unmodified.
-	    // TODO: perhaps an exception should be raised if build_path is attempted
-	    // while local signing
-	    submitRequest.build_path(tx._build_path);
-	    submitRequest.secret(tx._secret);
-	    submitRequest.tx_json(tx.tx_json);
-	  }
-
-	  remote._trace('transactionmanager: submit:', tx.tx_json);
-
-	  function transactionProposed(message) {
-	    tx.setState('client_proposed');
-	    // If server is honest, don't expect a final if rejected.
-	    message.rejected = tx.isRejected(message.engine_result_code)
-	    tx.emit('proposed', message);
-	  };
-
-	  function transactionFailed(message) {
-	    switch (message.engine_result) {
-	      case 'tefPAST_SEQ':
-	        self._resubmit(3, tx);
-	        break;
-	      default:
-	        tx.emit('error', message);
-	    }
-	  };
-
-	  function transactionRetry(message) {
-	    if (TransactionManager._isNoOp(tx)) {
-	      self._resubmit(1, tx);
-	    } else {
-	      self._fillSequence(tx, function() {
-	        self._resubmit(1, tx);
-	      });
-	    }
-	  };
-
-	  function transactionFeeClaimed(message) {
-	    tx.emit('error', message);
-	  };
-
-	  function submissionError(error) {
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) return;
-
-	    if (TransactionManager._isTooBusy(error)) {
-	      self._resubmit(1, tx);
-	    } else {
-	      self._nextSequence--;
-	      tx.setState('remoteError');
-	      tx.emit('error', error);
-	    }
-	  };
-
-	  function submitted(message) {
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) return;
-
-	    // ND: If for some unknown reason our hash wasn't computed correctly this is
-	    // an extra measure.
-	    if (message.tx_json && message.tx_json.hash) {
-	      tx.addId(message.tx_json.hash);
-	    }
-
-	    message.result = message.engine_result || '';
-
-	    remote._trace('transactionmanager: submit_response:', message);
-
-	    tx.emit('submitted', message);
-
-	    switch (message.result.slice(0, 3)) {
-	      case 'tes':
-	        transactionProposed(message);
-	        break;
-	      case 'tec':
-	        transactionFeeClaimed(message);
-	        break;
-	      case 'ter':
-	        transactionRetry(message);
-	        break;
-	      case 'tef':
-	        transactionFailed(message);
-	        break;
-	      default:
-	        //tel, tem
-	        submissionError(message);
-	    }
-	  };
-
-	  submitRequest.timeout(this._submissionTimeout, function requestTimeout() {
-	    // ND: What if the response is just slow and we get a response that
-	    // `submitted` above will cause to have concurrent resubmit logic streams?
-	    // It's simpler to just mute handlers and look out for finalized
-	    // `transaction` messages.
-
-	    // ND: We should audit the code for other potential multiple resubmit
-	    // streams. Connection/reconnection could be one? That's why it's imperative
-	    // that ALL transactionIDs sent over network are tracked.
-
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) return;
-
-	    tx.emit('timeout');
-
-	    if (remote._connected) {
-	      remote._trace('transactionmanager: timeout:', tx.tx_json);
-	      self._resubmit(3, tx);
-	    }
-	  });
-
-	  submitRequest.once('error', submitted);
-	  submitRequest.once('success', submitted);
-
-	  if (tx._server) {
-	    submitRequest.server = tx._server;
-	  }
-
-	  submitRequest.request();
-
-	  tx.setState('client_submitted');
-	  tx.attempts++;
-
-	  return submitRequest;
-	};
-
-	TransactionManager._isNoOp = function(transaction) {
-	  return (typeof transaction === 'object')
-	      && (typeof transaction.tx_json === 'object')
-	      && (transaction.tx_json.TransactionType === 'AccountSet')
-	      && (transaction.tx_json.Flags === 0);
-	};
-
-	TransactionManager._isRemoteError = function(error) {
-	  return (typeof error === 'object')
-	      && (error.error === 'remoteError')
-	      && (typeof error.remote === 'object');
-	};
-
-	TransactionManager._isNotFound = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
-	};
-
-	TransactionManager._isTooBusy = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && (error.remote.error === 'tooBusy');
+	KeyPair.prototype.parse_bn_secret = function (j) {
+	  this._secret = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves['c256'], j);
+	  return this;
 	};
 
 	/**
-	 * Entry point for TransactionManager submission
+	 * Returns public key as sjcl public key.
 	 *
-	 * @param {Object} tx
+	 * @private
 	 */
+	KeyPair.prototype._pub = function () {
+	  var curve = this._curve;
 
-	TransactionManager.prototype.submit = function(tx) {
-	  var self = this;
-
-	  // If sequence number is not yet known, defer until it is.
-	  if (typeof this._nextSequence === 'undefined') {
-	    function sequenceLoaded() {
-	      self.submit(tx);
-	    };
-	    this.once('sequence_loaded', sequenceLoaded);
-	    return;
+	  if (!this._pubkey && this._secret) {
+	    var exponent = this._secret._exponent;
+	    this._pubkey = new sjcl.ecc.ecdsa.publicKey(curve, curve.G.mult(exponent));
 	  }
 
-	  // Finalized (e.g. aborted) transactions must stop all activity
-	  if (tx.finalized) return;
-
-	  if (typeof tx.tx_json.Sequence !== 'number') {
-	    tx.tx_json.Sequence = this._nextSequence++;
-	  }
-
-	  tx.submitIndex = this._remote._ledger_current_index;
-	  //tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
-	  tx.lastLedger  = void(0);
-	  tx.attempts    = 0;
-	  tx.complete();
-
-	  function finalize(message) {
-	    if (!tx.finalized) {
-	      // ND: We can just remove this `tx` by identity
-	      self._pending.remove(tx);
-	      remote._trace('transactionmanager: finalize_transaction:', tx.tx_json);
-	      tx.finalized = true;
-	      tx.emit('final', message);
-	    }
-	  };
-
-	  tx.on('error', finalize);
-	  tx.once('success', finalize);
-
-	  tx.once('abort', function() {
-	    tx.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
-	  });
-
-	  var fee = Number(tx.tx_json.Fee);
-	  var remote = this._remote;
-
-	  if (!tx._secret && !tx.tx_json.TxnSignature) {
-	    tx.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
-	  } else if (!remote.trusted && !remote.local_signing) {
-	    tx.emit('error', new RippleError('tejServerUntrusted', 'Attempt to give secret to untrusted server'));
-	  } else if (fee && fee > this._maxFee) {
-	    tx.emit('error', new RippleError('tejMaxFeeExceeded', 'Max fee exceeded'));
-	  } else {
-	    // ND: this is the ONLY place we put the tx into the queue. The
-	    // TransactionQueue queue is merely a list, so any mutations to tx._hash
-	    // will cause subsequent look ups (eg. inside 'transaction-outbound'
-	    // validated transaction clearing) to fail.
-	    this._pending.push(tx);
-	    this._request(tx);
-	  }
+	  return this._pubkey;
 	};
 
-	exports.TransactionManager = TransactionManager;
+	/**
+	 * Returns public key in compressed format as bit array.
+	 *
+	 * @private
+	 */
+	KeyPair.prototype._pub_bits = function () {
+	  var pub = this._pub();
+
+	  if (!pub) {
+	    return null;
+	  }
+
+	  var point = pub._point, y_even = point.y.mod(2).equals(0);
+
+	  return sjcl.bitArray.concat(
+	    [sjcl.bitArray.partial(8, y_even ? 0x02 : 0x03)],
+	    point.x.toBits(this._curve.r.bitLength())
+	  );
+	};
+
+	/**
+	 * Returns public key as hex.
+	 *
+	 * Key will be returned as a compressed pubkey - 33 bytes converted to hex.
+	 */
+	KeyPair.prototype.to_hex_pub = function () {
+	  var bits = this._pub_bits();
+
+	  if (!bits) {
+	    return null;
+	  }
+
+	  return sjcl.codec.hex.fromBits(bits).toUpperCase();
+	};
+
+	function SHA256_RIPEMD160(bits) {
+	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
+	}
+
+	KeyPair.prototype.get_address = function () {
+	  var bits = this._pub_bits();
+
+	  if (!bits) {
+	    return null;
+	  }
+
+	  var hash = SHA256_RIPEMD160(bits);
+
+	  var address = UInt160.from_bits(hash);
+	  address.set_version(Base.VER_ACCOUNT_ID);
+	  return address;
+	};
+
+	KeyPair.prototype.sign = function (hash) {
+	  var hash = UInt256.from_json(hash);
+	  return this._secret.signDER(hash.to_bits(), 0);
+	};
+
+	exports.KeyPair = KeyPair;
 
 
 /***/ },
 
-/***/ 23:
+/***/ 26:
 /***/ function(module, exports, require) {
 
 	/**
@@ -7252,15 +8284,15 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert    = require(28);
-	var extend    = require(36);
-	var binformat = require(11);
-	var utils     = require(12);
+	var assert    = require(32);
+	var extend    = require(37);
+	var binformat = require(14);
+	var utils     = require(15);
 	var sjcl      = utils.sjcl;
 
-	var UInt128   = require(43).UInt128;
-	var UInt160   = require(16).UInt160;
-	var UInt256   = require(24).UInt256;
+	var UInt128   = require(46).UInt128;
+	var UInt160   = require(8).UInt160;
+	var UInt256   = require(9).UInt256;
 	var Base      = require(7).Base;
 
 	var amount    = require(3);
@@ -7648,7 +8680,7 @@ var ripple =
 
 	STAmount.id = 6;
 
-	var STVL = exports.VariableLength = new SerializedType({
+	var STVL = exports.VariableLength = exports.VL = new SerializedType({
 	  serialize: function (so, val) {
 	    if (typeof val === 'string') {
 	      serialize_hex(so, val);
@@ -7808,7 +8840,7 @@ var ripple =
 
 	var STVector256 = exports.Vector256 = new SerializedType({
 	  serialize: function (so, val) { //Assume val is an array of STHash256 objects.
-	    var length_as_varint = SerializedType.serialize_varint(so, val.length);
+	    var length_as_varint = SerializedType.serialize_varint(so, val.length * 32);
 	    for (var i=0, l=val.length; i<l; i++) {
 	      STHash256.serialize(so, val[i]);
 	    }
@@ -7816,7 +8848,8 @@ var ripple =
 	  parse: function (so) {
 	    var length = this.parse_varint(so);
 	    var output = [];
-	    for (var i=0; i<length; i++) {
+	    // length is number of bytes not number of Hash256
+	    for (var i=0; i<length / 32; i++) {
 	      output.push(STHash256.parse(so));
 	    }
 	    return output;
@@ -7831,7 +8864,7 @@ var ripple =
 	  //so: a byte-stream to serialize into.
 	  //field_name: a string for the field name ('LedgerEntryType' etc.)
 	  //value: the value of that field.
-	  var field_coordinates = INVERSE_FIELDS_MAP[field_name];
+	  var field_coordinates = binformat.fieldsInverseMap[field_name];
 	  var type_bits         = field_coordinates[0];
 	  var field_bits        = field_coordinates[1];
 	  var tag_byte          = (type_bits < 16 ? type_bits << 4 : 0) | (field_bits < 16 ? field_bits : 0);
@@ -7854,7 +8887,8 @@ var ripple =
 	    STInt8.serialize(so, field_bits);
 	  }
 
-	  var serialized_object_type = TYPES_MAP[type_bits];
+	  // Get the serializer class (ST...) for a field based on the type bits.
+	  var serialized_object_type = exports[binformat.types[type_bits]];
 	  //do something with val[keys] and val[keys[i]];
 	  serialized_object_type.serialize(so, value);
 	}
@@ -7870,14 +8904,15 @@ var ripple =
 	    type_bits = so.read(1)[0];
 	  }
 
-	  var type = TYPES_MAP[type_bits];
+	  // Get the parser class (ST...) for a field based on the type bits.
+	  var type = exports[binformat.types[type_bits]];
 
 	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
 
 	  var field_bits = tag_byte & 0x0f;
 	  var field_name = (field_bits === 0)
-	  ? field_name = FIELDS_MAP[type_bits][so.read(1)[0]]
-	  : field_name = FIELDS_MAP[type_bits][field_bits];
+	  ? field_name = binformat.fields[type_bits][so.read(1)[0]]
+	  : field_name = binformat.fields[type_bits][field_bits];
 
 	  assert(field_name, 'Unknown field - header byte is 0x' + tag_byte.toString(16));
 
@@ -7886,10 +8921,10 @@ var ripple =
 
 	function sort_fields(keys) {
 	  function sort_field_compare(a, b) {
-	    var a_field_coordinates = INVERSE_FIELDS_MAP[a];
+	    var a_field_coordinates = binformat.fieldsInverseMap[a];
 	    var a_type_bits         = a_field_coordinates[0];
 	    var a_field_bits        = a_field_coordinates[1];
-	    var b_field_coordinates = INVERSE_FIELDS_MAP[b];
+	    var b_field_coordinates = binformat.fieldsInverseMap[b];
 	    var b_type_bits         = b_field_coordinates[0];
 	    var b_field_bits        = b_field_coordinates[1];
 
@@ -7908,6 +8943,12 @@ var ripple =
 	    // convention.
 	    keys = keys.filter(function (key) {
 	      return key[0] !== key[0].toLowerCase();
+	    });
+
+	    keys.forEach(function (key) {
+	      if ("undefined" === typeof binformat.fieldsInverseMap[key]) {
+	        throw new Error("JSON contains unknown field: '" + key + "'");
+	      }
 	    });
 
 	    // Sort fields
@@ -7966,159 +9007,17 @@ var ripple =
 
 	STArray.id = 15;
 
-	var TYPES_MAP = [
-	  void(0),
-
-	  //Common:
-	  STInt16,    //1
-	  STInt32,    //2
-	  STInt64,    //3
-	  STHash128,  //4
-	  STHash256,  //5
-	  STAmount,   //6
-	  STVL,       //7
-	  STAccount,  //8
-
-	  // 9-13 reserved
-	  void(0),    //9
-	  void(0),    //10
-	  void(0),    //11
-	  void(0),    //12
-	  void(0),    //13
-
-	  STObject,   //14
-	  STArray,    //15
-
-	  //Uncommon:
-	  STInt8,     //16
-	  STHash160,  //17
-	  STPathSet,  //18
-	  STVector256 //19
-	];
-
-	var FIELDS_MAP = {
-	  //Common types
-	  1: { //Int16
-	    1: 'LedgerEntryType',
-	    2: 'TransactionType'
-	  },
-	  2: { //Int32
-	    2:'Flags', 3:'SourceTag',4:'Sequence',5:'PreviousTxnLgrSeq',6:'LedgerSequence',
-	    7:'CloseTime', 8:'ParentCloseTime',9:'SigningTime',10:'Expiration',11:'TransferRate',
-	    12:'WalletSize', 13:'OwnerCount',14:'DestinationTag',
-	    //Skip 15
-	    16:'HighQualityIn', 17:'HighQualityOut',18:'LowQualityIn',19:'LowQualityOut',
-	    20:'QualityIn', 21:'QualityOut',22:'StampEscrow',23:'BondAmount',24:'LoadFee',
-	    25:'OfferSequence', 26:'FirstLedgerSequence',27:'LastLedgerSequence',28:'TransactionIndex',
-	    29:'OperationLimit', 30:'ReferenceFeeUnits',31:'ReserveBase',32:'ReserveIncrement',
-	    33:'SetFlag', 34:'ClearFlag',
-	  },
-	  3: { // Int64
-	    1:'IndexNext', 2:'IndexPrevious',3:'BookNode',4:'OwnerNode',
-	    5:'BaseFee', 6:'ExchangeRate',7:'LowNode',8:'HighNode'
-	  },
-	  4: { //Hash128
-	    1:'EmailHash'
-	  },
-	  5: { //Hash256
-	    1:'LedgerHash', 2:'ParentHash',3:'TransactionHash',4:'AccountHash',5:'PreviousTxnID',
-	    6:'LedgerIndex', 7:'WalletLocator',8:'RootIndex',16:'BookDirectory',17:'InvoiceID',
-	    18:'Nickname', 19:'Feature'
-	  },
-	  6: { //Amount
-	    1:'Amount', 2:'Balance',3:'LimitAmount',4:'TakerPays',5:'TakerGets',6:'LowLimit',
-	    7:'HighLimit', 8:'Fee',9:'SendMax',16:'MinimumOffer',17:'RippleEscrow'
-	  },
-	  7: { //VL
-	    1:'PublicKey', 2:'MessageKey',3:'SigningPubKey',4:'TxnSignature',5:'Generator',
-	    6:'Signature', 7:'Domain',8:'FundCode',9:'RemoveCode',10:'ExpireCode',11:'CreateCode'
-	  },
-	  8: { //Account
-	    1:'Account', 2:'Owner',3:'Destination',4:'Issuer',7:'Target',8:'RegularKey'
-	  },
-	  14: { //Object
-	    1:void(0),  //end of Object
-	    2:'TransactionMetaData', 3:'CreatedNode',4:'DeletedNode',5:'ModifiedNode',
-	    6:'PreviousFields', 7:'FinalFields',8:'NewFields',9:'TemplateEntry',
-	  },
-	  15: { //Array
-	    1:void(0),  //end of Array
-	    2:'SigningAccounts', 3:'TxnSignatures',4:'Signatures',5:'Template',
-	    6:'Necessary', 7:'Sufficient',8:'AffectedNodes',
-	  },
-
-	  //Uncommon types
-	  16: { //Int8
-	    1:'CloseResolution', 2:'TemplateEntryType',3:'TransactionResult'
-	  },
-	  17: { //Hash160
-	    1:'TakerPaysCurrency', 2:'TakerPaysIssuer',3:'TakerGetsCurrency',4:'TakerGetsIssuer'
-	  },
-	  18: { //PathSet
-	    1:'Paths'
-	  },
-	  19: { //Vector256
-	    1:'Indexes', 2:'Hashes', 3:'Features'
-	  }
-	};
-
-	var INVERSE_FIELDS_MAP = { };
-
-	Object.keys(FIELDS_MAP).forEach(function(k1) {
-	  Object.keys(FIELDS_MAP[k1]).forEach(function(k2) {
-	    INVERSE_FIELDS_MAP[FIELDS_MAP[k1][k2]] = [ Number(k1), Number(k2) ];
-	  });
-	});
-
 
 /***/ },
 
-/***/ 24:
-/***/ function(module, exports, require) {
-
-	var sjcl    = require(12).sjcl;
-	var utils   = require(12);
-	var config  = require(14);
-	var extend  = require(36);
-
-	var BigInteger = utils.jsbn.BigInteger;
-
-	var UInt = require(32).UInt,
-	    Base = require(7).Base;
-
-	//
-	// UInt256 support
-	//
-
-	var UInt256 = extend(function () {
-	  // Internal form: NaN or BigInteger
-	  this._value  = NaN;
-	}, UInt);
-
-	UInt256.width = 32;
-	UInt256.prototype = extend({}, UInt.prototype);
-	UInt256.prototype.constructor = UInt256;
-
-	var HEX_ZERO     = UInt256.HEX_ZERO = "00000000000000000000000000000000" +
-	                                      "00000000000000000000000000000000";
-	var HEX_ONE      = UInt256.HEX_ONE  = "00000000000000000000000000000000" +
-	                                      "00000000000000000000000000000001";
-	var STR_ZERO     = UInt256.STR_ZERO = utils.hexToString(HEX_ZERO);
-	var STR_ONE      = UInt256.STR_ONE = utils.hexToString(HEX_ONE);
-
-	exports.UInt256 = UInt256;
-
-
-/***/ },
-
-/***/ 25:
+/***/ 27:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {function SlowBuffer (size) {
 	    this.length = size;
 	};
 
-	var assert = require(28);
+	var assert = require(32);
 
 	exports.INSPECT_MAX_BYTES = 50;
 
@@ -8152,7 +9051,7 @@ var ripple =
 	}
 
 	function base64ToBytes(str) {
-	  return require(45).toByteArray(str);
+	  return require(47).toByteArray(str);
 	}
 
 	SlowBuffer.byteLength = function (str, encoding) {
@@ -8204,7 +9103,7 @@ var ripple =
 
 	SlowBuffer.prototype.base64Slice = function (start, end) {
 	  var bytes = Array.prototype.slice.apply(this, arguments)
-	  return require(45).fromByteArray(bytes);
+	  return require(47).fromByteArray(bytes);
 	}
 
 	function decodeUtf8Char(str) {
@@ -9016,7 +9915,7 @@ var ripple =
 	        'Trying to read beyond buffer length');
 	  }
 
-	  return require(35).readIEEE754(buffer, offset, isBigEndian,
+	  return require(36).readIEEE754(buffer, offset, isBigEndian,
 	      23, 4);
 	}
 
@@ -9037,7 +9936,7 @@ var ripple =
 	        'Trying to read beyond buffer length');
 	  }
 
-	  return require(35).readIEEE754(buffer, offset, isBigEndian,
+	  return require(36).readIEEE754(buffer, offset, isBigEndian,
 	      52, 8);
 	}
 
@@ -9327,7 +10226,7 @@ var ripple =
 	    verifIEEE754(value, 3.4028234663852886e+38, -3.4028234663852886e+38);
 	  }
 
-	  require(35).writeIEEE754(buffer, value, offset, isBigEndian,
+	  require(36).writeIEEE754(buffer, value, offset, isBigEndian,
 	      23, 4);
 	}
 
@@ -9356,7 +10255,7 @@ var ripple =
 	    verifIEEE754(value, 1.7976931348623157E+308, -1.7976931348623157E+308);
 	  }
 
-	  require(35).writeIEEE754(buffer, value, offset, isBigEndian,
+	  require(36).writeIEEE754(buffer, value, offset, isBigEndian,
 	      52, 8);
 	}
 
@@ -9397,889 +10296,11 @@ var ripple =
 	SlowBuffer.prototype.writeDoubleLE = Buffer.prototype.writeDoubleLE;
 	SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
 	
-	/* WEBPACK VAR INJECTION */}(require, require(25).Buffer))
-
-/***/ },
-
-/***/ 26:
-/***/ function(module, exports, require) {
-
-	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
-	var isArray = require(37);
-	var indexOf = require(38);
-
-
-
-	// By default EventEmitters will print a warning if more than
-	// 10 listeners are added to it. This is a useful default which
-	// helps finding memory leaks.
-	//
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	var defaultMaxListeners = 10;
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!this._events) this._events = {};
-	  this._maxListeners = n;
-	};
-
-
-	EventEmitter.prototype.emit = function(type) {
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events || !this._events.error ||
-	        (isArray(this._events.error) && !this._events.error.length))
-	    {
-	      if (arguments[1] instanceof Error) {
-	        throw arguments[1]; // Unhandled 'error' event
-	      } else {
-	        throw new Error("Uncaught, unspecified 'error' event.");
-	      }
-	      return false;
-	    }
-	  }
-
-	  if (!this._events) return false;
-	  var handler = this._events[type];
-	  if (!handler) return false;
-
-	  if (typeof handler == 'function') {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        var args = Array.prototype.slice.call(arguments, 1);
-	        handler.apply(this, args);
-	    }
-	    return true;
-
-	  } else if (isArray(handler)) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-
-	    var listeners = handler.slice();
-	    for (var i = 0, l = listeners.length; i < l; i++) {
-	      listeners[i].apply(this, args);
-	    }
-	    return true;
-
-	  } else {
-	    return false;
-	  }
-	};
-
-	// EventEmitter is defined in src/node_events.cc
-	// EventEmitter.prototype.emit() is also defined there.
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('addListener only takes instances of Function');
-	  }
-
-	  if (!this._events) this._events = {};
-
-	  // To avoid recursion in the case that type == "newListeners"! Before
-	  // adding it to the listeners, first emit "newListeners".
-	  this.emit('newListener', type, listener);
-	  if (!this._events[type]) {
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  } else if (isArray(this._events[type])) {
-
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-
-	  } else {
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-	  }
-
-	  // Check for listener leak
-	  if (isArray(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (this._maxListeners !== undefined) {
-	      m = this._maxListeners;
-	    } else {
-	      m = defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(events) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      console.trace();
-	    }
-	  }
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('.once only takes instances of Function');
-	  }
-
-	  var self = this;
-	  function g() {
-	    self.removeListener(type, g);
-	    listener.apply(this, arguments);
-	  }
-
-	  g.listener = listener;
-	  self.on(type, g);
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('removeListener only takes instances of Function');
-	  }
-
-	  // does not use listeners(), so no side effect of creating _events[type]
-	  if (!this._events || !this._events[type]) return this;
-
-	  var list = this._events[type];
-
-	  if (isArray(list)) {
-	    var position = -1;
-	    for (var i = 0, length = list.length; i < length; i++) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener))
-	      {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0) return this;
-	    list.splice(position, 1);
-	    if (list.length == 0)
-	      delete this._events[type];
-	  } else if (list === listener ||
-	             (list.listener && list.listener === listener)) {
-	    delete this._events[type];
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  if (arguments.length === 0) {
-	    this._events = {};
-	    return this;
-	  }
-
-	  // does not use listeners(), so no side effect of creating _events[type]
-	  if (type && this._events && this._events[type]) this._events[type] = null;
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  if (!this._events) this._events = {};
-	  if (!this._events[type]) this._events[type] = [];
-	  if (!isArray(this._events[type])) {
-	    this._events[type] = [this._events[type]];
-	  }
-	  return this._events[type];
-	};
-
-
-/***/ },
-
-/***/ 27:
-/***/ function(module, exports, require) {
-
-	var events = require(26);
-
-	var isArray = require(37);
-	var Object_keys = require(39);
-	var Object_getOwnPropertyNames = require(40);
-	var Object_create = require(41);
-	var isRegExp = require(42);
-
-	exports.isArray = isArray;
-	exports.isDate = isDate;
-	exports.isRegExp = isRegExp;
-
-
-	exports.print = function () {};
-	exports.puts = function () {};
-	exports.debug = function() {};
-
-	exports.inspect = function(obj, showHidden, depth, colors) {
-	  var seen = [];
-
-	  var stylize = function(str, styleType) {
-	    // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-	    var styles =
-	        { 'bold' : [1, 22],
-	          'italic' : [3, 23],
-	          'underline' : [4, 24],
-	          'inverse' : [7, 27],
-	          'white' : [37, 39],
-	          'grey' : [90, 39],
-	          'black' : [30, 39],
-	          'blue' : [34, 39],
-	          'cyan' : [36, 39],
-	          'green' : [32, 39],
-	          'magenta' : [35, 39],
-	          'red' : [31, 39],
-	          'yellow' : [33, 39] };
-
-	    var style =
-	        { 'special': 'cyan',
-	          'number': 'blue',
-	          'boolean': 'yellow',
-	          'undefined': 'grey',
-	          'null': 'bold',
-	          'string': 'green',
-	          'date': 'magenta',
-	          // "name": intentionally not styling
-	          'regexp': 'red' }[styleType];
-
-	    if (style) {
-	      return '\033[' + styles[style][0] + 'm' + str +
-	             '\033[' + styles[style][1] + 'm';
-	    } else {
-	      return str;
-	    }
-	  };
-	  if (! colors) {
-	    stylize = function(str, styleType) { return str; };
-	  }
-
-	  function format(value, recurseTimes) {
-	    // Provide a hook for user-specified inspect functions.
-	    // Check that value is an object with an inspect function on it
-	    if (value && typeof value.inspect === 'function' &&
-	        // Filter out the util module, it's inspect function is special
-	        value !== exports &&
-	        // Also filter out any prototype objects using the circular check.
-	        !(value.constructor && value.constructor.prototype === value)) {
-	      return value.inspect(recurseTimes);
-	    }
-
-	    // Primitive types cannot have properties
-	    switch (typeof value) {
-	      case 'undefined':
-	        return stylize('undefined', 'undefined');
-
-	      case 'string':
-	        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-	                                                 .replace(/'/g, "\\'")
-	                                                 .replace(/\\"/g, '"') + '\'';
-	        return stylize(simple, 'string');
-
-	      case 'number':
-	        return stylize('' + value, 'number');
-
-	      case 'boolean':
-	        return stylize('' + value, 'boolean');
-	    }
-	    // For some reason typeof null is "object", so special case here.
-	    if (value === null) {
-	      return stylize('null', 'null');
-	    }
-
-	    // Look up the keys of the object.
-	    var visible_keys = Object_keys(value);
-	    var keys = showHidden ? Object_getOwnPropertyNames(value) : visible_keys;
-
-	    // Functions without properties can be shortcutted.
-	    if (typeof value === 'function' && keys.length === 0) {
-	      if (isRegExp(value)) {
-	        return stylize('' + value, 'regexp');
-	      } else {
-	        var name = value.name ? ': ' + value.name : '';
-	        return stylize('[Function' + name + ']', 'special');
-	      }
-	    }
-
-	    // Dates without properties can be shortcutted
-	    if (isDate(value) && keys.length === 0) {
-	      return stylize(value.toUTCString(), 'date');
-	    }
-
-	    var base, type, braces;
-	    // Determine the object type
-	    if (isArray(value)) {
-	      type = 'Array';
-	      braces = ['[', ']'];
-	    } else {
-	      type = 'Object';
-	      braces = ['{', '}'];
-	    }
-
-	    // Make functions say that they are functions
-	    if (typeof value === 'function') {
-	      var n = value.name ? ': ' + value.name : '';
-	      base = (isRegExp(value)) ? ' ' + value : ' [Function' + n + ']';
-	    } else {
-	      base = '';
-	    }
-
-	    // Make dates with properties first say the date
-	    if (isDate(value)) {
-	      base = ' ' + value.toUTCString();
-	    }
-
-	    if (keys.length === 0) {
-	      return braces[0] + base + braces[1];
-	    }
-
-	    if (recurseTimes < 0) {
-	      if (isRegExp(value)) {
-	        return stylize('' + value, 'regexp');
-	      } else {
-	        return stylize('[Object]', 'special');
-	      }
-	    }
-
-	    seen.push(value);
-
-	    var output = keys.map(function(key) {
-	      var name, str;
-	      if (value.__lookupGetter__) {
-	        if (value.__lookupGetter__(key)) {
-	          if (value.__lookupSetter__(key)) {
-	            str = stylize('[Getter/Setter]', 'special');
-	          } else {
-	            str = stylize('[Getter]', 'special');
-	          }
-	        } else {
-	          if (value.__lookupSetter__(key)) {
-	            str = stylize('[Setter]', 'special');
-	          }
-	        }
-	      }
-	      if (visible_keys.indexOf(key) < 0) {
-	        name = '[' + key + ']';
-	      }
-	      if (!str) {
-	        if (seen.indexOf(value[key]) < 0) {
-	          if (recurseTimes === null) {
-	            str = format(value[key]);
-	          } else {
-	            str = format(value[key], recurseTimes - 1);
-	          }
-	          if (str.indexOf('\n') > -1) {
-	            if (isArray(value)) {
-	              str = str.split('\n').map(function(line) {
-	                return '  ' + line;
-	              }).join('\n').substr(2);
-	            } else {
-	              str = '\n' + str.split('\n').map(function(line) {
-	                return '   ' + line;
-	              }).join('\n');
-	            }
-	          }
-	        } else {
-	          str = stylize('[Circular]', 'special');
-	        }
-	      }
-	      if (typeof name === 'undefined') {
-	        if (type === 'Array' && key.match(/^\d+$/)) {
-	          return str;
-	        }
-	        name = JSON.stringify('' + key);
-	        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-	          name = name.substr(1, name.length - 2);
-	          name = stylize(name, 'name');
-	        } else {
-	          name = name.replace(/'/g, "\\'")
-	                     .replace(/\\"/g, '"')
-	                     .replace(/(^"|"$)/g, "'");
-	          name = stylize(name, 'string');
-	        }
-	      }
-
-	      return name + ': ' + str;
-	    });
-
-	    seen.pop();
-
-	    var numLinesEst = 0;
-	    var length = output.reduce(function(prev, cur) {
-	      numLinesEst++;
-	      if (cur.indexOf('\n') >= 0) numLinesEst++;
-	      return prev + cur.length + 1;
-	    }, 0);
-
-	    if (length > 50) {
-	      output = braces[0] +
-	               (base === '' ? '' : base + '\n ') +
-	               ' ' +
-	               output.join(',\n  ') +
-	               ' ' +
-	               braces[1];
-
-	    } else {
-	      output = braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-	    }
-
-	    return output;
-	  }
-	  return format(obj, (typeof depth === 'undefined' ? 2 : depth));
-	};
-
-
-	function isDate(d) {
-	  if (d instanceof Date) return true;
-	  if (typeof d !== 'object') return false;
-	  var properties = Date.prototype && Object_getOwnPropertyNames(Date.prototype);
-	  var proto = d.__proto__ && Object_getOwnPropertyNames(d.__proto__);
-	  return JSON.stringify(proto) === JSON.stringify(properties);
-	}
-
-	function pad(n) {
-	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-	}
-
-	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-	              'Oct', 'Nov', 'Dec'];
-
-	// 26 Feb 16:19:34
-	function timestamp() {
-	  var d = new Date();
-	  var time = [pad(d.getHours()),
-	              pad(d.getMinutes()),
-	              pad(d.getSeconds())].join(':');
-	  return [d.getDate(), months[d.getMonth()], time].join(' ');
-	}
-
-	exports.log = function (msg) {};
-
-	exports.pump = null;
-
-	exports.inherits = function(ctor, superCtor) {
-	  ctor.super_ = superCtor;
-	  ctor.prototype = Object_create(superCtor.prototype, {
-	    constructor: {
-	      value: ctor,
-	      enumerable: false,
-	      writable: true,
-	      configurable: true
-	    }
-	  });
-	};
-
-	var formatRegExp = /%[sdj%]/g;
-	exports.format = function(f) {
-	  if (typeof f !== 'string') {
-	    var objects = [];
-	    for (var i = 0; i < arguments.length; i++) {
-	      objects.push(exports.inspect(arguments[i]));
-	    }
-	    return objects.join(' ');
-	  }
-
-	  var i = 1;
-	  var args = arguments;
-	  var len = args.length;
-	  var str = String(f).replace(formatRegExp, function(x) {
-	    if (x === '%%') return '%';
-	    if (i >= len) return x;
-	    switch (x) {
-	      case '%s': return String(args[i++]);
-	      case '%d': return Number(args[i++]);
-	      case '%j': return JSON.stringify(args[i++]);
-	      default:
-	        return x;
-	    }
-	  });
-	  for(var x = args[i]; i < len; x = args[++i]){
-	    if (x === null || typeof x !== 'object') {
-	      str += ' ' + x;
-	    } else {
-	      str += ' ' + exports.inspect(x);
-	    }
-	  }
-	  return str;
-	};
-
+	/* WEBPACK VAR INJECTION */}(require, require(27).Buffer))
 
 /***/ },
 
 /***/ 28:
-/***/ function(module, exports, require) {
-
-	// UTILITY
-	var util = require(27);
-	var pSlice = Array.prototype.slice;
-
-	var objectKeys = require(39);
-	var isRegExp = require(42);
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.message = options.message;
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	};
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (value === undefined) {
-	    return '' + value;
-	  }
-	  if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
-	    return value.toString();
-	  }
-	  if (typeof value === 'function' || value instanceof RegExp) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (typeof s == 'string') {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	assert.AssertionError.prototype.toString = function() {
-	  if (this.message) {
-	    return [this.name + ':', this.message].join(' ');
-	  } else {
-	    return [
-	      this.name + ':',
-	      truncate(JSON.stringify(this.actual, replacer), 128),
-	      this.operator,
-	      truncate(JSON.stringify(this.expected, replacer), 128)
-	    ].join(' ');
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-
-	assert.AssertionError.__proto__ = Error.prototype;
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!!!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (require(25).Buffer.isBuffer(actual) && require(25).Buffer.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (actual instanceof Date && expected instanceof Date) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (isRegExp(actual) && isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (typeof actual != 'object' && typeof expected != 'object') {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isUndefinedOrNull(value) {
-	  return value === null || value === undefined;
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  //~~~I've managed to break Object.keys through screwy arguments passing.
-	  //   Converting to array solves the problem.
-	  if (isArguments(a)) {
-	    if (!isArguments(b)) {
-	      return false;
-	    }
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  try {
-	    var ka = objectKeys(a),
-	        kb = objectKeys(b),
-	        key, i;
-	  } catch (e) {//happens when one is a string literal and the other isn't
-	    return false;
-	  }
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (isRegExp(expected)) {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (typeof expected === 'string') {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
-
-
-/***/ },
-
-/***/ 29:
-/***/ function(module, exports, require) {
-
-	// If there is no WebSocket, try MozWebSocket (support for some old browsers)
-	try {
-	  module.exports = WebSocket;
-	} catch(err) {
-	  module.exports = MozWebSocket;
-	}
-
-	// Some versions of Safari Mac 5 and Safari iOS 4 seem to support websockets,
-	// but can't communicate with websocketpp, which is what rippled uses.
-	//
-	// Note that we check for both the WebSocket protocol version the browser seems
-	// to implement as well as the user agent etc. The reason is that we want to err
-	// on the side of trying to connect since we don't want to accidentally disable
-	// a browser that would normally work fine.
-	var match, versionRegexp = /Version\/(\d+)\.(\d+)(?:\.(\d+))?.*Safari\//;
-	if (
-	  // Is browser
-	  "object" === typeof navigator &&
-	  "string" === typeof navigator.userAgent &&
-	  // Is Safari
-	  (match = versionRegexp.exec(navigator.userAgent)) &&
-	  // And uses the old websocket protocol
-	  2 === window.WebSocket.CLOSED
-	) {
-	  // Is iOS
-	  if (/iP(hone|od|ad)/.test(navigator.platform)) {
-	    // Below version 5 is broken
-	    if (+match[1] < 5) {
-	      module.exports = void(0);
-	    }
-	  // Is any other Mac OS
-	  // If you want to refactor this code, be careful, iOS user agents contain the
-	  // string "like Mac OS X".
-	  } else if (navigator.appVersion.indexOf("Mac") !== -1) {
-	    // Below version 6 is broken
-	    if (+match[1] < 6) {
-	      module.exports = void(0);
-	    }
-	  }
-	}
-
-
-/***/ },
-
-/***/ 30:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {/** @fileOverview Javascript cryptography implementation.
@@ -14408,11 +14429,11 @@ var ripple =
 	  }
 	};
 	
-	/* WEBPACK VAR INJECTION */}(require, require(44)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(45)(module)))
 
 /***/ },
 
-/***/ 31:
+/***/ 29:
 /***/ function(module, exports, require) {
 
 	// Copyright (c) 2005  Tom Wu
@@ -15629,302 +15650,833 @@ var ripple =
 
 /***/ },
 
+/***/ 30:
+/***/ function(module, exports, require) {
+
+	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
+	var isArray = require(38);
+	var indexOf = require(39);
+
+
+
+	// By default EventEmitters will print a warning if more than
+	// 10 listeners are added to it. This is a useful default which
+	// helps finding memory leaks.
+	//
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	var defaultMaxListeners = 10;
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!this._events) this._events = {};
+	  this._maxListeners = n;
+	};
+
+
+	EventEmitter.prototype.emit = function(type) {
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events || !this._events.error ||
+	        (isArray(this._events.error) && !this._events.error.length))
+	    {
+	      if (arguments[1] instanceof Error) {
+	        throw arguments[1]; // Unhandled 'error' event
+	      } else {
+	        throw new Error("Uncaught, unspecified 'error' event.");
+	      }
+	      return false;
+	    }
+	  }
+
+	  if (!this._events) return false;
+	  var handler = this._events[type];
+	  if (!handler) return false;
+
+	  if (typeof handler == 'function') {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        var args = Array.prototype.slice.call(arguments, 1);
+	        handler.apply(this, args);
+	    }
+	    return true;
+
+	  } else if (isArray(handler)) {
+	    var args = Array.prototype.slice.call(arguments, 1);
+
+	    var listeners = handler.slice();
+	    for (var i = 0, l = listeners.length; i < l; i++) {
+	      listeners[i].apply(this, args);
+	    }
+	    return true;
+
+	  } else {
+	    return false;
+	  }
+	};
+
+	// EventEmitter is defined in src/node_events.cc
+	// EventEmitter.prototype.emit() is also defined there.
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('addListener only takes instances of Function');
+	  }
+
+	  if (!this._events) this._events = {};
+
+	  // To avoid recursion in the case that type == "newListeners"! Before
+	  // adding it to the listeners, first emit "newListeners".
+	  this.emit('newListener', type, listener);
+	  if (!this._events[type]) {
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  } else if (isArray(this._events[type])) {
+
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+
+	  } else {
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+	  }
+
+	  // Check for listener leak
+	  if (isArray(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (this._maxListeners !== undefined) {
+	      m = this._maxListeners;
+	    } else {
+	      m = defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(events) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      console.trace();
+	    }
+	  }
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('.once only takes instances of Function');
+	  }
+
+	  var self = this;
+	  function g() {
+	    self.removeListener(type, g);
+	    listener.apply(this, arguments);
+	  }
+
+	  g.listener = listener;
+	  self.on(type, g);
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('removeListener only takes instances of Function');
+	  }
+
+	  // does not use listeners(), so no side effect of creating _events[type]
+	  if (!this._events || !this._events[type]) return this;
+
+	  var list = this._events[type];
+
+	  if (isArray(list)) {
+	    var position = -1;
+	    for (var i = 0, length = list.length; i < length; i++) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener))
+	      {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0) return this;
+	    list.splice(position, 1);
+	    if (list.length == 0)
+	      delete this._events[type];
+	  } else if (list === listener ||
+	             (list.listener && list.listener === listener)) {
+	    delete this._events[type];
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  if (arguments.length === 0) {
+	    this._events = {};
+	    return this;
+	  }
+
+	  // does not use listeners(), so no side effect of creating _events[type]
+	  if (type && this._events && this._events[type]) this._events[type] = null;
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  if (!this._events) this._events = {};
+	  if (!this._events[type]) this._events[type] = [];
+	  if (!isArray(this._events[type])) {
+	    this._events[type] = [this._events[type]];
+	  }
+	  return this._events[type];
+	};
+
+
+/***/ },
+
+/***/ 31:
+/***/ function(module, exports, require) {
+
+	var events = require(30);
+
+	var isArray = require(38);
+	var Object_keys = require(40);
+	var Object_getOwnPropertyNames = require(41);
+	var Object_create = require(42);
+	var isRegExp = require(43);
+
+	exports.isArray = isArray;
+	exports.isDate = isDate;
+	exports.isRegExp = isRegExp;
+
+
+	exports.print = function () {};
+	exports.puts = function () {};
+	exports.debug = function() {};
+
+	exports.inspect = function(obj, showHidden, depth, colors) {
+	  var seen = [];
+
+	  var stylize = function(str, styleType) {
+	    // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+	    var styles =
+	        { 'bold' : [1, 22],
+	          'italic' : [3, 23],
+	          'underline' : [4, 24],
+	          'inverse' : [7, 27],
+	          'white' : [37, 39],
+	          'grey' : [90, 39],
+	          'black' : [30, 39],
+	          'blue' : [34, 39],
+	          'cyan' : [36, 39],
+	          'green' : [32, 39],
+	          'magenta' : [35, 39],
+	          'red' : [31, 39],
+	          'yellow' : [33, 39] };
+
+	    var style =
+	        { 'special': 'cyan',
+	          'number': 'blue',
+	          'boolean': 'yellow',
+	          'undefined': 'grey',
+	          'null': 'bold',
+	          'string': 'green',
+	          'date': 'magenta',
+	          // "name": intentionally not styling
+	          'regexp': 'red' }[styleType];
+
+	    if (style) {
+	      return '\033[' + styles[style][0] + 'm' + str +
+	             '\033[' + styles[style][1] + 'm';
+	    } else {
+	      return str;
+	    }
+	  };
+	  if (! colors) {
+	    stylize = function(str, styleType) { return str; };
+	  }
+
+	  function format(value, recurseTimes) {
+	    // Provide a hook for user-specified inspect functions.
+	    // Check that value is an object with an inspect function on it
+	    if (value && typeof value.inspect === 'function' &&
+	        // Filter out the util module, it's inspect function is special
+	        value !== exports &&
+	        // Also filter out any prototype objects using the circular check.
+	        !(value.constructor && value.constructor.prototype === value)) {
+	      return value.inspect(recurseTimes);
+	    }
+
+	    // Primitive types cannot have properties
+	    switch (typeof value) {
+	      case 'undefined':
+	        return stylize('undefined', 'undefined');
+
+	      case 'string':
+	        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+	                                                 .replace(/'/g, "\\'")
+	                                                 .replace(/\\"/g, '"') + '\'';
+	        return stylize(simple, 'string');
+
+	      case 'number':
+	        return stylize('' + value, 'number');
+
+	      case 'boolean':
+	        return stylize('' + value, 'boolean');
+	    }
+	    // For some reason typeof null is "object", so special case here.
+	    if (value === null) {
+	      return stylize('null', 'null');
+	    }
+
+	    // Look up the keys of the object.
+	    var visible_keys = Object_keys(value);
+	    var keys = showHidden ? Object_getOwnPropertyNames(value) : visible_keys;
+
+	    // Functions without properties can be shortcutted.
+	    if (typeof value === 'function' && keys.length === 0) {
+	      if (isRegExp(value)) {
+	        return stylize('' + value, 'regexp');
+	      } else {
+	        var name = value.name ? ': ' + value.name : '';
+	        return stylize('[Function' + name + ']', 'special');
+	      }
+	    }
+
+	    // Dates without properties can be shortcutted
+	    if (isDate(value) && keys.length === 0) {
+	      return stylize(value.toUTCString(), 'date');
+	    }
+
+	    var base, type, braces;
+	    // Determine the object type
+	    if (isArray(value)) {
+	      type = 'Array';
+	      braces = ['[', ']'];
+	    } else {
+	      type = 'Object';
+	      braces = ['{', '}'];
+	    }
+
+	    // Make functions say that they are functions
+	    if (typeof value === 'function') {
+	      var n = value.name ? ': ' + value.name : '';
+	      base = (isRegExp(value)) ? ' ' + value : ' [Function' + n + ']';
+	    } else {
+	      base = '';
+	    }
+
+	    // Make dates with properties first say the date
+	    if (isDate(value)) {
+	      base = ' ' + value.toUTCString();
+	    }
+
+	    if (keys.length === 0) {
+	      return braces[0] + base + braces[1];
+	    }
+
+	    if (recurseTimes < 0) {
+	      if (isRegExp(value)) {
+	        return stylize('' + value, 'regexp');
+	      } else {
+	        return stylize('[Object]', 'special');
+	      }
+	    }
+
+	    seen.push(value);
+
+	    var output = keys.map(function(key) {
+	      var name, str;
+	      if (value.__lookupGetter__) {
+	        if (value.__lookupGetter__(key)) {
+	          if (value.__lookupSetter__(key)) {
+	            str = stylize('[Getter/Setter]', 'special');
+	          } else {
+	            str = stylize('[Getter]', 'special');
+	          }
+	        } else {
+	          if (value.__lookupSetter__(key)) {
+	            str = stylize('[Setter]', 'special');
+	          }
+	        }
+	      }
+	      if (visible_keys.indexOf(key) < 0) {
+	        name = '[' + key + ']';
+	      }
+	      if (!str) {
+	        if (seen.indexOf(value[key]) < 0) {
+	          if (recurseTimes === null) {
+	            str = format(value[key]);
+	          } else {
+	            str = format(value[key], recurseTimes - 1);
+	          }
+	          if (str.indexOf('\n') > -1) {
+	            if (isArray(value)) {
+	              str = str.split('\n').map(function(line) {
+	                return '  ' + line;
+	              }).join('\n').substr(2);
+	            } else {
+	              str = '\n' + str.split('\n').map(function(line) {
+	                return '   ' + line;
+	              }).join('\n');
+	            }
+	          }
+	        } else {
+	          str = stylize('[Circular]', 'special');
+	        }
+	      }
+	      if (typeof name === 'undefined') {
+	        if (type === 'Array' && key.match(/^\d+$/)) {
+	          return str;
+	        }
+	        name = JSON.stringify('' + key);
+	        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+	          name = name.substr(1, name.length - 2);
+	          name = stylize(name, 'name');
+	        } else {
+	          name = name.replace(/'/g, "\\'")
+	                     .replace(/\\"/g, '"')
+	                     .replace(/(^"|"$)/g, "'");
+	          name = stylize(name, 'string');
+	        }
+	      }
+
+	      return name + ': ' + str;
+	    });
+
+	    seen.pop();
+
+	    var numLinesEst = 0;
+	    var length = output.reduce(function(prev, cur) {
+	      numLinesEst++;
+	      if (cur.indexOf('\n') >= 0) numLinesEst++;
+	      return prev + cur.length + 1;
+	    }, 0);
+
+	    if (length > 50) {
+	      output = braces[0] +
+	               (base === '' ? '' : base + '\n ') +
+	               ' ' +
+	               output.join(',\n  ') +
+	               ' ' +
+	               braces[1];
+
+	    } else {
+	      output = braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+	    }
+
+	    return output;
+	  }
+	  return format(obj, (typeof depth === 'undefined' ? 2 : depth));
+	};
+
+
+	function isDate(d) {
+	  if (d instanceof Date) return true;
+	  if (typeof d !== 'object') return false;
+	  var properties = Date.prototype && Object_getOwnPropertyNames(Date.prototype);
+	  var proto = d.__proto__ && Object_getOwnPropertyNames(d.__proto__);
+	  return JSON.stringify(proto) === JSON.stringify(properties);
+	}
+
+	function pad(n) {
+	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+	}
+
+	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+	              'Oct', 'Nov', 'Dec'];
+
+	// 26 Feb 16:19:34
+	function timestamp() {
+	  var d = new Date();
+	  var time = [pad(d.getHours()),
+	              pad(d.getMinutes()),
+	              pad(d.getSeconds())].join(':');
+	  return [d.getDate(), months[d.getMonth()], time].join(' ');
+	}
+
+	exports.log = function (msg) {};
+
+	exports.pump = null;
+
+	exports.inherits = function(ctor, superCtor) {
+	  ctor.super_ = superCtor;
+	  ctor.prototype = Object_create(superCtor.prototype, {
+	    constructor: {
+	      value: ctor,
+	      enumerable: false,
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+	};
+
+	var formatRegExp = /%[sdj%]/g;
+	exports.format = function(f) {
+	  if (typeof f !== 'string') {
+	    var objects = [];
+	    for (var i = 0; i < arguments.length; i++) {
+	      objects.push(exports.inspect(arguments[i]));
+	    }
+	    return objects.join(' ');
+	  }
+
+	  var i = 1;
+	  var args = arguments;
+	  var len = args.length;
+	  var str = String(f).replace(formatRegExp, function(x) {
+	    if (x === '%%') return '%';
+	    if (i >= len) return x;
+	    switch (x) {
+	      case '%s': return String(args[i++]);
+	      case '%d': return Number(args[i++]);
+	      case '%j': return JSON.stringify(args[i++]);
+	      default:
+	        return x;
+	    }
+	  });
+	  for(var x = args[i]; i < len; x = args[++i]){
+	    if (x === null || typeof x !== 'object') {
+	      str += ' ' + x;
+	    } else {
+	      str += ' ' + exports.inspect(x);
+	    }
+	  }
+	  return str;
+	};
+
+
+/***/ },
+
 /***/ 32:
 /***/ function(module, exports, require) {
 
-	var utils   = require(12);
-	var sjcl    = utils.sjcl;
-	var config  = require(14);
+	// UTILITY
+	var util = require(31);
+	var pSlice = Array.prototype.slice;
 
-	var BigInteger = utils.jsbn.BigInteger;
+	var objectKeys = require(40);
+	var isRegExp = require(43);
 
-	var Base = require(7).Base;
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
 
-	//
-	// Abstract UInt class
-	//
-	// Base class for UInt??? classes
-	//
+	var assert = module.exports = ok;
 
-	var UInt = function () {
-	  // Internal form: NaN or BigInteger
-	  this._value  = NaN;
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
 
-	  this._update();
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.message = options.message;
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
 	};
+	util.inherits(assert.AssertionError, Error);
 
-	UInt.json_rewrite = function (j, opts) {
-	  return this.from_json(j).to_json(opts);
-	};
+	function replacer(key, value) {
+	  if (value === undefined) {
+	    return '' + value;
+	  }
+	  if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+	    return value.toString();
+	  }
+	  if (typeof value === 'function' || value instanceof RegExp) {
+	    return value.toString();
+	  }
+	  return value;
+	}
 
-	// Return a new UInt from j.
-	UInt.from_generic = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
+	function truncate(s, n) {
+	  if (typeof s == 'string') {
+	    return s.length < n ? s : s.slice(0, n);
 	  } else {
-	    return (new this()).parse_generic(j);
+	    return s;
+	  }
+	}
+
+	assert.AssertionError.prototype.toString = function() {
+	  if (this.message) {
+	    return [this.name + ':', this.message].join(' ');
+	  } else {
+	    return [
+	      this.name + ':',
+	      truncate(JSON.stringify(this.actual, replacer), 128),
+	      this.operator,
+	      truncate(JSON.stringify(this.expected, replacer), 128)
+	    ].join(' ');
 	  }
 	};
 
-	// Return a new UInt from j.
-	UInt.from_hex = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_hex(j);
+	// assert.AssertionError instanceof Error
+
+	assert.AssertionError.__proto__ = Error.prototype;
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!!!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
 	  }
 	};
 
-	// Return a new UInt from j.
-	UInt.from_json = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_json(j);
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
 	  }
 	};
 
-	// Return a new UInt from j.
-	UInt.from_bits = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_bits(j);
-	  }
-	};
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
 
-	// Return a new UInt from j.
-	UInt.from_bytes = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_bytes(j);
-	  }
-	};
+	  } else if (require(27).Buffer.isBuffer(actual) && require(27).Buffer.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
 
-	// Return a new UInt from j.
-	UInt.from_bn = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_bn(j);
-	  }
-	};
-
-	// Return a new UInt from j.
-	UInt.from_number = function (j) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_number(j);
-	  }
-	};
-
-	UInt.is_valid = function (j) {
-	  return this.from_json(j).is_valid();
-	};
-
-	UInt.prototype.clone = function () {
-	  return this.copyTo(new this.constructor());
-	};
-
-	// Returns copy.
-	UInt.prototype.copyTo = function (d) {
-	  d._value = this._value;
-
-	  if ("function" === typeof d._update) d._update();
-
-	  return d;
-	};
-
-	UInt.prototype.equals = function (d) {
-	  return this._value instanceof BigInteger && d._value instanceof BigInteger && this._value.equals(d._value);
-	};
-
-	UInt.prototype.is_valid = function () {
-	  return this._value instanceof BigInteger;
-	};
-
-	UInt.prototype.is_zero = function () {
-	  return this._value.equals(BigInteger.ZERO);
-	};
-
-	/**
-	 * Update any derivative values.
-	 *
-	 * This allows subclasses to maintain caches of any data that they derive from
-	 * the main _value. For example, the Currency class keeps the currency type, the
-	 * currency code and other information about the currency cached.
-	 *
-	 * The reason for keeping this mechanism in this class is so every subclass can
-	 * call it whenever it modifies the internal state.
-	 */
-	UInt.prototype._update = function () {
-	  // Nothing to do by default. Subclasses will override this.
-	};
-
-	// value = NaN on error.
-	UInt.prototype.parse_generic = function (j) {
-	  // Canonicalize and validate
-	  if (config.accounts && j in config.accounts)
-	    j = config.accounts[j].account;
-
-	  switch (j) {
-	  case undefined:
-	  case "0":
-	  case this.constructor.STR_ZERO:
-	  case this.constructor.ACCOUNT_ZERO:
-	  case this.constructor.HEX_ZERO:
-	    this._value  = BigInteger.valueOf();
-	    break;
-
-	  case "1":
-	  case this.constructor.STR_ONE:
-	  case this.constructor.ACCOUNT_ONE:
-	  case this.constructor.HEX_ONE:
-	    this._value  = new BigInteger([1]);
-
-	    break;
-
-	  default:
-	    if ('string' !== typeof j) {
-		    this._value  = NaN;
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
 	    }
-	    else if (this.constructor.width === j.length) {
-		    this._value  = new BigInteger(utils.stringToArray(j), 256);
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (actual instanceof Date && expected instanceof Date) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (isRegExp(actual) && isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (typeof actual != 'object' && typeof expected != 'object') {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isUndefinedOrNull(value) {
+	  return value === null || value === undefined;
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  //~~~I've managed to break Object.keys through screwy arguments passing.
+	  //   Converting to array solves the problem.
+	  if (isArguments(a)) {
+	    if (!isArguments(b)) {
+	      return false;
 	    }
-	    else if ((this.constructor.width*2) === j.length) {
-		    // XXX Check char set!
-		    this._value  = new BigInteger(j, 16);
-	    }
-	    else {
-		    this._value  = NaN;
-	    }
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  try {
+	    var ka = objectKeys(a),
+	        kb = objectKeys(b),
+	        key, i;
+	  } catch (e) {//happens when one is a string literal and the other isn't
+	    return false;
+	  }
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
 	  }
 
-	  this._update();
-
-	  return this;
-	};
-
-	UInt.prototype.parse_hex = function (j) {
-	  if ('string' === typeof j &&
-	      j.length === (this.constructor.width * 2)) {
-	    this._value  = new BigInteger(j, 16);
-	  } else {
-	    this._value  = NaN;
+	  if (isRegExp(expected)) {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
 	  }
 
-	  this._update();
+	  return false;
+	}
 
-	  return this;
-	};
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
 
-	UInt.prototype.parse_bits = function (j) {
-	  if (sjcl.bitArray.bitLength(j) !== this.constructor.width * 8) {
-	    this._value = NaN;
-	  } else {
-	    var bytes = sjcl.codec.bytes.fromBits(j);
-	    this.parse_bytes(bytes);
+	  if (typeof expected === 'string') {
+	    message = expected;
+	    expected = null;
 	  }
 
-	  this._update();
-
-	  return this;
-	};
-
-
-	UInt.prototype.parse_bytes = function (j) {
-	  if (!Array.isArray(j) || j.length !== this.constructor.width) {
-		this._value = NaN;
-	  } else {
-		  this._value  = new BigInteger([0].concat(j), 256);
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
 	  }
 
-	  this._update();
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
 
-	  return this;
-	};
-
-
-	UInt.prototype.parse_json = UInt.prototype.parse_hex;
-
-	UInt.prototype.parse_bn = function (j) {
-	  if (j instanceof sjcl.bn &&
-	      j.bitLength() <= this.constructor.width * 8) {
-	    var bytes = sjcl.codec.bytes.fromBits(j.toBits());
-		  this._value  = new BigInteger(bytes, 256);
-	  } else {
-	    this._value = NaN;
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
 	  }
 
-	  this._update();
-
-	  return this;
-	};
-
-	UInt.prototype.parse_number = function (j) {
-	  this._value = NaN;
-
-	  if ("number" === typeof j &&
-	      j === +j &&
-	      j > 0) {
-	    // XXX Better, faster way to get BigInteger from JS int?
-	    this._value = new BigInteger(""+j);
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
 	  }
 
-	  this._update();
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
 
-	  return this;
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
 	};
 
-	// Convert from internal form.
-	UInt.prototype.to_bytes = function () {
-	  if (!(this._value instanceof BigInteger))
-	    return null;
-
-	  var bytes  = this._value.toByteArray();
-	  bytes = bytes.map(function (b) { return (b+256) % 256; });
-	  var target = this.constructor.width;
-
-	  // XXX Make sure only trim off leading zeros.
-	  bytes = bytes.slice(-target);
-	  while (bytes.length < target) bytes.unshift(0);
-
-	  return bytes;
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
 	};
 
-	UInt.prototype.to_hex = function () {
-	  if (!(this._value instanceof BigInteger))
-	    return null;
-
-	  var bytes = this.to_bytes();
-	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(bytes)).toUpperCase();
-	};
-
-	UInt.prototype.to_json = UInt.prototype.to_hex;
-
-	UInt.prototype.to_bits = function () {
-	  if (!(this._value instanceof BigInteger))
-	    return null;
-
-	  var bytes = this.to_bytes();
-
-	  return sjcl.codec.bytes.toBits(bytes);
-	};
-
-	UInt.prototype.to_bn = function () {
-	  if (!(this._value instanceof BigInteger))
-	    return null;
-
-	  var bits = this.to_bits();
-
-	  return sjcl.bn.fromBits(bits);
-	};
-
-	exports.UInt = UInt;
-
-	// vim:sw=2:sts=2:ts=8:et
+	assert.ifError = function(err) { if (err) {throw err;}};
 
 
 /***/ },
@@ -15932,104 +16484,161 @@ var ripple =
 /***/ 33:
 /***/ function(module, exports, require) {
 
-	var sjcl    = require(12).sjcl;
-
-	var UInt160 = require(16).UInt160;
-	var UInt256 = require(24).UInt256;
-
-	function KeyPair() {
-	  this._curve  = sjcl.ecc.curves['c256'];
-	  this._secret = null;
-	  this._pubkey = null;
-	};
-
-	KeyPair.from_bn_secret = function (j) {
-	  return j instanceof this ? j.clone() : (new this()).parse_bn_secret(j);
-	};
-
-	KeyPair.prototype.parse_bn_secret = function (j) {
-	  this._secret = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves['c256'], j);
-	  return this;
-	};
-
-	/**
-	 * Returns public key as sjcl public key.
-	 *
-	 * @private
-	 */
-	KeyPair.prototype._pub = function () {
-	  var curve = this._curve;
-
-	  if (!this._pubkey && this._secret) {
-	    var exponent = this._secret._exponent;
-	    this._pubkey = new sjcl.ecc.ecdsa.publicKey(curve, curve.G.mult(exponent));
-	  }
-
-	  return this._pubkey;
-	};
-
-	/**
-	 * Returns public key in compressed format as bit array.
-	 *
-	 * @private
-	 */
-	KeyPair.prototype._pub_bits = function () {
-	  var pub = this._pub();
-
-	  if (!pub) {
-	    return null;
-	  }
-
-	  var point = pub._point, y_even = point.y.mod(2).equals(0);
-
-	  return sjcl.bitArray.concat(
-	    [sjcl.bitArray.partial(8, y_even ? 0x02 : 0x03)],
-	    point.x.toBits(this._curve.r.bitLength())
-	  );
-	};
-
-	/**
-	 * Returns public key as hex.
-	 *
-	 * Key will be returned as a compressed pubkey - 33 bytes converted to hex.
-	 */
-	KeyPair.prototype.to_hex_pub = function () {
-	  var bits = this._pub_bits();
-
-	  if (!bits) {
-	    return null;
-	  }
-
-	  return sjcl.codec.hex.fromBits(bits).toUpperCase();
-	};
-
-	function SHA256_RIPEMD160(bits) {
-	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
+	// If there is no WebSocket, try MozWebSocket (support for some old browsers)
+	try {
+	  module.exports = WebSocket;
+	} catch(err) {
+	  module.exports = MozWebSocket;
 	}
 
-	KeyPair.prototype.get_address = function () {
-	  var bits = this._pub_bits();
-
-	  if (!bits) {
-	    return null;
+	// Some versions of Safari Mac 5 and Safari iOS 4 seem to support websockets,
+	// but can't communicate with websocketpp, which is what rippled uses.
+	//
+	// Note that we check for both the WebSocket protocol version the browser seems
+	// to implement as well as the user agent etc. The reason is that we want to err
+	// on the side of trying to connect since we don't want to accidentally disable
+	// a browser that would normally work fine.
+	var match, versionRegexp = /Version\/(\d+)\.(\d+)(?:\.(\d+))?.*Safari\//;
+	if (
+	  // Is browser
+	  "object" === typeof navigator &&
+	  "string" === typeof navigator.userAgent &&
+	  // Is Safari
+	  (match = versionRegexp.exec(navigator.userAgent)) &&
+	  // And uses the old websocket protocol
+	  2 === window.WebSocket.CLOSED
+	) {
+	  // Is iOS
+	  if (/iP(hone|od|ad)/.test(navigator.platform)) {
+	    // Below version 5 is broken
+	    if (+match[1] < 5) {
+	      module.exports = void(0);
+	    }
+	  // Is any other Mac OS
+	  // If you want to refactor this code, be careful, iOS user agents contain the
+	  // string "like Mac OS X".
+	  } else if (navigator.appVersion.indexOf("Mac") !== -1) {
+	    // Below version 6 is broken
+	    if (+match[1] < 6) {
+	      module.exports = void(0);
+	    }
 	  }
-
-	  var hash = SHA256_RIPEMD160(bits);
-
-	  return UInt160.from_bits(hash);
-	};
-
-	KeyPair.prototype.sign = function (hash) {
-	  var hash = UInt256.from_json(hash);
-	  return this._secret.signDER(hash.to_bits(), 0);
-	};
-
-	exports.KeyPair = KeyPair;
+	}
 
 
 /***/ },
 
 /***/ 34:
+/***/ function(module, exports, require) {
+
+	/**
+	 * Logging functionality for ripple-lib and any applications built on it.
+	 */
+	var Log = function (namespace) {
+	  if (!namespace) {
+	    this._namespace = [];
+	  } else if (Array.isArray(namespace)) {
+	    this._namespace = namespace;
+	  } else {
+	    this._namespace = [""+namespace];
+	  }
+
+	  this._prefix = this._namespace.concat(['']).join(': ');
+	};
+
+	/**
+	 * Create a sub-logger.
+	 *
+	 * You can have a hierarchy of loggers.
+	 *
+	 * @example
+	 *
+	 *   var log = require('ripple').log.sub('server');
+	 *
+	 *   log.info('connection successful');
+	 *   // prints: "server: connection successful"
+	 */
+	Log.prototype.sub = function (namespace) {
+	  var subNamespace = this._namespace.slice();
+	  if (namespace && "string" === typeof namespace) subNamespace.push(namespace);
+	  var subLogger = new Log(subNamespace);
+	  subLogger._setParent(this);
+	  return subLogger;
+	};
+
+	Log.prototype._setParent = function (parentLogger) {
+	  this._parent = parentLogger;
+	};
+
+	Log.makeLevel = function (level) {
+	  return function () {
+	    arguments[0] = this._prefix + arguments[0];
+
+	    Log.engine.logObject.apply(Log, Array.prototype.slice.call(arguments));
+	  };
+	};
+
+	Log.prototype.debug = Log.makeLevel(1);
+	Log.prototype.info  = Log.makeLevel(2);
+	Log.prototype.warn  = Log.makeLevel(3);
+	Log.prototype.error = Log.makeLevel(4);
+
+	/**
+	 * Basic logging connector.
+	 *
+	 * This engine has no formatting and works with the most basic of "console.log"
+	 * implementations. This is the logging engine used in Node.js.
+	 */
+	var BasicLogEngine = {
+	  logObject: function logObject(msg) {
+	    var args = Array.prototype.slice.call(arguments, 1);
+
+	    args = args.map(function(arg) {
+	      return JSON.stringify(arg, null, 2);
+	    });
+
+	    args.unshift(msg);
+
+	    console.log.apply(console, args);
+	  }
+	};
+
+	/**
+	 * Null logging connector.
+	 *
+	 * This engine simply swallows all messages. Used when console.log is not
+	 * available.
+	 */
+	var NullLogEngine = {
+	  logObject: function () {}
+	};
+
+	Log.engine = NullLogEngine;
+
+	if (console && console.log) Log.engine = BasicLogEngine;
+
+	/**
+	 * Provide a root logger as our main export.
+	 *
+	 * This means you can use the logger easily on the fly:
+	 *     ripple.log.debug('My object is', myObj);
+	 */
+	module.exports = new Log();
+
+	/**
+	 * This is the logger for ripple-lib internally.
+	 */
+	module.exports.internal = module.exports.sub();
+
+	/**
+	 * Expose the class as well.
+	 */
+	module.exports.Log = Log;
+
+
+/***/ },
+
+/***/ 35:
 /***/ function(module, exports, require) {
 
 	
@@ -16040,10 +16649,42 @@ var ripple =
 	var Transaction = require(5).Transaction;
 
 	function TransactionQueue() {
+	  var self = this;
+
 	  this._queue         = [ ];
 	  this._idCache       = { };
 	  this._sequenceCache = { };
 	  this._save          = void(0);
+	};
+
+	TransactionQueue.prototype.clearCache = function() {
+	  this._idCache       = { };
+	  this._sequenceCache = { };
+	};
+
+	TransactionQueue.prototype.getMinLedger = function() {
+	  var minLedger = Infinity;
+
+	  for (var i=0; i<this._queue.length; i++) {
+	    var submitIndex = this._queue[i].submitIndex;
+
+	    if (typeof submitIndex !== 'number') {
+	      // If any pending transactions don't have a submit index,
+	      // return -1 for scanning all previous transactions
+	      minLedger = -1;
+	      break;
+	    }
+
+	    if (submitIndex < minLedger) {
+	      minLedger = submitIndex;
+	    }
+	  };
+
+	  if (!isFinite(minLedger)) minLedger = -1;
+
+	  if (minLedger !== -1) minLedger -= 1;
+
+	  return minLedger;
 	};
 
 	TransactionQueue.prototype.save = function() {
@@ -16123,6 +16764,10 @@ var ripple =
 	    }
 	  }
 
+	  if (!this._queue.length) {
+	    this.clearCache();
+	  }
+
 	  this.save();
 	};
 
@@ -16144,7 +16789,7 @@ var ripple =
 
 /***/ },
 
-/***/ 35:
+/***/ 36:
 /***/ function(module, exports, require) {
 
 	exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
@@ -16235,7 +16880,7 @@ var ripple =
 
 /***/ },
 
-/***/ 36:
+/***/ 37:
 /***/ function(module, exports, require) {
 
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -16320,7 +16965,7 @@ var ripple =
 
 /***/ },
 
-/***/ 37:
+/***/ 38:
 /***/ function(module, exports, require) {
 
 	module.exports = typeof Array.isArray === 'function'
@@ -16344,7 +16989,7 @@ var ripple =
 
 /***/ },
 
-/***/ 38:
+/***/ 39:
 /***/ function(module, exports, require) {
 
 	module.exports = function indexOf (xs, x) {
@@ -16358,7 +17003,7 @@ var ripple =
 
 /***/ },
 
-/***/ 39:
+/***/ 40:
 /***/ function(module, exports, require) {
 
 	module.exports = Object.keys || function objectKeys(object) {
@@ -16375,7 +17020,7 @@ var ripple =
 
 /***/ },
 
-/***/ 40:
+/***/ 41:
 /***/ function(module, exports, require) {
 
 	module.exports = Object.getOwnPropertyNames || function (obj) {
@@ -16388,7 +17033,7 @@ var ripple =
 
 /***/ },
 
-/***/ 41:
+/***/ 42:
 /***/ function(module, exports, require) {
 
 	module.exports = Object.create || function (prototype, properties) {
@@ -16416,7 +17061,7 @@ var ripple =
 
 /***/ },
 
-/***/ 42:
+/***/ 43:
 /***/ function(module, exports, require) {
 
 	module.exports = function isRegExp(re) {
@@ -16426,17 +17071,294 @@ var ripple =
 
 /***/ },
 
-/***/ 43:
+/***/ 44:
 /***/ function(module, exports, require) {
 
-	var sjcl    = require(12).sjcl;
-	var utils   = require(12);
-	var config  = require(14);
-	var extend  = require(36);
+	/* WEBPACK VAR INJECTION */(function(require, module) {;(function () { // closure for web browsers
+
+	if (typeof module === 'object' && module.exports) {
+	  module.exports = LRUCache
+	} else {
+	  // just set the global for non-node platforms.
+	  this.LRUCache = LRUCache
+	}
+
+	function hOP (obj, key) {
+	  return Object.prototype.hasOwnProperty.call(obj, key)
+	}
+
+	function naiveLength () { return 1 }
+
+	function LRUCache (options) {
+	  if (!(this instanceof LRUCache))
+	    return new LRUCache(options)
+
+	  if (typeof options === 'number')
+	    options = { max: options }
+
+	  if (!options)
+	    options = {}
+
+	  this._max = options.max
+	  // Kind of weird to have a default max of Infinity, but oh well.
+	  if (!this._max || !(typeof this._max === "number") || this._max <= 0 )
+	    this._max = Infinity
+
+	  this._lengthCalculator = options.length || naiveLength
+	  if (typeof this._lengthCalculator !== "function")
+	    this._lengthCalculator = naiveLength
+
+	  this._allowStale = options.stale || false
+	  this._maxAge = options.maxAge || null
+	  this._dispose = options.dispose
+	  this.reset()
+	}
+
+	// resize the cache when the max changes.
+	Object.defineProperty(LRUCache.prototype, "max",
+	  { set : function (mL) {
+	      if (!mL || !(typeof mL === "number") || mL <= 0 ) mL = Infinity
+	      this._max = mL
+	      if (this._length > this._max) trim(this)
+	    }
+	  , get : function () { return this._max }
+	  , enumerable : true
+	  })
+
+	// resize the cache when the lengthCalculator changes.
+	Object.defineProperty(LRUCache.prototype, "lengthCalculator",
+	  { set : function (lC) {
+	      if (typeof lC !== "function") {
+	        this._lengthCalculator = naiveLength
+	        this._length = this._itemCount
+	        for (var key in this._cache) {
+	          this._cache[key].length = 1
+	        }
+	      } else {
+	        this._lengthCalculator = lC
+	        this._length = 0
+	        for (var key in this._cache) {
+	          this._cache[key].length = this._lengthCalculator(this._cache[key].value)
+	          this._length += this._cache[key].length
+	        }
+	      }
+
+	      if (this._length > this._max) trim(this)
+	    }
+	  , get : function () { return this._lengthCalculator }
+	  , enumerable : true
+	  })
+
+	Object.defineProperty(LRUCache.prototype, "length",
+	  { get : function () { return this._length }
+	  , enumerable : true
+	  })
+
+
+	Object.defineProperty(LRUCache.prototype, "itemCount",
+	  { get : function () { return this._itemCount }
+	  , enumerable : true
+	  })
+
+	LRUCache.prototype.forEach = function (fn, thisp) {
+	  thisp = thisp || this
+	  var i = 0;
+	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
+	    i++
+	    var hit = this._lruList[k]
+	    if (this._maxAge && (Date.now() - hit.now > this._maxAge)) {
+	      del(this, hit)
+	      if (!this._allowStale) hit = undefined
+	    }
+	    if (hit) {
+	      fn.call(thisp, hit.value, hit.key, this)
+	    }
+	  }
+	}
+
+	LRUCache.prototype.keys = function () {
+	  var keys = new Array(this._itemCount)
+	  var i = 0
+	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
+	    var hit = this._lruList[k]
+	    keys[i++] = hit.key
+	  }
+	  return keys
+	}
+
+	LRUCache.prototype.values = function () {
+	  var values = new Array(this._itemCount)
+	  var i = 0
+	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
+	    var hit = this._lruList[k]
+	    values[i++] = hit.value
+	  }
+	  return values
+	}
+
+	LRUCache.prototype.reset = function () {
+	  if (this._dispose && this._cache) {
+	    for (var k in this._cache) {
+	      this._dispose(k, this._cache[k].value)
+	    }
+	  }
+
+	  this._cache = Object.create(null) // hash of items by key
+	  this._lruList = Object.create(null) // list of items in order of use recency
+	  this._mru = 0 // most recently used
+	  this._lru = 0 // least recently used
+	  this._length = 0 // number of items in the list
+	  this._itemCount = 0
+	}
+
+	// Provided for debugging/dev purposes only. No promises whatsoever that
+	// this API stays stable.
+	LRUCache.prototype.dump = function () {
+	  return this._cache
+	}
+
+	LRUCache.prototype.dumpLru = function () {
+	  return this._lruList
+	}
+
+	LRUCache.prototype.set = function (key, value) {
+	  if (hOP(this._cache, key)) {
+	    // dispose of the old one before overwriting
+	    if (this._dispose) this._dispose(key, this._cache[key].value)
+	    if (this._maxAge) this._cache[key].now = Date.now()
+	    this._cache[key].value = value
+	    this.get(key)
+	    return true
+	  }
+
+	  var len = this._lengthCalculator(value)
+	  var age = this._maxAge ? Date.now() : 0
+	  var hit = new Entry(key, value, this._mru++, len, age)
+
+	  // oversized objects fall out of cache automatically.
+	  if (hit.length > this._max) {
+	    if (this._dispose) this._dispose(key, value)
+	    return false
+	  }
+
+	  this._length += hit.length
+	  this._lruList[hit.lu] = this._cache[key] = hit
+	  this._itemCount ++
+
+	  if (this._length > this._max) trim(this)
+	  return true
+	}
+
+	LRUCache.prototype.has = function (key) {
+	  if (!hOP(this._cache, key)) return false
+	  var hit = this._cache[key]
+	  if (this._maxAge && (Date.now() - hit.now > this._maxAge)) {
+	    return false
+	  }
+	  return true
+	}
+
+	LRUCache.prototype.get = function (key) {
+	  return get(this, key, true)
+	}
+
+	LRUCache.prototype.peek = function (key) {
+	  return get(this, key, false)
+	}
+
+	LRUCache.prototype.pop = function () {
+	  var hit = this._lruList[this._lru]
+	  del(this, hit)
+	  return hit || null
+	}
+
+	LRUCache.prototype.del = function (key) {
+	  del(this, this._cache[key])
+	}
+
+	function get (self, key, doUse) {
+	  var hit = self._cache[key]
+	  if (hit) {
+	    if (self._maxAge && (Date.now() - hit.now > self._maxAge)) {
+	      del(self, hit)
+	      if (!self._allowStale) hit = undefined
+	    } else {
+	      if (doUse) use(self, hit)
+	    }
+	    if (hit) hit = hit.value
+	  }
+	  return hit
+	}
+
+	function use (self, hit) {
+	  shiftLU(self, hit)
+	  hit.lu = self._mru ++
+	  self._lruList[hit.lu] = hit
+	}
+
+	function trim (self) {
+	  while (self._lru < self._mru && self._length > self._max)
+	    del(self, self._lruList[self._lru])
+	}
+
+	function shiftLU (self, hit) {
+	  delete self._lruList[ hit.lu ]
+	  while (self._lru < self._mru && !self._lruList[self._lru]) self._lru ++
+	}
+
+	function del (self, hit) {
+	  if (hit) {
+	    if (self._dispose) self._dispose(hit.key, hit.value)
+	    self._length -= hit.length
+	    self._itemCount --
+	    delete self._cache[ hit.key ]
+	    shiftLU(self, hit)
+	  }
+	}
+
+	// classy, since V8 prefers predictable objects.
+	function Entry (key, value, lu, length, now) {
+	  this.key = key
+	  this.value = value
+	  this.lu = lu
+	  this.length = length
+	  this.now = now
+	}
+
+	})()
+	
+	/* WEBPACK VAR INJECTION */}(require, require(45)(module)))
+
+/***/ },
+
+/***/ 45:
+/***/ function(module, exports, require) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
+
+/***/ },
+
+/***/ 46:
+/***/ function(module, exports, require) {
+
+	var sjcl    = require(15).sjcl;
+	var utils   = require(15);
+	var config  = require(17);
+	var extend  = require(37);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = require(32).UInt,
+	var UInt = require(23).UInt,
 	    Base = require(7).Base;
 
 	//
@@ -16462,24 +17384,7 @@ var ripple =
 
 /***/ },
 
-/***/ 44:
-/***/ function(module, exports, require) {
-
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
-		}
-		return module;
-	}
-
-
-/***/ },
-
-/***/ 45:
+/***/ 47:
 /***/ function(module, exports, require) {
 
 	(function (exports) {
