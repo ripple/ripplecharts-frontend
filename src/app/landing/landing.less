@@ -26,7 +26,7 @@
   margin:0;
   display:table;
   width:100%;
-  height:220px;
+  height:250px;
   border:1px solid rgba(150,150,150,.3);
   background:rgba(150,155,160,.2); 
   border-radius:2px;
@@ -36,6 +36,7 @@
   padding:8px;
   border-radius:2px;
   margin:3px; 
+  line-height:25px;
   display:table-row;
 }
 
@@ -51,6 +52,8 @@
 
 .landing .stats label small {
   display:block;
+  font-size:70%;
+  color:#aaa;
 }
 
 .landing .stat {
@@ -71,6 +74,10 @@
 .landing .stats li:last-child .stat, .landing .stats li:last-child label {
   border-bottom:none;
 } 
+
+.landing .transactionFeed {
+  height:250px;
+}
 
 #topMarkets {
   margin-bottom:5px;
@@ -99,9 +106,11 @@
   border-bottom-color:#111;
 }
 
-.landing .transactionFeed {
-  height:220px;
+.dark .landing .stats label small {
+  color:#666;
 }
+
+
 
 @media (min-width: 1200px) {
   #topMarkets {

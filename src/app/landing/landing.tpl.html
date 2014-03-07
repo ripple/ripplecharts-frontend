@@ -18,21 +18,25 @@
           <li>
             <label>Total Network Value:</label>
             <div class="stat">
-              <span ng-bind="networkValue">--</span>
+              <span ng-bind="networkValue">&nbsp</span>
               <small>XRP</small>
             </div>
           </li>
           <li>
             <label>Ledger #:</label>
-            <div class="stat" ng-bind="ledgerIndex">--</div>
+            <div class="stat" ng-bind="ledgerIndex">&nbsp</div>
           </li> 
           <li>
+            <label>Transaction Volume: <small>(24 hours - USD terms)</small></label>
+            <div class="stat" ng-bind="volume24Hours">&nbsp</div>
+          </li>
+          <li>
             <label>Trade Volume: <small>(24 hours - USD terms)</small></label>
-            <div class="stat" ng-bind="tradeVolume"></div>
+            <div class="stat" ng-bind="tradeVolume">&nbsp</div>
           </li>
           <li>
             <label># of Ripple accounts:</label>
-            <div class="stat" ng-bind="totalAccounts"></div>
+            <div class="stat" ng-bind="totalAccounts">&nbsp</div>
           </li>  
         </ul>
       </div>

@@ -105,7 +105,13 @@ angular.module( 'ripplecharts.landing', [
   } 
    
 //get trade volume of top markets  
-  function getTopMarkets() {
+  function getVolumes() {
+    
+    api.getVolume24Hours(function(data){
+      var volume = data.total;
+      $scope.volume24Hours = volume ? "$"+commas(volume,2) : "";
+      $scope.$apply();          
+    });
     
     api.getTopMarkets(function(data){
       var volume = 0;
@@ -117,9 +123,10 @@ angular.module( 'ripplecharts.landing', [
       $scope.$apply();
     });
   }
+ 
   
   
-  getTopMarkets();
-  var topInterval = setInterval (getTopMarkets, 60000);
+  getVolumes();
+  var topInterval = setInterval (getVolumes, 300000);
 });
 
