@@ -16,19 +16,28 @@ function CapChart(options) {
   if (!options.height) options.height = options.width/2.25>400 ? options.width/2.25 :400;
   
   self.currency = options.currency || "USD";
-  self.format   = options.format   || "stacked";
-  self.dataType = options.dataType || "Capitalization";
+  self.format   = options.format   || "line";
+  self.dataType = options.dataType || "Transaction Volume";
   self.range    = options.range    || "max";
 
 //add data type dropdown
   dropdowns.append("div").attr("class","dropdowns dataType").append("select").selectAll("option")
-    .data(['Capitalization', 'Trade Volume'])
+    .data(['Capitalization', 'Transaction Volume', 'Trade Volume'])
     .enter().append("option")
     .html(function(d){return d})
     .attr("selected", function(d) {if (d == self.dataType) return true});
     
   dropdowns.select(".dataType select").on('change',function(){
     self.dataType = this.value;
+    if (self.dataType=='Transaction Volume') {
+      dropdowns.select(".currency").insert("option", ":first-child").attr("class", "XRP").text("XRP");  
+    } else {
+      dropdowns.select(".currency .XRP").remove();
+    }
+    
+    if (self.currency=='XRP') self.currency = dropdowns.select(".currency").node().value;
+    console.log(self.currency);
+
     var d = controls.select(".interval .selected").datum();
     loadData(d);
   });
@@ -36,6 +45,7 @@ function CapChart(options) {
  
 //add currency dropdown    
   var currencyList = ['BTC','USD','CNY','EUR','GBP','JPY','ILS','LTC'];
+  if (self.dataType=='Transaction Volume') currencyList.unshift("XRP");
   var currencyDropdown = ripple.currencyDropdown(currencyList).selected({currency:self.currency})
     .on("change", function(currency) {
       self.currency = currency;
@@ -105,6 +115,7 @@ function CapChart(options) {
     tracer, tooltip, loader, isLoading;
   
   var capDataCache   = {};
+  var sendDataCache  = {};
   var tradeDataCache = {};
 
   if (options.resize && typeof addResizeListener === 'function') {
@@ -143,13 +154,77 @@ function CapChart(options) {
     isLoading  = true;
     loader.transition().style("opacity",1);
     tracer.transition().duration(50).style("opacity",0); 
-    tooltip.transition().duration(50).style("opacity",0);     
+    tooltip.transition().duration(50).style("opacity",0);    
+     
     if (self.dataType=="Capitalization") {
-      loadCapitalizationData(range, self.currency);
+      loadCapitalizationData(range);
+    } else if (self.dataType==="Transaction Volume") {
+      loadSendData(range);
     } else {
       loadTradeData(range);
     }
   } 
+  
+  
+  function loadSendData(range) {
+    if (sendDataCache[self.currency] &&
+        sendDataCache[self.currency][self.range]) {
+          
+      isLoading = false;
+      drawData();
+      drawLegend();
+      return;  
+    } 
+
+    var issuers = self.currency=="XRP" ? [""] : currencyDropdown.getIssuers(self.currency);    
+    for (var i=0; i<issuers.length; i++) {
+      loadSendDataHelper(range, {currency:self.currency, issuer:issuers[i]}, issuers.length);
+    }       
+  }
+  
+  function loadSendDataHelper(range, c, count) {
+    var end = moment.utc();
+
+    apiHandler.valueSent({
+      startTime     : range.offset(end),
+      endTime       : end,
+      timeIncrement : range.interval,
+      currency      : c.currency,
+      issuer        : c.issuer
+      
+    }, function(data){  
+      if (!sendDataCache[c.currency]) 
+        sendDataCache[c.currency] = {};
+      if (!sendDataCache[c.currency][range.name])
+        sendDataCache[c.currency][range.name] = {raw:[]};
+      
+      
+      var results = data.results;
+      results.shift(); //remove the first;
+      
+      sendDataCache[c.currency][range.name]['raw'].push({
+        address : c.issuer,
+        name    : currencyDropdown.getName(c.issuer),
+        results : results.map(function(d){return[moment(d[0]).unix()*1000,d[1], d[2]]})});
+
+      prepareStackedData(c.currency, range); 
+      prepareLegend(c.currency, range);
+      
+      if (self.dataType=="Transaction Volume" &&
+        self.currency==c.currency &&
+        self.range==range.name) {
+      
+        if (sendDataCache[c.currency][range.name]['raw'].length == count) isLoading = false;
+        drawData(); //may have been changed after loading started
+        drawLegend();
+      }
+            
+    }, function (error){
+      console.log(error);
+
+    });     
+      
+  }
   
 //load trade data from offers exercised API for each issuer  
   function loadTradeData(range) {
@@ -211,7 +286,8 @@ function CapChart(options) {
   
 
 //load capitalization data from issuerCapitalization API  
-  function loadCapitalizationData(range, currency) { 
+  function loadCapitalizationData(range) { 
+    var currency = self.currency;
     
     if (capDataCache[currency] &&
         capDataCache[currency][range.name]) {
@@ -230,7 +306,8 @@ function CapChart(options) {
         issuer   : d
       }
     });
- 
+
+/* 
 //code below is used for gatewayCapitalization, wont be necessary
 //when issuerCapitalization is functioning    
     var currencies = [currency];
@@ -241,7 +318,7 @@ function CapChart(options) {
     //console.log(currencies);
     //console.log(gateways); 
     //console.log(pairs);
-    
+*/    
     apiHandler.issuerCapitalization({
       //currencies : currencies,
       //gateways   : gateways,
@@ -316,7 +393,10 @@ function CapChart(options) {
     
     if (self.dataType=='Capitalization') {
       raw = capDataCache[currency][range.name].raw;
-      
+    
+    } else if (self.dataType=="Transaction Volume") {
+      raw = sendDataCache[currency][range.name].raw;
+        
     } else {
       raw = tradeDataCache[currency][range.name].raw;
     }
@@ -359,6 +439,9 @@ function CapChart(options) {
     if (self.dataType=='Capitalization') {
       capDataCache[currency][range.name].stacked = stacked; 
       
+    } else if (self.dataType=="Transaction Volume") {
+      sendDataCache[currency][range.name].stacked = stacked;
+        
     } else {
       tradeDataCache[currency][range.name].stacked = stacked; 
     }
@@ -369,7 +452,11 @@ function CapChart(options) {
     var raw, legend;
     
     if (self.dataType=='Capitalization') {
-      raw = capDataCache[currency][range.name].raw;    
+      raw = capDataCache[currency][range.name].raw;  
+    
+    } else if (self.dataType=="Transaction Volume") {
+      raw = sendDataCache[currency][range.name].raw;
+          
     } else {
       raw = tradeDataCache[currency][range.name].raw;
     }
@@ -389,6 +476,10 @@ function CapChart(options) {
     
     if (self.dataType=='Capitalization') {
       capDataCache[currency][range.name].legend = legend;
+      
+    } else if (self.dataType=="Transaction Volume") {
+      sendDataCache[currency][range.name].legend = legend;
+          
     } else {
       tradeDataCache[currency][range.name].legend = legend;
     }
@@ -445,10 +536,13 @@ function CapChart(options) {
       if (self.dataType=='Capitalization') {
         data   = capDataCache[self.currency][self.range].stacked;
         legend = capDataCache[self.currency][self.range].legend;
+      } else if (self.dataType=='Transaction Volume') {
+        data   = sendDataCache[self.currency][self.range].stacked;
+        legend = sendDataCache[self.currency][self.range].legend;       
       } else if (self.dataType=='Trade Volume') {  
         data   = tradeDataCache[self.currency][self.range].stacked;
         legend = tradeDataCache[self.currency][self.range].legend;
-      }
+      } 
           
       color.domain(legend.map(function(d){return d.address}));   
       data = filterByLegend(data, legend); 
@@ -489,12 +583,15 @@ function CapChart(options) {
       if (self.dataType=='Capitalization') {
         lines  = capDataCache[self.currency][self.range].raw;
         legend = capDataCache[self.currency][self.range].legend;
-        
+      } else if (self.dataType=='Transaction Volume')   {
+        lines  = sendDataCache[self.currency][self.range].raw;
+        legend = sendDataCache[self.currency][self.range].legend;  
       } else if (self.dataType=='Trade Volume')   {
         lines  = tradeDataCache[self.currency][self.range].raw;
         legend = tradeDataCache[self.currency][self.range].legend;
       }
        
+      
       color.domain(legend.map(function(d){return d.address})); 
       lines = filterByLegend(lines, legend);
       
@@ -531,10 +628,12 @@ function CapChart(options) {
     var data;
     if (self.dataType=='Capitalization') 
       data = capDataCache[self.currency][self.range].legend;    
+    else if (self.dataType=='Transaction Volume')   
+      data = sendDataCache[self.currency][self.range].legend;   
     else if (self.dataType=='Trade Volume')   
-      data = tradeDataCache[self.currency][self.range].legend;   
-    
-        
+      data = tradeDataCache[self.currency][self.range].legend;      
+     
+    legend.style("display", self.currency == 'XRP' ? "none" : "block");     
     var items = legend.selectAll(".item").data(data);
     var enter = items.enter().append("div").attr("class","item");
 
@@ -553,7 +652,8 @@ function CapChart(options) {
       .style("opacity", function(d){return d.hide ? 0.3 : 1});
     items.select(".gateway").html(function(d){return d.name});
     items.select(".issuer").html(function(d){return d.address});
-    items.select(".amount").html(function(d){return d.amount + " <small>"+self.currency+"</small"});
+    if (self.dataType=='Capitalization') 
+      items.select(".amount").html(function(d){return d.amount + " <small>"+self.currency+"</small"});
     items.exit().remove();  
   }
   

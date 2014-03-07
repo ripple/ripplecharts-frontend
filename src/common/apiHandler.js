@@ -70,6 +70,21 @@ ApiHandler = function (url) {
     return request;    
   } 
   
+  this.valueSent = function (params, load, error) {
+    
+    var request = apiRequest("valueSent");        
+    request.post(JSON.stringify(params))
+      .on('load', function(xhr) {
+        var response = JSON.parse(xhr.response);  
+        load(response);
+      })
+      .on('error', function(xhr){
+        console.log(xhr.response);
+        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
+      });
+      
+    return request;      
+  }
   
   this.issuerCapitalization = function (params, load, error) {
     
