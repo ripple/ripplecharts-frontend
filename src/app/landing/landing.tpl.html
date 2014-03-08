@@ -18,25 +18,38 @@
           <li>
             <label>Total Network Value:</label>
             <div class="stat">
-              <span ng-bind="networkValue">&nbsp</span>
-              <small>XRP</small>
+              <span ng-bind="networkValue"></span>
+              <small ng-show="networkValue">XRP</small>
+              <img ng-hide="networkValue" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li>
           <li>
             <label>Ledger #:</label>
-            <div class="stat" ng-bind="ledgerIndex">&nbsp</div>
+            <div class="stat">
+              <span ng-bind="ledgerIndex"></span>
+              <img ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li> 
           <li>
             <label>Transaction Volume: <small>(24 hours - USD terms)</small></label>
-            <div class="stat" ng-bind="volume24Hours">&nbsp</div>
+            <div class="stat">
+              <span ng-bind="volume24Hours"></span>
+              <img ng-hide="volume24Hours" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li>
           <li>
             <label>Trade Volume: <small>(24 hours - USD terms)</small></label>
-            <div class="stat" ng-bind="tradeVolume">&nbsp</div>
+            <div class="stat">
+              <span ng-bind="tradeVolume"></span>
+              <img ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li>
           <li>
             <label># of Ripple accounts:</label>
-            <div class="stat" ng-bind="totalAccounts">&nbsp</div>
+            <div class="stat">
+              <span ng-bind="totalAccounts"></span>
+              <img ng-hide="totalAccounts" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li>  
         </ul>
       </div>

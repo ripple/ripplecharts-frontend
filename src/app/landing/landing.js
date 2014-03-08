@@ -27,6 +27,9 @@ angular.module( 'ripplecharts.landing', [
   remote.on("connect", function(){
     getTotalAccounts();  //we want to retreive this number every time we reconnect
   });
+  
+  if (remote._connected) getTotalAccounts();
+  
    
 //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
@@ -85,6 +88,11 @@ angular.module( 'ripplecharts.landing', [
       totalAccounts = total;
       $scope.totalAccounts = commas(totalAccounts);
       $scope.$apply();
+      
+    }, function(error){
+      console.log(error);
+      $scope.totalAccounts = " ";
+      $scope.$apply();
     });    
   }
   
@@ -110,7 +118,12 @@ angular.module( 'ripplecharts.landing', [
     api.getVolume24Hours(function(data){
       var volume = data.total;
       $scope.volume24Hours = volume ? "$"+commas(volume,2) : "";
-      $scope.$apply();          
+      $scope.$apply(); 
+               
+    }, function(error){
+      console.log(error);
+      $scope.volume24Hours = " ";
+      $scope.$apply();
     });
     
     api.getTopMarkets(function(data){
@@ -120,6 +133,11 @@ angular.module( 'ripplecharts.landing', [
       }
       
       $scope.tradeVolume = volume ? "$"+commas(volume,2) : "";
+      $scope.$apply();
+      
+    }, function(error){
+      console.log(error);
+      $scope.tradeVolume = " ";
       $scope.$apply();
     });
   }

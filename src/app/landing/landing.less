@@ -43,6 +43,7 @@
 .landing .stats label {
   vertical-align:middle;
   display:table-cell;
+  width:45%;
   text-align:left;
   color:#888;
   padding:5px 10px 5px 20px;
@@ -59,6 +60,7 @@
 .landing .stat {
   vertical-align:middle;
   display:table-cell;
+  width:55%;
   font-size: 18px;
   font-weight: bold;
   text-align:left;
@@ -69,6 +71,12 @@
 
 .landing .stat small {
   color:#777;
+}
+
+.landing .stat .loader {
+  width:20px;
+  height:20px;
+  opacity:.35;  
 }
 
 .landing .stats li:last-child .stat, .landing .stats li:last-child label {
@@ -119,10 +127,6 @@
   
   #topMarkets .chart {
     width:375px ;
-  }
-  
-  .landing .stats label small {
-    display:inline-block;
   }
 }
 
