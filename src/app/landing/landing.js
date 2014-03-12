@@ -117,12 +117,12 @@ angular.module( 'ripplecharts.landing', [
     
     api.getVolume24Hours(function(data){
       var volume = data.total;
-      $scope.volume24Hours = volume ? "$"+commas(volume,2) : "";
+      $scope.volume24Hours = volume ? "$"+commas(volume,2) : " ";
       $scope.$apply(); 
                
     }, function(error){
       console.log(error);
-      $scope.volume24Hours = " ";
+      $scope.volume24Hours = " "; //must be a space so that the loader hides
       $scope.$apply();
     });
     
@@ -132,12 +132,12 @@ angular.module( 'ripplecharts.landing', [
         volume += data[i][3];
       }
       
-      $scope.tradeVolume = volume ? "$"+commas(volume,2) : "";
+      $scope.tradeVolume = volume ? "$"+commas(volume,2) : " ";
       $scope.$apply();
       
     }, function(error){
       console.log(error);
-      $scope.tradeVolume = " ";
+      $scope.tradeVolume = " "; //must be a space so that the loader hides
       $scope.$apply();
     });
   }

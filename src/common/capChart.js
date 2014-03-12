@@ -207,6 +207,8 @@ function CapChart(options) {
         name    : currencyDropdown.getName(c.issuer),
         results : results.map(function(d){return[moment(d[0]).unix()*1000,d[1], d[2]]})});
 
+      console.log(data);
+            
       prepareStackedData(c.currency, range); 
       prepareLegend(c.currency, range);
       
@@ -266,7 +268,6 @@ function CapChart(options) {
         name    : currencyDropdown.getName(base.issuer),
         results : data.map(function(d){return[d.time.unix()*1000,d.volume]})});
       
-
       prepareStackedData(base.currency, range); 
       prepareLegend(base.currency, range);
       
