@@ -125,9 +125,9 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	var EventEmitter = require(30).EventEmitter;
-	var util         = require(31);
-	var LRU          = require(44);
+	var EventEmitter = require(31).EventEmitter;
+	var util         = require(32);
+	var LRU          = require(40);
 	var Request      = require(2).Request;
 	var Server       = require(16).Server;
 	var Amount       = require(3).Amount;
@@ -269,19 +269,19 @@ var ripple =
 	    ];
 	  }
 
-	  if (isNaN(this._connection_offset)) {
+	  if (typeof this._connection_offset !== 'number') {
 	    throw new TypeError('Remote "connection_offset" configuration is not a Number');
 	  }
 
-	  if (isNaN(this._submission_timeout)) {
+	  if (typeof this._submission_timeout !== 'number') {
 	    throw new TypeError('Remote "submission_timeout" configuration is not a Number');
 	  }
 
-	  if (isNaN(this.max_fee)) {
+	  if (typeof this.max_fee !== 'number') {
 	    throw new TypeError('Remote "max_fee" configuration is not a Number');
 	  }
 
-	  if (isNaN(this.fee_cushion)) {
+	  if (typeof this.fee_cushion !== 'number') {
 	    throw new TypeError('Remote "fee_cushion" configuration is not a Number');
 	  }
 
@@ -421,7 +421,7 @@ var ripple =
 	};
 
 	Remote.from_config = function(obj, trace) {
-	  var serverConfig = typeof obj === 'string' ? config.servers[obj] : obj;
+	  var serverConfig = (typeof obj === 'string') ? config.servers[obj] : obj;
 
 	  var remote = new Remote(serverConfig, trace);
 
@@ -1853,8 +1853,8 @@ var ripple =
 /***/ 2:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(30).EventEmitter;
-	var util         = require(31);
+	var EventEmitter = require(31).EventEmitter;
+	var util         = require(32);
 	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
 	var Transaction  = require(5).Transaction;
@@ -3278,12 +3278,12 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter       = require(30).EventEmitter;
-	var util               = require(31);
-	var extend             = require(37);
+	var EventEmitter       = require(31).EventEmitter;
+	var util               = require(32);
+	var extend             = require(35);
 	var Amount             = require(3).Amount;
 	var UInt160            = require(8).UInt160;
-	var TransactionManager = require(21).TransactionManager;
+	var TransactionManager = require(22).TransactionManager;
 
 	/**
 	 * @constructor Account
@@ -3599,8 +3599,8 @@ var ripple =
 	//   - may or may not forward.
 	//
 
-	var EventEmitter     = require(30).EventEmitter;
-	var util             = require(31);
+	var EventEmitter     = require(31).EventEmitter;
+	var util             = require(32);
 	var sjcl             = require(15).sjcl;
 	var Amount           = require(3).Amount;
 	var Currency         = require(3).Currency;
@@ -3608,7 +3608,7 @@ var ripple =
 	var Seed             = require(10).Seed;
 	var SerializedObject = require(12).SerializedObject;
 	var RippleError      = require(13).RippleError;
-	var hashprefixes     = require(24);
+	var hashprefixes     = require(23);
 	var config           = require(17);
 
 	function Transaction(remote) {
@@ -3616,49 +3616,50 @@ var ripple =
 
 	  var self  = this;
 
-	  this.remote              = remote;
-
-	  this._secret             = void(0);
+	  this.remote = remote;
 
 	  // Transaction data
-	  this.tx_json             = { Flags: 0 };
+	  this.tx_json = { Flags: 0 };
 
-	  this._build_path         = false;
+	  this._secret = void(0);
+	  this._build_path = false;
 
-	  // Index at which transaction was submitted
-	  this.submitIndex         = void(0);
-
-	  this.state               = 'unsubmitted';
-
-	  this.finalized           = false;
-
+	  this.state = 'unsubmitted';
+	  this.finalized = false;
 	  this.previousSigningHash = void(0);
+	  // Index at which transaction was submitted
+	  this.submitIndex = void(0);
 
 	  // We aren't clever enough to eschew preventative measures so we keep an array
 	  // of all submitted transactionIDs (which can change due to load_factor
 	  // effecting the Fee amount). This should be populated with a transactionID
 	  // any time it goes on the network
-	  this.submittedIDs        = [ ]
+	  this.submittedIDs = [ ]
 
 	  function finalize(message) {
 	    if (!self.finalized) {
 	      self.finalized = true;
+
+	      if (self.result) {
+	        self.result.ledger_index = message.ledger_index;
+	        self.result.ledger_hash  = message.ledger_hash;
+	      } else {
+	        self.result = message;
+	        self.result.tx_json = self.tx_json;
+	      }
+
 	      self.emit('cleanup', message);
 	    }
 	  };
 
 	  this.once('success', function(message) {
-	    finalize(message);
 	    self.setState('validated');
+	    finalize(message);
 	  });
 
 	  this.once('error', function(message) {
+	    self.setState('failed');
 	    finalize(message);
-
-	    var prefix = message.engine_result.substring(0, 3);
-	    var offlineError = (prefix === 'tej' && message.engine_result !== 'tejLost');
-
-	    self.setState(offlineError ? 'failed_offline' : 'failed');
 	  });
 
 	  this.once('submitted', function() {
@@ -3817,8 +3818,8 @@ var ripple =
 
 	Transaction.prototype.complete = function() {
 	  // Try to auto-fill the secret
-	  if (!this._secret) {
-	    this._secret = this._account_secret(this.tx_json.Account);
+	  if (!this._secret && !(this._secret = this._account_secret(this.tx_json.Account))) {
+	    return this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
 	  }
 
 	  if (this.remote && typeof this.tx_json.Fee === 'undefined') {
@@ -3940,6 +3941,21 @@ var ripple =
 	  return this;
 	};
 
+	Transaction.prototype.clientID = function(id) {
+	  if (typeof id === 'string') {
+	    this._clientID = id;
+	  }
+	  return this;
+	};
+
+	Transaction.prototype.lastLedger = function(sequence) {
+	  if (typeof sequence === 'number') {
+	    this._setLastLedger = true;
+	    this.tx_json.LastLedgerSequence = sequence;
+	  }
+	  return this;
+	};
+
 	Transaction._pathRewrite = function(path) {
 	  return path.map(function(node) {
 	    var newNode = { };
@@ -3954,6 +3970,10 @@ var ripple =
 
 	    if (node.hasOwnProperty('currency')) {
 	      newNode.currency = Currency.json_rewrite(node.currency);
+	    }
+
+	    if (node.hasOwnProperty('type_hex')) {
+	      newNode.type_hex = node.type_hex;
 	    }
 
 	    return newNode
@@ -4333,19 +4353,27 @@ var ripple =
 	};
 
 	Transaction.summary = function() {
-	  return {
-	    tx_json: this.tx_json,
-	    sourceID: this.sourceID,
-	    submittedIDs: this.submittedIDs,
-	    submissionAttempts: this.attempts,
-	    state: this.state,
-	    server: this._server ? this._server._opts.url :  void(0),
-	    finalized: this.finalized,
-	    result: {
-	      engine_result: this.result ? this.result.engine_result: void(0),
-	      engine_result_message: this.result ? this.result.engine_result_message: void(0),
+	  var result = {
+	    tx_json:             this.tx_json,
+	    clientID:            this._clientID,
+	    submittedIDs:        this.submittedIDs,
+	    submissionAttempts:  this.attempts,
+	    state:               this.state,
+	    server:              this._server ? this._server._opts.url :  void(0),
+	    finalized:           this.finalized
+	  }
+
+	  if (this.result) {
+	    result.result = {
+	      engine_result        : this.result.engine_result,
+	      engine_result_message: this.result.engine_result_message,
+	      ledger_hash          : this.result.ledger_hash,
+	      ledger_index         : this.result.ledger_index,
+	      transaction_hash     : this.result.tx_json.hash
 	    }
 	  }
+
+	  return result;
 	};
 
 	exports.Transaction = Transaction;
@@ -4359,10 +4387,10 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	
-	var extend    = require(37);
+	var extend    = require(35);
 
 	var UInt160 = require(8).UInt160;
-	var Float = require(22).Float;
+	var Float = require(21).Float;
 	var utils = require(15);
 
 	//
@@ -4597,7 +4625,7 @@ var ripple =
 
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
-	var extend  = require(37);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4774,11 +4802,11 @@ var ripple =
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(37);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = require(23).UInt;
+	var UInt = require(24).UInt;
 	var Base = require(7).Base;
 
 	//
@@ -4888,11 +4916,11 @@ var ripple =
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(37);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = require(23).UInt,
+	var UInt = require(24).UInt,
 	    Base = require(7).Base;
 
 	//
@@ -4929,12 +4957,12 @@ var ripple =
 
 	var utils   = require(15);
 	var sjcl    = utils.sjcl;
-	var extend  = require(37);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = require(7).Base;
-	var UInt    = require(23).UInt;
+	var UInt    = require(24).UInt;
 	var UInt256 = require(9).UInt256;
 	var KeyPair = require(25).KeyPair;
 
@@ -5046,7 +5074,7 @@ var ripple =
 /***/ 11:
 /***/ function(module, exports, require) {
 
-	var extend  = require(37);
+	var extend  = require(35);
 	var utils   = require(15);
 	var UInt160 = require(8).UInt160;
 	var Amount  = require(3).Amount;
@@ -5222,10 +5250,10 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(14);
-	var extend     = require(37);
+	var extend     = require(35);
 	var stypes     = require(26);
 	var UInt256    = require(9).UInt256;
-	var assert     = require(32);
+	var assert     = require(33);
 
 	var utils      = require(15);
 	var sjcl       = utils.sjcl;
@@ -5528,8 +5556,8 @@ var ripple =
 /***/ 13:
 /***/ function(module, exports, require) {
 
-	var util   = require(31);
-	var extend = require(37);
+	var util   = require(32);
+	var extend = require(35);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -5700,7 +5728,9 @@ var ripple =
 	    8: 'FundCode',
 	    9: 'RemoveCode',
 	    10: 'ExpireCode',
-	    11: 'CreateCode'
+	    11: 'CreateCode',
+	    12: 'MemoType',
+	    13: 'MemoData'
 	  },
 	  8: { // Account
 	    1: 'Account',
@@ -5719,7 +5749,8 @@ var ripple =
 	    6: 'PreviousFields',
 	    7: 'FinalFields',
 	    8: 'NewFields',
-	    9: 'TemplateEntry'
+	    9: 'TemplateEntry',
+	    10: 'Memo'
 	  },
 	  15: { // Array
 	    1: void(0),  //end of Array
@@ -5729,7 +5760,8 @@ var ripple =
 	    5: 'Template',
 	    6: 'Necessary',
 	    7: 'Sufficient',
-	    8: 'AffectedNodes'
+	    8: 'AffectedNodes',
+	    9: 'Memos'
 	  },
 
 	  // Uncommon types
@@ -6164,8 +6196,8 @@ var ripple =
 /***/ 16:
 /***/ function(module, exports, require) {
 
-	var util         = require(31);
-	var EventEmitter = require(30).EventEmitter;
+	var util         = require(32);
+	var EventEmitter = require(31).EventEmitter;
 	var Transaction = require(5).Transaction;
 	var Amount       = require(3).Amount;
 	var utils        = require(15);
@@ -6202,7 +6234,7 @@ var ripple =
 	    throw new Error('Server host is malformed, use "host" and "port" server configuration');
 	  }
 
-	  if (isNaN(opts.port)) {
+	  if (typeof opts.port !== 'number') {
 	    throw new TypeError('Server configuration "port" is not a Number');
 	  }
 
@@ -6332,7 +6364,7 @@ var ripple =
 	Server.websocketConstructor = function() {
 	  // We require this late, because websocket shims may be loaded after
 	  // ripple-lib in the browser
-	  return require(33);
+	  return require(30);
 	};
 
 	/**
@@ -6757,7 +6789,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = require(37);
+	var extend = require(35);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -6782,9 +6814,9 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter = require(30).EventEmitter;
-	var util         = require(31);
-	var extend       = require(37);
+	var EventEmitter = require(31).EventEmitter;
+	var util         = require(32);
+	var extend       = require(35);
 	var Amount       = require(3).Amount;
 	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
@@ -7075,10 +7107,10 @@ var ripple =
 /***/ 19:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(30).EventEmitter;
-	var util         = require(31);
+	var EventEmitter = require(31).EventEmitter;
+	var util         = require(32);
 	var Amount       = require(3).Amount;
-	var extend       = require(37);
+	var extend       = require(35);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -7205,11 +7237,74 @@ var ripple =
 /***/ 21:
 /***/ function(module, exports, require) {
 
-	var util         = require(31);
-	var EventEmitter = require(30).EventEmitter;
+	/**
+	 * IEEE 754 floating-point.
+	 *
+	 * Supports single- or double-precision
+	 */
+	var Float = exports.Float = {};
+
+	var allZeros = /^0+$/;
+	var allOnes = /^1+$/;
+
+	Float.fromBytes = function (bytes) {
+	  // Render in binary.  Hackish.
+	  var b = "";
+	  for (var i = 0, n = bytes.length; i < n; i++) {
+	    var bits = (bytes[i] & 0xff).toString(2);
+	    while (bits.length < 8) bits = "0" + bits;
+	    b += bits;
+	  }
+
+	  // Determine configuration.  This could have all been precomputed but it is fast enough.
+	  var exponentBits = bytes.length === 4 ? 4 : 11;
+	  var mantissaBits = (bytes.length * 8) - exponentBits - 1;
+	  var bias = Math.pow(2, exponentBits - 1) - 1;
+	  var minExponent = 1 - bias - mantissaBits;
+
+	  // Break up the binary representation into its pieces for easier processing.
+	  var s = b[0];
+	  var e = b.substring(1, exponentBits + 1);
+	  var m = b.substring(exponentBits + 1);
+
+	  var value = 0;
+	  var multiplier = (s === "0" ? 1 : -1);
+
+	  if (allZeros.test(e)) {
+	    // Zero or denormalized
+	    if (allZeros.test(m)) {
+	      // Value is zero
+	    } else {
+	      value = parseInt(m, 2) * Math.pow(2, minExponent);
+	    }
+	  } else if (allOnes.test(e)) {
+	    // Infinity or NaN
+	    if (allZeros.test(m)) {
+	      value = Infinity;
+	    } else {
+	      value = NaN;
+	    }
+	  } else {
+	    // Normalized
+	    var exponent = parseInt(e, 2) - bias;
+	    var mantissa = parseInt(m, 2);
+	    value = (1 + (mantissa * Math.pow(2, -mantissaBits))) * Math.pow(2, exponent);
+	  }
+
+	  return value * multiplier;
+	};
+
+
+/***/ },
+
+/***/ 22:
+/***/ function(module, exports, require) {
+
+	var util         = require(32);
+	var EventEmitter = require(31).EventEmitter;
 	var Transaction  = require(5).Transaction;
 	var RippleError  = require(13).RippleError;
-	var PendingQueue = require(35).TransactionQueue;
+	var PendingQueue = require(36).TransactionQueue;
 
 	/**
 	 * @constructor TransactionManager
@@ -7396,8 +7491,18 @@ var ripple =
 	  function sequenceLoaded(err, sequence) {
 	    if (typeof sequence !== 'number') {
 	      callback(new Error('Failed to fetch account transaction sequence'));
-	    } else {
-	      submitFill(tx.tx_json.Sequence, callback);
+	      return;
+	    }
+
+	    var sequenceDif = tx.tx_json.Sequence - sequence;
+	    var submitted = 0;
+
+	    for (var i=sequence; i<tx.tx_json.Sequence; i++) {
+	      submitFill(i, function() {
+	        if (++submitted === sequenceDif) {
+	          callback();
+	        }
+	      });
 	    }
 	  };
 
@@ -7463,9 +7568,7 @@ var ripple =
 
 	        self._loadSequence();
 
-	        if (++i < pending.length) {
-	          nextTransaction(i);
-	        }
+	        if (++i < pending.length) nextTransaction(i);
 	      });
 
 	      resubmitTransaction(transaction);
@@ -7516,7 +7619,12 @@ var ripple =
 	  tx.emit('presubmit');
 
 	  tx.submitIndex = this._remote._ledger_current_index;
-	  tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
+
+	  if (!tx._setLastLedger) {
+	    // Honor LastLedgerSequence set by user of API. If
+	    // left unset by API, bump LastLedgerSequence
+	    tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
+	  }
 
 	  var submitRequest = remote.requestSubmit();
 
@@ -7544,29 +7652,46 @@ var ripple =
 	  remote._trace('transactionmanager: submit:', tx.tx_json);
 
 	  function transactionProposed(message) {
+	    if (tx.finalized) return;
 	    // If server is honest, don't expect a final if rejected.
 	    message.rejected = tx.isRejected(message.engine_result_code);
 	    tx.emit('proposed', message);
 	  };
 
 	  function transactionFailed(message) {
-	    self._fillSequence(tx, function() {
-	      switch (message.engine_result) {
-	        case 'tefPAST_SEQ':
-	          self._resubmit(1, tx);
-	          break;
-	        default:
-	          tx.emit('error', message);
-	      }
-	    });
+	    if (tx.finalized) return;
+	    switch (message.engine_result) {
+	      case 'tefPAST_SEQ':
+	        self._resubmit(1, tx);
+	        break;
+	      default:
+	        tx.emit('error', message);
+	    }
 	  };
 
 	  function transactionRetry(message) {
-	    self._resubmit(1, tx);
+	    if (tx.finalized) return;
+	    self._fillSequence(tx, function() {
+	      self._resubmit(1, tx);
+	    });
 	  };
 
 	  function transactionFeeClaimed(message) {
+	    if (tx.finalized) return;
 	    tx.emit('error', message);
+	  };
+
+	  function transactionFailedLocal(message) {
+	    if (tx.finalized) return;
+
+	    var shouldAdjustFee = self._remote.local_fee
+	    && (message.engine_result === 'telINSUF_FEE_P');
+
+	    if (shouldAdjustFee) {
+	      self._resubmit(1, tx);
+	    } else {
+	      submissionError(message);
+	    }
 	  };
 
 	  function submissionError(error) {
@@ -7612,8 +7737,11 @@ var ripple =
 	      case 'tef':
 	        transactionFailed(message);
 	        break;
+	      case 'tel':
+	        transactionFailedLocal(message);
+	        break;
 	      default:
-	        //tel, tem
+	        // tem
 	        submissionError(message);
 	    }
 	  };
@@ -7662,7 +7790,6 @@ var ripple =
 	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
 	    submitRequest.request();
 	    tx.attempts++;
-	    tx.emit('save', tx.summary());
 	    tx.emit('postsubmit');
 	  };
 
@@ -7700,6 +7827,7 @@ var ripple =
 
 	TransactionManager.prototype.submit = function(tx) {
 	  var self = this;
+	  var remote = this._remote;
 
 	  // If sequence number is not yet known, defer until it is.
 	  if (typeof this._nextSequence === 'undefined') {
@@ -7713,15 +7841,10 @@ var ripple =
 	  // Finalized (e.g. aborted) transactions must stop all activity
 	  if (tx.finalized) return;
 
-	  if (typeof tx.tx_json.Sequence !== 'number') {
-	    tx.tx_json.Sequence = this._nextSequence++;
-	  }
-
 	  function cleanup(message) {
 	    // ND: We can just remove this `tx` by identity
 	    self._pending.remove(tx);
 	    tx.emit('final', message);
-	    tx.emit('save');
 	    remote._trace('transactionmanager: finalize_transaction:', tx.tx_json);
 	  };
 
@@ -7743,8 +7866,8 @@ var ripple =
 	    tx.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
 	  });
 
-	  if (typeof tx.clientID === 'string') {
-	    tx.sourceID = [ this._accountID, tx.clientID ].join(':');
+	  if (typeof tx.tx_json.Sequence !== 'number') {
+	    tx.tx_json.Sequence = this._nextSequence++;
 	  }
 
 	  tx.attempts = 0;
@@ -7753,7 +7876,6 @@ var ripple =
 	  tx.complete();
 
 	  var fee = Number(tx.tx_json.Fee);
-	  var remote = this._remote;
 
 	  if (!tx._secret && !tx.tx_json.TxnSignature) {
 	    tx.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
@@ -7768,7 +7890,6 @@ var ripple =
 	    // validated transaction clearing) to fail.
 	    this._pending.push(tx);
 	    this._request(tx);
-	    tx.emit('save');
 	  }
 	};
 
@@ -7777,70 +7898,37 @@ var ripple =
 
 /***/ },
 
-/***/ 22:
+/***/ 23:
 /***/ function(module, exports, require) {
 
 	/**
-	 * IEEE 754 floating-point.
+	 * Prefix for hashing functions.
 	 *
-	 * Supports single- or double-precision
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
 	 */
-	var Float = exports.Float = {};
 
-	var allZeros = /^0+$/;
-	var allOnes = /^1+$/;
-
-	Float.fromBytes = function (bytes) {
-	  // Render in binary.  Hackish.
-	  var b = "";
-	  for (var i = 0, n = bytes.length; i < n; i++) {
-	    var bits = (bytes[i] & 0xff).toString(2);
-	    while (bits.length < 8) bits = "0" + bits;
-	    b += bits;
-	  }
-
-	  // Determine configuration.  This could have all been precomputed but it is fast enough.
-	  var exponentBits = bytes.length === 4 ? 4 : 11;
-	  var mantissaBits = (bytes.length * 8) - exponentBits - 1;
-	  var bias = Math.pow(2, exponentBits - 1) - 1;
-	  var minExponent = 1 - bias - mantissaBits;
-
-	  // Break up the binary representation into its pieces for easier processing.
-	  var s = b[0];
-	  var e = b.substring(1, exponentBits + 1);
-	  var m = b.substring(exponentBits + 1);
-
-	  var value = 0;
-	  var multiplier = (s === "0" ? 1 : -1);
-
-	  if (allZeros.test(e)) {
-	    // Zero or denormalized
-	    if (allZeros.test(m)) {
-	      // Value is zero
-	    } else {
-	      value = parseInt(m, 2) * Math.pow(2, minExponent);
-	    }
-	  } else if (allOnes.test(e)) {
-	    // Infinity or NaN
-	    if (allZeros.test(m)) {
-	      value = Infinity;
-	    } else {
-	      value = NaN;
-	    }
-	  } else {
-	    // Normalized
-	    var exponent = parseInt(e, 2) - bias;
-	    var mantissa = parseInt(m, 2);
-	    value = (1 + (mantissa * Math.pow(2, -mantissaBits))) * Math.pow(2, exponent);
-	  }
-
-	  return value * multiplier;
-	};
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
 
 
 /***/ },
 
-/***/ 23:
+/***/ 24:
 /***/ function(module, exports, require) {
 
 	var utils   = require(15);
@@ -8140,36 +8228,6 @@ var ripple =
 
 /***/ },
 
-/***/ 24:
-/***/ function(module, exports, require) {
-
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
-
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
-
-
-/***/ },
-
 /***/ 25:
 /***/ function(module, exports, require) {
 
@@ -8284,13 +8342,13 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert    = require(32);
-	var extend    = require(37);
+	var assert    = require(33);
+	var extend    = require(35);
 	var binformat = require(14);
 	var utils     = require(15);
 	var sjcl      = utils.sjcl;
 
-	var UInt128   = require(46).UInt128;
+	var UInt128   = require(38).UInt128;
 	var UInt160   = require(8).UInt160;
 	var UInt256   = require(9).UInt256;
 	var Base      = require(7).Base;
@@ -9017,7 +9075,7 @@ var ripple =
 	    this.length = size;
 	};
 
-	var assert = require(32);
+	var assert = require(33);
 
 	exports.INSPECT_MAX_BYTES = 50;
 
@@ -9915,7 +9973,7 @@ var ripple =
 	        'Trying to read beyond buffer length');
 	  }
 
-	  return require(36).readIEEE754(buffer, offset, isBigEndian,
+	  return require(39).readIEEE754(buffer, offset, isBigEndian,
 	      23, 4);
 	}
 
@@ -9936,7 +9994,7 @@ var ripple =
 	        'Trying to read beyond buffer length');
 	  }
 
-	  return require(36).readIEEE754(buffer, offset, isBigEndian,
+	  return require(39).readIEEE754(buffer, offset, isBigEndian,
 	      52, 8);
 	}
 
@@ -10226,7 +10284,7 @@ var ripple =
 	    verifIEEE754(value, 3.4028234663852886e+38, -3.4028234663852886e+38);
 	  }
 
-	  require(36).writeIEEE754(buffer, value, offset, isBigEndian,
+	  require(39).writeIEEE754(buffer, value, offset, isBigEndian,
 	      23, 4);
 	}
 
@@ -10255,7 +10313,7 @@ var ripple =
 	    verifIEEE754(value, 1.7976931348623157E+308, -1.7976931348623157E+308);
 	  }
 
-	  require(36).writeIEEE754(buffer, value, offset, isBigEndian,
+	  require(39).writeIEEE754(buffer, value, offset, isBigEndian,
 	      52, 8);
 	}
 
@@ -14336,7 +14394,7 @@ var ripple =
 	        l = R.bitLength(),
 	        r = sjcl.bn.fromBits(w.bitSlice(rs,0,l)),
 	        s = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l)),
-	        sInv = s.modInverse(R),
+	        sInv = s.inverseMod(R),
 	        hG = sjcl.bn.fromBits(hash).mul(sInv).mod(R),
 	        hA = r.mul(sInv).mod(R),
 	        r2 = this._curve.G.mult2(hG, hA, this._point).x;
@@ -14429,7 +14487,7 @@ var ripple =
 	  }
 	};
 	
-	/* WEBPACK VAR INJECTION */}(require, require(45)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(37)(module)))
 
 /***/ },
 
@@ -15653,9 +15711,56 @@ var ripple =
 /***/ 30:
 /***/ function(module, exports, require) {
 
+	// If there is no WebSocket, try MozWebSocket (support for some old browsers)
+	try {
+	  module.exports = WebSocket;
+	} catch(err) {
+	  module.exports = MozWebSocket;
+	}
+
+	// Some versions of Safari Mac 5 and Safari iOS 4 seem to support websockets,
+	// but can't communicate with websocketpp, which is what rippled uses.
+	//
+	// Note that we check for both the WebSocket protocol version the browser seems
+	// to implement as well as the user agent etc. The reason is that we want to err
+	// on the side of trying to connect since we don't want to accidentally disable
+	// a browser that would normally work fine.
+	var match, versionRegexp = /Version\/(\d+)\.(\d+)(?:\.(\d+))?.*Safari\//;
+	if (
+	  // Is browser
+	  "object" === typeof navigator &&
+	  "string" === typeof navigator.userAgent &&
+	  // Is Safari
+	  (match = versionRegexp.exec(navigator.userAgent)) &&
+	  // And uses the old websocket protocol
+	  2 === window.WebSocket.CLOSED
+	) {
+	  // Is iOS
+	  if (/iP(hone|od|ad)/.test(navigator.platform)) {
+	    // Below version 5 is broken
+	    if (+match[1] < 5) {
+	      module.exports = void(0);
+	    }
+	  // Is any other Mac OS
+	  // If you want to refactor this code, be careful, iOS user agents contain the
+	  // string "like Mac OS X".
+	  } else if (navigator.appVersion.indexOf("Mac") !== -1) {
+	    // Below version 6 is broken
+	    if (+match[1] < 6) {
+	      module.exports = void(0);
+	    }
+	  }
+	}
+
+
+/***/ },
+
+/***/ 31:
+/***/ function(module, exports, require) {
+
 	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
-	var isArray = require(38);
-	var indexOf = require(39);
+	var isArray = require(41);
+	var indexOf = require(42);
 
 
 
@@ -15845,16 +15950,16 @@ var ripple =
 
 /***/ },
 
-/***/ 31:
+/***/ 32:
 /***/ function(module, exports, require) {
 
-	var events = require(30);
+	var events = require(31);
 
-	var isArray = require(38);
-	var Object_keys = require(40);
-	var Object_getOwnPropertyNames = require(41);
-	var Object_create = require(42);
-	var isRegExp = require(43);
+	var isArray = require(41);
+	var Object_keys = require(43);
+	var Object_getOwnPropertyNames = require(45);
+	var Object_create = require(46);
+	var isRegExp = require(44);
 
 	exports.isArray = isArray;
 	exports.isDate = isDate;
@@ -16159,15 +16264,15 @@ var ripple =
 
 /***/ },
 
-/***/ 32:
+/***/ 33:
 /***/ function(module, exports, require) {
 
 	// UTILITY
-	var util = require(31);
+	var util = require(32);
 	var pSlice = Array.prototype.slice;
 
-	var objectKeys = require(40);
-	var isRegExp = require(43);
+	var objectKeys = require(43);
+	var isRegExp = require(44);
 
 	// 1. The assert module provides functions that throw
 	// AssertionError's when particular conditions are not met. The
@@ -16481,53 +16586,6 @@ var ripple =
 
 /***/ },
 
-/***/ 33:
-/***/ function(module, exports, require) {
-
-	// If there is no WebSocket, try MozWebSocket (support for some old browsers)
-	try {
-	  module.exports = WebSocket;
-	} catch(err) {
-	  module.exports = MozWebSocket;
-	}
-
-	// Some versions of Safari Mac 5 and Safari iOS 4 seem to support websockets,
-	// but can't communicate with websocketpp, which is what rippled uses.
-	//
-	// Note that we check for both the WebSocket protocol version the browser seems
-	// to implement as well as the user agent etc. The reason is that we want to err
-	// on the side of trying to connect since we don't want to accidentally disable
-	// a browser that would normally work fine.
-	var match, versionRegexp = /Version\/(\d+)\.(\d+)(?:\.(\d+))?.*Safari\//;
-	if (
-	  // Is browser
-	  "object" === typeof navigator &&
-	  "string" === typeof navigator.userAgent &&
-	  // Is Safari
-	  (match = versionRegexp.exec(navigator.userAgent)) &&
-	  // And uses the old websocket protocol
-	  2 === window.WebSocket.CLOSED
-	) {
-	  // Is iOS
-	  if (/iP(hone|od|ad)/.test(navigator.platform)) {
-	    // Below version 5 is broken
-	    if (+match[1] < 5) {
-	      module.exports = void(0);
-	    }
-	  // Is any other Mac OS
-	  // If you want to refactor this code, be careful, iOS user agents contain the
-	  // string "like Mac OS X".
-	  } else if (navigator.appVersion.indexOf("Mac") !== -1) {
-	    // Below version 6 is broken
-	    if (+match[1] < 6) {
-	      module.exports = void(0);
-	    }
-	  }
-	}
-
-
-/***/ },
-
 /***/ 34:
 /***/ function(module, exports, require) {
 
@@ -16639,6 +16697,91 @@ var ripple =
 /***/ },
 
 /***/ 35:
+/***/ function(module, exports, require) {
+
+	var hasOwn = Object.prototype.hasOwnProperty;
+	var toString = Object.prototype.toString;
+
+	function isPlainObject(obj) {
+		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
+			return false;
+
+		var has_own_constructor = hasOwn.call(obj, 'constructor');
+		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+		// Not own constructor property must be Object
+		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
+			return false;
+
+		// Own properties are enumerated firstly, so to speed up,
+		// if last one is own, then all properties are own.
+		var key;
+		for ( key in obj ) {}
+
+		return key === undefined || hasOwn.call( obj, key );
+	};
+
+	module.exports = function extend() {
+		var options, name, src, copy, copyIsArray, clone,
+		    target = arguments[0] || {},
+		    i = 1,
+		    length = arguments.length,
+		    deep = false;
+
+		// Handle a deep copy situation
+		if ( typeof target === "boolean" ) {
+			deep = target;
+			target = arguments[1] || {};
+			// skip the boolean and the target
+			i = 2;
+		}
+
+		// Handle case when target is a string or something (possible in deep copy)
+		if ( typeof target !== "object" && typeof target !== "function") {
+			target = {};
+		}
+
+		for ( ; i < length; i++ ) {
+			// Only deal with non-null/undefined values
+			if ( (options = arguments[ i ]) != null ) {
+				// Extend the base object
+				for ( name in options ) {
+					src = target[ name ];
+					copy = options[ name ];
+
+					// Prevent never-ending loop
+					if ( target === copy ) {
+						continue;
+					}
+
+					// Recurse if we're merging plain objects or arrays
+					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
+						if ( copyIsArray ) {
+							copyIsArray = false;
+							clone = src && Array.isArray(src) ? src : [];
+
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[ name ] = extend( deep, clone, copy );
+
+					// Don't bring in undefined values
+					} else if ( copy !== undefined ) {
+						target[ name ] = copy;
+					}
+				}
+			}
+		}
+
+		// Return the modified object
+		return target;
+	};
+
+
+/***/ },
+
+/***/ 36:
 /***/ function(module, exports, require) {
 
 	
@@ -16789,7 +16932,60 @@ var ripple =
 
 /***/ },
 
-/***/ 36:
+/***/ 37:
+/***/ function(module, exports, require) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
+
+/***/ },
+
+/***/ 38:
+/***/ function(module, exports, require) {
+
+	var sjcl    = require(15).sjcl;
+	var utils   = require(15);
+	var config  = require(17);
+	var extend  = require(35);
+
+	var BigInteger = utils.jsbn.BigInteger;
+
+	var UInt = require(24).UInt,
+	    Base = require(7).Base;
+
+	//
+	// UInt128 support
+	//
+
+	var UInt128 = extend(function () {
+	  // Internal form: NaN or BigInteger
+	  this._value  = NaN;
+	}, UInt);
+
+	UInt128.width = 16;
+	UInt128.prototype = extend({}, UInt.prototype);
+	UInt128.prototype.constructor = UInt128;
+
+	var HEX_ZERO     = UInt128.HEX_ZERO = "00000000000000000000000000000000";
+	var HEX_ONE      = UInt128.HEX_ONE  = "00000000000000000000000000000000";
+	var STR_ZERO     = UInt128.STR_ZERO = utils.hexToString(HEX_ZERO);
+	var STR_ONE      = UInt128.STR_ONE = utils.hexToString(HEX_ONE);
+
+	exports.UInt128 = UInt128;
+
+
+/***/ },
+
+/***/ 39:
 /***/ function(module, exports, require) {
 
 	exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
@@ -16880,198 +17076,7 @@ var ripple =
 
 /***/ },
 
-/***/ 37:
-/***/ function(module, exports, require) {
-
-	var hasOwn = Object.prototype.hasOwnProperty;
-	var toString = Object.prototype.toString;
-
-	function isPlainObject(obj) {
-		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
-			return false;
-
-		var has_own_constructor = hasOwn.call(obj, 'constructor');
-		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-		// Not own constructor property must be Object
-		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
-			return false;
-
-		// Own properties are enumerated firstly, so to speed up,
-		// if last one is own, then all properties are own.
-		var key;
-		for ( key in obj ) {}
-
-		return key === undefined || hasOwn.call( obj, key );
-	};
-
-	module.exports = function extend() {
-		var options, name, src, copy, copyIsArray, clone,
-		    target = arguments[0] || {},
-		    i = 1,
-		    length = arguments.length,
-		    deep = false;
-
-		// Handle a deep copy situation
-		if ( typeof target === "boolean" ) {
-			deep = target;
-			target = arguments[1] || {};
-			// skip the boolean and the target
-			i = 2;
-		}
-
-		// Handle case when target is a string or something (possible in deep copy)
-		if ( typeof target !== "object" && typeof target !== "function") {
-			target = {};
-		}
-
-		for ( ; i < length; i++ ) {
-			// Only deal with non-null/undefined values
-			if ( (options = arguments[ i ]) != null ) {
-				// Extend the base object
-				for ( name in options ) {
-					src = target[ name ];
-					copy = options[ name ];
-
-					// Prevent never-ending loop
-					if ( target === copy ) {
-						continue;
-					}
-
-					// Recurse if we're merging plain objects or arrays
-					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-						if ( copyIsArray ) {
-							copyIsArray = false;
-							clone = src && Array.isArray(src) ? src : [];
-
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[ name ] = extend( deep, clone, copy );
-
-					// Don't bring in undefined values
-					} else if ( copy !== undefined ) {
-						target[ name ] = copy;
-					}
-				}
-			}
-		}
-
-		// Return the modified object
-		return target;
-	};
-
-
-/***/ },
-
-/***/ 38:
-/***/ function(module, exports, require) {
-
-	module.exports = typeof Array.isArray === 'function'
-	    ? Array.isArray
-	    : function (xs) {
-	        return Object.prototype.toString.call(xs) === '[object Array]'
-	    }
-	;
-
-	/*
-
-	alternative
-
-	function isArray(ar) {
-	  return ar instanceof Array ||
-	         Array.isArray(ar) ||
-	         (ar && ar !== Object.prototype && isArray(ar.__proto__));
-	}
-
-	*/
-
-/***/ },
-
-/***/ 39:
-/***/ function(module, exports, require) {
-
-	module.exports = function indexOf (xs, x) {
-	    if (xs.indexOf) return xs.indexOf(x);
-	    for (var i = 0; i < xs.length; i++) {
-	        if (x === xs[i]) return i;
-	    }
-	    return -1;
-	}
-
-
-/***/ },
-
 /***/ 40:
-/***/ function(module, exports, require) {
-
-	module.exports = Object.keys || function objectKeys(object) {
-		if (object !== Object(object)) throw new TypeError('Invalid object');
-		var result = [];
-		for (var name in object) {
-			if (Object.prototype.hasOwnProperty.call(object, name)) {
-				result.push(name);
-			}
-		}
-		return result;
-	};
-
-
-/***/ },
-
-/***/ 41:
-/***/ function(module, exports, require) {
-
-	module.exports = Object.getOwnPropertyNames || function (obj) {
-	    var res = [];
-	    for (var key in obj) {
-	        if (Object.hasOwnProperty.call(obj, key)) res.push(key);
-	    }
-	    return res;
-	};
-
-/***/ },
-
-/***/ 42:
-/***/ function(module, exports, require) {
-
-	module.exports = Object.create || function (prototype, properties) {
-	    // from es5-shim
-	    var object;
-	    if (prototype === null) {
-	        object = { '__proto__' : null };
-	    }
-	    else {
-	        if (typeof prototype !== 'object') {
-	            throw new TypeError(
-	                'typeof prototype[' + (typeof prototype) + '] != \'object\''
-	            );
-	        }
-	        var Type = function () {};
-	        Type.prototype = prototype;
-	        object = new Type();
-	        object.__proto__ = prototype;
-	    }
-	    if (typeof properties !== 'undefined' && Object.defineProperties) {
-	        Object.defineProperties(object, properties);
-	    }
-	    return object;
-	};
-
-/***/ },
-
-/***/ 43:
-/***/ function(module, exports, require) {
-
-	module.exports = function isRegExp(re) {
-	  return re instanceof RegExp ||
-	    (typeof re === 'object' && Object.prototype.toString.call(re) === '[object RegExp]');
-	}
-
-/***/ },
-
-/***/ 44:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {;(function () { // closure for web browsers
@@ -17327,60 +17332,113 @@ var ripple =
 
 	})()
 	
-	/* WEBPACK VAR INJECTION */}(require, require(45)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(37)(module)))
+
+/***/ },
+
+/***/ 41:
+/***/ function(module, exports, require) {
+
+	module.exports = typeof Array.isArray === 'function'
+	    ? Array.isArray
+	    : function (xs) {
+	        return Object.prototype.toString.call(xs) === '[object Array]'
+	    }
+	;
+
+	/*
+
+	alternative
+
+	function isArray(ar) {
+	  return ar instanceof Array ||
+	         Array.isArray(ar) ||
+	         (ar && ar !== Object.prototype && isArray(ar.__proto__));
+	}
+
+	*/
+
+/***/ },
+
+/***/ 42:
+/***/ function(module, exports, require) {
+
+	module.exports = function indexOf (xs, x) {
+	    if (xs.indexOf) return xs.indexOf(x);
+	    for (var i = 0; i < xs.length; i++) {
+	        if (x === xs[i]) return i;
+	    }
+	    return -1;
+	}
+
+
+/***/ },
+
+/***/ 43:
+/***/ function(module, exports, require) {
+
+	module.exports = Object.keys || function objectKeys(object) {
+		if (object !== Object(object)) throw new TypeError('Invalid object');
+		var result = [];
+		for (var name in object) {
+			if (Object.prototype.hasOwnProperty.call(object, name)) {
+				result.push(name);
+			}
+		}
+		return result;
+	};
+
+
+/***/ },
+
+/***/ 44:
+/***/ function(module, exports, require) {
+
+	module.exports = function isRegExp(re) {
+	  return re instanceof RegExp ||
+	    (typeof re === 'object' && Object.prototype.toString.call(re) === '[object RegExp]');
+	}
 
 /***/ },
 
 /***/ 45:
 /***/ function(module, exports, require) {
 
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
-		}
-		return module;
-	}
-
+	module.exports = Object.getOwnPropertyNames || function (obj) {
+	    var res = [];
+	    for (var key in obj) {
+	        if (Object.hasOwnProperty.call(obj, key)) res.push(key);
+	    }
+	    return res;
+	};
 
 /***/ },
 
 /***/ 46:
 /***/ function(module, exports, require) {
 
-	var sjcl    = require(15).sjcl;
-	var utils   = require(15);
-	var config  = require(17);
-	var extend  = require(37);
-
-	var BigInteger = utils.jsbn.BigInteger;
-
-	var UInt = require(23).UInt,
-	    Base = require(7).Base;
-
-	//
-	// UInt128 support
-	//
-
-	var UInt128 = extend(function () {
-	  // Internal form: NaN or BigInteger
-	  this._value  = NaN;
-	}, UInt);
-
-	UInt128.width = 16;
-	UInt128.prototype = extend({}, UInt.prototype);
-	UInt128.prototype.constructor = UInt128;
-
-	var HEX_ZERO     = UInt128.HEX_ZERO = "00000000000000000000000000000000";
-	var HEX_ONE      = UInt128.HEX_ONE  = "00000000000000000000000000000000";
-	var STR_ZERO     = UInt128.STR_ZERO = utils.hexToString(HEX_ZERO);
-	var STR_ONE      = UInt128.STR_ONE = utils.hexToString(HEX_ONE);
-
-	exports.UInt128 = UInt128;
-
+	module.exports = Object.create || function (prototype, properties) {
+	    // from es5-shim
+	    var object;
+	    if (prototype === null) {
+	        object = { '__proto__' : null };
+	    }
+	    else {
+	        if (typeof prototype !== 'object') {
+	            throw new TypeError(
+	                'typeof prototype[' + (typeof prototype) + '] != \'object\''
+	            );
+	        }
+	        var Type = function () {};
+	        Type.prototype = prototype;
+	        object = new Type();
+	        object.__proto__ = prototype;
+	    }
+	    if (typeof properties !== 'undefined' && Object.defineProperties) {
+	        Object.defineProperties(object, properties);
+	    }
+	    return object;
+	};
 
 /***/ },
 

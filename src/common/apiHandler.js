@@ -19,13 +19,15 @@ ApiHandler = function (url) {
         if (response.length>1) {
           if (params.reduce===false) {
             data = response.map(function(d) {
-              d = JSON.parse(d);
+
               return {
-                id     : d.id,
-                time   : moment.utc(d.key.slice(2)), 
-                amount : d.value[1],
-                price  : d.value[2],        
-                type   : ''
+                time    : moment.utc(d[0]),
+                price   : d[1],   
+                amount  : d[2], 
+                amount2 : d[3],
+                tx      : d[4], 
+                id      : d[5],    
+                type    : ''
               }
             });
             
