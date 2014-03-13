@@ -167,11 +167,31 @@ module.exports = function ( grunt ) {
           {
             src: [ '<%= vendor_files.js %>' ],
             dest: '<%= build_dir %>/',
+            cwd: '..',
+            expand: true
+          }
+        ]
+      },
+      build_maintenance: {
+        files: [
+          {
+            src: '<%= app_files.maintenance %>',
+            dest: '<%= build_dir %>/',
             cwd: '.',
             expand: true
           }
         ]
       },
+      compile_maintenance: {
+       files: [
+        {
+          src: '<%= app_files.maintenance %>',
+          dest: '<%= compile_dir %>/',
+          cwd: '.',
+          expand: true
+        }
+      ]     
+    },
       compile_assets: {
         files: [
           {
@@ -638,8 +658,8 @@ module.exports = function ( grunt ) {
   grunt.registerTask( 'build', [
     'clean', 'html2js', 'jshint', 'coffeelint',  'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
-    'copy:build_appjs', 'copy:build_vendorjs',   'index:build', 
-    'embed:build_css',  'embed:build',           
+    'copy:build_appjs', 'copy:build_vendorjs',   'copy:build_maintenance', 
+    'index:build',      'embed:build_css',       'embed:build',           
     'karmaconfig',      'karma:continuous' 
   ]);
 
@@ -648,7 +668,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'recess:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 
+    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance', 'ngmin', 'concat:compile_js', 'uglify', 
     'index:compile',  'embed:compile_css', 'embed:compile'
   ]);
 
