@@ -70,6 +70,21 @@ ApiHandler = function (url) {
     return request;    
   } 
   
+  this.valueSent = function (params, load, error) {
+    
+    var request = apiRequest("valueSent");        
+    request.post(JSON.stringify(params))
+      .on('load', function(xhr) {
+        var response = JSON.parse(xhr.response);  
+        load(response);
+      })
+      .on('error', function(xhr){
+        console.log(xhr.response);
+        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
+      });
+      
+    return request;      
+  }
   
   this.issuerCapitalization = function (params, load, error) {
     
@@ -128,20 +143,62 @@ ApiHandler = function (url) {
   
   this.getTopMarkets = function (callback, error) {
     var request = apiRequest("topMarkets");
-
+    
     request.post("")
     .on('load', function(xhr){   
       var response = JSON.parse(xhr.response);
       response.splice(0,1); //remove first  
       callback(response);
-      
+
     }).on('error', function(xhr){
       console.log(xhr.response);
       if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });    
   }
   
+  this.getVolume24Hours = function (callback, error) {
+    var request = apiRequest("totalValueSent");
+
+    request.post(JSON.stringify({
+      exchange : {
+        currency : "USD",
+        issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+      }
+    }))
+    .on('load', function(xhr){   
+      var response = JSON.parse(xhr.response);
+        callback (response);
+      
+    }).on('error', function(xhr){
+      console.log(xhr.response);
+      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    });     
+  }
   
+  this.getVolume30Days = function (callback, error) {
+    var request = apiRequest("totalValueSent");
+    
+    request.post(JSON.stringify({
+      endTime   : moment.utc(),
+      startTime : moment.utc().subtract(30, "days"),
+      exchange  : {
+        currency : "USD",
+        issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+      }
+    }))
+    .on('load', function(xhr){   
+      var response = JSON.parse(xhr.response);
+      console.log(response);
+        callback (response);
+      
+    }).on('error', function(xhr){
+      console.log(xhr.response);
+      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    }); 
+    
+  }
+  
+/*  
   this.networkValue = function (params, callback, error) {
     var request = apiRequest("networkValue");
     request.post(JSON.stringify(params))
@@ -155,4 +212,5 @@ ApiHandler = function (url) {
     
     return request;    
   }
+*/  
 }

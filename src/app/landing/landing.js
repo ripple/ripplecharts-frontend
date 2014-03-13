@@ -27,6 +27,9 @@ angular.module( 'ripplecharts.landing', [
   remote.on("connect", function(){
     getTotalAccounts();  //we want to retreive this number every time we reconnect
   });
+  
+  if (remote._connected) getTotalAccounts();
+  
    
 //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
@@ -85,6 +88,11 @@ angular.module( 'ripplecharts.landing', [
       totalAccounts = total;
       $scope.totalAccounts = commas(totalAccounts);
       $scope.$apply();
+      
+    }, function(error){
+      console.log(error);
+      $scope.totalAccounts = " ";
+      $scope.$apply();
     });    
   }
   
@@ -105,7 +113,18 @@ angular.module( 'ripplecharts.landing', [
   } 
    
 //get trade volume of top markets  
-  function getTopMarkets() {
+  function getVolumes() {
+    
+    api.getVolume24Hours(function(data){
+      var volume = data.total;
+      $scope.volume24Hours = volume ? "$"+commas(volume,2) : " ";
+      $scope.$apply(); 
+               
+    }, function(error){
+      console.log(error);
+      $scope.volume24Hours = " "; //must be a space so that the loader hides
+      $scope.$apply();
+    });
     
     api.getTopMarkets(function(data){
       var volume = 0;
@@ -113,13 +132,19 @@ angular.module( 'ripplecharts.landing', [
         volume += data[i][3];
       }
       
-      $scope.tradeVolume = volume ? "$"+commas(volume,2) : "";
+      $scope.tradeVolume = volume ? "$"+commas(volume,2) : " ";
+      $scope.$apply();
+      
+    }, function(error){
+      console.log(error);
+      $scope.tradeVolume = " "; //must be a space so that the loader hides
       $scope.$apply();
     });
   }
+ 
   
   
-  getTopMarkets();
-  var topInterval = setInterval (getTopMarkets, 60000);
+  getVolumes();
+  var topInterval = setInterval (getVolumes, 300000);
 });
 

@@ -41,6 +41,7 @@ angular.module( 'ripplecharts.markets', [
     store.session.set('base',  base);
     store.session.set('trade', trade);  
     $location.path("/markets").replace(); //to remove the data from the URL
+    return;
   }
   
 //load settings from session, local storage, options, or defaults  
@@ -195,11 +196,9 @@ angular.module( 'ripplecharts.markets', [
     url    : API   
   });
   
-  tradeFeed.loadPair ($scope.base, $scope.trade);
-  
 //single function to reload all feeds when something changes
   function loadPair() {
-    
+ 
     var interval = d3.select("#interval .selected").datum();
     
     store.set('base',  $scope.base);

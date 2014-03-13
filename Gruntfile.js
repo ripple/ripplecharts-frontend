@@ -30,6 +30,7 @@ module.exports = function ( grunt ) {
 
   var deploymentConfig = require( './deployment.config.js' )(deploymentEnvironment);
 
+  var maintenance = deploymentConfig.maintenance ? "maintenance.html" : null;
   /**
    * This is the configuration object Grunt uses to give each plugin its 
    * instructions.
@@ -172,6 +173,28 @@ module.exports = function ( grunt ) {
           }
         ]
       },
+      build_maintenance: {
+        files: [
+          {
+            src: '<%= app_files.maintenance %>',
+            dest: '<%= build_dir %>/',
+            cwd: '.',
+            expand: true,
+            flatten: true
+          }
+        ]
+      },
+      compile_maintenance: {
+       files: [
+        {
+          src: '<%= app_files.maintenance %>',
+          dest: '<%= compile_dir %>/',
+          cwd: '.',
+          expand: true,
+          flatten: true
+        }
+      ]     
+    },
       compile_assets: {
         files: [
           {
@@ -638,8 +661,8 @@ module.exports = function ( grunt ) {
   grunt.registerTask( 'build', [
     'clean', 'html2js', 'jshint', 'coffeelint',  'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
-    'copy:build_appjs', 'copy:build_vendorjs',   'index:build', 
-    'embed:build_css',  'embed:build',           
+    'copy:build_appjs', 'copy:build_vendorjs',   'copy:build_maintenance', 
+    'index:build',      'embed:build_css',       'embed:build',           
     'karmaconfig',      'karma:continuous' 
   ]);
 
@@ -648,7 +671,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'recess:compile', 'copy:compile_assets', 'ngmin', 'concat:compile_js', 'uglify', 
+    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance', 'ngmin', 'concat:compile_js', 'uglify', 
     'index:compile',  'embed:compile_css', 'embed:compile'
   ]);
 
@@ -691,9 +714,10 @@ module.exports = function ( grunt ) {
           data: {
             scripts  : jsFiles,
             styles   : cssFiles,
-            mixpanel : deploymentConfig.mixpanel,
-            api      : deploymentConfig.api,
-            version  : grunt.config( 'pkg.version' )
+            maintenance : maintenance,
+            mixpanel    : deploymentConfig.mixpanel,
+            api         : deploymentConfig.api,
+            version     : grunt.config( 'pkg.version' )
           }
         });
       }

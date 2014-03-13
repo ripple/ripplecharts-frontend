@@ -18,21 +18,38 @@
           <li>
             <label>Total Network Value:</label>
             <div class="stat">
-              <span ng-bind="networkValue">--</span>
-              <small>XRP</small>
+              <span ng-bind="networkValue"></span>
+              <small ng-show="networkValue">XRP</small>
+              <img ng-hide="networkValue" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li>
           <li>
             <label>Ledger #:</label>
-            <div class="stat" ng-bind="ledgerIndex">--</div>
+            <div class="stat">
+              <span ng-bind="ledgerIndex"></span>
+              <img ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li> 
           <li>
+            <label>Transaction Volume: <small>(24 hours - USD terms)</small></label>
+            <div class="stat">
+              <span ng-bind="volume24Hours"></span>
+              <img ng-hide="volume24Hours" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+          <li>
             <label>Trade Volume: <small>(24 hours - USD terms)</small></label>
-            <div class="stat" ng-bind="tradeVolume"></div>
+            <div class="stat">
+              <span ng-bind="tradeVolume"></span>
+              <img ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li>
           <li>
             <label># of Ripple accounts:</label>
-            <div class="stat" ng-bind="totalAccounts"></div>
+            <div class="stat">
+              <span ng-bind="totalAccounts"></span>
+              <img ng-hide="totalAccounts" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
           </li>  
         </ul>
       </div>
@@ -44,7 +61,7 @@
     <h5>Top Markets</h5> 
     <div id="topMarkets"></div> 
     <div class="disclaimer">
-      Top markets and trade volume are updated every 60 seconds.
+      Top markets are updated every 60 seconds.
     </div>
   </div>
 </div>

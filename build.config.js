@@ -36,6 +36,7 @@ module.exports = {
     ctpl: [ 'src/common/**/*.tpl.html' ],
     
     html: [ 'src/index.html' ],
+    maintenance : 'src/maintenance.html',
     less: 'src/less/main.less'
   },
 
