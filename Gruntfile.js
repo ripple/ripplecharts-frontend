@@ -30,6 +30,7 @@ module.exports = function ( grunt ) {
 
   var deploymentConfig = require( './deployment.config.js' )(deploymentEnvironment);
 
+  var maintenance = deploymentConfig.maintenance ? "maintenance.html" : null;
   /**
    * This is the configuration object Grunt uses to give each plugin its 
    * instructions.
@@ -167,7 +168,7 @@ module.exports = function ( grunt ) {
           {
             src: [ '<%= vendor_files.js %>' ],
             dest: '<%= build_dir %>/',
-            cwd: '..',
+            cwd: '.',
             expand: true
           }
         ]
@@ -178,7 +179,8 @@ module.exports = function ( grunt ) {
             src: '<%= app_files.maintenance %>',
             dest: '<%= build_dir %>/',
             cwd: '.',
-            expand: true
+            expand: true,
+            flatten: true
           }
         ]
       },
@@ -188,7 +190,8 @@ module.exports = function ( grunt ) {
           src: '<%= app_files.maintenance %>',
           dest: '<%= compile_dir %>/',
           cwd: '.',
-          expand: true
+          expand: true,
+          flatten: true
         }
       ]     
     },
@@ -711,9 +714,10 @@ module.exports = function ( grunt ) {
           data: {
             scripts  : jsFiles,
             styles   : cssFiles,
-            mixpanel : deploymentConfig.mixpanel,
-            api      : deploymentConfig.api,
-            version  : grunt.config( 'pkg.version' )
+            maintenance : maintenance,
+            mixpanel    : deploymentConfig.mixpanel,
+            api         : deploymentConfig.api,
+            version     : grunt.config( 'pkg.version' )
           }
         });
       }
