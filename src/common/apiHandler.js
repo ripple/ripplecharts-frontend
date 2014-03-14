@@ -146,10 +146,14 @@ ApiHandler = function (url) {
   this.getTopMarkets = function (callback, error) {
     var request = apiRequest("topMarkets");
     
-    request.post("")
+    request.post(JSON.stringify({
+      exchange : {
+        currency : "USD",
+        issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+      }      
+    }))
     .on('load', function(xhr){   
-      var response = JSON.parse(xhr.response);
-      response.splice(0,1); //remove first  
+      var response = JSON.parse(xhr.response); 
       callback(response);
 
     }).on('error', function(xhr){

@@ -127,10 +127,7 @@ angular.module( 'ripplecharts.landing', [
     });
     
     api.getTopMarkets(function(data){
-      var volume = 0;
-      for (var i=0; i<data.length; i++) {
-        volume += data[i][3];
-      }
+      var volume = data.total;
       
       $scope.tradeVolume = volume ? "$"+commas(volume,2) : " ";
       $scope.$apply();
