@@ -18,6 +18,8 @@ ApiHandler = function (url) {
 
         if (response.length>1) {
           if (params.reduce===false) {
+
+            response.shift(); //remove header row
             data = response.map(function(d) {
 
               return {
