@@ -190,12 +190,13 @@ var TradeFeed = function (options) {
 
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime : then.toDate(),
-      endTime   : now.toDate(),
-      reduce    : false,
-      base      : self.base,
-      trade     : self.trade,
-      limit     : 50
+      startTime  : then.toDate(),
+      endTime    : now.toDate(),
+      reduce     : false,
+      base       : self.base,
+      trade      : self.trade,
+      descending : true,
+      limit      : 50
       
     }, function(data){
 
