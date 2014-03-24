@@ -8,7 +8,8 @@ angular.element(document).ready(function() {
     'ripplecharts.multimarkets',
     'ripplecharts.graph',
     'ripplecharts.accounts',
-    'ripplecharts.capitalization',
+    'ripplecharts.value',
+    'ripplecharts.payments',
     'ui.state',
     'ui.route',
     'snap'
