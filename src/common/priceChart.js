@@ -616,9 +616,8 @@ PriceChart = function (options) {
     var monthNames = [ "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December" ];
     
-    
-    if      (increment == "mo") return monthNames[date.month()] + " " + date.year();
-    else if (increment == "da")   return monthNames[date.month()] + " " + date.date();
+    if      (increment == "mo") return monthNames[date.utc().month()] + " " + date.utc().year() + "<small>UTC</small>";
+    else if (increment == "da")   return monthNames[date.utc().month()] + " " + date.utc().date() + " <small>("+date.utc().format("hh:mm A")+" UTC)</small>";
     else if (increment == "ho")  return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm A");
     else return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm:ss A");
   }
