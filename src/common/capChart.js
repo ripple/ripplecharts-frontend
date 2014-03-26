@@ -16,10 +16,11 @@ function CapChart(options) {
   if (!options.height) options.height = options.width/2.25>400 ? options.width/2.25 :400;
   
   self.currency = options.currency || "USD";
-  self.format   = options.format   || "line";
-  self.dataType = options.dataType || "Transaction Volume";
+  self.format   = options.format   || "stacked";
+  self.dataType = options.dataType || "Capitalization";
   self.range    = options.range    || "max";
-
+  self.onchange = options.onchange || null;
+  
 //add data type dropdown
   dropdowns.append("div").attr("class","dropdowns dataType").append("select").selectAll("option")
     .data(['Capitalization', 'Transaction Volume', 'Trade Volume'])
@@ -36,7 +37,6 @@ function CapChart(options) {
     }
     
     if (self.currency=='XRP') self.currency = dropdowns.select(".currency").node().value;
-    console.log(self.currency);
 
     var d = controls.select(".interval .selected").datum();
     loadData(d);
@@ -69,6 +69,14 @@ function CapChart(options) {
       type.classed("selected", function() { return this === that; });
       self.format = d;
       drawData();
+      
+      var range = controls.select(".interval .selected").datum();
+      if (self.onchange) self.onchange({
+        dataType : self.dataType,
+        currency : self.currency,
+        format   : self.format,
+        range    : range.name      
+      });      
     });
 
   
@@ -78,7 +86,7 @@ function CapChart(options) {
   var interval = list.selectAll("a")
     .data([
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
-      {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
+      {name: "month",  interval:"day",   offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
       {name: "max",    interval:"month", offset: function(d) { return d3.time.year.offset(d, -3); }}
@@ -150,6 +158,13 @@ function CapChart(options) {
       "Range"      : range.name
     });
     
+    if (self.onchange) self.onchange({
+      dataType : self.dataType,
+      currency : self.currency,
+      format   : self.format,
+      range    : range.name      
+    });
+    
     self.range = range.name;
     isLoading  = true;
     loader.transition().style("opacity",1);
@@ -206,8 +221,6 @@ function CapChart(options) {
         address : c.issuer,
         name    : currencyDropdown.getName(c.issuer),
         results : results.map(function(d){return[moment(d[0]).unix()*1000,d[1], d[2]]})});
-
-      console.log(data);
             
       prepareStackedData(c.currency, range); 
       prepareLegend(c.currency, range);
@@ -633,7 +646,7 @@ function CapChart(options) {
       data = sendDataCache[self.currency][self.range].legend;   
     else if (self.dataType=='Trade Volume')   
       data = tradeDataCache[self.currency][self.range].legend;      
-     
+    
     legend.style("display", self.currency == 'XRP' ? "none" : "block");     
     var items = legend.selectAll(".item").data(data);
     var enter = items.enter().append("div").attr("class","item");
@@ -655,16 +668,19 @@ function CapChart(options) {
     items.select(".issuer").html(function(d){return d.address});
     if (self.dataType=='Capitalization') 
       items.select(".amount").html(function(d){return d.amount + " <small>"+self.currency+"</small"});
+    else items.select(".amount").html("");
+    
     items.exit().remove();  
   }
   
   function movingInSky() {
-    var top, date, i, j, cx, cy, position;
+    var top, date, i, j, cx, cy, position, zoom = div.style("zoom") || 1;
+
     if (self.format=="stacked") {
       if (!sections || !sections.length) return;
       
       top  = sections[sections.length-1].values;
-      date = xScale.invert(d3.mouse(this)[0]);
+      date = xScale.invert(d3.mouse(this)[0]/zoom);
       i    = d3.bisect(top.map(function(d){return d.date}), date);
    
 
@@ -683,10 +699,8 @@ function CapChart(options) {
       handleTracer(cx, cy);
         
     } else {
-      top  = lines[lines.length-1].results;
-      date = xScale.invert(d3.mouse(this)[0]);
-      amt  = yScale.invert(d3.mouse(this)[1]);
-      //i    = d3.bisect(top.map(function(d){return d[0]}), date);  
+      date = xScale.invert(d3.mouse(this)[0]/zoom);
+      amt  = yScale.invert(d3.mouse(this)[1]/zoom);
 
       rows = lines.map(function(d,i){ 
         j = d3.bisectLeft(d.results.map(function(d){return d[0]}), date);
@@ -717,9 +731,10 @@ function CapChart(options) {
 
   function movingInGround(section) {
     var tx, ty;
-    var date = xScale.invert(d3.mouse(this)[0]);
+    var zoom = div.style("zoom") || 1;
+    var date = xScale.invert(d3.mouse(this)[0]/zoom);
     var i    = d3.bisect(section.values.map(function(d){return d.date}), date);
- 
+    
     if (date<(section.values[i].date+section.values[i-1].date)/2) i--;
     var cy  = yScale(section.values[i].y+section.values[i].y0)+options.margin.top;
     var cx  = xScale(section.values[i].date)+options.margin.left;
@@ -740,7 +755,8 @@ function CapChart(options) {
   
   function movingOnLine(line) {
     var tx, ty;
-    var date = xScale.invert(d3.mouse(this)[0]);
+    var zoom = div.style("zoom") || 1;
+    var date = xScale.invert(d3.mouse(this)[0]/zoom);
     var i    = d3.bisect(line.results.map(function(d){return d[0]}), date);
  
     if (i && date<(line.results[i][0]+line.results[i-1][0])/2) i--;

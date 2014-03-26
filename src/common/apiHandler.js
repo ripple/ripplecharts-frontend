@@ -96,7 +96,6 @@ ApiHandler = function (url) {
     request.post(JSON.stringify(params))
       .on('load', function(xhr) {
         var response = JSON.parse(xhr.response);  
-        console.log(response); 
         load(response);
       })
       .on('error', function(xhr){
