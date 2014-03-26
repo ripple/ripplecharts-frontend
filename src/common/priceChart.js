@@ -511,10 +511,11 @@ PriceChart = function (options) {
 
 //show the details of the candle on mouseover, touch
   function showDetails() {
-    var x  = d3.mouse(this)[0],
-      tx   = Math.max(0, Math.min(options.width+options.margin.left, x)),
-      i    = d3.bisect(lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
-      d    = lineData[i],
+    var z = wrap.style("zoom") || 1,
+      x   = d3.mouse(this)[0]/z,
+      tx  = Math.max(0, Math.min(options.width+options.margin.left, x)),
+      i   = d3.bisect(lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
+      d   = lineData[i],
       o, h, l, c, v;
 
     if (d) {
