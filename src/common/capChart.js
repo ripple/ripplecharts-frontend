@@ -699,6 +699,7 @@ function CapChart(options) {
       handleTracer(cx, cy);
         
     } else {
+      if (!lines) return;
       date = xScale.invert(d3.mouse(this)[0]/zoom);
       amt  = yScale.invert(d3.mouse(this)[1]/zoom);
 
