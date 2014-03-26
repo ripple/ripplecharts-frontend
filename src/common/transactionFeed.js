@@ -26,6 +26,7 @@ var TransactionFeed = function (options) {
 
 //process incoming transaction from ripple-lib     
   this.handleTransaction = function (data) {
+    if (data.engine_result !== 'tesSUCCESS') return;
     addTransaction(data.transaction);
  
     var rows     = self.div.selectAll('.transaction').data(transactions);
@@ -134,11 +135,12 @@ var TransactionFeed = function (options) {
     d.setUTCSeconds(secondsSince2000+946684800);
     var hours = d.getHours();
     var minutes = d.getMinutes();
-    var ampm = hours >= 12 ? 'pm' : 'am';
+    var seconds = d.getSeconds();
+    var ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
     minutes = minutes < 10 ? '0'+minutes : minutes;
-    return strTime = hours + ':' + minutes + ':' + (d.getSeconds()<10 ? '0'+d.getSeconds() : d.getSeconds()) + ' ' + ampm;
+    return strTime = ''+hours + ':' + minutes + '<small>:' + (seconds<10 ? '0'+seconds : seconds) + ' ' + ampm + "</small>";
   }
   
   this.absoluteDate = function(secondsSince2000) {
