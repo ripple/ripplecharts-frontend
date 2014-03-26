@@ -33,7 +33,7 @@ angular.module( 'ripplecharts.value', [
     range    : range,
     currency : currency,
     onchange : function(params) {
-      console.log(params);
+ 
       store.session.set('valueChartData',     params.dataType);
       store.session.set('valueChartFormat',   params.format);
       store.session.set('valueChartRange',    params.range);

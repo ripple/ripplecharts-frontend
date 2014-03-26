@@ -125,6 +125,7 @@ angular.element(document).ready(function() {
 });
 
 function commas (number, precision) {
+  if (number===0) return 0;
   if (!number) return null;
   var parts = number.toString().split(".");
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");

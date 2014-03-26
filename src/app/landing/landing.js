@@ -17,7 +17,6 @@ angular.module( 'ripplecharts.landing', [
 
 
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
-  var totalAccounts = 0;
   var feed = new TransactionFeed({id : 'liveFeed'});
   var api  = new ApiHandler(API);
   
@@ -85,8 +84,7 @@ angular.module( 'ripplecharts.landing', [
 //get num accounts
   function getTotalAccounts () {
     api.getTotalAccounts(null, function(total){
-      totalAccounts = total;
-      $scope.totalAccounts = commas(totalAccounts);
+      $scope.totalAccounts = total ? commas(total) : " ";
       $scope.$apply();
       
     }, function(error){
