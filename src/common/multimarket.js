@@ -110,13 +110,14 @@ var MiniChart = function(base, trade, markets) {
       isLoading = true;  
     }
     
+    /*
     if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
       "Base Currency"  : self.base.currency,
       "Base Issuer"    : self.base.issuer || "",
       "Trade Currency" : self.trade.currency,
       "Trade Issuer"   : self.trade.issuer || ""
     });
-    
+    */
     if (self.request) self.request.abort();
     self.request = self.markets.apiHandler.offersExercised({
       startTime     : new Date(),

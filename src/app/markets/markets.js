@@ -211,10 +211,8 @@ angular.module( 'ripplecharts.markets', [
     book.getMarket($scope.base, $scope.trade); 
     tradeFeed.loadPair ($scope.base, $scope.trade);   
     mixpanel.track("Price Chart", {
-      "Base Currency"  : $scope.base.currency,
-      "Base Issuer"    : $scope.base.issuer || "",
-      "Trade Currency" : $scope.trade.currency,
-      "Trade Issuer"   : $scope.trade.issuer || "",
+      "Base Currency"  : $scope.base.currency  + ($scope.base.issuer  ? "."+$scope.base.issuer  : ""),
+      "Trade Currency" : $scope.trade.currency + ($scope.trade.issuer ? "."+$scope.trade.issuer : ""),
       "Interval"       : interval.name,
       "Chart Type"     : priceChart.type
     }); 
