@@ -13,14 +13,39 @@
     </div>
     <div class="row-fluid">
       <div class="span6 stats">
-        <h5>Ripple Network Stats</h5> 
+        <h5>
+          Ripple Network Stats
+          <select id="valueCurrency" class="valueCurrencySelect"></select>
+          <span class="valueRateDisplay" ng-bind="valueRateDisplay"></span>
+        </h5> 
         <ul>
           <li>
             <label>Total Network Value:</label>
             <div class="stat">
-              <span ng-bind="networkValue"></span>
-              <small ng-show="networkValue">XRP</small>
-              <img ng-hide="networkValue" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-bind="totalNetworkValue"></span>
+              <img  ng-hide="totalNetworkValue" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+          <li>
+            <label>24 hr Transaction Volume:</label>
+            <div class="stat">
+              <span ng-show="valueRate" ng-bind="transactionVolume"></span>
+              <img  ng-hide="transactionVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+          <li>
+            <label>24 hr Trade Volume:</label>
+            <div class="stat">
+              <span ng-show="valueRate" ng-bind="tradeVolume"></span>
+              <img  ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>          
+          <li>
+            <label>Total Coins:</label>
+            <div class="stat">
+              <span ng-bind="totalCoins"></span>
+              <small ng-show="totalCoins">XRP</small>
+              <img ng-hide="totalCoins" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li>
           <li>
@@ -30,20 +55,6 @@
               <img ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li> 
-          <li>
-            <label>Transaction Volume: <small>(24 hours - USD terms)</small></label>
-            <div class="stat">
-              <span ng-bind="volume24Hours"></span>
-              <img ng-hide="volume24Hours" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-          </li>
-          <li>
-            <label>Trade Volume: <small>(24 hours - USD terms)</small></label>
-            <div class="stat">
-              <span ng-bind="tradeVolume"></span>
-              <img ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-          </li>
           <li>
             <label># of Ripple accounts:</label>
             <div class="stat">

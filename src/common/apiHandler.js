@@ -119,105 +119,108 @@ ApiHandler = function (url) {
     })).on('load', function(xhr){   
       data  = JSON.parse(xhr.response);
       num   = data[1] && data[1][1] ? data[1][1] : 0;
-      callback (num);
+      callback (null, num);
+      
     }).on('error', function(xhr){
-      console.log(xhr.response);
-      callback(null);
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
     }); 
     
     return request;
   }
   
   
-  this.accountsCreated = function (params, callback, error) {
+  this.accountsCreated = function (params, callback) {
     var request = apiRequest("accountsCreated");
     request.post(JSON.stringify(params))
     .on('load', function(xhr){   
-      callback(JSON.parse(xhr.response));
+      callback(null, JSON.parse(xhr.response));
       
     }).on('error', function(xhr){
-      console.log(xhr.response);
-      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });
     
     return request;
   }
   
   
-  this.getTopMarkets = function (callback, error) {
+  this.getTopMarkets = function (ex, callback) {
     var request = apiRequest("topMarkets");
-    
-    request.post(JSON.stringify({
-      exchange : {
-        currency : "USD",
-        issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
-      }      
-    }))
+
+    request.post(JSON.stringify({ exchange : ex }))
     .on('load', function(xhr){   
       var response = JSON.parse(xhr.response); 
-      callback(response);
+      callback(null, response);
 
     }).on('error', function(xhr){
-      console.log(xhr.response);
-      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });    
   }
   
-  this.getVolume24Hours = function (callback, error) {
+  this.getVolume24Hours = function (ex, callback) {
     var request = apiRequest("totalValueSent");
 
-    request.post(JSON.stringify({
-      exchange : {
-        currency : "USD",
-        issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
-      }
-    }))
+      //exchange : {
+      //  currency : "USD",
+      //  issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+      //}
+      
+    request.post(JSON.stringify({ exchange : ex }))
     .on('load', function(xhr){   
       var response = JSON.parse(xhr.response);
-        callback (response);
+        callback (null, response);
       
     }).on('error', function(xhr){
-      console.log(xhr.response);
-      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });     
   }
   
-  this.getVolume30Days = function (callback, error) {
+  this.getVolume30Days = function (ex, callback) {
     var request = apiRequest("totalValueSent");
     
     request.post(JSON.stringify({
       endTime   : moment.utc(),
       startTime : moment.utc().subtract(30, "days"),
-      exchange  : {
-        currency : "USD",
-        issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
-      }
+      exchange  : ex
     }))
     .on('load', function(xhr){   
       var response = JSON.parse(xhr.response);
-      console.log(response);
-        callback (response);
+        callback (null, response);
       
     }).on('error', function(xhr){
-      console.log(xhr.response);
-      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
     }); 
     
   }
   
-/*  
-  this.networkValue = function (params, callback, error) {
-    var request = apiRequest("networkValue");
-    request.post(JSON.stringify(params))
+
+  this.getNetworkValue = function (ex, callback) {
+    var request = apiRequest("totalNetworkValue");
+
+    request.post(JSON.stringify({ exchange : ex }))
     .on('load', function(xhr){   
-      callback(JSON.parse(xhr.response));
+      callback(null, JSON.parse(xhr.response));
       
     }).on('error', function(xhr){
-      console.log(xhr.response);
-      if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      console.log(xhr);
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
     });
     
     return request;    
   }
-*/  
+  
+  
+  this.exchangeRates = function (params, callback) {
+    var request = apiRequest("exchangeRates");
+
+    request.post(JSON.stringify(params))
+    .on('load', function(xhr){   
+      var response = JSON.parse(xhr.response);
+      callback (null, response);
+      
+    }).on('error', function(xhr){
+
+      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    });     
+  }
+ 
 }

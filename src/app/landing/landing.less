@@ -2,6 +2,43 @@
   text-align:center;
 }
 
+.landing .valueRateDisplay {
+  float: right;
+  font-size: 12px;
+  font-weight: normal;
+  color: #aaa;
+  padding-top: 5px;
+  line-height: 15px; 
+  margin-right: 10px;
+}
+
+.landing .valueCurrencySelect {
+  float:right;
+  width: auto;
+  height: 20px;
+  padding: 2px 20px 2px 5px;
+  margin: 0 0 0 5px;
+  font-size: 15px;
+  line-height: 20px;
+  background: none;
+  background-image: url('images/dropdown.png');
+  background-position: 95% 80%;
+  background-repeat: no-repeat;
+  background-size: 13px;
+  border: none;
+  -webkit-appearance:none;  
+  -moz-appearance:none!important;
+  -o-appearance:none;
+  appearance: none;
+  vertical-align: bottom;
+  text-indent: 0.01px; /* needed to hide arrow in moz */
+  text-overflow: "";   /* needed to hide arrow in moz */
+} 
+      
+.landing .valueCurrencySelect::-ms-expand {
+  display: none;
+}
+      
 .landing .helpbox {
   text-align:center;  
 }
@@ -52,7 +89,6 @@
 }
 
 .landing .stats label small {
-  display:block;
   font-size:70%;
   color:#aaa;
 }
@@ -71,6 +107,7 @@
 
 .landing .stat small {
   color:#777;
+  font-weight:normal;
 }
 
 .landing .stat .loader {
@@ -108,6 +145,15 @@
 .dark .landing h5, .dark .landing .stat {
   color:#ccc;
 }
+.dark .landing .valueRateDisplay {
+  color:#555;
+  font-weight:bold;
+}
+
+.dark .landing .valueCurrencySelect {
+  color:#aaa;
+  background-image: url('images/dropdownLight.png');
+}
 
 .dark .landing .stat, .dark .stats label {
   border-top-color:#303030;
@@ -118,6 +164,9 @@
   color:#666;
 }
 
+.dark .landing .stat small {
+  font-weight:bold;
+}
 
 
 @media (min-width: 1200px) {

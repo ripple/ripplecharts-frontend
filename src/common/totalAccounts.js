@@ -91,7 +91,15 @@ var TotalAccounts = function (options) {
   
   function updateHelper (params) {
     if (request) request.abort();
-    request = apiHandler.accountsCreated(params, function (data) {
+    request = apiHandler.accountsCreated(params, function (err, data) {
+
+      if (err) {
+        console.log(err);
+        chart.loading = false;
+        chart.setStatus(err.text ? err.text : "Unable to load data");
+        return;        
+      }
+      
       var total  = chart.basis,
         lineData = [];
         
@@ -108,10 +116,6 @@ var TotalAccounts = function (options) {
       
       chart.loading = false;
       chart.redraw(params.timeIncrement, lineData);
-    }, function (error) {
-      console.log(error);
-      chart.loading = false;
-      chart.setStatus(error.text ? error.text : "Unable to load data");
     });
   } 
   
