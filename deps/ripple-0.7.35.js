@@ -125,9 +125,9 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	var EventEmitter = require(31).EventEmitter;
-	var util         = require(32);
-	var LRU          = require(40);
+	var EventEmitter = require(28).EventEmitter;
+	var util         = require(29);
+	var LRU          = require(38);
 	var Request      = require(2).Request;
 	var Server       = require(16).Server;
 	var Amount       = require(3).Amount;
@@ -641,7 +641,7 @@ var ripple =
 	      // De-duplicate transactions that are immediately following each other
 	      var hash = message.transaction.hash;
 
-	      if (this._received_tx.hasOwnProperty(hash)) {
+	      if (this._received_tx.get(hash)) {
 	        break;
 	      }
 
@@ -976,11 +976,8 @@ var ripple =
 
 	  switch (typeof ledger_hash) {
 	    case 'string':
-	      request.ledgerHash(ledger_hash);
-	      break;
-
 	    case 'number':
-	      request.ledgerIndex(ledger_hash);
+	      request.ledgerSelect(ledger_hash);
 	      break;
 
 	    case 'undefined':
@@ -1111,6 +1108,27 @@ var ripple =
 	    }
 	  }
 
+	  function propertiesFilter(obj, transaction) {
+	    var properties = Object.keys(obj);
+	    return function(transaction) {
+	      var result = properties.every(function(property) {
+	        return transaction.tx[property] === obj[property];
+	      });
+	      return result;
+	    };
+	  };
+
+	  var SerializedObject = require(12).SerializedObject;
+
+	  function parseBinary(transaction) {
+	    var tx = { validated: transaction.validated };
+	    tx.meta = new SerializedObject(transaction.meta).to_json();
+	    tx.tx = new SerializedObject(transaction.tx_blob).to_json();
+	    tx.tx.ledger_index = transaction.ledger_index;
+	    tx.tx.hash = Transaction.from_json(tx.tx).hash();
+	    return tx;
+	  };
+
 	  function accountTxFilter(fn) {
 	    if (typeof fn !== 'function') {
 	      throw new Error('Missing filter function');
@@ -1124,7 +1142,13 @@ var ripple =
 	      self.removeAllListeners('success');
 
 	      self.once('success', function(res) {
-	        res.transactions = res.transactions.filter(fn);
+	        if (options.binary) {
+	          res.transactions = res.transactions.map(parseBinary);
+	        }
+
+	        if (fn !== Boolean) {
+	          res.transactions = res.transactions.filter(fn);
+	        }
 
 	        if (typeof options.map === 'function') {
 	          res.transactions = res.transactions.map(options.map);
@@ -1151,18 +1175,8 @@ var ripple =
 
 	  request.filter = accountTxFilter;
 
-	  function propertiesFilter(obj, transaction) {
-	    var properties = Object.keys(obj);
-	    return function(transaction) {
-	      var result = properties.every(function(property) {
-	        return transaction.tx[property] === obj[property];
-	      });
-	      return result;
-	    };
-	  };
-
-	  if (!options.filter && (options.map || options.reduce)) {
-	    options.filter = Boolean;
+	  if (options.binary || (options.map || options.reduce)) {
+	    options.filter = options.filter || Boolean;
 	  }
 
 	  if (options.filter) {
@@ -1853,8 +1867,8 @@ var ripple =
 /***/ 2:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(31).EventEmitter;
-	var util         = require(32);
+	var EventEmitter = require(28).EventEmitter;
+	var util         = require(29);
 	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
 	var Transaction  = require(5).Transaction;
@@ -2273,8 +2287,8 @@ var ripple =
 	  return (new Amount()).parse_json(j);
 	};
 
-	Amount.from_quality = function (q, c, i) {
-	  return (new Amount()).parse_quality(q, c, i);
+	Amount.from_quality = function (quality, currency, issuer, opts) {
+	  return (new Amount()).parse_quality(quality, currency, issuer, opts);
 	};
 
 	Amount.from_human = function (j, opts) {
@@ -2359,6 +2373,29 @@ var ripple =
 	  }
 
 	  return result;
+	};
+
+	/**
+	 * Turn this amount into its inverse.
+	 *
+	 * @private
+	 */
+	Amount.prototype._invert = function () {
+	  this._value = consts.bi_1e32.divide(this._value);
+	  this._offset = -32 - this._offset;
+	  this.canonicalize();
+
+	  return this;
+	};
+
+	/**
+	 * Return the inverse of this amount.
+	 *
+	 * @return {Amount} New Amount object with same currency and issuer, but the
+	 *   inverse of the value.
+	 */
+	Amount.prototype.invert = function () {
+	  return this.copy()._invert();
 	};
 
 	Amount.prototype.canonicalize = function () {
@@ -2551,9 +2588,14 @@ var ripple =
 	 *
 	 * @this {Amount} The numerator (top half) of the fraction.
 	 * @param {Amount} denominator The denominator (bottom half) of the fraction.
+	 * @param opts Options for the calculation.
+	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
+	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
 	 * @return {Amount} The resulting ratio. Unit will be the same as numerator.
 	 */
-	Amount.prototype.ratio_human = function (denominator) {
+	Amount.prototype.ratio_human = function (denominator, opts) {
+	  opts = opts || {};
+
 	  if (typeof denominator === 'number' && parseInt(denominator, 10) === denominator) {
 	    // Special handling of integer arguments
 	    denominator = Amount.from_json('' + denominator + '.0');
@@ -2567,6 +2609,14 @@ var ripple =
 	  // If either operand is NaN, the result is NaN.
 	  if (!numerator.is_valid() || !denominator.is_valid()) {
 	    return Amount.NaN();
+	  }
+
+	  // Apply interest/demurrage
+	  //
+	  // We only need to apply it to the second factor, because the currency unit of
+	  // the first factor will carry over into the result.
+	  if (opts.reference_date) {
+	    denominator = denominator.applyInterest(opts.reference_date);
 	  }
 
 	  // Special case: The denominator is a native (XRP) amount.
@@ -2604,9 +2654,14 @@ var ripple =
 	 *
 	 * @this {Amount} The first factor of the product.
 	 * @param {Amount} factor The second factor of the product.
+	 * @param opts Options for the calculation.
+	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
+	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
 	 * @return {Amount} The product. Unit will be the same as the first factor.
 	 */
-	Amount.prototype.product_human = function (factor) {
+	Amount.prototype.product_human = function (factor, opts) {
+	  opts = opts || {};
+
 	  if (typeof factor === 'number' && parseInt(factor, 10) === factor) {
 	    // Special handling of integer arguments
 	    factor = Amount.from_json(String(factor) + '.0');
@@ -2617,6 +2672,14 @@ var ripple =
 	  // If either operand is NaN, the result is NaN.
 	  if (!this.is_valid() || !factor.is_valid()) {
 	    return Amount.NaN();
+	  }
+
+	  // Apply interest/demurrage
+	  //
+	  // We only need to apply it to the second factor, because the currency unit of
+	  // the first factor will carry over into the result.
+	  if (opts.reference_date) {
+	    factor = factor.applyInterest(opts.reference_date);
 	  }
 
 	  var product = this.multiply(factor);
@@ -2820,16 +2883,80 @@ var ripple =
 	  return this;
 	};
 
-	// --> h: 8 hex bytes quality or 32 hex bytes directory index.
-	Amount.prototype.parse_quality = function (q, c, i) {
+	/**
+	 * Decode a price from a BookDirectory index.
+	 *
+	 * BookDirectory ledger entries each encode the offer price in their index. This
+	 * method can decode that information and populate an Amount object with it.
+	 *
+	 * It is possible not to provide a currency or issuer, but be aware that Amount
+	 * objects behave differently based on the currency, so you may get incorrect
+	 * results.
+	 *
+	 * Prices involving demurraging currencies are tricky, since they depend on the
+	 * base and counter currencies.
+	 *
+	 * @param quality {String} 8 hex bytes quality or 32 hex bytes BookDirectory
+	 *   index.
+	 * @param counterCurrency {Currency|String} Currency of the resulting Amount
+	 *   object.
+	 * @param counterIssuer {Issuer|String} Issuer of the resulting Amount object.
+	 * @param opts Additional options
+	 * @param opts.inverse {Boolean} If true, return the inverse of the price
+	 *   encoded in the quality.
+	 * @param opts.base_currency {Currency|String} The other currency. This plays a
+	 *   role with interest-bearing or demurrage currencies. In that case the
+	 *   demurrage has to be applied when the quality is decoded, otherwise the
+	 *   price will be false.
+	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
+	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
+	 * @param opts.xrp_as_drops {Boolean} Whether XRP amount should be treated as
+	 *   drops. When the base currency is XRP, the quality is calculated in drops.
+	 *   For human use however, we want to think of 1000000 drops as 1 XRP and
+	 *   prices as per-XRP instead of per-drop.
+	 */
+	Amount.prototype.parse_quality = function (quality, counterCurrency, counterIssuer, opts)
+	{
+	  opts = opts || {};
+
+	  var baseCurrency = Currency.from_json(opts.base_currency);
+
 	  this._is_negative = false;
-	  this._value       = new BigInteger(q.substring(q.length-14), 16);
-	  this._offset      = parseInt(q.substring(q.length-16, q.length-14), 16)-100;
-	  this._currency    = Currency.from_json(c);
-	  this._issuer      = UInt160.from_json(i);
+	  this._value       = new BigInteger(quality.substring(quality.length-14), 16);
+	  this._offset      = parseInt(quality.substring(quality.length-16, quality.length-14), 16)-100;
+	  this._currency    = Currency.from_json(counterCurrency);
+	  this._issuer      = UInt160.from_json(counterIssuer);
 	  this._is_native   = this._currency.is_native();
 
+	  // Correct offset if xrp_as_drops option is not set and base currency is XRP
+	  if (!opts.xrp_as_drops &&
+	      baseCurrency.is_valid() &&
+	      baseCurrency.is_native()) {
+	    if (opts.inverse) {
+	      this._offset -= 6;
+	    } else {
+	      this._offset += 6;
+	    }
+	  }
+
+	  if (opts.inverse) {
+	    this._invert();
+	  }
+
 	  this.canonicalize();
+
+	  if (opts.reference_date && baseCurrency.is_valid() && baseCurrency.has_interest()) {
+	    var interest = baseCurrency.get_interest_at(opts.reference_date);
+
+	    // XXX If we had better math utilities, we wouldn't need this hack.
+	    var interestTempAmount = Amount.from_json(""+interest+"/1/1");
+
+	    if (interestTempAmount.is_valid()) {
+	      var v = this.divide(interestTempAmount);
+	      this._value = v._value;
+	      this._offset = v._offset;
+	    }
+	  }
 
 	  return this;
 	}
@@ -3053,6 +3180,39 @@ var ripple =
 	};
 
 	/**
+	 * Calculate present value based on currency and a reference date.
+	 *
+	 * This only affects demurraging and interest-bearing currencies.
+	 *
+	 * User should not store amount objects after the interest is applied. This is
+	 * intended by display functions such as toHuman().
+	 *
+	 * @param referenceDate {Date|Number} Date based on which demurrage/interest
+	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
+	 * @return {Amount} The amount with interest applied.
+	 */
+	Amount.prototype.applyInterest = function (referenceDate) {
+	  if (this._currency.has_interest()) {
+	    var interest = this._currency.get_interest_at(referenceDate);
+
+	    // XXX Because the Amount parsing routines don't support some of the things
+	    //     that JavaScript can output when casting a float to a string, the
+	    //     following call sometimes does not produce a valid Amount.
+	    //
+	    //     The correct way to solve this is probably to switch to a proper
+	    //     BigDecimal for our internal representation and then use that across
+	    //     the board instead of instantiating these dummy Amount objects.
+	    var interestTempAmount = Amount.from_json(""+interest+"/1/1");
+
+	    if (interestTempAmount.is_valid()) {
+	      return this.multiply(interestTempAmount);
+	    }
+	  } else {
+	    return this;
+	  }
+	};
+
+	/**
 	 * Format only value in a human-readable format.
 	 *
 	 * @example
@@ -3087,21 +3247,8 @@ var ripple =
 
 	  // Apply demurrage/interest
 	  var ref = this;
-	  if (opts.reference_date && this._currency.has_interest()) {
-	    var interest = this._currency.get_interest_at(opts.reference_date);
-
-	    // XXX Because the Amount parsing routines don't support some of the things
-	    //     that JavaScript can output when casting a float to a string, the
-	    //     following call sometimes does not produce a valid Amount.
-	    //
-	    //     The correct way to solve this is probably to switch to a proper
-	    //     BigDecimal for our internal representation and then use that across
-	    //     the board instead of instantiating these dummy Amount objects.
-	    var interestTempAmount = Amount.from_json(""+interest+"/1/1");
-
-	    if (interestTempAmount.is_valid()) {
-	      ref = this.multiply(interestTempAmount);
-	    }
+	  if (opts.reference_date) {
+	    ref = this.applyInterest(opts.reference_date);
 	  }
 
 	  var order         = ref._is_native ? consts.xns_precision : -ref._offset;
@@ -3278,12 +3425,12 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter       = require(31).EventEmitter;
-	var util               = require(32);
-	var extend             = require(35);
+	var EventEmitter       = require(28).EventEmitter;
+	var util               = require(29);
+	var extend             = require(36);
 	var Amount             = require(3).Amount;
 	var UInt160            = require(8).UInt160;
-	var TransactionManager = require(22).TransactionManager;
+	var TransactionManager = require(21).TransactionManager;
 
 	/**
 	 * @constructor Account
@@ -3599,8 +3746,8 @@ var ripple =
 	//   - may or may not forward.
 	//
 
-	var EventEmitter     = require(31).EventEmitter;
-	var util             = require(32);
+	var EventEmitter     = require(28).EventEmitter;
+	var util             = require(29);
 	var sjcl             = require(15).sjcl;
 	var Amount           = require(3).Amount;
 	var Currency         = require(3).Currency;
@@ -3630,34 +3777,29 @@ var ripple =
 	  // Index at which transaction was submitted
 	  this.submitIndex = void(0);
 
+	  this.canonical = true;
+
 	  // We aren't clever enough to eschew preventative measures so we keep an array
 	  // of all submitted transactionIDs (which can change due to load_factor
 	  // effecting the Fee amount). This should be populated with a transactionID
 	  // any time it goes on the network
-	  this.submittedIDs = [ ]
+	  this.submittedIDs = [ ];
 
 	  function finalize(message) {
 	    if (!self.finalized) {
 	      self.finalized = true;
-
-	      if (self.result) {
-	        self.result.ledger_index = message.ledger_index;
-	        self.result.ledger_hash  = message.ledger_hash;
-	      } else {
-	        self.result = message;
-	        self.result.tx_json = self.tx_json;
-	      }
-
 	      self.emit('cleanup', message);
 	    }
 	  };
 
 	  this.once('success', function(message) {
+	    self.finalized = true;
 	    self.setState('validated');
 	    finalize(message);
 	  });
 
 	  this.once('error', function(message) {
+	    self.finalized = true;
 	    self.setState('failed');
 	    finalize(message);
 	  });
@@ -3679,6 +3821,11 @@ var ripple =
 	};
 
 	Transaction.flags = {
+	  // Universal flags can apply to any transaction type
+	  Universal: {
+	    FullyCanonicalSig:  0x80000000
+	  },
+
 	  AccountSet: {
 	    RequireDestTag:     0x00010000,
 	    OptionalDestTag:    0x00020000,
@@ -3822,6 +3969,8 @@ var ripple =
 	    return this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
 	  }
 
+	  // If the Fee hasn't been set, one needs to be computed by
+	  // an assigned server
 	  if (this.remote && typeof this.tx_json.Fee === 'undefined') {
 	    if (this.remote.local_fee || !this.remote.trusted) {
 	      this._server = this._getServer();
@@ -3833,6 +3982,15 @@ var ripple =
 	    var seed = Seed.from_json(this._secret);
 	    var key  = seed.get_key(this.tx_json.Account);
 	    this.tx_json.SigningPubKey = key.to_hex_pub();
+	  }
+
+	  // Set canonical flag - this enables canonicalized signature checking
+	  if (this.canonical) {
+	    this.tx_json.Flags |= Transaction.flags.Universal.FullyCanonicalSig;
+
+	    // JavaScript converts operands to 32-bit signed ints before doing bitwise
+	    // operations. We need to convert it back to an unsigned int.
+	    this.tx_json.Flags = this.tx_json.Flags >>> 0;
 	  }
 
 	  return this.tx_json;
@@ -4358,6 +4516,9 @@ var ripple =
 	    clientID:            this._clientID,
 	    submittedIDs:        this.submittedIDs,
 	    submissionAttempts:  this.attempts,
+	    submitIndex:         this.submitIndex,
+	    initialSubmitIndex:  this.initialSubmitIndex,
+	    lastLedgerSequence:  this.lastLedgerSequence,
 	    state:               this.state,
 	    server:              this._server ? this._server._opts.url :  void(0),
 	    finalized:           this.finalized
@@ -4387,10 +4548,10 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	
-	var extend    = require(35);
+	var extend    = require(36);
 
 	var UInt160 = require(8).UInt160;
-	var Float = require(21).Float;
+	var Float = require(22).Float;
 	var utils = require(15);
 
 	//
@@ -4625,7 +4786,7 @@ var ripple =
 
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
-	var extend  = require(35);
+	var extend  = require(36);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4802,7 +4963,7 @@ var ripple =
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(35);
+	var extend  = require(36);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4916,7 +5077,7 @@ var ripple =
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(35);
+	var extend  = require(36);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4957,7 +5118,7 @@ var ripple =
 
 	var utils   = require(15);
 	var sjcl    = utils.sjcl;
-	var extend  = require(35);
+	var extend  = require(36);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -5074,7 +5235,7 @@ var ripple =
 /***/ 11:
 /***/ function(module, exports, require) {
 
-	var extend  = require(35);
+	var extend  = require(36);
 	var utils   = require(15);
 	var UInt160 = require(8).UInt160;
 	var Amount  = require(3).Amount;
@@ -5250,10 +5411,10 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(14);
-	var extend     = require(35);
+	var extend     = require(36);
 	var stypes     = require(26);
 	var UInt256    = require(9).UInt256;
-	var assert     = require(33);
+	var assert     = require(30);
 
 	var utils      = require(15);
 	var sjcl       = utils.sjcl;
@@ -5556,8 +5717,8 @@ var ripple =
 /***/ 13:
 /***/ function(module, exports, require) {
 
-	var util   = require(32);
-	var extend = require(35);
+	var util   = require(29);
+	var extend = require(36);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -6185,8 +6346,8 @@ var ripple =
 
 	// Going up three levels is needed to escape the src-cov folder used for the
 	// test coverage stuff.
-	exports.sjcl = require(28);
-	exports.jsbn = require(29);
+	exports.sjcl = require(31);
+	exports.jsbn = require(32);
 
 	// vim:sw=2:sts=2:ts=8:et
 
@@ -6196,8 +6357,8 @@ var ripple =
 /***/ 16:
 /***/ function(module, exports, require) {
 
-	var util         = require(32);
-	var EventEmitter = require(31).EventEmitter;
+	var util         = require(29);
+	var EventEmitter = require(28).EventEmitter;
 	var Transaction = require(5).Transaction;
 	var Amount       = require(3).Amount;
 	var utils        = require(15);
@@ -6234,8 +6395,17 @@ var ripple =
 	    throw new Error('Server host is malformed, use "host" and "port" server configuration');
 	  }
 
-	  if (typeof opts.port !== 'number') {
-	    throw new TypeError('Server configuration "port" is not a Number');
+	  // We want to allow integer strings as valid port numbers for backward
+	  // compatibility.
+	  if (typeof opts.port === 'string') {
+	    opts.port = parseFloat(opts.port);
+	  }
+
+	  if (typeof opts.port !== 'number' ||
+	      opts.port >>> 0 !== parseFloat(opts.port) || // is integer?
+	      opts.port < 1 ||
+	      opts.port > 65535) {
+	    throw new TypeError('Server "port" must be an integer in range 1-65535');
 	  }
 
 	  if (typeof opts.secure !== 'boolean') {
@@ -6364,7 +6534,7 @@ var ripple =
 	Server.websocketConstructor = function() {
 	  // We require this late, because websocket shims may be loaded after
 	  // ripple-lib in the browser
-	  return require(30);
+	  return require(33);
 	};
 
 	/**
@@ -6789,7 +6959,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = require(35);
+	var extend = require(36);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -6814,9 +6984,9 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter = require(31).EventEmitter;
-	var util         = require(32);
-	var extend       = require(35);
+	var EventEmitter = require(28).EventEmitter;
+	var util         = require(29);
+	var extend       = require(36);
 	var Amount       = require(3).Amount;
 	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
@@ -7031,11 +7201,12 @@ var ripple =
 	        break;
 
 	      case 'CreatedNode':
-	        var price = Amount.from_json(an.fields.TakerPays).ratio_human(an.fields.TakerGets);
+	        // XXX Should use Amount#from_quality
+	        var price = Amount.from_json(an.fields.TakerPays).ratio_human(an.fields.TakerGets, {reference_date: new Date()});
 
 	        for (i = 0, l = self._offers.length; i < l; i++) {
 	          offer = self._offers[i];
-	          var priceItem = Amount.from_json(offer.TakerPays).ratio_human(offer.TakerGets);
+	          var priceItem = Amount.from_json(offer.TakerPays).ratio_human(offer.TakerGets, {reference_date: new Date()});
 
 	          if (price.compareTo(priceItem) <= 0) {
 	            var obj   = an.fields;
@@ -7107,10 +7278,10 @@ var ripple =
 /***/ 19:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(31).EventEmitter;
-	var util         = require(32);
+	var EventEmitter = require(28).EventEmitter;
+	var util         = require(29);
 	var Amount       = require(3).Amount;
-	var extend       = require(35);
+	var extend       = require(36);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -7237,74 +7408,11 @@ var ripple =
 /***/ 21:
 /***/ function(module, exports, require) {
 
-	/**
-	 * IEEE 754 floating-point.
-	 *
-	 * Supports single- or double-precision
-	 */
-	var Float = exports.Float = {};
-
-	var allZeros = /^0+$/;
-	var allOnes = /^1+$/;
-
-	Float.fromBytes = function (bytes) {
-	  // Render in binary.  Hackish.
-	  var b = "";
-	  for (var i = 0, n = bytes.length; i < n; i++) {
-	    var bits = (bytes[i] & 0xff).toString(2);
-	    while (bits.length < 8) bits = "0" + bits;
-	    b += bits;
-	  }
-
-	  // Determine configuration.  This could have all been precomputed but it is fast enough.
-	  var exponentBits = bytes.length === 4 ? 4 : 11;
-	  var mantissaBits = (bytes.length * 8) - exponentBits - 1;
-	  var bias = Math.pow(2, exponentBits - 1) - 1;
-	  var minExponent = 1 - bias - mantissaBits;
-
-	  // Break up the binary representation into its pieces for easier processing.
-	  var s = b[0];
-	  var e = b.substring(1, exponentBits + 1);
-	  var m = b.substring(exponentBits + 1);
-
-	  var value = 0;
-	  var multiplier = (s === "0" ? 1 : -1);
-
-	  if (allZeros.test(e)) {
-	    // Zero or denormalized
-	    if (allZeros.test(m)) {
-	      // Value is zero
-	    } else {
-	      value = parseInt(m, 2) * Math.pow(2, minExponent);
-	    }
-	  } else if (allOnes.test(e)) {
-	    // Infinity or NaN
-	    if (allZeros.test(m)) {
-	      value = Infinity;
-	    } else {
-	      value = NaN;
-	    }
-	  } else {
-	    // Normalized
-	    var exponent = parseInt(e, 2) - bias;
-	    var mantissa = parseInt(m, 2);
-	    value = (1 + (mantissa * Math.pow(2, -mantissaBits))) * Math.pow(2, exponent);
-	  }
-
-	  return value * multiplier;
-	};
-
-
-/***/ },
-
-/***/ 22:
-/***/ function(module, exports, require) {
-
-	var util         = require(32);
-	var EventEmitter = require(31).EventEmitter;
+	var util         = require(29);
+	var EventEmitter = require(28).EventEmitter;
 	var Transaction  = require(5).Transaction;
 	var RippleError  = require(13).RippleError;
-	var PendingQueue = require(36).TransactionQueue;
+	var PendingQueue = require(35).TransactionQueue;
 
 	/**
 	 * @constructor TransactionManager
@@ -7405,6 +7513,7 @@ var ripple =
 	      account: self._accountID,
 	      ledger_index_min: -1,
 	      ledger_index_max: -1,
+	      binary: true,
 	      limit: 100,
 	      filter: 'outbound'
 	    }
@@ -7618,13 +7727,21 @@ var ripple =
 
 	  tx.emit('presubmit');
 
+	  if (tx.finalized) return;
+
 	  tx.submitIndex = this._remote._ledger_current_index;
+
+	  if (tx.attempts === 0) {
+	    tx.initialSubmitIndex = tx.submitIndex;
+	  }
 
 	  if (!tx._setLastLedger) {
 	    // Honor LastLedgerSequence set by user of API. If
 	    // left unset by API, bump LastLedgerSequence
 	    tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
 	  }
+
+	  tx.lastLedgerSequence = tx.tx_json.LastLedgerSequence;
 
 	  var submitRequest = remote.requestSubmit();
 
@@ -7787,8 +7904,11 @@ var ripple =
 	  };
 
 	  function submitTransaction() {
+	    if (tx.finalized) return;
+
 	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
 	    submitRequest.request();
+
 	    tx.attempts++;
 	    tx.emit('postsubmit');
 	  };
@@ -7894,6 +8014,69 @@ var ripple =
 	};
 
 	exports.TransactionManager = TransactionManager;
+
+
+/***/ },
+
+/***/ 22:
+/***/ function(module, exports, require) {
+
+	/**
+	 * IEEE 754 floating-point.
+	 *
+	 * Supports single- or double-precision
+	 */
+	var Float = exports.Float = {};
+
+	var allZeros = /^0+$/;
+	var allOnes = /^1+$/;
+
+	Float.fromBytes = function (bytes) {
+	  // Render in binary.  Hackish.
+	  var b = "";
+	  for (var i = 0, n = bytes.length; i < n; i++) {
+	    var bits = (bytes[i] & 0xff).toString(2);
+	    while (bits.length < 8) bits = "0" + bits;
+	    b += bits;
+	  }
+
+	  // Determine configuration.  This could have all been precomputed but it is fast enough.
+	  var exponentBits = bytes.length === 4 ? 4 : 11;
+	  var mantissaBits = (bytes.length * 8) - exponentBits - 1;
+	  var bias = Math.pow(2, exponentBits - 1) - 1;
+	  var minExponent = 1 - bias - mantissaBits;
+
+	  // Break up the binary representation into its pieces for easier processing.
+	  var s = b[0];
+	  var e = b.substring(1, exponentBits + 1);
+	  var m = b.substring(exponentBits + 1);
+
+	  var value = 0;
+	  var multiplier = (s === "0" ? 1 : -1);
+
+	  if (allZeros.test(e)) {
+	    // Zero or denormalized
+	    if (allZeros.test(m)) {
+	      // Value is zero
+	    } else {
+	      value = parseInt(m, 2) * Math.pow(2, minExponent);
+	    }
+	  } else if (allOnes.test(e)) {
+	    // Infinity or NaN
+	    if (allZeros.test(m)) {
+	      value = Infinity;
+	    } else {
+	      value = NaN;
+	    }
+	  } else {
+	    // Normalized
+	    var exponent = parseInt(e, 2) - bias;
+	    var mantissa = parseInt(m, 2);
+	    value = (1 + (mantissa * Math.pow(2, -mantissaBits))) * Math.pow(2, exponent);
+	  }
+
+	  return value * multiplier;
+	};
 
 
 /***/ },
@@ -8322,8 +8505,10 @@ var ripple =
 	};
 
 	KeyPair.prototype.sign = function (hash) {
-	  var hash = UInt256.from_json(hash);
-	  return this._secret.signDER(hash.to_bits(), 0);
+	  hash = UInt256.from_json(hash);
+	  var sig = this._secret.sign(hash.to_bits(), 0);
+	  sig = this._secret.canonicalizeSignature(sig);
+	  return this._secret.encodeDER(sig);
 	};
 
 	exports.KeyPair = KeyPair;
@@ -8342,13 +8527,13 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert    = require(33);
-	var extend    = require(35);
+	var assert    = require(30);
+	var extend    = require(36);
 	var binformat = require(14);
 	var utils     = require(15);
 	var sjcl      = utils.sjcl;
 
-	var UInt128   = require(38).UInt128;
+	var UInt128   = require(37).UInt128;
 	var UInt160   = require(8).UInt160;
 	var UInt256   = require(9).UInt256;
 	var Base      = require(7).Base;
@@ -9075,7 +9260,7 @@ var ripple =
 	    this.length = size;
 	};
 
-	var assert = require(33);
+	var assert = require(30);
 
 	exports.INSPECT_MAX_BYTES = 50;
 
@@ -10359,6 +10544,837 @@ var ripple =
 /***/ },
 
 /***/ 28:
+/***/ function(module, exports, require) {
+
+	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
+	var isArray = require(40);
+	var indexOf = require(41);
+
+
+
+	// By default EventEmitters will print a warning if more than
+	// 10 listeners are added to it. This is a useful default which
+	// helps finding memory leaks.
+	//
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	var defaultMaxListeners = 10;
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!this._events) this._events = {};
+	  this._maxListeners = n;
+	};
+
+
+	EventEmitter.prototype.emit = function(type) {
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events || !this._events.error ||
+	        (isArray(this._events.error) && !this._events.error.length))
+	    {
+	      if (arguments[1] instanceof Error) {
+	        throw arguments[1]; // Unhandled 'error' event
+	      } else {
+	        throw new Error("Uncaught, unspecified 'error' event.");
+	      }
+	      return false;
+	    }
+	  }
+
+	  if (!this._events) return false;
+	  var handler = this._events[type];
+	  if (!handler) return false;
+
+	  if (typeof handler == 'function') {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        var args = Array.prototype.slice.call(arguments, 1);
+	        handler.apply(this, args);
+	    }
+	    return true;
+
+	  } else if (isArray(handler)) {
+	    var args = Array.prototype.slice.call(arguments, 1);
+
+	    var listeners = handler.slice();
+	    for (var i = 0, l = listeners.length; i < l; i++) {
+	      listeners[i].apply(this, args);
+	    }
+	    return true;
+
+	  } else {
+	    return false;
+	  }
+	};
+
+	// EventEmitter is defined in src/node_events.cc
+	// EventEmitter.prototype.emit() is also defined there.
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('addListener only takes instances of Function');
+	  }
+
+	  if (!this._events) this._events = {};
+
+	  // To avoid recursion in the case that type == "newListeners"! Before
+	  // adding it to the listeners, first emit "newListeners".
+	  this.emit('newListener', type, listener);
+	  if (!this._events[type]) {
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  } else if (isArray(this._events[type])) {
+
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+
+	  } else {
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+	  }
+
+	  // Check for listener leak
+	  if (isArray(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (this._maxListeners !== undefined) {
+	      m = this._maxListeners;
+	    } else {
+	      m = defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(events) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      console.trace();
+	    }
+	  }
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('.once only takes instances of Function');
+	  }
+
+	  var self = this;
+	  function g() {
+	    self.removeListener(type, g);
+	    listener.apply(this, arguments);
+	  }
+
+	  g.listener = listener;
+	  self.on(type, g);
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('removeListener only takes instances of Function');
+	  }
+
+	  // does not use listeners(), so no side effect of creating _events[type]
+	  if (!this._events || !this._events[type]) return this;
+
+	  var list = this._events[type];
+
+	  if (isArray(list)) {
+	    var position = -1;
+	    for (var i = 0, length = list.length; i < length; i++) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener))
+	      {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0) return this;
+	    list.splice(position, 1);
+	    if (list.length == 0)
+	      delete this._events[type];
+	  } else if (list === listener ||
+	             (list.listener && list.listener === listener)) {
+	    delete this._events[type];
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  if (arguments.length === 0) {
+	    this._events = {};
+	    return this;
+	  }
+
+	  // does not use listeners(), so no side effect of creating _events[type]
+	  if (type && this._events && this._events[type]) this._events[type] = null;
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  if (!this._events) this._events = {};
+	  if (!this._events[type]) this._events[type] = [];
+	  if (!isArray(this._events[type])) {
+	    this._events[type] = [this._events[type]];
+	  }
+	  return this._events[type];
+	};
+
+
+/***/ },
+
+/***/ 29:
+/***/ function(module, exports, require) {
+
+	var events = require(28);
+
+	var isArray = require(40);
+	var Object_keys = require(43);
+	var Object_getOwnPropertyNames = require(44);
+	var Object_create = require(45);
+	var isRegExp = require(46);
+
+	exports.isArray = isArray;
+	exports.isDate = isDate;
+	exports.isRegExp = isRegExp;
+
+
+	exports.print = function () {};
+	exports.puts = function () {};
+	exports.debug = function() {};
+
+	exports.inspect = function(obj, showHidden, depth, colors) {
+	  var seen = [];
+
+	  var stylize = function(str, styleType) {
+	    // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+	    var styles =
+	        { 'bold' : [1, 22],
+	          'italic' : [3, 23],
+	          'underline' : [4, 24],
+	          'inverse' : [7, 27],
+	          'white' : [37, 39],
+	          'grey' : [90, 39],
+	          'black' : [30, 39],
+	          'blue' : [34, 39],
+	          'cyan' : [36, 39],
+	          'green' : [32, 39],
+	          'magenta' : [35, 39],
+	          'red' : [31, 39],
+	          'yellow' : [33, 39] };
+
+	    var style =
+	        { 'special': 'cyan',
+	          'number': 'blue',
+	          'boolean': 'yellow',
+	          'undefined': 'grey',
+	          'null': 'bold',
+	          'string': 'green',
+	          'date': 'magenta',
+	          // "name": intentionally not styling
+	          'regexp': 'red' }[styleType];
+
+	    if (style) {
+	      return '\033[' + styles[style][0] + 'm' + str +
+	             '\033[' + styles[style][1] + 'm';
+	    } else {
+	      return str;
+	    }
+	  };
+	  if (! colors) {
+	    stylize = function(str, styleType) { return str; };
+	  }
+
+	  function format(value, recurseTimes) {
+	    // Provide a hook for user-specified inspect functions.
+	    // Check that value is an object with an inspect function on it
+	    if (value && typeof value.inspect === 'function' &&
+	        // Filter out the util module, it's inspect function is special
+	        value !== exports &&
+	        // Also filter out any prototype objects using the circular check.
+	        !(value.constructor && value.constructor.prototype === value)) {
+	      return value.inspect(recurseTimes);
+	    }
+
+	    // Primitive types cannot have properties
+	    switch (typeof value) {
+	      case 'undefined':
+	        return stylize('undefined', 'undefined');
+
+	      case 'string':
+	        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+	                                                 .replace(/'/g, "\\'")
+	                                                 .replace(/\\"/g, '"') + '\'';
+	        return stylize(simple, 'string');
+
+	      case 'number':
+	        return stylize('' + value, 'number');
+
+	      case 'boolean':
+	        return stylize('' + value, 'boolean');
+	    }
+	    // For some reason typeof null is "object", so special case here.
+	    if (value === null) {
+	      return stylize('null', 'null');
+	    }
+
+	    // Look up the keys of the object.
+	    var visible_keys = Object_keys(value);
+	    var keys = showHidden ? Object_getOwnPropertyNames(value) : visible_keys;
+
+	    // Functions without properties can be shortcutted.
+	    if (typeof value === 'function' && keys.length === 0) {
+	      if (isRegExp(value)) {
+	        return stylize('' + value, 'regexp');
+	      } else {
+	        var name = value.name ? ': ' + value.name : '';
+	        return stylize('[Function' + name + ']', 'special');
+	      }
+	    }
+
+	    // Dates without properties can be shortcutted
+	    if (isDate(value) && keys.length === 0) {
+	      return stylize(value.toUTCString(), 'date');
+	    }
+
+	    var base, type, braces;
+	    // Determine the object type
+	    if (isArray(value)) {
+	      type = 'Array';
+	      braces = ['[', ']'];
+	    } else {
+	      type = 'Object';
+	      braces = ['{', '}'];
+	    }
+
+	    // Make functions say that they are functions
+	    if (typeof value === 'function') {
+	      var n = value.name ? ': ' + value.name : '';
+	      base = (isRegExp(value)) ? ' ' + value : ' [Function' + n + ']';
+	    } else {
+	      base = '';
+	    }
+
+	    // Make dates with properties first say the date
+	    if (isDate(value)) {
+	      base = ' ' + value.toUTCString();
+	    }
+
+	    if (keys.length === 0) {
+	      return braces[0] + base + braces[1];
+	    }
+
+	    if (recurseTimes < 0) {
+	      if (isRegExp(value)) {
+	        return stylize('' + value, 'regexp');
+	      } else {
+	        return stylize('[Object]', 'special');
+	      }
+	    }
+
+	    seen.push(value);
+
+	    var output = keys.map(function(key) {
+	      var name, str;
+	      if (value.__lookupGetter__) {
+	        if (value.__lookupGetter__(key)) {
+	          if (value.__lookupSetter__(key)) {
+	            str = stylize('[Getter/Setter]', 'special');
+	          } else {
+	            str = stylize('[Getter]', 'special');
+	          }
+	        } else {
+	          if (value.__lookupSetter__(key)) {
+	            str = stylize('[Setter]', 'special');
+	          }
+	        }
+	      }
+	      if (visible_keys.indexOf(key) < 0) {
+	        name = '[' + key + ']';
+	      }
+	      if (!str) {
+	        if (seen.indexOf(value[key]) < 0) {
+	          if (recurseTimes === null) {
+	            str = format(value[key]);
+	          } else {
+	            str = format(value[key], recurseTimes - 1);
+	          }
+	          if (str.indexOf('\n') > -1) {
+	            if (isArray(value)) {
+	              str = str.split('\n').map(function(line) {
+	                return '  ' + line;
+	              }).join('\n').substr(2);
+	            } else {
+	              str = '\n' + str.split('\n').map(function(line) {
+	                return '   ' + line;
+	              }).join('\n');
+	            }
+	          }
+	        } else {
+	          str = stylize('[Circular]', 'special');
+	        }
+	      }
+	      if (typeof name === 'undefined') {
+	        if (type === 'Array' && key.match(/^\d+$/)) {
+	          return str;
+	        }
+	        name = JSON.stringify('' + key);
+	        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+	          name = name.substr(1, name.length - 2);
+	          name = stylize(name, 'name');
+	        } else {
+	          name = name.replace(/'/g, "\\'")
+	                     .replace(/\\"/g, '"')
+	                     .replace(/(^"|"$)/g, "'");
+	          name = stylize(name, 'string');
+	        }
+	      }
+
+	      return name + ': ' + str;
+	    });
+
+	    seen.pop();
+
+	    var numLinesEst = 0;
+	    var length = output.reduce(function(prev, cur) {
+	      numLinesEst++;
+	      if (cur.indexOf('\n') >= 0) numLinesEst++;
+	      return prev + cur.length + 1;
+	    }, 0);
+
+	    if (length > 50) {
+	      output = braces[0] +
+	               (base === '' ? '' : base + '\n ') +
+	               ' ' +
+	               output.join(',\n  ') +
+	               ' ' +
+	               braces[1];
+
+	    } else {
+	      output = braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+	    }
+
+	    return output;
+	  }
+	  return format(obj, (typeof depth === 'undefined' ? 2 : depth));
+	};
+
+
+	function isDate(d) {
+	  if (d instanceof Date) return true;
+	  if (typeof d !== 'object') return false;
+	  var properties = Date.prototype && Object_getOwnPropertyNames(Date.prototype);
+	  var proto = d.__proto__ && Object_getOwnPropertyNames(d.__proto__);
+	  return JSON.stringify(proto) === JSON.stringify(properties);
+	}
+
+	function pad(n) {
+	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+	}
+
+	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+	              'Oct', 'Nov', 'Dec'];
+
+	// 26 Feb 16:19:34
+	function timestamp() {
+	  var d = new Date();
+	  var time = [pad(d.getHours()),
+	              pad(d.getMinutes()),
+	              pad(d.getSeconds())].join(':');
+	  return [d.getDate(), months[d.getMonth()], time].join(' ');
+	}
+
+	exports.log = function (msg) {};
+
+	exports.pump = null;
+
+	exports.inherits = function(ctor, superCtor) {
+	  ctor.super_ = superCtor;
+	  ctor.prototype = Object_create(superCtor.prototype, {
+	    constructor: {
+	      value: ctor,
+	      enumerable: false,
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+	};
+
+	var formatRegExp = /%[sdj%]/g;
+	exports.format = function(f) {
+	  if (typeof f !== 'string') {
+	    var objects = [];
+	    for (var i = 0; i < arguments.length; i++) {
+	      objects.push(exports.inspect(arguments[i]));
+	    }
+	    return objects.join(' ');
+	  }
+
+	  var i = 1;
+	  var args = arguments;
+	  var len = args.length;
+	  var str = String(f).replace(formatRegExp, function(x) {
+	    if (x === '%%') return '%';
+	    if (i >= len) return x;
+	    switch (x) {
+	      case '%s': return String(args[i++]);
+	      case '%d': return Number(args[i++]);
+	      case '%j': return JSON.stringify(args[i++]);
+	      default:
+	        return x;
+	    }
+	  });
+	  for(var x = args[i]; i < len; x = args[++i]){
+	    if (x === null || typeof x !== 'object') {
+	      str += ' ' + x;
+	    } else {
+	      str += ' ' + exports.inspect(x);
+	    }
+	  }
+	  return str;
+	};
+
+
+/***/ },
+
+/***/ 30:
+/***/ function(module, exports, require) {
+
+	// UTILITY
+	var util = require(29);
+	var pSlice = Array.prototype.slice;
+
+	var objectKeys = require(43);
+	var isRegExp = require(46);
+
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
+
+	var assert = module.exports = ok;
+
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
+
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.message = options.message;
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
+	};
+	util.inherits(assert.AssertionError, Error);
+
+	function replacer(key, value) {
+	  if (value === undefined) {
+	    return '' + value;
+	  }
+	  if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+	    return value.toString();
+	  }
+	  if (typeof value === 'function' || value instanceof RegExp) {
+	    return value.toString();
+	  }
+	  return value;
+	}
+
+	function truncate(s, n) {
+	  if (typeof s == 'string') {
+	    return s.length < n ? s : s.slice(0, n);
+	  } else {
+	    return s;
+	  }
+	}
+
+	assert.AssertionError.prototype.toString = function() {
+	  if (this.message) {
+	    return [this.name + ':', this.message].join(' ');
+	  } else {
+	    return [
+	      this.name + ':',
+	      truncate(JSON.stringify(this.actual, replacer), 128),
+	      this.operator,
+	      truncate(JSON.stringify(this.expected, replacer), 128)
+	    ].join(' ');
+	  }
+	};
+
+	// assert.AssertionError instanceof Error
+
+	assert.AssertionError.__proto__ = Error.prototype;
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!!!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
+	  }
+	};
+
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+	  }
+	};
+
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
+
+	  } else if (require(27).Buffer.isBuffer(actual) && require(27).Buffer.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
+
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
+	    }
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (actual instanceof Date && expected instanceof Date) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (isRegExp(actual) && isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (typeof actual != 'object' && typeof expected != 'object') {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isUndefinedOrNull(value) {
+	  return value === null || value === undefined;
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  //~~~I've managed to break Object.keys through screwy arguments passing.
+	  //   Converting to array solves the problem.
+	  if (isArguments(a)) {
+	    if (!isArguments(b)) {
+	      return false;
+	    }
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  try {
+	    var ka = objectKeys(a),
+	        kb = objectKeys(b),
+	        key, i;
+	  } catch (e) {//happens when one is a string literal and the other isn't
+	    return false;
+	  }
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
+	  }
+
+	  if (isRegExp(expected)) {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
+
+	  if (typeof expected === 'string') {
+	    message = expected;
+	    expected = null;
+	  }
+
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
+	  }
+
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
+
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
+	  }
+
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
+	  }
+
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
+
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
+	};
+
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
+	};
+
+	assert.ifError = function(err) { if (err) {throw err;}};
+
+
+/***/ },
+
+/***/ 31:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {/** @fileOverview Javascript cryptography implementation.
@@ -14406,6 +15422,24 @@ var ripple =
 	  }
 	};
 
+	sjcl.ecc.ecdsa.secretKey.prototype.canonicalizeSignature = function(rs) {
+	  var w = sjcl.bitArray,
+	      R = this._curve.r,
+	      l = R.bitLength();
+
+	  var r = sjcl.bn.fromBits(w.bitSlice(rs,0,l)),
+	      s = sjcl.bn.fromBits(w.bitSlice(rs,l,2*l));
+
+	  // For a canonical signature we want the lower of two possible values for s
+	  // 0 < s <= n/2
+	  if (!R.copy().halveM().greaterEquals(s)) {
+	    s = R.sub(s);
+	  }
+
+	  return w.concat(r.toBits(l), s.toBits(l));
+	};
+
+
 	sjcl.ecc.ecdsa.secretKey.prototype.signDER = function(hash, paranoia) {
 	  return this.encodeDER(this.sign(hash, paranoia));
 	};
@@ -14487,11 +15521,11 @@ var ripple =
 	  }
 	};
 	
-	/* WEBPACK VAR INJECTION */}(require, require(37)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(42)(module)))
 
 /***/ },
 
-/***/ 29:
+/***/ 32:
 /***/ function(module, exports, require) {
 
 	// Copyright (c) 2005  Tom Wu
@@ -15708,7 +16742,7 @@ var ripple =
 
 /***/ },
 
-/***/ 30:
+/***/ 33:
 /***/ function(module, exports, require) {
 
 	// If there is no WebSocket, try MozWebSocket (support for some old browsers)
@@ -15751,837 +16785,6 @@ var ripple =
 	    }
 	  }
 	}
-
-
-/***/ },
-
-/***/ 31:
-/***/ function(module, exports, require) {
-
-	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
-	var isArray = require(41);
-	var indexOf = require(42);
-
-
-
-	// By default EventEmitters will print a warning if more than
-	// 10 listeners are added to it. This is a useful default which
-	// helps finding memory leaks.
-	//
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	var defaultMaxListeners = 10;
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!this._events) this._events = {};
-	  this._maxListeners = n;
-	};
-
-
-	EventEmitter.prototype.emit = function(type) {
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events || !this._events.error ||
-	        (isArray(this._events.error) && !this._events.error.length))
-	    {
-	      if (arguments[1] instanceof Error) {
-	        throw arguments[1]; // Unhandled 'error' event
-	      } else {
-	        throw new Error("Uncaught, unspecified 'error' event.");
-	      }
-	      return false;
-	    }
-	  }
-
-	  if (!this._events) return false;
-	  var handler = this._events[type];
-	  if (!handler) return false;
-
-	  if (typeof handler == 'function') {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        var args = Array.prototype.slice.call(arguments, 1);
-	        handler.apply(this, args);
-	    }
-	    return true;
-
-	  } else if (isArray(handler)) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-
-	    var listeners = handler.slice();
-	    for (var i = 0, l = listeners.length; i < l; i++) {
-	      listeners[i].apply(this, args);
-	    }
-	    return true;
-
-	  } else {
-	    return false;
-	  }
-	};
-
-	// EventEmitter is defined in src/node_events.cc
-	// EventEmitter.prototype.emit() is also defined there.
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('addListener only takes instances of Function');
-	  }
-
-	  if (!this._events) this._events = {};
-
-	  // To avoid recursion in the case that type == "newListeners"! Before
-	  // adding it to the listeners, first emit "newListeners".
-	  this.emit('newListener', type, listener);
-	  if (!this._events[type]) {
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  } else if (isArray(this._events[type])) {
-
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-
-	  } else {
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-	  }
-
-	  // Check for listener leak
-	  if (isArray(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (this._maxListeners !== undefined) {
-	      m = this._maxListeners;
-	    } else {
-	      m = defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(events) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      console.trace();
-	    }
-	  }
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('.once only takes instances of Function');
-	  }
-
-	  var self = this;
-	  function g() {
-	    self.removeListener(type, g);
-	    listener.apply(this, arguments);
-	  }
-
-	  g.listener = listener;
-	  self.on(type, g);
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('removeListener only takes instances of Function');
-	  }
-
-	  // does not use listeners(), so no side effect of creating _events[type]
-	  if (!this._events || !this._events[type]) return this;
-
-	  var list = this._events[type];
-
-	  if (isArray(list)) {
-	    var position = -1;
-	    for (var i = 0, length = list.length; i < length; i++) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener))
-	      {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0) return this;
-	    list.splice(position, 1);
-	    if (list.length == 0)
-	      delete this._events[type];
-	  } else if (list === listener ||
-	             (list.listener && list.listener === listener)) {
-	    delete this._events[type];
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  if (arguments.length === 0) {
-	    this._events = {};
-	    return this;
-	  }
-
-	  // does not use listeners(), so no side effect of creating _events[type]
-	  if (type && this._events && this._events[type]) this._events[type] = null;
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  if (!this._events) this._events = {};
-	  if (!this._events[type]) this._events[type] = [];
-	  if (!isArray(this._events[type])) {
-	    this._events[type] = [this._events[type]];
-	  }
-	  return this._events[type];
-	};
-
-
-/***/ },
-
-/***/ 32:
-/***/ function(module, exports, require) {
-
-	var events = require(31);
-
-	var isArray = require(41);
-	var Object_keys = require(43);
-	var Object_getOwnPropertyNames = require(45);
-	var Object_create = require(46);
-	var isRegExp = require(44);
-
-	exports.isArray = isArray;
-	exports.isDate = isDate;
-	exports.isRegExp = isRegExp;
-
-
-	exports.print = function () {};
-	exports.puts = function () {};
-	exports.debug = function() {};
-
-	exports.inspect = function(obj, showHidden, depth, colors) {
-	  var seen = [];
-
-	  var stylize = function(str, styleType) {
-	    // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-	    var styles =
-	        { 'bold' : [1, 22],
-	          'italic' : [3, 23],
-	          'underline' : [4, 24],
-	          'inverse' : [7, 27],
-	          'white' : [37, 39],
-	          'grey' : [90, 39],
-	          'black' : [30, 39],
-	          'blue' : [34, 39],
-	          'cyan' : [36, 39],
-	          'green' : [32, 39],
-	          'magenta' : [35, 39],
-	          'red' : [31, 39],
-	          'yellow' : [33, 39] };
-
-	    var style =
-	        { 'special': 'cyan',
-	          'number': 'blue',
-	          'boolean': 'yellow',
-	          'undefined': 'grey',
-	          'null': 'bold',
-	          'string': 'green',
-	          'date': 'magenta',
-	          // "name": intentionally not styling
-	          'regexp': 'red' }[styleType];
-
-	    if (style) {
-	      return '\033[' + styles[style][0] + 'm' + str +
-	             '\033[' + styles[style][1] + 'm';
-	    } else {
-	      return str;
-	    }
-	  };
-	  if (! colors) {
-	    stylize = function(str, styleType) { return str; };
-	  }
-
-	  function format(value, recurseTimes) {
-	    // Provide a hook for user-specified inspect functions.
-	    // Check that value is an object with an inspect function on it
-	    if (value && typeof value.inspect === 'function' &&
-	        // Filter out the util module, it's inspect function is special
-	        value !== exports &&
-	        // Also filter out any prototype objects using the circular check.
-	        !(value.constructor && value.constructor.prototype === value)) {
-	      return value.inspect(recurseTimes);
-	    }
-
-	    // Primitive types cannot have properties
-	    switch (typeof value) {
-	      case 'undefined':
-	        return stylize('undefined', 'undefined');
-
-	      case 'string':
-	        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-	                                                 .replace(/'/g, "\\'")
-	                                                 .replace(/\\"/g, '"') + '\'';
-	        return stylize(simple, 'string');
-
-	      case 'number':
-	        return stylize('' + value, 'number');
-
-	      case 'boolean':
-	        return stylize('' + value, 'boolean');
-	    }
-	    // For some reason typeof null is "object", so special case here.
-	    if (value === null) {
-	      return stylize('null', 'null');
-	    }
-
-	    // Look up the keys of the object.
-	    var visible_keys = Object_keys(value);
-	    var keys = showHidden ? Object_getOwnPropertyNames(value) : visible_keys;
-
-	    // Functions without properties can be shortcutted.
-	    if (typeof value === 'function' && keys.length === 0) {
-	      if (isRegExp(value)) {
-	        return stylize('' + value, 'regexp');
-	      } else {
-	        var name = value.name ? ': ' + value.name : '';
-	        return stylize('[Function' + name + ']', 'special');
-	      }
-	    }
-
-	    // Dates without properties can be shortcutted
-	    if (isDate(value) && keys.length === 0) {
-	      return stylize(value.toUTCString(), 'date');
-	    }
-
-	    var base, type, braces;
-	    // Determine the object type
-	    if (isArray(value)) {
-	      type = 'Array';
-	      braces = ['[', ']'];
-	    } else {
-	      type = 'Object';
-	      braces = ['{', '}'];
-	    }
-
-	    // Make functions say that they are functions
-	    if (typeof value === 'function') {
-	      var n = value.name ? ': ' + value.name : '';
-	      base = (isRegExp(value)) ? ' ' + value : ' [Function' + n + ']';
-	    } else {
-	      base = '';
-	    }
-
-	    // Make dates with properties first say the date
-	    if (isDate(value)) {
-	      base = ' ' + value.toUTCString();
-	    }
-
-	    if (keys.length === 0) {
-	      return braces[0] + base + braces[1];
-	    }
-
-	    if (recurseTimes < 0) {
-	      if (isRegExp(value)) {
-	        return stylize('' + value, 'regexp');
-	      } else {
-	        return stylize('[Object]', 'special');
-	      }
-	    }
-
-	    seen.push(value);
-
-	    var output = keys.map(function(key) {
-	      var name, str;
-	      if (value.__lookupGetter__) {
-	        if (value.__lookupGetter__(key)) {
-	          if (value.__lookupSetter__(key)) {
-	            str = stylize('[Getter/Setter]', 'special');
-	          } else {
-	            str = stylize('[Getter]', 'special');
-	          }
-	        } else {
-	          if (value.__lookupSetter__(key)) {
-	            str = stylize('[Setter]', 'special');
-	          }
-	        }
-	      }
-	      if (visible_keys.indexOf(key) < 0) {
-	        name = '[' + key + ']';
-	      }
-	      if (!str) {
-	        if (seen.indexOf(value[key]) < 0) {
-	          if (recurseTimes === null) {
-	            str = format(value[key]);
-	          } else {
-	            str = format(value[key], recurseTimes - 1);
-	          }
-	          if (str.indexOf('\n') > -1) {
-	            if (isArray(value)) {
-	              str = str.split('\n').map(function(line) {
-	                return '  ' + line;
-	              }).join('\n').substr(2);
-	            } else {
-	              str = '\n' + str.split('\n').map(function(line) {
-	                return '   ' + line;
-	              }).join('\n');
-	            }
-	          }
-	        } else {
-	          str = stylize('[Circular]', 'special');
-	        }
-	      }
-	      if (typeof name === 'undefined') {
-	        if (type === 'Array' && key.match(/^\d+$/)) {
-	          return str;
-	        }
-	        name = JSON.stringify('' + key);
-	        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-	          name = name.substr(1, name.length - 2);
-	          name = stylize(name, 'name');
-	        } else {
-	          name = name.replace(/'/g, "\\'")
-	                     .replace(/\\"/g, '"')
-	                     .replace(/(^"|"$)/g, "'");
-	          name = stylize(name, 'string');
-	        }
-	      }
-
-	      return name + ': ' + str;
-	    });
-
-	    seen.pop();
-
-	    var numLinesEst = 0;
-	    var length = output.reduce(function(prev, cur) {
-	      numLinesEst++;
-	      if (cur.indexOf('\n') >= 0) numLinesEst++;
-	      return prev + cur.length + 1;
-	    }, 0);
-
-	    if (length > 50) {
-	      output = braces[0] +
-	               (base === '' ? '' : base + '\n ') +
-	               ' ' +
-	               output.join(',\n  ') +
-	               ' ' +
-	               braces[1];
-
-	    } else {
-	      output = braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-	    }
-
-	    return output;
-	  }
-	  return format(obj, (typeof depth === 'undefined' ? 2 : depth));
-	};
-
-
-	function isDate(d) {
-	  if (d instanceof Date) return true;
-	  if (typeof d !== 'object') return false;
-	  var properties = Date.prototype && Object_getOwnPropertyNames(Date.prototype);
-	  var proto = d.__proto__ && Object_getOwnPropertyNames(d.__proto__);
-	  return JSON.stringify(proto) === JSON.stringify(properties);
-	}
-
-	function pad(n) {
-	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-	}
-
-	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-	              'Oct', 'Nov', 'Dec'];
-
-	// 26 Feb 16:19:34
-	function timestamp() {
-	  var d = new Date();
-	  var time = [pad(d.getHours()),
-	              pad(d.getMinutes()),
-	              pad(d.getSeconds())].join(':');
-	  return [d.getDate(), months[d.getMonth()], time].join(' ');
-	}
-
-	exports.log = function (msg) {};
-
-	exports.pump = null;
-
-	exports.inherits = function(ctor, superCtor) {
-	  ctor.super_ = superCtor;
-	  ctor.prototype = Object_create(superCtor.prototype, {
-	    constructor: {
-	      value: ctor,
-	      enumerable: false,
-	      writable: true,
-	      configurable: true
-	    }
-	  });
-	};
-
-	var formatRegExp = /%[sdj%]/g;
-	exports.format = function(f) {
-	  if (typeof f !== 'string') {
-	    var objects = [];
-	    for (var i = 0; i < arguments.length; i++) {
-	      objects.push(exports.inspect(arguments[i]));
-	    }
-	    return objects.join(' ');
-	  }
-
-	  var i = 1;
-	  var args = arguments;
-	  var len = args.length;
-	  var str = String(f).replace(formatRegExp, function(x) {
-	    if (x === '%%') return '%';
-	    if (i >= len) return x;
-	    switch (x) {
-	      case '%s': return String(args[i++]);
-	      case '%d': return Number(args[i++]);
-	      case '%j': return JSON.stringify(args[i++]);
-	      default:
-	        return x;
-	    }
-	  });
-	  for(var x = args[i]; i < len; x = args[++i]){
-	    if (x === null || typeof x !== 'object') {
-	      str += ' ' + x;
-	    } else {
-	      str += ' ' + exports.inspect(x);
-	    }
-	  }
-	  return str;
-	};
-
-
-/***/ },
-
-/***/ 33:
-/***/ function(module, exports, require) {
-
-	// UTILITY
-	var util = require(32);
-	var pSlice = Array.prototype.slice;
-
-	var objectKeys = require(43);
-	var isRegExp = require(44);
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.message = options.message;
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	};
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (value === undefined) {
-	    return '' + value;
-	  }
-	  if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
-	    return value.toString();
-	  }
-	  if (typeof value === 'function' || value instanceof RegExp) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (typeof s == 'string') {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	assert.AssertionError.prototype.toString = function() {
-	  if (this.message) {
-	    return [this.name + ':', this.message].join(' ');
-	  } else {
-	    return [
-	      this.name + ':',
-	      truncate(JSON.stringify(this.actual, replacer), 128),
-	      this.operator,
-	      truncate(JSON.stringify(this.expected, replacer), 128)
-	    ].join(' ');
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-
-	assert.AssertionError.__proto__ = Error.prototype;
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!!!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (require(27).Buffer.isBuffer(actual) && require(27).Buffer.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (actual instanceof Date && expected instanceof Date) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (isRegExp(actual) && isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (typeof actual != 'object' && typeof expected != 'object') {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isUndefinedOrNull(value) {
-	  return value === null || value === undefined;
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  //~~~I've managed to break Object.keys through screwy arguments passing.
-	  //   Converting to array solves the problem.
-	  if (isArguments(a)) {
-	    if (!isArguments(b)) {
-	      return false;
-	    }
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  try {
-	    var ka = objectKeys(a),
-	        kb = objectKeys(b),
-	        key, i;
-	  } catch (e) {//happens when one is a string literal and the other isn't
-	    return false;
-	  }
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (isRegExp(expected)) {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (typeof expected === 'string') {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
 
 
 /***/ },
@@ -16697,91 +16900,6 @@ var ripple =
 /***/ },
 
 /***/ 35:
-/***/ function(module, exports, require) {
-
-	var hasOwn = Object.prototype.hasOwnProperty;
-	var toString = Object.prototype.toString;
-
-	function isPlainObject(obj) {
-		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
-			return false;
-
-		var has_own_constructor = hasOwn.call(obj, 'constructor');
-		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-		// Not own constructor property must be Object
-		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
-			return false;
-
-		// Own properties are enumerated firstly, so to speed up,
-		// if last one is own, then all properties are own.
-		var key;
-		for ( key in obj ) {}
-
-		return key === undefined || hasOwn.call( obj, key );
-	};
-
-	module.exports = function extend() {
-		var options, name, src, copy, copyIsArray, clone,
-		    target = arguments[0] || {},
-		    i = 1,
-		    length = arguments.length,
-		    deep = false;
-
-		// Handle a deep copy situation
-		if ( typeof target === "boolean" ) {
-			deep = target;
-			target = arguments[1] || {};
-			// skip the boolean and the target
-			i = 2;
-		}
-
-		// Handle case when target is a string or something (possible in deep copy)
-		if ( typeof target !== "object" && typeof target !== "function") {
-			target = {};
-		}
-
-		for ( ; i < length; i++ ) {
-			// Only deal with non-null/undefined values
-			if ( (options = arguments[ i ]) != null ) {
-				// Extend the base object
-				for ( name in options ) {
-					src = target[ name ];
-					copy = options[ name ];
-
-					// Prevent never-ending loop
-					if ( target === copy ) {
-						continue;
-					}
-
-					// Recurse if we're merging plain objects or arrays
-					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-						if ( copyIsArray ) {
-							copyIsArray = false;
-							clone = src && Array.isArray(src) ? src : [];
-
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[ name ] = extend( deep, clone, copy );
-
-					// Don't bring in undefined values
-					} else if ( copy !== undefined ) {
-						target[ name ] = copy;
-					}
-				}
-			}
-		}
-
-		// Return the modified object
-		return target;
-	};
-
-
-/***/ },
-
-/***/ 36:
 /***/ function(module, exports, require) {
 
 	
@@ -16932,30 +17050,98 @@ var ripple =
 
 /***/ },
 
-/***/ 37:
+/***/ 36:
 /***/ function(module, exports, require) {
 
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
+	var hasOwn = Object.prototype.hasOwnProperty;
+	var toString = Object.prototype.toString;
+
+	function isPlainObject(obj) {
+		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
+			return false;
+
+		var has_own_constructor = hasOwn.call(obj, 'constructor');
+		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+		// Not own constructor property must be Object
+		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
+			return false;
+
+		// Own properties are enumerated firstly, so to speed up,
+		// if last one is own, then all properties are own.
+		var key;
+		for ( key in obj ) {}
+
+		return key === undefined || hasOwn.call( obj, key );
+	};
+
+	module.exports = function extend() {
+		var options, name, src, copy, copyIsArray, clone,
+		    target = arguments[0] || {},
+		    i = 1,
+		    length = arguments.length,
+		    deep = false;
+
+		// Handle a deep copy situation
+		if ( typeof target === "boolean" ) {
+			deep = target;
+			target = arguments[1] || {};
+			// skip the boolean and the target
+			i = 2;
 		}
-		return module;
-	}
+
+		// Handle case when target is a string or something (possible in deep copy)
+		if ( typeof target !== "object" && typeof target !== "function") {
+			target = {};
+		}
+
+		for ( ; i < length; i++ ) {
+			// Only deal with non-null/undefined values
+			if ( (options = arguments[ i ]) != null ) {
+				// Extend the base object
+				for ( name in options ) {
+					src = target[ name ];
+					copy = options[ name ];
+
+					// Prevent never-ending loop
+					if ( target === copy ) {
+						continue;
+					}
+
+					// Recurse if we're merging plain objects or arrays
+					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
+						if ( copyIsArray ) {
+							copyIsArray = false;
+							clone = src && Array.isArray(src) ? src : [];
+
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[ name ] = extend( deep, clone, copy );
+
+					// Don't bring in undefined values
+					} else if ( copy !== undefined ) {
+						target[ name ] = copy;
+					}
+				}
+			}
+		}
+
+		// Return the modified object
+		return target;
+	};
 
 
 /***/ },
 
-/***/ 38:
+/***/ 37:
 /***/ function(module, exports, require) {
 
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(35);
+	var extend  = require(36);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -16985,98 +17171,7 @@ var ripple =
 
 /***/ },
 
-/***/ 39:
-/***/ function(module, exports, require) {
-
-	exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
-	  var e, m,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      nBits = -7,
-	      i = isBE ? 0 : (nBytes - 1),
-	      d = isBE ? 1 : -1,
-	      s = buffer[offset + i];
-
-	  i += d;
-
-	  e = s & ((1 << (-nBits)) - 1);
-	  s >>= (-nBits);
-	  nBits += eLen;
-	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  m = e & ((1 << (-nBits)) - 1);
-	  e >>= (-nBits);
-	  nBits += mLen;
-	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  if (e === 0) {
-	    e = 1 - eBias;
-	  } else if (e === eMax) {
-	    return m ? NaN : ((s ? -1 : 1) * Infinity);
-	  } else {
-	    m = m + Math.pow(2, mLen);
-	    e = e - eBias;
-	  }
-	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-	};
-
-	exports.writeIEEE754 = function(buffer, value, offset, isBE, mLen, nBytes) {
-	  var e, m, c,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-	      i = isBE ? (nBytes - 1) : 0,
-	      d = isBE ? -1 : 1,
-	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-	  value = Math.abs(value);
-
-	  if (isNaN(value) || value === Infinity) {
-	    m = isNaN(value) ? 1 : 0;
-	    e = eMax;
-	  } else {
-	    e = Math.floor(Math.log(value) / Math.LN2);
-	    if (value * (c = Math.pow(2, -e)) < 1) {
-	      e--;
-	      c *= 2;
-	    }
-	    if (e + eBias >= 1) {
-	      value += rt / c;
-	    } else {
-	      value += rt * Math.pow(2, 1 - eBias);
-	    }
-	    if (value * c >= 2) {
-	      e++;
-	      c /= 2;
-	    }
-
-	    if (e + eBias >= eMax) {
-	      m = 0;
-	      e = eMax;
-	    } else if (e + eBias >= 1) {
-	      m = (value * c - 1) * Math.pow(2, mLen);
-	      e = e + eBias;
-	    } else {
-	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-	      e = 0;
-	    }
-	  }
-
-	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-	  e = (e << mLen) | m;
-	  eLen += mLen;
-	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-	  buffer[offset + i - d] |= s * 128;
-	};
-
-
-/***/ },
-
-/***/ 40:
+/***/ 38:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {;(function () { // closure for web browsers
@@ -17332,11 +17427,102 @@ var ripple =
 
 	})()
 	
-	/* WEBPACK VAR INJECTION */}(require, require(37)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(42)(module)))
 
 /***/ },
 
-/***/ 41:
+/***/ 39:
+/***/ function(module, exports, require) {
+
+	exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
+	  var e, m,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      nBits = -7,
+	      i = isBE ? 0 : (nBytes - 1),
+	      d = isBE ? 1 : -1,
+	      s = buffer[offset + i];
+
+	  i += d;
+
+	  e = s & ((1 << (-nBits)) - 1);
+	  s >>= (-nBits);
+	  nBits += eLen;
+	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  m = e & ((1 << (-nBits)) - 1);
+	  e >>= (-nBits);
+	  nBits += mLen;
+	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  if (e === 0) {
+	    e = 1 - eBias;
+	  } else if (e === eMax) {
+	    return m ? NaN : ((s ? -1 : 1) * Infinity);
+	  } else {
+	    m = m + Math.pow(2, mLen);
+	    e = e - eBias;
+	  }
+	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+	};
+
+	exports.writeIEEE754 = function(buffer, value, offset, isBE, mLen, nBytes) {
+	  var e, m, c,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+	      i = isBE ? (nBytes - 1) : 0,
+	      d = isBE ? -1 : 1,
+	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+	  value = Math.abs(value);
+
+	  if (isNaN(value) || value === Infinity) {
+	    m = isNaN(value) ? 1 : 0;
+	    e = eMax;
+	  } else {
+	    e = Math.floor(Math.log(value) / Math.LN2);
+	    if (value * (c = Math.pow(2, -e)) < 1) {
+	      e--;
+	      c *= 2;
+	    }
+	    if (e + eBias >= 1) {
+	      value += rt / c;
+	    } else {
+	      value += rt * Math.pow(2, 1 - eBias);
+	    }
+	    if (value * c >= 2) {
+	      e++;
+	      c /= 2;
+	    }
+
+	    if (e + eBias >= eMax) {
+	      m = 0;
+	      e = eMax;
+	    } else if (e + eBias >= 1) {
+	      m = (value * c - 1) * Math.pow(2, mLen);
+	      e = e + eBias;
+	    } else {
+	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+	      e = 0;
+	    }
+	  }
+
+	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+	  e = (e << mLen) | m;
+	  eLen += mLen;
+	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+	  buffer[offset + i - d] |= s * 128;
+	};
+
+
+/***/ },
+
+/***/ 40:
 /***/ function(module, exports, require) {
 
 	module.exports = typeof Array.isArray === 'function'
@@ -17360,7 +17546,7 @@ var ripple =
 
 /***/ },
 
-/***/ 42:
+/***/ 41:
 /***/ function(module, exports, require) {
 
 	module.exports = function indexOf (xs, x) {
@@ -17369,6 +17555,23 @@ var ripple =
 	        if (x === xs[i]) return i;
 	    }
 	    return -1;
+	}
+
+
+/***/ },
+
+/***/ 42:
+/***/ function(module, exports, require) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
 	}
 
 
@@ -17394,16 +17597,6 @@ var ripple =
 /***/ 44:
 /***/ function(module, exports, require) {
 
-	module.exports = function isRegExp(re) {
-	  return re instanceof RegExp ||
-	    (typeof re === 'object' && Object.prototype.toString.call(re) === '[object RegExp]');
-	}
-
-/***/ },
-
-/***/ 45:
-/***/ function(module, exports, require) {
-
 	module.exports = Object.getOwnPropertyNames || function (obj) {
 	    var res = [];
 	    for (var key in obj) {
@@ -17414,7 +17607,7 @@ var ripple =
 
 /***/ },
 
-/***/ 46:
+/***/ 45:
 /***/ function(module, exports, require) {
 
 	module.exports = Object.create || function (prototype, properties) {
@@ -17439,6 +17632,16 @@ var ripple =
 	    }
 	    return object;
 	};
+
+/***/ },
+
+/***/ 46:
+/***/ function(module, exports, require) {
+
+	module.exports = function isRegExp(re) {
+	  return re instanceof RegExp ||
+	    (typeof re === 'object' && Object.prototype.toString.call(re) === '[object RegExp]');
+	}
 
 /***/ },
 
