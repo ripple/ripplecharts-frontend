@@ -1,4 +1,32 @@
+.valueWrap {
+  padding:0px 60px;
+  
+  .table {
+    display:table;
+  
+    .cell {
+      display:table-cell;
+      padding:20px;
+      width:33%;
+    }
+  }
+}
+
 @media (max-width: 767px) {
+  
+  .valueWrap {
+    
+    .table {
+      display:block;
+    
+      .cell {
+        display:block;
+        padding:15px 0 0;
+        width:auto;
+      }
+    }
+  }
+  
   #valueChart .controls .dropdownBox {
     float:none;
     text-align:center;
@@ -22,6 +50,10 @@
 }
 
 @media (max-width: 480px) {
+  .valueWrap {
+    padding:0px 30px;
+  }
+  
   #valueChart .chart {
     zoom: .75;  
   }

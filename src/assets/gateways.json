@@ -104,6 +104,13 @@
             "currencies": ["XAU","XAG", "USD"],
             "hotwallets": []
             }]
+    }, {
+        "name": "Ripple Trade Japan",
+        "accounts": [{
+            "address": "rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6",
+            "currencies": ["JPY"],
+            "hotwallets": []
+            }]
     }
     
 ]

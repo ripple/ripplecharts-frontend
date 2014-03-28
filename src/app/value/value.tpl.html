@@ -1,90 +1,40 @@
-<style>
-
-body {
-  font: 12px "Open Sans", Helvetica, sans-serif;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-.invisible {
-  visibility:hidden;
-}
-
-.visible {
-  visibility:visible;
-  pointer-events:none !important;
-}
-
-.distinctor, .ranger {
-  margin-right:10px;
-  cursor: pointer;
-}
-
-.distinctor.selected, .ranger.selected {
-  color: #486cb4;
-  cursor: default;
-  font-weight: bold;
-}
-
-.distinctor:hover, .ranger:hover {
-  color: #486cb4;
-}
-
-</style>
-
+<div class="valueWrap">
+  <div class="helpbox" ng-class="{showHelp : showHelp}">
+    <h4>Value Trends</h4>
+    <p>
+      This chart shows trends for various currencies available on the Ripple Network.  Gateways are 
+      grouped by currency for comparison. Each gateway can be toggled on or off by clicking on its entry 
+      in the legend below the graph.  The legend shows the name of the gateway and its issuing address.
+      The format of the graph can be changed between a line graph and a stacked area graph and 
+      time range can be selected from the list on the right.
+    </p>
+    
+    <div class="table">
+      <div class="cell">
+        <h5>Gateway Capitalization</h5>
+        <p>
+          The gateway capitalization chart shows the changing balances of gateways on the Ripple 
+          Network for the selected currency.  The legend at the bottom includes the gateway's 
+          current balance.
+        </p>        
+      </div>
+      <div class="cell">
+        <h5>Transaction Volume</h5>
+        <p>
+          The transaction volume chart shows the amounts sent through payments and offers 
+          exercised for the selected currency.  This chart adds the option of XRP to the currency 
+          dropdown.
+        </p>        
+      </div>
+      <div class="cell">
+        <h5>Trade Volume</h5>
+        <p>
+          The trade volume chart shows the volume of trade between the selected currency 
+          and XRP for each gateway that issues the selected currency.
+        </p>  
+      </div>
+    </div>
+    
+  </div>
+</div>
 <div id="valueChart" data-snap-ignore="true"></div>
-
-<div style="width: 840px; margin-left:auto; margin-right:auto; display:none">
-
-
-<div>
-
-<div id="controls">
-
-<div style="clear:both;"></div>
-
-<div style="margin-top:20px; float:left;">
-  <span class="distinctor selected" id="gatewayDistinctor">gateway</span>
-  <span class="distinctor" id="currencyDistinctor">currency</span>
-</div>
-
-<div style="margin-top:20px; float:left; margin-left: 100px;">
-  <span>range:</span>
-  <span class="ranger selected" value="0">all</span>
-  <span class="ranger" value="12">1y</span>
-  <span class="ranger" value="6">6m</span>
-  <span class="ranger" value="2">2m</span>
-  <span class="ranger" value="1">1m</span>
-</div>
-
-<div style="margin-top:17px; float:right">
-measure value in:
-<select id="currencySelector" disabled="disabled">
-  <option value="XRP">XRP</option>
-</select>
-<select id="gatewaySelector" class="invisible" style="width: 120px">
-</select>
-</div>
-
-<div style="clear:both;"></div>
-
-</div>
-<div id="container" style="position:relative;">
-
-<img src="assets/images/throbber5.gif" style="position:absolute; pointer-events:none;" id="throbber"/>
-
-<div id="tooltip" style="border: 1px solid black; background-color: white; text-align:center;-moz-border-radius: 3px;
-border-radius: 3px; position:absolute;" class="invisible">
-<span id="tracedDate"></span><br/>
-
-<span style="text-align:center"><span id="sectionName" style="max-width: 90px; overflow:hidden; text-overflow:ellipsis; display:inline-block; vertical-align:middle; margin-top:-3px; text-align:right"></span>: <span id="tracedValue" style="display:inline-block; margin-top:-5px;"></span></span>
-
-</div>
-</div>
-</div>
-</div>
