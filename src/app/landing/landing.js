@@ -15,7 +15,6 @@ angular.module( 'ripplecharts.landing', [
   });
 })
 
-
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
   var feed = new TransactionFeed({id : 'liveFeed'});
   var api  = new ApiHandler(API);
@@ -31,7 +30,8 @@ angular.module( 'ripplecharts.landing', [
   
   $scope.valueCurrency = "USD";
   $scope.valueRate;
-  
+ 
+  //dropdown to change currency for metrics  
   var valueSelect = d3.select("#valueCurrency")
     .on("change", function(){
       var currency = this.value;
@@ -59,7 +59,7 @@ angular.module( 'ripplecharts.landing', [
   if (remote._connected) getTotalAccounts();
   
    
-//get "fixed" multimarket charts for the most important markets  
+  //get "fixed" multimarket charts for the most important markets  
   var markets = new MultiMarket ({
     url            : API,  
     id             : "topMarkets",
@@ -90,15 +90,17 @@ angular.module( 'ripplecharts.landing', [
     $location.path(path);
     $scope.$apply();  
   });
+  
       
-//show the helper text the first time we visit the page               
+  //show the helper text the first time we visit the page               
   if (!store.get("returning")) setTimeout(function(){
     d3.select("#helpButton").node().click();
   }, 100);
   
-     
+  
+  //stuff to do when leaving the page   
   $scope.$on("$destroy", function(){
-    markets.list([]);
+    markets.list([]); //this will disable the update listeners for the charts
     
     if (!store.get("returning") &&
       $scope.showHelp) setTimeout(function(){
@@ -106,11 +108,11 @@ angular.module( 'ripplecharts.landing', [
       }, 50);
       
     store.set("returning", true);
-    clearInterval(topInterval);
+    clearInterval(valueInterval);
   });
 
   
-//get num accounts
+  //get num accounts
   function getTotalAccounts () {
     api.getTotalAccounts(null, function(err, total){
       if (err) console.log(err);
@@ -121,7 +123,7 @@ angular.module( 'ripplecharts.landing', [
     });    
   }
   
-//look for new accounts from the websocket feed  
+  //look for new accounts from the websocket feed  
   function handleNewAccount (tx) {
     var meta = tx.meta;
     if (meta.TransactionResult !== "tesSUCCESS") return;
@@ -137,6 +139,7 @@ angular.module( 'ripplecharts.landing', [
     });    
   } 
 
+  //display the selected metric on the page, if its ready
   function showValue (metric) {
     if (typeof $scope.valueRate == 'undefined') return;
     
@@ -170,7 +173,8 @@ angular.module( 'ripplecharts.landing', [
     $scope.$apply();    
   }
    
-//get trade volume of top markets in XRP
+   
+  //get values for the various metrics
   function getValues() {
     
     setValueRate($scope.valueCurrency, false, function(err){
@@ -182,7 +186,7 @@ angular.module( 'ripplecharts.landing', [
         
     api.getNetworkValue (null, function(err, data){
       if (err) console.log(err);
-      
+
       totalNetworkValueXRP = data ? data.total : 0;
       showValue("totalNetworkValue");          
     });
@@ -202,6 +206,8 @@ angular.module( 'ripplecharts.landing', [
     });
   }
  
+  //set the value rate for the selected currency, retreiving it from the 
+  //API if its not cached or if we are updating the cache
   function setValueRate (currency, useCached, callback) {
     var issuer = valueCurrencies[currency];
     
@@ -235,6 +241,8 @@ angular.module( 'ripplecharts.landing', [
     });     
   }
   
+  
+  //get the exchange rate from the API
   function getExchangeRate (c, callback) {
     
     api.exchangeRates({
@@ -255,7 +263,9 @@ angular.module( 'ripplecharts.landing', [
     });
   }
   
+  
+  //get value metrics at load time and every 5 minutes
   getValues();
-  var topInterval = setInterval (getValues, 300000);
+  var valueInterval = setInterval (getValues, 300000);
 });
 

@@ -91,7 +91,7 @@ var TransactionFeed = function (options) {
       row.type    = "canceloffer";
       
     } else {
-      console.log("unhandled", tx);
+      console.log("unhandled", tx.TransactionType);
       return;
     }
     
