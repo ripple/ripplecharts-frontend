@@ -614,12 +614,37 @@ PriceChart = function (options) {
 
 //display the date in a nice format  
   function parseDate (date, increment) {
-    var monthNames = [ "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December" ];
     
-    if      (increment == "mo") return monthNames[date.utc().month()] + " " + date.utc().year() + "<small>UTC</small>";
-    else if (increment == "da")   return monthNames[date.utc().month()] + " " + date.utc().date() + " <small>("+date.utc().format("hh:mm A")+" UTC)</small>";
-    else if (increment == "ho")  return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm A");
-    else return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm:ss A");
+    
+    if      (increment == "mi") return date.format('MMMM D')    + " &middot " + date.format("hh:mm A")+" "+tz(date);
+    else if (increment == "ho") return date.format('MMMM D')    + " &middot " + date.format("hh:mm A")+" "+tz(date);
+    else if (increment == "da") return date.utc().format('MMMM D')    + " <small>("+date.utc().format("hh:mm A")+" UTC)</small>";
+    else if (increment == "mo") return date.utc().format('MMMM YYYY') + "<small>UTC</small>";
+    else if (increment == "ye") return date.utc().format('YYYY');
+    else return date.format('MMMM D') + " &middot " + date.format("hh:mm:ss A")+" "+tz(date);
+  }
+  
+  function tz (dateInput) {
+    var dateObject = dateInput.toDate() || new Date(),
+      dateString = dateObject + "",
+      tzAbbr = (
+        // Works for the majority of modern browsers
+        dateString.match(/\(([^\)]+)\)$/) ||
+        // IE outputs date strings in a different format:
+        dateString.match(/([A-Z]+) [\d]{4}$/)
+      );
+   
+    if (tzAbbr) {
+      // Old Firefox uses the long timezone name (e.g., "Central
+      // Daylight Time" instead of "CDT")
+      tzAbbr = tzAbbr[1].match(/[A-Z]/g).join("");
+    }
+   
+    //return GMT offset if all else fails
+    if (!tzAbbr && /(GMT\W*\d{4})/.test(dateString)) {
+      return RegExp.$1;
+    }
+   
+    return tzAbbr;
   }
 }
