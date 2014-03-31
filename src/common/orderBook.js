@@ -292,9 +292,10 @@ var OrderBook = function (options) {
 
 //show details on mouseover  
   function mousemove () {
-    var tx = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
-        i = d3.bisect(lineData.map(function(d) { return d.showPrice; }), xScale.invert(tx-options.margin.left));
-        d = lineData[i];
+    var z = chart.style("zoom") || 1,
+      tx  = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])/z),
+      i   = d3.bisect(lineData.map(function(d) { return d.showPrice; }), xScale.invert(tx-options.margin.left));
+      d   = lineData[i];
         
         //prevent 0 sum numbers at best bid/ask from displaying
         if (d && !d.showSum) d = d.showPrice<midpoint ? lineData[i-1] : lineData[i+1]; 
