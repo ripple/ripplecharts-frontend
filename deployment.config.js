@@ -26,9 +26,11 @@ module.exports = function(env) {
       domain: config.cloudflare_domain
     },
     
-    api: config.api ? config.api : "",
-    mixpanel: config.mixpanel ? config.mixpanel : "",
-    domain: config.domain ? config.domain : "",
+    api         : config.api         ? config.api : "",
+    mixpanel    : config.mixpanel    ? config.mixpanel : "",
+    ga_account  : config.ga_account  ? config.ga_account : "",
+    ga_id       : config.ga_id       ? config.ga_id  : "",
+    domain      : config.domain      ? config.domain : "",
     maintenance : config.maintenance ? true : false
   };
 }

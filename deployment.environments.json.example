@@ -1,24 +1,30 @@
 {
   "development": {
-    "mixpanel" : "REPLACEME",
-    "api"      : "REPLACEME",
-    "domain"   : "http://localhost",
+    "mixpanel"    : "REPLACEME",
+    "ga_account"  : "",
+    "ga_id"       : "",
+    "api"         : "REPLACEME",
+    "domain"      : "http://localhost",
     "maintenance" : false
   },
   
   "staging": {
-    "mixpanel" : "REPLACEME",
-    "api"      : "REPLACEME",
-    "domain"   : "http://staging.example.com",
-    "bucket"   : "staging-bucket"
+    "mixpanel"    : "REPLACEME",
+    "ga_account"  : "",
+    "ga_id"       : "",
+    "api"         : "REPLACEME",
+    "domain"      : "http://staging.example.com",
+    "bucket"      : "staging-bucket"
     "cloudflare_domain": "REPLACEME"
   },
   
   "production": {
-    "mixpanel" : "REPLACEME",
-    "api"      : "REPLACEME",
-    "domain"   : "http://example.com",
-    "bucket"   : "production-bucket",
+    "mixpanel"    : "REPLACEME",
+    "ga_account"  : "",
+    "ga_id"       : "",
+    "api"         : "REPLACEME",
+    "domain"      : "http://example.com",
+    "bucket"      : "production-bucket",
     "cloudflare_domain": "REPLACEME"
   }
 }

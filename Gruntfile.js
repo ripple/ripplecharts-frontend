@@ -717,6 +717,8 @@ module.exports = function ( grunt ) {
             maintenance : maintenance,
             mixpanel    : deploymentConfig.mixpanel,
             api         : deploymentConfig.api,
+            ga_account  : deploymentConfig.ga_account,
+            ga_id       : deploymentConfig.ga_id,
             version     : grunt.config( 'pkg.version' )
           }
         });
