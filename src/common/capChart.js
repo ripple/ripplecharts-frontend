@@ -616,8 +616,8 @@ function CapChart(options) {
       line.enter().append("g").attr("class","line");
       line.exit().remove();
       
-      var p = line.selectAll("path").data(function(d){return[d]});
-      p.enter().append("path")
+      var p = line.selectAll(".l").data(function(d){return[d]});
+      p.enter().append("path").attr("class","l")
         .on("mouseover", movingOnLine);
         
       p.transition().attr("d", function(d) {
@@ -626,8 +626,19 @@ function CapChart(options) {
           .y(function(d) { return yScale(d[1]); }); 
           return l(d.results);
       }).style("stroke", function(d) { return color(d.address || d.issuer); });
-        
+       
       p.exit().remove();
+      
+      var a = line.selectAll(".a").data(function(d){return[d]});
+        a.enter().append("path").attr("class","a");
+       
+      a.transition().attr("d", function (d){
+        var area = d3.svg.area()
+          .x(function(d) { return xScale(d[0]); })
+          .y0(options.height)
+          .y1(function(d) { return yScale(d[1]); });  
+          return area(d.results);
+      }).style("fill", function(d) { return color(d.address || d.issuer); });  
     }
     
     var ticks = options.width/60-(options.width/60)%2;

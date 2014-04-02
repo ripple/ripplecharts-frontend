@@ -76,10 +76,16 @@
     stroke-width: 1;
 }
 
-.capChart .line path {
+.capChart .line .l {
   fill:none;
   stroke-width:2;
   stroke:@rippleBlue;  
+}
+
+.capChart .line .a {
+  stroke:none;  
+  opacity:.1;
+  pointer-events:none;
 }
 
 .capChart .axis text {
@@ -182,6 +188,10 @@
 .dark .capChart .axis path,
 .dark .capChart .axis line {
   stroke : #404040;
+}
+
+.dark .capChart .line .a {  
+  opacity:.2;
 }
 
 .dark .capChart .axis text {
