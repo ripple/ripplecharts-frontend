@@ -234,9 +234,9 @@ angular.module( 'ripplecharts.landing', [
         console.log(err);
         return callback(err);
       }
-      
-      $scope.valueRate = exchangeRates[currency+"."+issuer];
-      $scope.valueRateDisplay = commas(1/$scope.valueRate,4) + " XRP/"+currency;
+            
+      $scope.valueRate = exchangeRates[currency+"."+issuer] || 0;
+      if ($scope.valueRate) $scope.valueRateDisplay = commas(1/$scope.valueRate,4) + " XRP/"+currency;
       callback();
     });     
   }
