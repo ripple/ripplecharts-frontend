@@ -213,14 +213,14 @@ function CapChart(options) {
       if (!sendDataCache[c.currency][range.name])
         sendDataCache[c.currency][range.name] = {raw:[]};
       
-      
-      var results = data.results;
-      results.shift(); //remove the first;
-      
+
+      data.shift(); //remove the first;
+
       sendDataCache[c.currency][range.name]['raw'].push({
         address : c.issuer,
         name    : currencyDropdown.getName(c.issuer),
-        results : results.map(function(d){return[moment(d[0]).unix()*1000,d[1], d[2]]})});
+        results : data.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]})
+      });
             
       prepareStackedData(c.currency, range); 
       prepareLegend(c.currency, range);
@@ -267,7 +267,7 @@ function CapChart(options) {
       timeIncrement : range.interval,
       descending    : false,
       base          : base,
-      trade         : {currency:"XRP"}
+      counter       : {currency:"XRP"}
       
     }, function(data){  
       if (!tradeDataCache[base.currency]) 
@@ -279,7 +279,8 @@ function CapChart(options) {
       tradeDataCache[base.currency][range.name]['raw'].push({
         address : base.issuer,
         name    : currencyDropdown.getName(base.issuer),
-        results : data.map(function(d){return[d.time.unix()*1000,d.volume]})});
+        results : data.map(function(d){return[d.time.unix()*1000,d.volume]})
+      });
       
       prepareStackedData(base.currency, range); 
       prepareLegend(base.currency, range);
@@ -312,9 +313,9 @@ function CapChart(options) {
       return;  
     } 
     
-    var end     = moment.utc();
-    var issuers = currencyDropdown.getIssuers(currency);    
-    var pairs   = issuers.map(function(d){
+    var end        = moment.utc();
+    var issuers    = currencyDropdown.getIssuers(currency);    
+    var currencies = issuers.map(function(d){
       return {
         currency : currency,
         issuer   : d
@@ -331,20 +332,25 @@ function CapChart(options) {
     
     //console.log(currencies);
     //console.log(gateways); 
-    //console.log(pairs);
+    //console.log(currencies);
 */    
     apiHandler.issuerCapitalization({
       //currencies : currencies,
       //gateways   : gateways,
       timeIncrement : range.interval,
-      pairs     : pairs,
-      startTime  : range.offset(end),
-      endTime    : end
+      currencies    : currencies,
+      startTime     : range.offset(end),
+      endTime       : end
       
     }, function(data){
       
       if (!capDataCache[self.currency]) capDataCache[self.currency] = {};
       capDataCache[self.currency][self.range] = {raw : data};
+      
+      //convert the time to a timestamp
+      data.forEach(function(d, index){
+       d.results = d.results.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]});
+      });
       
       prepareStackedData(currency, range);
       prepareLegend(currency, range);
@@ -426,9 +432,9 @@ function CapChart(options) {
       };
       
       for (var j=0; j<series.results.length; j++) {
-        var timestamp = series.results[j][0];
+        var timestamp = moment.utc(series.results[j][0]).unix();
         stacked[i].data[timestamp] = series.results[j][1];
-        timestamps.push(series.results[j][0]);
+        timestamps.push(timestamp);
       }
     }
 
@@ -442,7 +448,7 @@ function CapChart(options) {
       stacked[k].values = [];
       for (var m=0; m<timestamps.length; m++) {
         stacked[k].values.push({
-          date : moment(parseInt(timestamps[m], 10)).utc(),
+          date : moment.unix(timestamps[m]).utc(),
           y    : data[timestamps[m]] || last
         });
         
@@ -606,6 +612,7 @@ function CapChart(options) {
       }
        
       
+      console.log(lines);
       color.domain(legend.map(function(d){return d.address})); 
       lines = filterByLegend(lines, legend);
       

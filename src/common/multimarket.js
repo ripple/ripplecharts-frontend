@@ -1,4 +1,4 @@
-var MiniChart = function(base, trade, markets) {
+var MiniChart = function(base, counter, markets) {
   var self      = this,
     header, details, range, showHigh, showLow, change, volume,
     wrap, svg, svgEnter, pointer, gEnter, 
@@ -50,21 +50,21 @@ var MiniChart = function(base, trade, markets) {
       if (!flipping && loaded) self.load();
       });
          
-  dropdownB = ripple.currencyDropdown().selected(trade);
+  dropdownB = ripple.currencyDropdown().selected(counter);
   dropdownB.on("change", function(d) {
-      self.trade = d;
+      self.counter = d;
       if (loaded) self.load();
     });
     
   dropdowns = self.div.append("div").attr("class", "dropdowns");
   dropdowns.append("div").attr("class","base").call(dropdownA);
-  dropdowns.append("div").attr("class","trade").call(dropdownB);
+  dropdowns.append("div").attr("class","counter").call(dropdownB);
   
   if (markets.options.fixed) {
     dropdowns.style("display","none");
     header.html("<small>"+self.div.select(".base .gateway").node().value+
-      "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
-      self.div.select(".trade .gateway").node().value+"</small>");
+      "</small>"+self.base.currency+"/"+self.counter.currency+"<small>"+
+      self.div.select(".counter .gateway").node().value+"</small>");
   } 
   
   status = self.div.append("h4").attr("class", "status");  
@@ -100,9 +100,9 @@ var MiniChart = function(base, trade, markets) {
 //load the chart data from the API       
   function load (update) {
     markets.updateListHandler();
-    if (!self.base || !self.trade ||
-      (self.base.currency == self.trade.currency &&
-      self.trade.currency == "XRP")) return setStatus("Select a currency pair."); 
+    if (!self.base || !self.counter ||
+      (self.base.currency == self.counter.currency &&
+      self.counter.currency == "XRP")) return setStatus("Select a currency pair."); 
 
     if (!update) {
       setStatus("");
@@ -112,10 +112,10 @@ var MiniChart = function(base, trade, markets) {
     
     /*
     if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
-      "Base Currency"  : self.base.currency,
-      "Base Issuer"    : self.base.issuer || "",
-      "Trade Currency" : self.trade.currency,
-      "Trade Issuer"   : self.trade.issuer || ""
+      "Base Currency"    : self.base.currency,
+      "Base Issuer"      : self.base.issuer || "",
+      "Counter Currency" : self.counter.currency,
+      "Counter Issuer"   : self.counter.issuer || ""
     });
     */
     if (self.request) self.request.abort();
@@ -126,7 +126,7 @@ var MiniChart = function(base, trade, markets) {
       timeMultiple  : 1,
       descending    : false,
       base          : self.base,
-      trade         : self.trade
+      counter       : self.counter
 
     }, function(data){
       
@@ -186,17 +186,17 @@ var MiniChart = function(base, trade, markets) {
       .on("click", function(){
         d3.event.stopPropagation();
         flipping = true;
-        dropdownA.selected(self.trade);
+        dropdownA.selected(self.counter);
         dropdownB.selected(self.base);
         dropdowns.selectAll("select").remove();
         dropdowns.append("div").attr("class","base").call(dropdownA);
-        dropdowns.append("div").attr("class","trade").call(dropdownB);  
+        dropdowns.append("div").attr("class","counter").call(dropdownB);  
         flipping = false;
         
         if (markets.options.fixed) {
           header.html("<small>"+self.div.select(".base .gateway").node().value+
-            "</small>"+self.base.currency+"/"+self.trade.currency+"<small>"+
-            self.div.select(".trade .gateway").node().value+"</small>");
+            "</small>"+self.base.currency+"/"+self.counter.currency+"<small>"+
+            self.div.select(".counter .gateway").node().value+"</small>");
         }        
       });
     
@@ -413,8 +413,8 @@ var MultiMarket = function (options) {
   }
       
 //new chart from list initialization or add chart button click         
-  this.addChart = function (base, trade) {
-    new MiniChart(base, trade, self); 
+  this.addChart = function (base, counter) {
+    new MiniChart(base, counter, self); 
   }
   
 //remove chart from list initialization or remove button click  
@@ -432,10 +432,10 @@ var MultiMarket = function (options) {
       for (var i=0; i<self.charts.length; i++) {
         if (!self.charts[i].base) continue;
         else if (self.charts[i].base.currency=='XRP' &&
-          self.charts[i].trade.currency=='XRP') continue;
+          self.charts[i].counter.currency=='XRP') continue;
         data.push({
-          base  : self.charts[i].base,
-          trade : self.charts[i].trade
+          base    : self.charts[i].base,
+          counter : self.charts[i].counter
         });
       }
       self.updateListCallback(data);
@@ -463,7 +463,7 @@ var MultiMarket = function (options) {
       clearInterval(interval);
       
     for (var j=0; j<charts.length; j++) {
-      self.addChart(charts[j].base, charts[j].trade);
+      self.addChart(charts[j].base, charts[j].counter);
     }
   }
  

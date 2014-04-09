@@ -52,9 +52,9 @@ ApiHandler = function (url) {
               return {
                 time    : moment.utc(d[0]),
                 open    : d[4],
-                close   : d[5],
-                high    : d[6],
-                low     : d[7],
+                high    : d[5],
+                low     : d[6],
+                close   : d[7],
                 vwap    : d[8],
                 volume  : d[1],
                 num     : d[3],

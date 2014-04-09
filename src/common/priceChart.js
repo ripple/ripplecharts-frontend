@@ -23,7 +23,7 @@ PriceChart = function (options) {
     svg, svgEnter, gEnter, gradient, 
     hover, horizontal, focus, 
     status, details, loader,
-    base, trade, lineData = [],
+    base, counter, lineData = [],
     startTime, endTime, type, 
     chartInterval, intervalSeconds, 
     multiple, lastCandle;
@@ -182,10 +182,10 @@ PriceChart = function (options) {
 
 
 //load historical from API  	  	      			
-  this.load = function (b, t, d) {
+  this.load = function (b, c, d) {
 
     if (!b) return setStatus("Base currency is required.");
-    if (!t) return setStatus("Counter currency is required.");
+    if (!c) return setStatus("Counter currency is required.");
     if (!d || !d.interval) return setStatus("Interval is required.");
 
     chartInterval = d.interval.slice(0,2);
@@ -202,7 +202,7 @@ PriceChart = function (options) {
     
     self.fadeOut();
     base      = b;
-    trade     = t;
+    counter   = c;
     multiple  = d.multiple || 1;
     lineData  = [];
     isLoading = true;
@@ -223,7 +223,7 @@ PriceChart = function (options) {
       timeMultiple  : d.multiple,
       descending    : false,
       base          : base,
-      trade         : trade
+      counter       : counter
     }, function(data){
       
       //if we've got live data reported already, we need to merge
@@ -285,8 +285,8 @@ PriceChart = function (options) {
     else interval = chartInterval;
     
     var viewOptions = {
-      base  : base,
-      trade : trade,
+      base    : base,
+      counter : counter,
       timeIncrement    : interval,
       timeMultiple     : multiple,
       incompleteApiRow : candle
@@ -365,7 +365,7 @@ PriceChart = function (options) {
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
-    gEnter.select(".axis.price").select("text").text("Price ("+trade.currency+")");
+    gEnter.select(".axis.price").select("text").text("Price ("+counter.currency+")");
     gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
         
     svg.datum(lineData, function(d){return d.time;})

@@ -71,22 +71,22 @@ angular.module( 'ripplecharts.landing', [
   
   markets.list([
     {
-      base  : {currency:"XRP"},
-      trade : {currency:"USD",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}},
+      base    : {currency:"XRP"},
+      counter : {currency:"USD",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}},
     {
-      base  : {currency:"XRP"},
-      trade : {currency:"CNY",issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}},
+      base    : {currency:"XRP"},
+      counter : {currency:"CNY",issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}},
     {
-      base  : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-      trade : {currency:"XRP"}}
+      base    : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      counter : {currency:"XRP"}}
     ]);
 
 
   markets.on('chartClick', function(chart){
     var path = "/markets/"+chart.base.currency+
       (chart.base.issuer ? ":"+chart.base.issuer : "")+
-      "/"+chart.trade.currency+
-      (chart.trade.issuer ? ":"+chart.trade.issuer : "");
+      "/"+chart.counter.currency+
+      (chart.counter.issuer ? ":"+chart.counter.issuer : "");
     $location.path(path);
     $scope.$apply();  
   });
@@ -247,8 +247,8 @@ angular.module( 'ripplecharts.landing', [
     
     api.exchangeRates({
       pairs:[{
-        base  : {currency : c.currency, issuer : c.issuer},
-        trade : {currency:"XRP"}
+        base    : {currency : c.currency, issuer : c.issuer},
+        counter : {currency:"XRP"}
       }]
       
     }, function(err, data){
