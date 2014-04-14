@@ -89,7 +89,7 @@ function CapChart(options) {
       {name: "month",  interval:"day",   offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"month", offset: function(d) { return d3.time.year.offset(d, -3); }}
+      {name: "max",    interval:"month", offset: function(d) { return "Jan 1 2013" }}
     ])
     .enter().append("a")
     .attr("href", "#")
@@ -279,7 +279,7 @@ function CapChart(options) {
       tradeDataCache[base.currency][range.name]['raw'].push({
         address : base.issuer,
         name    : currencyDropdown.getName(base.issuer),
-        results : data.map(function(d){return[d.time.unix()*1000,d.volume]})
+        results : data.map(function(d){return[d.startTime.unix()*1000,d.baseVolume]})
       });
       
       prepareStackedData(base.currency, range); 
