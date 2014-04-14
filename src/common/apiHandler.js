@@ -50,15 +50,18 @@ ApiHandler = function (url) {
             
             data = response.map(function(d) {
               return {
-                time    : moment.utc(d[0]),
-                open    : d[4],
-                high    : d[5],
-                low     : d[6],
-                close   : d[7],
-                vwap    : d[8],
-                volume  : d[1],
-                num     : d[3],
-                volume2 : d[2]
+                startTime     : moment.utc(d[0]),
+                baseVolume    : d[1],
+                counterVolume : d[2],
+                count         : d[3],
+                open          : d[4],
+                high          : d[5],
+                low           : d[6],
+                close         : d[7],
+                vwap          : d[8],
+                openTime      : d[9],
+                closeTime     : d[10],
+                partial       : d[11]
               };
             });
           }

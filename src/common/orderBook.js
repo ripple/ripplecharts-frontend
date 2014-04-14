@@ -354,6 +354,7 @@ var OrderBook = function (options) {
     row.select(".sum").html(function(offer){return filter(offer.showSum)});
     row.select(".size").html(function(offer){return filter(offer.showTakerPays)});
     row.select(".price").html(function(offer){return filter(offer.showPrice)});
+    row.attr("title", function (d){ return d.Account; });
     
     row      = asksBody.selectAll("tr").data(pad(self.offers.asks.slice(0,length),length));
     rowEnter = row.enter().append("tr");
@@ -366,6 +367,7 @@ var OrderBook = function (options) {
     row.select(".sum").html(function(offer){return filter(offer.showSum)});
     row.select(".size").html(function(offer){return filter(offer.showTakerGets)});
     row.select(".price").html(function(offer){return filter(offer.showPrice)}); 
+    row.attr("title", function (d){ return d.Account; });
     
     emitSpread();
   }

@@ -89,7 +89,7 @@ function OffersExercisedListener(opts, displayFn) {
   
   if (typeof opts === 'function') {
     displayFn = opts;
-    opts = {};
+    opts      = {};
   }
 
   this.displayFn = displayFn;
@@ -97,18 +97,41 @@ function OffersExercisedListener(opts, displayFn) {
   this.interval;
 
   // Wrapper to call the displayFn and update the openTime and closeTime
-  this.finishedInterval = function() {
-    this.storedResults.closeTime = moment.utc().toArray().slice(0,6);
+  this.finishedInterval = function() {      
     
+    //send to display
     this.displayFn(formatReduceResult(this.storedResults));
-
-    this.storedResults = {
-      openTime: moment.utc().toArray().slice(0,6),
-    };
+    
+    //reset the stored results
+    var startTime = moment.utc(this.storedResults.startTime)
+      .add(this.viewOpts.timeIncrement, this.viewOpts.timeMultiple);
+    this.resetStored([startTime.format()]);
   };
 
   // setup this instance based on the given opts
   this.updateViewOpts(opts);
+}
+
+
+OffersExercisedListener.prototype.resetStored = function (row) {
+  if (!row) row = [];
+  
+  this.storedResults = {
+    startTime   : moment.utc(row.startTime || row.time || row[0]).format(),
+    curr1Volume : row.baseVolume    || row[1]  || 0.0,
+    curr2Volume : row.counterVolume || row[2]  || 0.0,
+    numTrades   : row.count         || row[3]  || 0,
+    open        : row.open          || row[4]  || 0.0,
+    high        : row.high          || row[5]  || 0.0,
+    low         : row.low           || row[6]  || 0.0,
+    close       : row.close         || row[7]  || 0.0,
+    volumeWeightedAvg: row.vwap     || row[8]  || 0.0,
+    openTime    : row.openTime      || row[9]  || 0,
+    closeTime   : row.closeTime     || row[10] || 0,
+  }; 
+  
+  this.storedResults.curr1VwavNumerator = this.storedResults.volumeWeightedAvg * this.storedResults.curr1Volume;
+ 
 }
 
 
@@ -118,17 +141,15 @@ function OffersExercisedListener(opts, displayFn) {
 OffersExercisedListener.prototype.stopListener = function() {
 
   var listener = this;
-
   listener.storedResults = {};
 
-  if (listener.interval) {
-    clearInterval(listener.interval);
-  }
+  if (listener.interval) clearInterval(listener.interval);  
+  if (listener.timeout)  clearTimeout(listener.timeout);
+ 
 
   if (listener.txProcessor) {
     remote.removeListener('transaction_all', listener.txProcessor);
   }
-
 };
 
 
@@ -141,54 +162,23 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
   var listener = this;
 
   listener.stopListener();
-
   listener.viewOpts = parseViewOpts(newOpts);
-
-  listener.storedResults.openTime = listener.viewOpts.openTime;
-
-  // TODO make this work with formats other than 'json'
-  if (listener.viewOpts.incompleteApiRow) {
-
-    var row = listener.viewOpts.incompleteApiRow; 
-
-    listener.viewOpts.openTime = row.time || row.openTime || row[0];
-
-    listener.storedResults = {
-      openTime: moment.utc(row.time || row.openTime || row[0]).toArray().slice(0,6),
-      curr1Volume: row.tradeCurrVol || row[2],
-      curr2Volume: row.baseCurrVol || row[1],
-      numTrades: row.numTrades || row[3],
-      open: row.openPrice || row[4],
-      close: row.closePrice || row[5],
-      high: row.highPrice || row[6],
-      low: row.lowPrice || row[7],
-      volumeWeightedAvg: row.vwavPrice || row[8]
-    };
-
-  }
 
   // If timeIncrement is set, setup an interval to call the displayFn,
   // otherwise, pass the displayFn directly to createTransactionProcessor()
   if (!listener.viewOpts.timeIncrement) {
-
     listener.txProcessor = createTransactionProcessor(listener.viewOpts, listener.displayFn);
 
   } else {
-
+    
+    //if there isnt a row, start time will be set to now
+    listener.resetStored(listener.viewOpts.incompleteApiRow || []);
+         
     // create regular listener
     listener.txProcessor = createTransactionProcessor(listener.viewOpts, function(reducedTrade){
-
-      // Set storedResults to be the reducedTrade or merge them with offersExercisedReduce
-      if (!listener.storedResults.open) {
-        var tempOpenTime = listener.storedResults.openTime.slice();
-        listener.storedResults = reducedTrade;
-        listener.storedResults.openTime = tempOpenTime;
-      } else {
-        listener.storedResults = offersExercisedReduce(null, [reducedTrade, listener.storedResults], true);
-      }
-
-      listener.storedResults.closeTime = moment.utc().toArray().slice(0,6);
-
+      
+      listener.storedResults = offersExercisedReduce([listener.storedResults, reducedTrade], true);
+      
       // Call displayFn every time a new trade comes in, as well as after the interval
       listener.displayFn(formatReduceResult(listener.storedResults));
       
@@ -197,33 +187,34 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
     // handle first interval
 
-    var endOfFirstIncrement = moment.utc(listener.viewOpts.openTime).add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple),
-      firstIncrementRemainder = endOfFirstIncrement.diff(moment.utc());
+    var endTime   = moment.utc(listener.storedResults.startTime)
+      .add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple);
+    var remainder = endTime.diff(moment.utc());
 
 
     // If there is time left in the first timeIncrement, wait until that 
     // is finished to start the interval
-    if (firstIncrementRemainder > 0) {
-      setTimeout(function(){
+    if (remainder > 0) {
 
+      listener.timeout = setTimeout(function(){
         listener.finishedInterval();
+        setNext(listener);
 
-        listener.interval = setInterval(function(){
-          listener.finishedInterval();
-        }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());
-
-      }, firstIncrementRemainder);
+      }, remainder);
       
     } else {
-
-      listener.interval = setInterval(function(){
-        listener.finishedInterval();
-      }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());
-
+      listener.finishedInterval();
+      setNext(listener);
     }
 
   }
 
+  function setNext(listener) {
+    listener.interval = setInterval(function(){
+      listener.finishedInterval();
+    }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());    
+  }
+  
   remote.on('transaction_all', listener.txProcessor);
 
 }
@@ -245,35 +236,10 @@ function parseViewOpts(opts) {
     }
   }
 
-  if (!opts.base || !opts.trade) {
-    opts.reduce = false;
-  }
-
-  if (opts.base) {
-
-    if (opts.base.issuer === '') {
-      delete opts.base.issuer;
-    } else if (opts.base.issuer) {
-
-      var baseGatewayAddress = gatewayNameToAddress(opts.base.issuer, opts.base.currency);
-      if (baseGatewayAddress) {
-        opts.base.issuer = baseGatewayAddress;
-      }
-    }
-  }
-
-  if (opts.trade) {
-    if (opts.trade.issuer === '') {
-      delete opts.trade.issuer;
-    } else if (opts.trade.issuer) {
-
-      var tradeGatewayAddress = gatewayNameToAddress(opts.trade.issuer, opts.trade.currency);
-      if (tradeGatewayAddress) {
-        opts.trade.issuer = tradeGatewayAddress;
-      }
-    }
-  }
-  
+  if (!opts.base || !opts.counter) opts.reduce = false;
+  else if (opts.base    && opts.base.issuer == '')    delete opts.base.issuer;
+  else if (opts.counter && opts.counter.issuer == '') delete opts.counter.issuer;
+ 
   return opts;
 }
 
@@ -283,9 +249,7 @@ function parseViewOpts(opts) {
  *  and parses it according to the viewOpts
  */
 function createTransactionProcessor(viewOpts, resultHandler) {
-
-  //console.log('Creating transaction processor with opts: ' + JSON.stringify(viewOpts));
-  
+ 
   function txProcessor (txData){
 
     var txContainer = {
@@ -297,38 +261,31 @@ function createTransactionProcessor(viewOpts, resultHandler) {
     // use the map function to parse txContainer data
     offersExercisedMap(txContainer, function(key, value){
       
-      //console.log(viewOpts.reduce ? "chart:" : "trade:", key[0], key[1], value);
-      
-      if (viewOpts.trade) {
-        
+      if (viewOpts.counter) {
         // return if trade doesn't match either currency in the pair
-        if ((viewOpts.trade.currency !== key[0][0] || viewOpts.trade.issuer !== key[0][1])
-            && (viewOpts.trade.currency !== key[1][0] || viewOpts.trade.issuer !== key[1][1])) {
+        if ((viewOpts.counter.currency !== key[0][0] || viewOpts.counter.issuer !== key[0][1])
+            && (viewOpts.counter.currency !== key[1][0] || viewOpts.counter.issuer !== key[1][1])) {
           return;
         }
-
       }
 
       if (viewOpts.base) {
-        
         // return if base doesn't match either currency in the pair
         if ((viewOpts.base.currency !== key[0][0] || viewOpts.base.issuer !== key[0][1])
             && (viewOpts.base.currency !== key[1][0] || viewOpts.base.issuer !== key[1][1])) {
           return;
         }
-        
       }
 
       // Flip the currencies if necessary
       if (viewOpts.base.currency === key[1][0] && viewOpts.base.issuer === key[1][1]) {
-        key = [key[1].slice(), key[0].slice()].concat(key.slice(2));
-        value = [value[1], value[0], 1/value[2]];
+        key      = [key[1], key[0]]
+        value    = [value[1], value[0], 1/value[2], value[3], value[4], value[5], value[6]];
       }
 
-      
-      
+      console.log(value);
       if (!viewOpts.reduce) resultHandler({key: key, value: value});
-      else resultHandler(offersExercisedReduce([[key]], [value], false));
+      else resultHandler(offersExercisedReduce([value], false));
        
     });
   }
@@ -350,10 +307,8 @@ function createTransactionProcessor(viewOpts, resultHandler) {
 function offersExercisedMap(doc, emit) {
 
     var time = new Date(doc.close_time_timestamp),
-        timestamp = [time.getUTCFullYear(), time.getUTCMonth(), time.getUTCDate(),
-            time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds()
-        ];
-
+      unix   = Math.round(time.getTime());
+      
     doc.transactions.forEach(function(tx) {
         
       
@@ -385,6 +340,7 @@ function offersExercisedMap(doc, emit) {
             }
 
             var exchangeRate = node.exchange_rate,
+                counterparty = node.FinalFields.Account,
                 payCurr,
                 payAmnt,
                 getCurr,
@@ -408,11 +364,7 @@ function offersExercisedMap(doc, emit) {
                 exchangeRate = exchangeRate * 1000000.0;
             }
 
-
-            //I found it necessary to reverse the amounts here... - Matthew Fettig
-            emit([payCurr, getCurr].concat(timestamp), [getAmnt, payAmnt, 1 / exchangeRate]);
-            //emit([getCurr, payCurr].concat(timestamp), [getAmnt, payAmnt, 1 / exchangeRate]);
-            
+            emit([payCurr, getCurr], [payAmnt, getAmnt, 1/exchangeRate, counterparty, tx.Account, unix, tx.hash]);            
         });
         
         
@@ -424,208 +376,109 @@ function offersExercisedMap(doc, emit) {
  *  offersExercised view in CouchDB
  *  (note the difference between the 'reduce' and 'rereduce' modes)
  */
-function offersExercisedReduce(keys, values, rereduce) {
+function offersExercisedReduce(values, rereduce) {
 
-    var stats;
+  var stats;
 
-    if (!rereduce) {
+  if ( !rereduce ) {
 
-        var firstTime = keys[0][0].slice(2),
-            firstPrice;
+    var firstTime = values[0][5], //unix timestamp
+      firstPrice  = values[0][2]; //exchange rate
 
-        if (values[0][2]) { // exchangeRate
-            firstPrice = parseFloat(values[0][2]);
-        } else {
-            firstPrice = values[0][0] / values[0][1];
-        }
+    // initial values
+    stats = {
+      openTime  : firstTime,
+      closeTime : firstTime,
 
-        // initial values
-        stats = {
-            openTime: firstTime,
-            closeTime: firstTime,
+      open  : firstPrice,
+      close : firstPrice,
+      high  : firstPrice,
+      low   : firstPrice,
 
-            open: firstPrice,
-            close: firstPrice,
-            high: firstPrice,
-            low: firstPrice,
+      curr1VwavNumerator : 0,
+      curr1Volume : 0,
+      curr2Volume : 0,
+      numTrades   : 0
+    };
+    
+    values.forEach( function( trade, index ) {
 
-            curr1VwavNumerator: 0,
-            curr1Volume: 0,
-            curr2Volume: 0,
-            numTrades: 0
-        };
+      var time = trade[5], //unix timestamp
+        price  = trade[2]; //exchange rate
+      
+      if (time<stats.openTime) {
+        stats.openTime = time;
+        stats.open     = price;
+      }
 
-        values.forEach(function(trade, index) {
+      if (stats.closeTime<time) {
+        stats.closeTime = time;
+        stats.close     = price;
+      }
 
-            var tradeTime = keys[index][0].slice(2),
-                tradeRate = trade[2] || (trade[0] / trade[1]);
+      if (price>stats.high) stats.high = price;
+      if (price<stats.low)  stats.low  = price;
+      
+      stats.curr1VwavNumerator += price * trade[0]; //pay amount
+      stats.curr1Volume += trade[0];
+      stats.curr2Volume += trade[1];
+      stats.numTrades++;
+    });
 
-            if (lessThan(tradeTime, stats.openTime)) {
-                stats.openTime = tradeTime;
-                stats.open = tradeRate;
-            }
+    stats.volumeWeightedAvg = stats.curr1VwavNumerator / stats.curr1Volume;
+    return stats;
 
-            if (lessThan(stats.closeTime, tradeTime)) {
-                stats.closeTime = tradeTime;
-                stats.close = tradeRate;
-            }
+  } else {
 
-            stats.high = Math.max(stats.high, tradeRate);
-            stats.low = Math.min(stats.low, tradeRate);
-            stats.curr1VwavNumerator += tradeRate * trade[0];
-            stats.curr1Volume += trade[0];
-            stats.curr2Volume += trade[1];
-            stats.numTrades++;
+    stats = values[0];
 
-        });
+    values.forEach( function( segment, index ) {
+      
+      // skip values[0]
+      if (index === 0) return;
 
-        stats.volumeWeightedAvg = stats.curr1VwavNumerator / stats.curr1Volume;
+      if (!stats.open || segment.openTime<stats.openTime) {
+        stats.openTime = segment.openTime;
+        stats.open     = segment.open;
+      }
+      if (!stats.close || stats.closeTime<segment.closeTime) {
+        stats.closeTime = segment.closeTime;
+        stats.close     = segment.close;
+      }
 
-        return stats;
+      if (!stats.high || segment.high>stats.high) stats.high = segment.high;
+      if (!stats.low  || segment.low<stats.low)   stats.low  = segment.low;
 
-    } else {
+      stats.curr1VwavNumerator += segment.curr1VwavNumerator;
+      stats.curr1Volume += segment.curr1Volume;
+      stats.curr2Volume += segment.curr2Volume;
+      stats.numTrades   += segment.numTrades;
+           
+    } );
 
-        stats = values[0];
-
-        values.forEach(function(segment, index) {
-
-            // skip values[0]
-            if (index === 0) {
-                return;
-            }
-
-            if (lessThan(segment.openTime, stats.openTime)) {
-                stats.openTime = segment.openTime;
-                stats.open = segment.open;
-            }
-            if (lessThan(stats.closeTime, segment.closeTime)) {
-                stats.closeTime = segment.closeTime;
-                stats.close = segment.close;
-            }
-
-            stats.high = Math.max(stats.high, segment.high);
-            stats.low = Math.min(stats.low, segment.low);
-
-            stats.curr1VwavNumerator += segment.curr1VwavNumerator;
-            stats.curr1Volume += segment.curr1Volume;
-            stats.curr2Volume += segment.curr2Volume;
-            stats.numTrades += segment.numTrades;
-
-        });
-
-        stats.volumeWeightedAvg = stats.curr1VwavNumerator / stats.curr1Volume;
-
-        return stats;
-    }
-
-
-    function lessThan(arr1, arr2) {
-        if (arr1.length !== arr2.length)
-            return false;
-
-        for (var i = 0; i < arr1.length; i++) {
-            if (arr1[i] < arr2[i]) {
-                return true;
-            } else if (arr1[i] > arr2[i]) {
-                return false;
-            } else {
-                continue;
-            }
-        }
-
-        return false;
-    }
+    stats.volumeWeightedAvg = stats.curr1VwavNumerator / stats.curr1Volume;
+  
+    return stats;
+  }
 }
 
 
-function formatReduceResult (reduceRes) {
+function formatReduceResult (result) {
 
   return {
-    openTime: reduceRes.openTime,
-    closeTime: reduceRes.closeTime,
-    baseCurrVol: reduceRes.curr2Volume,
-    tradeCurrVol: reduceRes.curr1Volume,
-    numTrades: reduceRes.numTrades,
-    openPrice: reduceRes.open,
-    closePrice: reduceRes.close,
-    highPrice: reduceRes.high,
-    lowPrice: reduceRes.low,
-    vwavPrice: reduceRes.volumeWeightedAvg
+    startTime     : result.startTime,
+    openTime      : moment.utc(result.openTime).format(),
+    closeTime     : moment.utc(result.closeTime).format(),
+    baseVolume    : result.curr1Volume,
+    counterVolume : result.curr2Volume,
+    count         : result.numTrades,
+    open          : result.open,
+    close         : result.close,
+    high          : result.high,
+    low           : result.low,
+    vwap          : result.volumeWeightedAvg
   };
 }
-
-
-/** HELPER FUNCTIONS **/
-
-/**
- *  gatewayNameToAddress translates a given name and, 
- *  optionally, a currency to its corresponding ripple address or
- *  returns null
- */
- function gatewayNameToAddress( name, currency ) {
-
-  var gatewayAddress = null;
-
-  gateways.forEach(function(entry){
-
-    if (entry.name.toLowerCase() === name.toLowerCase()) {
-    
-      if (currency) {
-
-        entry.accounts.forEach(function(acct){
-
-          if (acct.currencies.indexOf(currency) !== -1) {
-            gatewayAddress = acct.address;
-          }
-        });
-
-      } else {
-         gatewayAddress = entry.accounts[0].address;
-      }
-    }
-
-  });
-
-  return gatewayAddress;
-
- }
-
-
-/**
- *  getGatewaysForCurrency takes a currency and returns
- *  an array of gateways that issue that currency
- *  returns an empty array if the currency is invalid
- */
-function getGatewaysForCurrency( currName ) {
-
-  var issuers = [];
-  gateways.forEach(function(gateway){
-    gateway.accounts.forEach(function(acct){
-      if (acct.currencies.indexOf(currName.toUpperCase()) !== -1) {
-        issuers.push(acct.address);
-      }
-    });
-  });
-
-  return issuers;
-
-}
-
-/**
- *  getCurrenciesForGateway returns the currencies that that gateway handles
- */
-function getCurrenciesForGateway( name ) {
-  var currencies = [];
-  gateways.forEach(function(gateway){
-    if (gateway.name.toLowerCase() === name.toLowerCase()) {
-      gateway.accounts.forEach(function(account){
-        currencies = currencies.concat(account.currencies);
-      });
-    }
-  });
-  return currencies;
-}
-
 
 
 if (typeof module != 'undefined') {

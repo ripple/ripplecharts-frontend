@@ -229,19 +229,19 @@ var MiniChart = function(base, counter, markets) {
     }
     
     var area = d3.svg.area()
-        .x(function(d) { return xScale(d.time); })
+        .x(function(d) { return xScale(d.startTime); })
         .y0(height)
         .y1(function(d) { return priceScale(d.close); }),  
 
       line = d3.svg.line()
-        .x(function(d) { return xScale(d.time); })
+        .x(function(d) { return xScale(d.startTime); })
         .y(function(d) { return priceScale(d.close); }),
       
       open = self.lineData[0].close,
       high = d3.max(self.lineData, function (d){return d.high}),  
       low  = d3.min(self.lineData, function (d){return d.low}),
       last = self.lineData[self.lineData.length-1].close,
-      vol  = d3.sum(self.lineData, function (d){return d.volume}),
+      vol  = d3.sum(self.lineData, function (d){return d.baseVolume}),
       pct  = (((last-open)/open)*100).toFixed(2),     
       pathStyle, horizontalStyle, pointerStyle, changeStyle; 
       
@@ -271,7 +271,7 @@ var MiniChart = function(base, counter, markets) {
     
     // Update the x-scale.
     xScale
-      .domain(d3.extent(self.lineData, function(d) { return d.time; }))
+      .domain(d3.extent(self.lineData, function(d) { return d.startTime; }))
       .range([0, width]);
     
 

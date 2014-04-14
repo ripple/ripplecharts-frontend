@@ -229,20 +229,29 @@ PriceChart = function (options) {
       //if we've got live data reported already, we need to merge
       //the first live data with the last historic candle
       if (lineData.length && data.length) {
+        
         var first  = lineData.shift();
         var candle = data[data.length-1];
-        var volume = candle.volume + first.volume;
+        var volume = candle.baseVolume + first.baseVolume;
+        
         //candle.open will be from historic
         if (candle.high>first.high) candle.high = first.high;
         if (candle.low<first.low)   candle.low  = first.low;
-        candle.vwap   = (candle.vwap*candle.volume+first.vwap*first.volume)/volume;
-        candle.volume = volume;
-        candle.close  = first.close;
+        candle.vwap       = (candle.vwap*candle.baseVolume+first.vwap*first.baseVolume)/volume;
+        candle.baseVolume = volume;
+        candle.close      = first.close;
+        candle.closeTime  = first.closeTime;
         data[data.length-1] = candle;
       }
       
-      lineData = data.concat(lineData);
-      isLoading     = false;
+      //merge the last candle with the updater candle - if
+      //its not the same time interval it will be discarded
+      if (options.live) {
+        liveFeed.resetStored(data[data.length-1]);
+      }
+      
+      lineData  = data.concat(lineData);
+      isLoading = false;
       if (self.onStateChange) self.onStateChange("loaded");
       drawData();
       
@@ -265,13 +274,17 @@ PriceChart = function (options) {
 //enable the live feed via ripple-lib
   function setLiveFeed () {
     var candle = {
-        time   : lastCandle,
-        volume : 0,
-        vwap   : 0,
-        close  : 0,
-        open   : 0,
-        high   : 0,
-        low    : 0
+        startTime     : lastCandle,
+        baseVolume    : 0.0,
+        counterVolume : 0.0, 
+        count         : 0,
+        open          : 0.0,
+        high          : 0.0,
+        low           : 0.0,
+        close         : 0.0,
+        vwap          : 0.0,
+        openTime      : null,
+        closeTime     : null
       };
       
     var interval;
@@ -307,23 +320,20 @@ PriceChart = function (options) {
   
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
-
-    var first = lineData.length ? lineData[0] : null;
-    var last  = lineData.length ? lineData[lineData.length-1] : null;
-    var candle = {
-        time   : moment.utc(data.openTime),
-        volume : data.baseCurrVol,
-        vwap   : data.vwavPrice,
-        close  : data.closePrice,
-        open   : data.openPrice,
-        high   : data.highPrice,
-        low    : data.lowPrice,
-        live   : true
-      }; 
-      
     
-    if (last && candle.volume && last.time.unix()===candle.time.unix()) {
-
+    var first   = lineData.length ? lineData[0] : null;
+    var last    = lineData.length ? lineData[lineData.length-1] : null;
+    var candle  = data;
+    
+    candle.startTime = moment.utc(candle.startTime);
+    candle.live      = true;
+    
+    console.log(candle);  
+    console.log(last.startTime.format(), candle.startTime.format());
+    
+    if (last && last.startTime.unix()===candle.startTime.unix()) {
+      console.log("update");     
+/*      
       if (!last.live) {  //historical data
         var volume = candle.volume + last.volume;
         if (candle.high<last.high) candle.high = last.high;
@@ -331,15 +341,15 @@ PriceChart = function (options) {
         candle.vwap   = (candle.vwap*candle.volume+last.vwap*last.volume)/volume;
         candle.volume = volume;
         candle.open   = last.open;
-        //close will be from live data
-        data[data.length-1] = candle;
-        
+        //close will be from live data  
       }
+*/      
       lineData[lineData.length-1] = candle;
     } else {
+      console.log("new");
       
       //new candle, only add it if something happened
-      if (candle.volume) {
+      if (candle.baseVolume) {
         lineData.push(candle); //append the candle    
       }
       
@@ -348,7 +358,7 @@ PriceChart = function (options) {
       endTime.add(intervalSeconds,"seconds");
     
       //remove the first candle if it is before the start range
-      if (first && first.time.unix()<startTime.unix()) lineData.shift();
+      if (first && first.startTime.unix()<startTime.unix()) lineData.shift();
     }
     
     //redraw the chart
@@ -368,9 +378,11 @@ PriceChart = function (options) {
     gEnter.select(".axis.price").select("text").text("Price ("+counter.currency+")");
     gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
         
-    svg.datum(lineData, function(d){return d.time;})
+    svg.datum(lineData, function(d){return d.startTime;})
       .on("mousemove", showDetails)
-      .on("touchmove", showDetails);
+      .on("touchmove", showDetails)
+      .on("touchstart", showDetails)
+      .on("touchend", showDetails);
 
     // Update the x-scale.
     xScale
@@ -379,7 +391,7 @@ PriceChart = function (options) {
     
     // Update the volume scale.
     volumeScale
-      .domain([0, d3.max(lineData, function (d) {return d.volume})*2])
+      .domain([0, d3.max(lineData, function (d) {return d.baseVolume})*2])
       .range([options.height, 0]);
             
     if (type == 'line') {
@@ -407,12 +419,12 @@ PriceChart = function (options) {
 
 
     var line = d3.svg.line()
-      .x(function(d) { return xScale(d.time); })
+      .x(function(d) { return xScale(d.startTime); })
       .y(function(d) { return priceScale(d.close); });
       
     //add the price line
     gEnter.select(".line")
-      .datum(lineData, function(d){return d.time;})
+      .datum(lineData, function(d){return d.startTime;})
       .transition()
       .attr("d", line); 
           
@@ -420,7 +432,7 @@ PriceChart = function (options) {
     // add the candlesticks.
     var candle = gEnter.select(".candlesticks").selectAll("g")
       .data(lineData, function(d){
-        return d.time;  
+        return d.startTime;  
       });
 
      /*
@@ -432,7 +444,7 @@ PriceChart = function (options) {
      */
           
     var candleEnter = candle.enter().append("g")
-      .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; });
+      .attr("transform", function(d) { return "translate(" + xScale(d.startTime) + ")"; });
     candleEnter.append("line").attr("class","extent");
     candleEnter.append("line").attr("class", "high");
     candleEnter.append("line").attr("class", "low");    
@@ -449,7 +461,7 @@ PriceChart = function (options) {
          return d.close<=d.open; 
       })
       .transition()
-      .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; });
+      .attr("transform", function(d) { return "translate(" + xScale(d.startTime) + ")"; });
         
     candleUpdate.select(".extent")
       .attr("y1", function(d) { return priceScale(d.low); })
@@ -470,20 +482,20 @@ PriceChart = function (options) {
       .attr("y1", function(d) { return priceScale(d.low)})
       .attr("y2", function(d) { return priceScale(d.low)});
     d3.transition(candle.exit())
-      .attr("transform", function(d) { return "translate(" + xScale(d.time) + ")"; })
+      .attr("transform", function(d) { return "translate(" + xScale(d.startTime) + ")"; })
       .style("opacity", 1e-6).remove();
       
       
     //add the volume bars
-    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData, function(d){return d.time;});
+    var bars = gEnter.select(".volumeBars").selectAll("rect").data(lineData, function(d){return d.startTime;});
     bars.enter().append("rect"); 
 
-    bars.data(lineData, function(d){return d.time;})
+    bars.data(lineData, function(d){return d.startTime;})
       .transition()
-      .attr("x", function(d){return xScale(d.time)-candleWidth/3})
-      .attr("y", function(d){return volumeScale(d.volume)})
+      .attr("x", function(d){return xScale(d.startTime)-candleWidth/3})
+      .attr("y", function(d){return volumeScale(d.baseVolume)})
       .attr("width", candleWidth/1.2)
-      .attr("height", function(d){return options.height - volumeScale(d.volume)})
+      .attr("height", function(d){return options.height - volumeScale(d.baseVolume)})
       .style("fill", "url(#gradient)")
         
     bars.exit().remove();
@@ -514,7 +526,7 @@ PriceChart = function (options) {
     var z = wrap.style("zoom") || 1,
       x   = d3.mouse(this)[0]/z,
       tx  = Math.max(0, Math.min(options.width+options.margin.left, x)),
-      i   = d3.bisect(lineData.map(function(d) { return d.time }), xScale.invert(tx-options.margin.left)),
+      i   = d3.bisect(lineData.map(function(d) { return d.startTime }), xScale.invert(tx-options.margin.left)),
       d   = lineData[i],
       o, h, l, c, v;
 
@@ -525,17 +537,17 @@ PriceChart = function (options) {
         h = ripple.Amount.from_human(d.high).to_human({max_sig_digits:6});
         l = ripple.Amount.from_human(d.low).to_human({max_sig_digits:6});
         c = ripple.Amount.from_human(d.close).to_human({max_sig_digits:6});
-        v = ripple.Amount.from_human(d.volume).to_human({max_sig_digits:6}); 
+        v = ripple.Amount.from_human(d.baseVolume).to_human({max_sig_digits:6}); 
       } else {
         o = d.open.toFixed(4);
         h = d.high.toFixed(4);
         l = d.low.toFixed(4);
         c = d.close.toFixed(4);
-        v = d.volume.toFixed(2);
+        v = d.baseVolume.toFixed(2);
       }
 
       var details = div.select('.chartDetails');
-      details.html("<span class='date'>"+ parseDate(d.time.local(), chartInterval) + 
+      details.html("<span class='date'>"+ parseDate(d.startTime.local(), chartInterval) + 
         "</span><span>O:<b>" + o  + "</b></span>" +
         "<span class='high'>H:<b>" + h + "</b></span>" +
         "<span class='low'>L:<b>" + l + "</b></span>" +
@@ -543,10 +555,10 @@ PriceChart = function (options) {
         "<span class='volume'>Volume:<b>" + v + " " + base.currency + "</b></span>")
         .style("opacity",1);
 
-      hover.transition().duration(50).attr("transform", "translate(" + xScale(d.time) + ")");
-      focus.transition().duration(50).attr("transform", "translate(" + xScale(d.time) + "," + priceScale(d.close) + ")");
+      hover.transition().duration(50).attr("transform", "translate(" + xScale(d.startTime) + ")");
+      focus.transition().duration(50).attr("transform", "translate(" + xScale(d.startTime) + "," + priceScale(d.close) + ")");
       horizontal.transition().duration(50)
-        .attr("x1", xScale(d.time))
+        .attr("x1", xScale(d.startTime))
         .attr("x2", options.width)
         .attr("y1", priceScale(d.close))
         .attr("y2", priceScale(d.close));

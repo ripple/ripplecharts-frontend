@@ -65,12 +65,12 @@ var TradeFeed = function (options) {
   
 //process incoming transaction from the live feed handler  
   function handleTransaction (data) {
-    
+    console.log(data);
     var last = transactions[0];
     
     var trade = {
-      time   : moment.utc(data.key.slice(2)),
-      amount : data.value[1], //oddly backwards from my expectation
+      time   : moment.utc(data.value[5]),
+      amount : data.value[0],
       price  : data.value[2],
       type   : ''
     }
