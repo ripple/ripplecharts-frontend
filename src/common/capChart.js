@@ -44,7 +44,7 @@ function CapChart(options) {
  
  
 //add currency dropdown    
-  var currencyList = ['BTC','USD','CNY','EUR','GBP','JPY','ILS','LTC'];
+  var currencyList = ['BTC','USD','CAD','CNY','EUR','GBP','JPY','ILS','LTC'];
   if (self.dataType=='Transaction Volume') currencyList.unshift("XRP");
   var currencyDropdown = ripple.currencyDropdown(currencyList).selected({currency:self.currency})
     .on("change", function(currency) {
@@ -120,7 +120,7 @@ function CapChart(options) {
   var stack = d3.layout.stack().values(function(d) { return d.values; });  
   
   var svg, g, timeAxis, amountAxis, amountLabel, borders, sections, lines,
-    tracer, tooltip, loader, isLoading;
+    tracer, tooltip, status, loader, isLoading;
   
   var capDataCache   = {};
   var sendDataCache  = {};
@@ -235,8 +235,7 @@ function CapChart(options) {
       }
             
     }, function (error){
-      console.log(error);
-
+      setStatus(error.text ? error.text : "Unable to load data");
     });     
       
   }
@@ -294,8 +293,7 @@ function CapChart(options) {
         drawLegend();
       }
     }, function (error){
-      console.log(error);
-      //setStatus(error.text ? error.text : "Unable to load data");
+      setStatus(error.text ? error.text : "Unable to load data");
     });       
   }
   
@@ -367,8 +365,7 @@ function CapChart(options) {
       }
       
     }, function (error){
-      console.log(error);
-      //setStatus(error.text ? error.text : "Unable to load data");
+      setStatus(error.text ? error.text : "Unable to load data");
     });    
   }
   
@@ -538,6 +535,7 @@ function CapChart(options) {
     tracer.append("circle").attr("class","bottom").attr("r",4);
           
     tooltip = chart.append("div").attr("class", "tooltip");
+    status  = chart.append("div").attr("class", "status");
     loader  = chart.append("img")
       .attr("class", "loader")
       .attr("src", "assets/images/rippleThrobber.png");
@@ -547,6 +545,7 @@ function CapChart(options) {
   
   function drawData() {
     var data, legend;
+    setStatus("");
     
     if (!isLoading) loader.transition().style("opacity",0);
     if (self.format=="stacked") {
@@ -829,6 +828,16 @@ function CapChart(options) {
       .style("opacity",1);    
   }
  
+  function setStatus (string) {
+    status.html(string);
+    if (string) {
+      isLoading  = false;
+      loader.transition().style("opacity",0);
+      svg.transition().style("opacity",0.3);
+    } else {
+      svg.style("opacity",1);
+    }
+  }
  
 //filter data to remove hidden items
   function filterByLegend (data, legend) {
