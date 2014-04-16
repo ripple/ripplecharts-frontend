@@ -70,7 +70,6 @@ ApiHandler = function (url) {
         load(data);
       })
       .on('error', function(xhr){
-        console.log(xhr.response);
         if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
       });
       
@@ -80,33 +79,19 @@ ApiHandler = function (url) {
   this.valueSent = function (params, load, error) {
     
     var request = apiRequest("valueSent");        
-    request.post(JSON.stringify(params))
-      .on('load', function(xhr) {
-        var response = JSON.parse(xhr.response);  
-        load(response);
-      })
-      .on('error', function(xhr){
-        console.log(xhr.response);
-        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
-      });
-      
-    return request;      
+    return handleRequest(request, params, function (err, response){
+      if (err) error(err);
+      else load(response);
+    });     
   }
   
   this.issuerCapitalization = function (params, load, error) {
     
-    var request = apiRequest("issuerCapitalization");        
-    request.post(JSON.stringify(params))
-      .on('load', function(xhr) {
-        var response = JSON.parse(xhr.response);  
-        load(response);
-      })
-      .on('error', function(xhr){
-        console.log(xhr.response);
-        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
-      });
-      
-    return request;        
+    var request = apiRequest("issuerCapitalization"); 
+    return handleRequest(request, params, function (err, response){
+      if (err) error(err);
+      else load(response);
+    });       
   }
   
   
@@ -134,87 +119,48 @@ ApiHandler = function (url) {
   
   this.accountsCreated = function (params, callback) {
     var request = apiRequest("accountsCreated");
-    request.post(JSON.stringify(params))
-    .on('load', function(xhr){   
-      callback(null, JSON.parse(xhr.response));
-      
-    }).on('error', function(xhr){
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    });
-    
-    return request;
+    return handleRequest(request, params, callback); 
   }
   
   
   this.getTopMarkets = function (ex, callback) {
     var request = apiRequest("topMarkets");
-
-    request.post(JSON.stringify({ exchange : ex }))
-    .on('load', function(xhr){   
-      var response = JSON.parse(xhr.response); 
-      callback(null, response);
-
-    }).on('error', function(xhr){
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    });    
+    return handleRequest(request, { exchange : ex }, callback);     
   }
   
   this.getVolume24Hours = function (ex, callback) {
     var request = apiRequest("totalValueSent");
-
-      //exchange : {
-      //  currency : "USD",
-      //  issuer   : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
-      //}
-      
-    request.post(JSON.stringify({ exchange : ex }))
-    .on('load', function(xhr){   
-      var response = JSON.parse(xhr.response);
-        callback (null, response);
-      
-    }).on('error', function(xhr){
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    });     
+    return handleRequest(request, { exchange : ex }, callback);      
   }
   
   this.getVolume30Days = function (ex, callback) {
     var request = apiRequest("totalValueSent");
-    
-    request.post(JSON.stringify({
+    return handleRequest(request, {
       endTime   : moment.utc(),
       startTime : moment.utc().subtract(30, "days"),
       exchange  : ex
-    }))
-    .on('load', function(xhr){   
-      var response = JSON.parse(xhr.response);
-        callback (null, response);
-      
-    }).on('error', function(xhr){
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    }); 
-    
+    }, callback); 
   }
   
 
   this.getNetworkValue = function (ex, callback) {
     var request = apiRequest("totalNetworkValue");
-
-    request.post(JSON.stringify({ exchange : ex }))
-    .on('load', function(xhr){   
-      callback(null, JSON.parse(xhr.response));
-      
-    }).on('error', function(xhr){
-      console.log(xhr);
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    });
-    
-    return request;    
+    return handleRequest(request, { exchange : ex }, callback); 
   }
   
   
   this.exchangeRates = function (params, callback) {
     var request = apiRequest("exchangeRates");
-
+    return handleRequest(request, params, callback);    
+  }
+  
+  this.marketMakers = function (params, callback) {
+    var request = apiRequest("marketMakers");
+    return handleRequest(request, params, callback);    
+  }
+  
+  function handleRequest(request, params, callback) {
+    
     request.post(JSON.stringify(params))
     .on('load', function(xhr){   
       var response = JSON.parse(xhr.response);
@@ -223,7 +169,8 @@ ApiHandler = function (url) {
     }).on('error', function(xhr){
 
       callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    });     
+    });
+    
+    return request;    
   }
- 
 }

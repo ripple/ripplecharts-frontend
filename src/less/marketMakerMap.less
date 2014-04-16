@@ -1,0 +1,85 @@
+.traderMap {
+  position:relative;
+  font-family:Arial, Helvetica, sans-serif;  
+  padding:10px;
+}
+
+.metricSelect span, .periodSelect span {
+  margin:0 5px;  
+}
+
+.metricSelect span.selected, .periodSelect span.selected {
+  font-weight:bold;
+}
+
+.node {
+  position:absolute;
+  border-radius:3px;
+}
+
+.tooltip {
+  position:absolute;
+  pointer-events:none;
+  background:rgba(255,255,255,.9);
+  opacity:0;
+  padding:10px;
+  border-radius:2px;
+  border:1px solid #bbb;
+}
+
+.accountsTable {
+  width:100%;
+  font-size:12px;
+  margin:10px 0;
+  display:table;
+  
+  .accountsHeader {
+    display:table-row;
+    
+    div {
+      display:table-cell;
+      font-weight:bold;
+      font-size:13px;
+      text-align:center;
+      padding:8px;
+    }  
+  }
+  
+  .account {
+    display:table-row;
+  
+    .address, .volume, .volumePCT, .count, .countPCT, .buySell {
+      display:table-cell;
+      text-align:right;
+      padding:2px 15px;
+      font-size:13px;
+    }
+    
+    .address {
+      text-align:left;
+      font-size:11px;
+      color:#667
+    }
+    
+    .volume small {
+      color:#99a
+    }  
+    
+    
+    .buy {
+      color:green
+    }
+    
+    .sell {
+      color:red
+    }
+  }
+  
+  .account:nth-child(even) {
+    background:rgba(200,200,200,.2);
+  }  
+}
+
+.dark .node {
+  opacity:.75;
+}
