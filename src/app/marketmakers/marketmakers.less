@@ -1,21 +1,19 @@
-.accounts {
-  text-align:center;
+.marketmakers {
+  overflow:hidden;
+  
+  .pairSelect {
+    padding:10px 10px 5px;
+    
+    .dropdowns {
+      display:inline-block;
+    }
+    
+    .gateway {
+      min-width:200px;
+    }
+  }
 }
 
-.accounts .helpbox {
-  width:80%;
-  display:inline-block;
-}
-
-.accounts .chartWrap {
-  display:inline-block;
-  width:96%;
-  margin-bottom:10px;
-}
-
-.accounts .selectList a, .accounts .selectList label {
-  font-size:14px;
-}
 
 
 /*
@@ -23,11 +21,62 @@
  */
 
 
+@media (max-width: 768px) {
+  #marketMakerMap .accountsTable {
+    margin-top:10px;
+    display:block;
+    
+    .accountsHeader {
+      display:none;
+    }
+    
+    .account {
+      display:block;
+      overflow:hidden;
+    }
+    
+    .account:nth-child(even) {
+      background:none;
+    }
+    
+    .account div {
+      display:block !important;
+      float:left;
+      min-width:50px;
+      padding:2px 5px;
+      border:none;
+    }
+    .account .volume {
+      min-width:120px;
+    }
+    
+    .account .buySell {
+      float:right;
+    }
+    
+    .account .address {
+      width:100%;
+      float:none;
+      border-bottom:1px solid rgba(150,150,150,.3);
+      margin-top:10px;
+    }
+    
+  }   
+}
 
-//mobile
-@media (max-width: 480px) {
-  #totalAccounts {
-    zoom: .75;
-    width:100%;
+@media (max-width: 650px) {
+  .marketmakers .pairSelect {
+    text-align:center;
+    
+    #flip {
+      display:block;
+      margin-left:auto;
+      margin-right:auto;
+    }
   }
 }
+
+@media (max-width: 480px) {
+
+}
+

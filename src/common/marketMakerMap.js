@@ -2,20 +2,22 @@ var MarketMakerMap = function (options){
   var self     = this,
     apiHandler = new ApiHandler(options.url);
   
-  var base, counter, accounts, treemap;
+  var base, counter, accounts, treemap, isLoading;
   var div    = d3.select("#"+options.id).attr("class", "traderMap");
   var metric = options.metric || "volume";
   var period = options.period || "24h";
-  var color  = d3.scale.pow().exponent(0.35).range(['#ccc', "#039"]); 
+  var color  = d3.scale.pow().exponent(0.35).range(['#ccc', "#003099"]); 
   
-  var metricSelect = div.append("div").attr("class","metricSelect")
-    .selectAll("span").data(["volume","count"])
-    .enter().append("span")
+  var metricSelect = div.append("div").attr("class","metricSelect selectList");
+  
+  metricSelect.append("label").html("Metric:");
+  metricSelect.selectAll("a").data(["volume","count"])
+    .enter().append("a")
     .text(function(d){return d})
     .classed("selected", function(d) { return d === metric })
     .on("click", function(d){
       var that = this;
-      metricSelect.classed("selected", function() { return this === that; });
+      metricSelect.selectAll("a").classed("selected", function() { return this === that; });
       metric = d;
       if (1) {
         drawData();
@@ -30,30 +32,36 @@ var MarketMakerMap = function (options){
       drawTable();
     });  
   
-  var periodSelect = div.append("div").attr("class","periodSelect")
-    .selectAll("span").data(["24h","3d","7d","30d"])
-    .enter().append("span")
+  var periodSelect = div.append("div").attr("class","periodSelect selectList");
+  
+  periodSelect.append("label").html("Period:");
+  periodSelect.selectAll("a").data(["24h","3d","7d","30d"])
+    .enter().append("a")
     .text(function(d){return d})
     .classed("selected", function(d) { return d === period })
     .on("click", function(d){
       var that = this;
-      periodSelect.classed("selected", function() { return this === that; });
+      periodSelect.selectAll("a").classed("selected", function() { return this === that; });
       self.load(null, null, d);
     });
     
   var wrap   = div.append("div").attr("class","wrap");
   var width  = options.width  ? options.width  : parseInt(wrap.style('width'), 10);
-  var height = options.height ? options.height : parseInt(wrap.style('height'), 10);
-  
-  if (!height) height = options.width/2>400 ? options.width/2 : 400;
+  var height = 350;
 
   var map = wrap.append("div")
     .attr("class","map")
-    .style("position", "relative")
     .style("width", width + "px")
     .style("height", height + "px"); 
+  
+  var status = wrap.append("div")
+    .attr("class","status");
+    
+  var loader = wrap.append("img")
+    .attr("class", "loader")
+    .attr("src", "assets/images/rippleThrobber.png");
       
-  var table = wrap.append("div").attr("class","accountsTable");
+  var table = div.append("div").attr("class","accountsTable");
     table.append("div").attr("class","accountsHeader");
     table.select(".accountsHeader").append("div").html("Address");
     table.select(".accountsHeader").append("div").html("Volume");
@@ -62,7 +70,7 @@ var MarketMakerMap = function (options){
     table.select(".accountsHeader").append("div").html("% of Trades");
     table.select(".accountsHeader").append("div").html("Buy/Sell");
     
-  var tooltip = wrap.append("div").attr("class", "tooltip");
+  var tooltip = div.append("div").attr("class", "tooltip");
     tooltip.append("div").attr("class", "name");
     tooltip.append("div").attr("class", "address");
     tooltip.append("div").attr("class","volume");
@@ -76,8 +84,6 @@ var MarketMakerMap = function (options){
   function resizeMap () {
     old    = width;
     width  = parseInt(wrap.style('width'), 10);
-    height = options.height ? options.height : parseInt(wrap.style('height'), 10);
-    if (!height) height = options.width/2>400 ? options.width/2 : 400;
     
     if (old != width) { 
       map.style("width", width + "px").style("height", height + "px");
@@ -94,7 +100,9 @@ var MarketMakerMap = function (options){
     if (p) period  = p;
     if (m) metric  = m;
     
-    console.log(period);
+    isLoading = true;
+    loader.transition().style("opacity",1);
+    map.transition().style("opacity",0.5);
     
     apiHandler.marketMakers({
       base      : base,
@@ -103,8 +111,11 @@ var MarketMakerMap = function (options){
       transactions : true
     
     }, function(error, data){
-      if (error) return console.log(error);
-      //console.log(data);
+      
+      isLoading = false;
+      
+      if (error) return setStatus(error.text ? error.text : "Unable to load data");
+      
       data.shift(); //remove header row
       
       accounts = {
@@ -125,8 +136,13 @@ var MarketMakerMap = function (options){
     });
   }
   
-  function drawData (resize) {    
+  function drawData () {    
     
+    map.transition().style("opacity",1);
+    loader.transition().style("opacity",0);
+    if (accounts.count) setStatus("");
+    else return setStatus("No offers exercised for this period.");
+        
     treemap = d3.layout.treemap()
       .size([width, height])
       .sticky(true)
@@ -180,22 +196,25 @@ var MarketMakerMap = function (options){
   
   function showTooltip (d) {
     if (!d[0]) return hideTooltip(d);
-    var volume, count;
+    var volume, count, top, left;
     d3.select("#"+d[0])
       .classed("selected",true)
       .transition().style("opacity", 1);
       
     tooltip.select(".address").html(d[0]);
     
-    volume   = commas(d[1],4)+" "+base.currency+" ("+commas(100*d[1]/accounts.volume,2)+"%)";
-    count    = d[3]+" ("+100*commas(d[3]/accounts.count,2)+"%)";
-
+    volume   = "<b>"+commas(d[1],4)+" <small>"+base.currency+"</small></b> ("+commas(100*d[1]/accounts.volume,2)+"%)";
+    count    = "<b>"+d[3]+"</b> ("+commas(100*d[3]/accounts.count,2)+"%)";
+    left     = d.x+380>width  ? width-380 : d.x+20;
+    top      = d.y+120>height ? height-120 : d.y+40;
+    console.log(d.y);
+    
     tooltip.select(".volume").html("<label>Total Volume:</label>"+volume);   
-    tooltip.select(".count").html("<label># of transactions:</label>"+count); 
+    tooltip.select(".count").html("<label># of Transactions:</label>"+count); 
     tooltip.transition()
       .style("opacity",1)
-      .style("left", (d.x+40)+"px")
-      .style("top", (d.y+40)+"px");   
+      .style("left", left+"px")
+      .style("top", top+"px");   
   }
   
   function hideTooltip (d) {
@@ -218,5 +237,12 @@ var MarketMakerMap = function (options){
     if      (metric=="volume") return color(d[1]);
     else if (metric=="count") return color(d[3]);
     return null;
-  }  
+  } 
+  
+  function setStatus(string) {
+    status.html(string)
+    if (string) {
+      loader.transition().style("opacity",0);
+    }
+  } 
 }

@@ -18,7 +18,7 @@ angular.module( 'ripplecharts.marketmakers', [
 
 .controller( 'MarketmakersCtrl', function MarketmakersCtrl( $scope ) {
 
-  var base    = {"currency": "EUR", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
+  var base    = {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
   var counter = {"currency": "XRP"};
   var period  = "24h";
   var metric  = "volume";
@@ -47,15 +47,15 @@ angular.module( 'ripplecharts.marketmakers', [
         }});
 
   d3.select("#base").call(dropdownA);
-  d3.select("#quote").call(dropdownB);
+  d3.select("#counter").call(dropdownB);
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected(counter);
     dropdownB.selected(base);
     d3.select("#base").selectAll("select").remove();
-    d3.select("#quote").selectAll("select").remove();
+    d3.select("#counter").selectAll("select").remove();
     loaded = false;
     d3.select("#base").call(dropdownA);
-    d3.select("#quote").call(dropdownB);
+    d3.select("#counter").call(dropdownB);
     loaded = true;
     
     swap    = counter;

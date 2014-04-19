@@ -1,85 +1,188 @@
 .traderMap {
-  position:relative;
-  font-family:Arial, Helvetica, sans-serif;  
+  position:relative;  
   padding:10px;
-}
-
-.metricSelect span, .periodSelect span {
-  margin:0 5px;  
-}
-
-.metricSelect span.selected, .periodSelect span.selected {
-  font-weight:bold;
-}
-
-.node {
-  position:absolute;
-  border-radius:3px;
-}
-
-.tooltip {
-  position:absolute;
-  pointer-events:none;
-  background:rgba(255,255,255,.9);
-  opacity:0;
-  padding:10px;
-  border-radius:2px;
-  border:1px solid #bbb;
-}
-
-.accountsTable {
-  width:100%;
-  font-size:12px;
-  margin:10px 0;
-  display:table;
   
-  .accountsHeader {
-    display:table-row;
-    
-    div {
-      display:table-cell;
-      font-weight:bold;
-      font-size:13px;
-      text-align:center;
-      padding:8px;
-    }  
+  .metricSelect {
+    float:left;
+    padding-bottom:5px;
   }
   
-  .account {
-    display:table-row;
+  .periodSelect {
+    float:right;
+    padding-bottom:5px;
+  }
   
-    .address, .volume, .volumePCT, .count, .countPCT, .buySell {
-      display:table-cell;
+  .wrap {
+    clear:both;
+    position:relative;
+    
+    .status {
+      position:absolute;
+      width:100%;
+      top:50%;
+      text-align:center;
+      margin-top:-20px;
+      font-size:18px;  
+      color:rgba(150, 150, 150, 0.5);
+    }
+    
+    .loader {
+      position:absolute;
+      top:50%;
+      left:50%;
+      width:40px;
+      margin-top:-20px;
+      margin-left:-20px;
+    }
+  }
+  
+  .node {
+    position:absolute;
+    border-radius:3px;
+    opacity:.9;
+  }
+  
+  .node.child {
+    border-radius:0;
+    opacity:.3;
+    border:1px solid #aaa;
+    pointer-events:none;
+  }
+  
+  .tooltip {
+    position:absolute;
+    pointer-events:none;
+    background:rgba(255,255,255,.9);
+    opacity:0;
+    padding:10px;
+    border-radius:2px;
+    padding-bottom:20px;
+    
+    label {
       text-align:right;
-      padding:2px 15px;
+      display:inline-block;
+      min-width:120px;
       font-size:13px;
+      color:#999;
+      margin-right:5px; 
     }
     
     .address {
-      text-align:left;
-      font-size:11px;
-      color:#667
+      text-align:center;
+      margin:5px 20px;
+      color:@rippleBlue;
+      font-weight:bold;
+      margin-bottom:15px;
     }
     
-    .volume small {
-      color:#99a
-    }  
-    
-    
-    .buy {
-      color:green
-    }
-    
-    .sell {
-      color:red
+    .volume, .count {
+      padding: 0 20px 2px;
+      font-size:16px;
+      
+      small {
+        color:#778;
+      }
     }
   }
   
-  .account:nth-child(even) {
-    background:rgba(200,200,200,.2);
-  }  
+  .accountsTable {
+    width:100%;
+    font-size:12px;
+    display:table;
+    border-collapse:collapse;
+    
+    .accountsHeader {
+      display:table-row;
+      
+      div {
+        display:table-cell;
+        font-weight:bold;
+        font-size:13px;
+        text-align:right;
+        padding:10px;
+        border-bottom:1px solid rgba(160,160,160,.1);
+      } 
+      
+      div:first-child {
+        text-align:left;
+      }
+    }
+    
+    .account {
+      display:table-row;
+    
+      .address, .volume, .volumePCT, .count, .countPCT, .buySell {
+        display:table-cell;
+        text-align:right;
+        padding:2px 10px;
+        font-size:13px;
+        border-bottom:1px solid rgba(150,150,150,.1);
+        border-top:1px solid rgba(150,150,150,.1);
+      }
+      
+      .address {
+        text-align:left;
+        font-size:11px;
+        color:#889
+      }
+      
+      .volume small {
+        color:#99a
+      }  
+      
+      .buySell {
+        color:#999;
+      }
+      
+      .buy {
+        color:#393;
+      }
+      
+      .sell {
+        color:#c00;
+      }
+    }
+    
+    .account:nth-child(even) {
+      background:rgba(200,200,200,.1);
+    }  
+  }
+
+
 }
 
-.dark .node {
-  opacity:.75;
+
+
+.dark {
+  .traderMap {
+    
+    .node {
+      opacity:.65;
+    }
+    
+    .accountsTable {
+      font-family:Arial;
+      color:#bbb;
+      
+      .accountsHeader {
+        color:#666;  
+      }
+      
+      .buySell {
+        color:#777;  
+      }
+      
+      .buy {
+        color:#282;
+      }
+      
+      .sell {
+        color:#b22;
+      }
+      
+      .volume small {
+        color:#777;
+      }
+    }
+  }
 }
