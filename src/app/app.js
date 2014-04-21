@@ -6,6 +6,7 @@ angular.element(document).ready(function() {
     'ripplecharts.landing',
     'ripplecharts.markets',
     'ripplecharts.multimarkets',
+    'ripplecharts.marketmakers',
     'ripplecharts.graph',
     'ripplecharts.accounts',
     'ripplecharts.value',
