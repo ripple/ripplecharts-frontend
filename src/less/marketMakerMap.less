@@ -39,7 +39,7 @@
   .node {
     position:absolute;
     border-radius:3px;
-    opacity:.9;
+    opacity:.85;
   }
   
   .node.child {
@@ -56,27 +56,27 @@
     opacity:0;
     padding:10px;
     border-radius:2px;
-    padding-bottom:20px;
+    padding-bottom:10px;
     
     label {
-      text-align:right;
-      display:inline-block;
-      min-width:120px;
-      font-size:13px;
+      text-align:left;
+      display:block;
+      font-size:11px;
       color:#999;
-      margin-right:5px; 
+      margin:0; 
     }
     
     .address {
       text-align:center;
-      margin:5px 20px;
+      margin:5px 10px;
       color:@rippleBlue;
       font-weight:bold;
       margin-bottom:15px;
+      font-size:11px;
     }
     
     .volume, .count {
-      padding: 0 20px 2px;
+      padding: 0 10px 10px;
       font-size:16px;
       
       small {
@@ -100,7 +100,7 @@
         font-size:13px;
         text-align:right;
         padding:10px;
-        border-bottom:1px solid rgba(160,160,160,.1);
+        border-bottom:1px solid rgba(160,160,160,.2);
       } 
       
       div:first-child {
@@ -145,7 +145,11 @@
     
     .account:nth-child(even) {
       background:rgba(200,200,200,.1);
-    }  
+    } 
+    
+    .account.selected {
+      background:rgba(140,160,200,.25);
+    } 
   }
 
 
@@ -158,6 +162,10 @@
     
     .node {
       opacity:.65;
+    }
+    
+    .tooltip {
+      color:#444;
     }
     
     .accountsTable {
