@@ -17,7 +17,7 @@
  *  theme    : "light", "dark"
  *  type     : "line", "candlestick"
  *  base     : e.g "{currency:'USD',issuer:'rXaiz....'}"  
- *  trade    : e.g "{currency:'BTC',issuer:'rXaiz....'}"
+ *  counter  : e.g "{currency:'BTC',issuer:'rXaiz....'}"
  *  start    : e.g "January 2, 2014 1:15pm"   - moment.js readable date/time
  *  end      : e.g "Feb 12, 2014"             - moment.js readable date/time
  *  interval : "second","minute","hour","day","week","month"
@@ -91,7 +91,7 @@ var PriceChartWidget = function (options) {
     }
     
     priceChart.setType(params.type);
-    priceChart.load(params.base, params.trade, range);      
+    priceChart.load(params.base, params.counter, range);      
   }
   
   
@@ -99,10 +99,10 @@ var PriceChartWidget = function (options) {
     
     var params = getParams();
     
-    if (!params.base)  params.base  = {currency:"XRP", issuer:""};
-    if (!params.trade) params.trade = {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}; 
-    if (!params.type)  params.type  = "line";
-    if (!params.theme) params.theme = "light"; 
+    if (!params.base)    params.base    = {currency:"XRP", issuer:""};
+    if (!params.counter) params.counter = {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}; 
+    if (!params.type)    params.type    = "line";
+    if (!params.theme)   params.theme   = "light"; 
     
     
     params.end   = params.end   ? moment.utc(params.end)   : moment.utc(); 
