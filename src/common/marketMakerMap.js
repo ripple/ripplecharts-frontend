@@ -21,6 +21,11 @@ var MarketMakerMap = function (options){
       metricSelect.selectAll("a").classed("selected", function() { return this === that; });
       metric = d;
       
+      if (typeof store !== undefined) {
+        store.set('traderMetric', metric);
+        store.session.set('traderMetric', metric); 
+      }
+      
       //sort the accounts by the appropriate metric
       accounts.children.sort(function(a,b){return metric=="volume" ? b[1]-a[1] : b[3]-a[3]});
       
@@ -45,6 +50,12 @@ var MarketMakerMap = function (options){
     .classed("selected", function(d) { return d === period })
     .on("click", function(d){
       var that = this;
+
+      if (typeof store !== undefined) {
+        store.set('traderPeriod', d);
+        store.session.set('traderPeriod', d); 
+      }      
+      
       periodSelect.selectAll("a").classed("selected", function() { return this === that; });
       self.load(null, null, d);
     });

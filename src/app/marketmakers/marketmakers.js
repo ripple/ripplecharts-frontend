@@ -18,10 +18,10 @@ angular.module( 'ripplecharts.marketmakers', [
 
 .controller( 'MarketmakersCtrl', function MarketmakersCtrl( $scope ) {
 
-  var base    = {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
-  var counter = {"currency": "XRP"};
-  var period  = "24h";
-  var metric  = "count";
+  var base    = store.session.get('traderBase')    || store.get('traderBase')    || {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
+  var counter = store.session.get('traderCounter') || store.get('traderCounter') || {"currency": "XRP"};
+  var period  = store.session.get('traderPeriod')  || store.get('traderPeriod')  || "24h";
+  var metric  = store.session.get('traderMetric')  || store.get('traderMetric')  || "volume";
    
   var map = new MarketMakerMap({
     url    : API,
@@ -67,7 +67,11 @@ angular.module( 'ripplecharts.marketmakers', [
   loaded = true;
   loadPair();
   function loadPair() {
-    console.log(base, counter);
+    store.set('traderBase',    base);
+    store.set('traderCounter', counter); 
+    store.session.set('traderBase',    base);
+    store.session.set('traderCounter', counter);
+    
     map.load(base, counter);
   }
   
