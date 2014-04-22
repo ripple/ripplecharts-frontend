@@ -21,7 +21,7 @@ angular.module( 'ripplecharts.marketmakers', [
   var base    = {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
   var counter = {"currency": "XRP"};
   var period  = "24h";
-  var metric  = "volume";
+  var metric  = "count";
    
   var map = new MarketMakerMap({
     url    : API,

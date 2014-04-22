@@ -12,6 +12,27 @@
     padding-bottom:5px;
   }
   
+  .breadcrumbs {
+    font-size:12px;
+    font-weight:bold;
+    padding:5px 0;
+    color:#888;
+    
+    span {
+      margin-right:5px;
+    }  
+    
+    .market {
+      border-bottom:3px solid transparent;  
+    }
+    
+    .market:hover {
+      color:#333;
+      cursor:pointer;
+      border-color:#333
+    }
+  }
+        
   .wrap {
     clear:both;
     position:relative;
@@ -36,17 +57,24 @@
     }
   }
   
-  .node {
-    position:absolute;
-    border-radius:3px;
-    opacity:.85;
-  }
-  
-  .node.child {
-    border-radius:0;
-    opacity:.3;
-    border:1px solid #aaa;
-    pointer-events:none;
+  .map {
+    
+    .node {
+      position:absolute;
+      border-radius:3px;
+      opacity:.85;
+    }
+    
+    .node.child {
+      border-radius:0;
+      opacity:.3;
+      border:1px solid #aaa;
+      pointer-events:none;
+    }
+    
+    .account {
+      cursor:pointer;
+    }
   }
   
   .tooltip {
@@ -82,22 +110,36 @@
       small {
         color:#778;
       }
+      
+      .buy {
+        color:#393;
+      }
+      
+      .sell {
+        color:#c00;
+      }
+      
+      .date {
+        font-size:12px;
+        text-align:center;
+        margin-top:15px;
+        color:#999
+      }
     }
   }
   
   .accountsTable {
     width:100%;
-    font-size:12px;
+    font-size:13px;
     display:table;
     border-collapse:collapse;
     
-    .accountsHeader {
+    .accountsHeader, .transactionsHeader {
       display:table-row;
       
       div {
         display:table-cell;
         font-weight:bold;
-        font-size:13px;
         text-align:right;
         padding:10px;
         border-bottom:1px solid rgba(160,160,160,.2);
@@ -109,13 +151,16 @@
     }
     
     .account {
+      cursor:pointer;
+    }
+    
+    .account, .transaction {
       display:table-row;
     
-      .address, .volume, .volumePCT, .count, .countPCT, .buySell {
+      div {
         display:table-cell;
         text-align:right;
         padding:2px 10px;
-        font-size:13px;
         border-bottom:1px solid rgba(150,150,150,.1);
         border-top:1px solid rgba(150,150,150,.1);
       }
@@ -123,6 +168,11 @@
       .address {
         text-align:left;
         font-size:11px;
+        color:#889
+      }
+      
+      .date {
+        text-align:left; 
         color:#889
       }
       
@@ -143,22 +193,29 @@
       }
     }
     
-    .account:nth-child(even) {
+    .account:nth-child(odd), .transaction:nth-child(odd) {
       background:rgba(200,200,200,.1);
     } 
     
-    .account.selected {
+    .account.selected, .transaction.selected {
       background:rgba(140,160,200,.25);
     } 
   }
-
-
 }
 
 
 
 .dark {
   .traderMap {
+    
+    .breadcrumbs {
+      color:#aaa;
+      
+      .market:hover {
+        color: #ddd;
+        border-color:#eee;
+      }
+    }
     
     .node {
       opacity:.65;
@@ -172,7 +229,7 @@
       font-family:Arial;
       color:#bbb;
       
-      .accountsHeader {
+      .accountsHeader, .transactionsHeader {
         color:#666;  
       }
       

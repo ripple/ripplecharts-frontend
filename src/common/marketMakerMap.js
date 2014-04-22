@@ -2,9 +2,9 @@ var MarketMakerMap = function (options){
   var self     = this,
     apiHandler = new ApiHandler(options.url);
   
-  var base, counter, accounts, treemap, isLoading, inTransition;
+  var base, counter, accounts, account, treemap, isLoading, inTransition, transactions = false;
   var div    = d3.select("#"+options.id).attr("class", "traderMap");
-  var metric = options.metric || "volume";
+  var metric = options.metric || "count";
   var period = options.period || "24h";
   var color  = d3.scale.pow().exponent(0.35).range(['#ccc', "#003099"]); 
   
@@ -16,24 +16,24 @@ var MarketMakerMap = function (options){
     .text(function(d){return d})
     .classed("selected", function(d) { return d === metric })
     .on("click", function(d){
+      if (transactions) return;
       var that = this;
       metricSelect.selectAll("a").classed("selected", function() { return this === that; });
       metric = d;
+      
+      //sort the accounts by the appropriate metric
       accounts.children.sort(function(a,b){return metric=="volume" ? b[1]-a[1] : b[3]-a[3]});
       
-      if (0) {
-        drawData();
-      } else {
-        inTransition = true;
-        color.domain(d3.extent(accounts.children, function(d){return metric=="volume" ? d[1] : d[3]}));
-        map.datum(accounts).selectAll(".node").data(treemap.nodes)
-          .attr("id", function(d){ return d[0] ? "node_"+d[0] : null})
-          .transition().duration(500)
-          .style("background", colorFunction)
-          .call(position).each("end",function(){ inTransition=false });
-      }
+      //redraw the nodes on the map
+      inTransition = true;
+      color.domain(d3.extent(accounts.children, function(d){return metric=="volume" ? d[1] : d[3]}));
+      map.datum(accounts).selectAll(".node").data(treemap.nodes)
+        .attr("id", function(d){ return d[0] ? "node_"+d[0] : null})
+        .transition().duration(500)
+        .style("background", colorFunction)
+        .call(position).each("end",function(){ inTransition=false });
         
-      drawTable();
+      drawAccountsTable(); //redraw the table
     });  
   
   var periodSelect = div.append("div").attr("class","periodSelect selectList");
@@ -49,15 +49,16 @@ var MarketMakerMap = function (options){
       self.load(null, null, d);
     });
     
+  var crumb  = div.append("div").attr("class","breadcrumbs");
   var wrap   = div.append("div").attr("class","wrap");
   var width  = options.width  ? options.width  : parseInt(wrap.style('width'), 10);
   var height = 350;
-
+    
   var map = wrap.append("div")
     .attr("class","map")
     .style("width", width + "px")
     .style("height", height + "px"); 
-  
+    
   var status = wrap.append("div")
     .attr("class","status");
     
@@ -66,13 +67,20 @@ var MarketMakerMap = function (options){
     .attr("src", "assets/images/rippleThrobber.png");
       
   var table = div.append("div").attr("class","accountsTable");
-    table.append("div").attr("class","accountsHeader");
-    table.select(".accountsHeader").append("div").html("Address");
-    table.select(".accountsHeader").append("div").html("Volume");
-    table.select(".accountsHeader").append("div").html("% of Volume");
-    table.select(".accountsHeader").append("div").html("# of Trades");
-    table.select(".accountsHeader").append("div").html("% of Trades");
-    table.select(".accountsHeader").append("div").html("Buy/Sell");
+  var accountsHeader = table.append("div").attr("class","accountsHeader");
+    accountsHeader.append("div").html("Address");
+    accountsHeader.append("div").html("Volume");
+    accountsHeader.append("div").html("% of Volume");
+    accountsHeader.append("div").html("# of Trades");
+    accountsHeader.append("div").html("% of Trades");
+    accountsHeader.append("div").html("Buy/Sell");
+    
+  var transactionsHeader = table.append("div").attr("class","transactionsHeader").style("display","none");
+    transactionsHeader.append("div").html("Date");
+    transactionsHeader.append("div").html("Base Volume");
+    transactionsHeader.append("div").html("Counter Volume");
+    transactionsHeader.append("div").html("Rate");
+    transactionsHeader.append("div").html("Type");
     
   var tooltip = div.append("div").attr("class", "tooltip");
     tooltip.append("div").attr("class", "name");
@@ -84,20 +92,27 @@ var MarketMakerMap = function (options){
     addResizeListener(window, resizeMap);
   } 
   
+  
   //function called whenever the window is resized (if resizable)    
   function resizeMap () {
     old    = width;
     width  = parseInt(wrap.style('width'), 10);
     
-    if (old != width) { 
+    if (old != width) { //resized
       map.style("width", width + "px").style("height", height + "px");
       if (treemap) {
-        treemap.size([width, height]); 
-        map.datum(accounts).selectAll(".node").data(treemap.nodes).call(position);
+        treemap.size([width, height]);
+        if (transactions) drawTransactions(true);
+        else map.datum(accounts).selectAll(".node").data(treemap.nodes).call(position);
       }  
     } 
   }
   
+  
+  /*
+   * load -
+   * load a market from the selected parameters
+   */
   this.load = function (b, c, p, m) {
     if (b) base    = b;
     if (c) counter = c;
@@ -109,15 +124,14 @@ var MarketMakerMap = function (options){
     map.transition().style("opacity",0.5);
     
     apiHandler.marketMakers({
-      base      : base,
-      counter   : counter,
-      period    : period,
-      transactions : true
+      base         : base,
+      counter      : counter,
+      period       : period,
+      transactions : true 
     
     }, function(error, data){
       
-      isLoading = false;
-      
+      isLoading = false;     
       if (error) return setStatus(error.text ? error.text : "Unable to load data");
       
       data.shift(); //remove header row
@@ -137,44 +151,179 @@ var MarketMakerMap = function (options){
       
      
       map.html("");
-      drawData();
-      drawTable();
+      drawAccounts();
+      drawAccountsTable();
     });
   }
   
-  function drawData () {    
+  /*
+   * drawAccounts -
+   * draw treemap nodes for each account returned from the API
+   * 
+   */  
+  function drawAccounts () {    
     inTransition = true;
+    transactions = false;
     map.transition().style("opacity",1);
     loader.transition().style("opacity",0);
+    
     if (accounts.count) setStatus("");
     else return setStatus("No offers exercised for this period.");
     
-      
     treemap = d3.layout.treemap()
       .size([width, height])
       .value(function(d) { return metric=="volume" ? d[1] : d[3]; });
-    
-    if (!accounts.count) return;
+
     color.domain(d3.extent(accounts.children, function(d){return metric=="volume" ? d[1] : d[3]}));
     var node = map.datum(accounts).selectAll(".node").data(treemap.nodes);
     
     var nodeEnter = node.enter().append("div")
           .attr("class", "node")
-          .on('mouseover', function(d){
-            if (!inTransition) showTooltip(d, d3.select(this));
-          }).on('mouseout', function(d){
-            if (!inTransition) hideTooltip(d, d3.select(this));
-          });
+          .on('mouseover', function(d, i){
+            if (!inTransition) showTooltip(d, i, d3.select(this));
+          }).on('mouseout', function(d, i){
+            if (!inTransition) hideTooltip(d, i, d3.select(this));
+          }).on('click', selectAccount);
     
     node.attr("id", function(d){ return d[0] ? "node_"+d[0] : null})
+      .classed("account", true)
+      .style("opacity","")
       .transition().duration(500)
       .style("background", colorFunction)
       .call(position).each("end",function(){ inTransition=false });
       
     node.exit().remove();
   }  
+
+
+  /*
+   * selectAccount -
+   * display the transactions for a single account
+   * 
+   */
+  function selectAccount (d) {
+    account = {
+      name     : d[0],
+      children : d[10].sort(function(a,b){return moment(b[0]).unix()-moment(a[0]).unix()})
+    }
+    
+    periodSelect.style("display","none");
+    metricSelect.style("display","none");
+    transactions = true;
+    drawTransactions();
+    drawTransactionsTable();    
+  } 
+  
+
+  /*
+   * drawTransactions -
+   * draw treemap nodes for each transaction of a selected account
+   * 
+   */
+  function drawTransactions(resize) {
+    if (!resize) inTransition = true;
+    
+    treemap = d3.layout.treemap()
+      .size([width, height])
+      .sort(function(a,b){return moment(b[0]).unix()-moment(a[0]).unix()})
+      .value(function(d) { return d[2]});
+
+    color.domain(d3.extent(account.children, function(d){ return d[2] }));
+    var node = map.datum(account).selectAll(".node").data(treemap.nodes);
+    
+    var nodeEnter = node.enter().append("div")
+          .attr("class", "node")
+          .on('mouseover', function(d, i){
+            if (!inTransition) showTooltip(d, i, d3.select(this));
+          }).on('mouseout', function(d, i){
+            if (!inTransition) hideTooltip(d, i, d3.select(this));
+          });
+    
+    if (resize) node.attr("id", function(d, i){return "node_"+i})
+      .classed("account", false)
+      .style("opacity","")
+      .style("background", colorFunction)
+      .call(position);
+      
+    else node.attr("id", function(d, i){return "node_"+(i-1)})
+      .classed("account", false)
+      .style("opacity","")
+      .transition().duration(500)
+      .style("background", colorFunction)
+      .call(position).each("end",function(){ inTransition=false });
+      
+    node.exit().remove();    
+
+    //set up the breadcrumb so we can get back to the accounts view    
+    crumb.html("").append("span")
+      .html(base.currency+"/"+counter.currency)
+      .attr("class","market")
+      .on('click', function(){
+        transactions = false;
+        crumb.html("");
+        drawAccounts();
+        drawAccountsTable();
+        periodSelect.style("display","");
+        metricSelect.style("display","")
+      });
+    crumb.append("span").html("&middot");
+    crumb.append("span").html(account.name);
+  } 
  
-  function drawTable () {
+ 
+  /*
+   * drawTransactionsTable -
+   * fill the table with a list of transactions for the selected account
+   * 
+   */ 
+  function drawTransactionsTable() {
+
+    table.selectAll(".account").remove(); //remove account rows
+    accountsHeader.style("display","none");
+    transactionsHeader.style("display",undefined);
+    
+    var row = table.selectAll(".transaction").data(account.children); 
+    var rowEnter = row.enter()
+      .append("div")
+      .attr("class", "transaction")
+      .on("mouseover", function(d, i){
+        if (!inTransition) d3.select("#node_"+i).classed("selected",true).transition().style("opacity", 1);
+        d3.select(this).classed("selected",true);        
+      }).on("mouseout", function(d, i){
+        if (!inTransition) d3.select("#node_"+i).classed("selected",true).transition().style("opacity", "");
+        d3.select(this).classed("selected",false);        
+      });   
+   
+    rowEnter.append("div").attr("class","date");
+    rowEnter.append("div").attr("class","baseVolume");
+    rowEnter.append("div").attr("class","counterVolume");
+    rowEnter.append("div").attr("class","rate");
+    rowEnter.append("div").attr("class","type");
+    
+    row.attr('id', function(d, i){return "row_"+i})
+    row.select(".date").html(function(d){return moment(d[0]).format("MMMM Do YYYY, h:mm:ss a")});
+    row.select(".baseVolume").html(function(d){return commas(d[2],4)+" <small>"+base.currency+"</small>"});
+    row.select(".counterVolume").html(function(d){return commas(d[3],4)+" <small>"+counter.currency+"</small>"});
+    row.select(".rate").html(function(d){return commas(d[1],5)});
+    row.select(".type").html(function(d){return account.name==d[4] ? "sell":"buy"})
+      .classed("buy",  function(d){return account.name != d[4]}) 
+      .classed("sell", function(d){return account.name == d[4]}); 
+    
+    row.style({opacity:0}).transition().delay(function(d, i){return i*10}).style({opacity:1});  
+    row.exit().remove();        
+  }
+  
+  /*
+   * drawAccountsTable -
+   * fill the table with a list of accounts for the loaded market
+   * 
+   */  
+  function drawAccountsTable () {
+    
+    table.selectAll(".transaction").remove();
+    transactionsHeader.style("display","none");
+    accountsHeader.style("display",undefined);
+    
     var row = table.selectAll(".account").data(accounts.children);
      
     var rowEnter = row.enter()
@@ -186,7 +335,7 @@ var MarketMakerMap = function (options){
       }).on("mouseout", function(d){
         if (!inTransition) d3.select("#node_"+d[0]).classed("selected",true).transition().style("opacity", "");
         d3.select(this).classed("selected",false);        
-      });
+      }).on("click", selectAccount);
      
     rowEnter.append("div").attr("class","address");
     rowEnter.append("div").attr("class","volume");
@@ -194,8 +343,7 @@ var MarketMakerMap = function (options){
     rowEnter.append("div").attr("class","count");
     rowEnter.append("div").attr("class","countPCT");  
     rowEnter.append("div").attr("class","buySell"); 
-  
-    
+     
     row.attr('id', function(d){return "row_"+d[0]})
     row.select(".address").html(function(d){return d[0]});
     row.select(".volume").html(function(d){return commas(d[1],4)+" <small>"+base.currency+"</small>"});
@@ -205,12 +353,66 @@ var MarketMakerMap = function (options){
     row.select(".buySell").html(function(d){return commas(100*d[4]/d[1],0)+"/"+commas(100*d[7]/d[1],0);})
       .classed("buy",  function(d){return (d[4]-d[7])/d[1]>0.04})  //overall buyer
       .classed("sell", function(d){return (d[7]-d[4])/d[1]>0.04}); //overall seller 
-      
+    
+    row.style({opacity:0}).transition().delay(function(d, i){return i*10}).style({opacity:1});  
     row.exit().remove();    
   }
   
-  function showTooltip (d, node) {
+  
+  /*
+   * showTooltip -
+   * update, position, and show the tooltip
+   * 
+   */
+  function showTooltip (d, i, node) {
     if (!d[0]) return hideTooltip(d);
+    
+    var top, left;
+    
+    if (transactions) transactionTooltip (d, i, node);
+    else              accountTooltip (d, i, node);
+    
+    left     = d.x+300>width  ? width-300 : d.x+60;
+    top      = d.y+160>height ? height-160 : d.y+60;
+    if (left<20) left = 20;
+    if (top<20)  top  = 20;    
+    
+    tooltip.transition()
+      .style("opacity",1)
+      .style("left", left+"px")
+      .style("top", top+"px");       
+  }
+  
+  /*
+   * transactionTooltip -
+   * update the tooltip with data from a transaction
+   * 
+   */
+  function transactionTooltip (d, i, node) {
+    node.classed("selected",true).transition().style("opacity", 1);
+    d3.select("#row_"+(i-1)).classed("selected",true);
+    
+    tooltip.select(".address").html(account.name);
+    
+    var volume, count, type;
+    type    = account.name==d[4] ? "sell":"buy";
+    
+    volume  = "<label>Base Amount:</label> <b>"+commas(d[2],4)+" <small>"+base.currency+"</small></b>";
+    volume += "<label>Counter Amount:</label> <b>"+commas(d[3],4)+" <small>"+counter.currency+"</small></b>";
+    count   = "<b><span class='"+type+"'>"+type+"</span> @ "+commas(d[1],5)+"</b>"; 
+    count  += "<div class='date'>"+moment(d[0]).format("MMMM Do YYYY, h:mm:ss a")+"</div>";
+    
+    tooltip.select(".volume").html(volume);   
+    tooltip.select(".count").html(count);     
+  }
+  
+  
+  /*
+   * accountTooltip -
+   * update the tooltip with data from an account
+   * 
+   */
+  function accountTooltip (d, i, node) {  
     var volume, count, top, left;
     
     node.classed("selected",true).transition().style("opacity", 1);
@@ -220,26 +422,30 @@ var MarketMakerMap = function (options){
     
     volume   = "<b>"+commas(d[1],4)+" <small>"+base.currency+"</small></b> ("+commas(100*d[1]/accounts.volume,2)+"%)";
     count    = "<b>"+d[3]+"</b> ("+commas(100*d[3]/accounts.count,2)+"%)";
-    left     = d.x+300>width  ? width-300 : d.x+60;
-    top      = d.y+160>height ? height-160 : d.y+60;
-    if (left<20) left = 20;
-    if (top<20)  top  = 20;
+
     
     tooltip.select(".volume").html("<label>Total Volume:</label>"+volume);   
     tooltip.select(".count").html("<label># of Transactions:</label>"+count); 
-    tooltip.transition()
-      .style("opacity",1)
-      .style("left", left+"px")
-      .style("top", top+"px");   
   }
   
-  function hideTooltip (d, node) {
-    node.classed("selected",true).transition().style("opacity", "");
+  /*
+   * hideTooltip -
+   * hide the tooltip and deselect nodes and table rows
+   * 
+   */
+  function hideTooltip (d, i, node) {
+    if (node) node.classed("selected",false).transition().style("opacity", "");
     
-    d3.select("#row_"+d[0]).classed("selected",false); 
+    if (transactions) d3.select("#row_"+(i-1)).classed("selected",false); 
+    else  d3.select("#row_"+d[0]).classed("selected",false); 
     tooltip.transition().style("opacity",0);       
   }
   
+  /*
+   * position -
+   * establish the position of a node
+   * 
+   */
   function position() {
     this.style("left", function(d) { return d.x + "px"; })
       .style("top", function(d) { return d.y + "px"; })
@@ -247,13 +453,24 @@ var MarketMakerMap = function (options){
       .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
   }
   
+  /*
+   * colorFunction -
+   * select the color for a node
+   * 
+   */
   function colorFunction (d) { 
     if(!d[0]) return null;
-    if      (metric=="volume") return color(d[1]);
-    else if (metric=="count") return color(d[3]);
+    if      (transactions) return color(d[2]);     //baseVolume
+    if      (metric=="volume") return color(d[1]); //baseVolume
+    else if (metric=="count") return color(d[3]);  //# of transactions
     return null;
   } 
   
+  /*
+   * setStatus - 
+   * set the text of the status message
+   * 
+   */
   function setStatus(string) {
     status.html(string)
     if (string) {
@@ -261,185 +478,3 @@ var MarketMakerMap = function (options){
     }
   } 
 }
-
-
-/*
-var margin = {top: 20, right: 0, bottom: 0, left: 0},
-    width = 960,
-    height = 500 - margin.top - margin.bottom,
-    formatNumber = d3.format(",d"),
-    transitioning;
-
-var x = d3.scale.linear()
-    .domain([0, width])
-    .range([0, width]);
-
-var y = d3.scale.linear()
-    .domain([0, height])
-    .range([0, height]);
-
-var treemap = d3.layout.treemap()
-    .children(function(d, depth) { return depth ? null : d._children; })
-    .sort(function(a, b) { return a.value - b.value; })
-    .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
-    .round(false);
-
-var svg = d3.select("#chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.bottom + margin.top)
-    .style("margin-left", -margin.left + "px")
-    .style("margin.right", -margin.right + "px")
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-    .style("shape-rendering", "crispEdges");
-
-var grandparent = svg.append("g")
-    .attr("class", "grandparent");
-
-grandparent.append("rect")
-    .attr("y", -margin.top)
-    .attr("width", width)
-    .attr("height", margin.top);
-
-grandparent.append("text")
-    .attr("x", 6)
-    .attr("y", 6 - margin.top)
-    .attr("dy", ".75em");
-
-d3.json("flare.json", function(root) {
-  initialize(root);
-  accumulate(root);
-  layout(root);
-  display(root);
-
-  function initialize(root) {
-    root.x = root.y = 0;
-    root.dx = width;
-    root.dy = height;
-    root.depth = 0;
-  }
-
-  // Aggregate the values for internal nodes. This is normally done by the
-  // treemap layout, but not here because of our custom implementation.
-  // We also take a snapshot of the original children (_children) to avoid
-  // the children being overwritten when when layout is computed.
-  function accumulate(d) {
-    return (d._children = d.children)
-        ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
-        : d.value;
-  }
-
-  // Compute the treemap layout recursively such that each group of siblings
-  // uses the same size (1×1) rather than the dimensions of the parent cell.
-  // This optimizes the layout for the current zoom state. Note that a wrapper
-  // object is created for the parent node for each group of siblings so that
-  // the parent’s dimensions are not discarded as we recurse. Since each group
-  // of sibling was laid out in 1×1, we must rescale to fit using absolute
-  // coordinates. This lets us use a viewport to zoom.
-  function layout(d) {
-    if (d._children) {
-      treemap.nodes({_children: d._children});
-      d._children.forEach(function(c) {
-        c.x = d.x + c.x * d.dx;
-        c.y = d.y + c.y * d.dy;
-        c.dx *= d.dx;
-        c.dy *= d.dy;
-        c.parent = d;
-        layout(c);
-      });
-    }
-  }
-
-  function display(d) {
-    grandparent
-        .datum(d.parent)
-        .on("click", transition)
-      .select("text")
-        .text(name(d));
-
-    var g1 = svg.insert("g", ".grandparent")
-        .datum(d)
-        .attr("class", "depth");
-
-    var g = g1.selectAll("g")
-        .data(d._children)
-      .enter().append("g");
-
-    g.filter(function(d) { return d._children; })
-        .classed("children", true)
-        .on("click", transition);
-
-    g.selectAll(".child")
-        .data(function(d) { return d._children || [d]; })
-      .enter().append("rect")
-        .attr("class", "child")
-        .call(rect);
-
-    g.append("rect")
-        .attr("class", "parent")
-        .call(rect)
-      .append("title")
-        .text(function(d) { return formatNumber(d.value); });
-
-    g.append("text")
-        .attr("dy", ".75em")
-        .text(function(d) { return d.name; })
-        .call(text);
-
-    function transition(d) {
-      if (transitioning || !d) return;
-      transitioning = true;
-
-      var g2 = display(d),
-          t1 = g1.transition().duration(750),
-          t2 = g2.transition().duration(750);
-
-      // Update the domain only after entering new elements.
-      x.domain([d.x, d.x + d.dx]);
-      y.domain([d.y, d.y + d.dy]);
-
-      // Enable anti-aliasing during the transition.
-      svg.style("shape-rendering", null);
-
-      // Draw child nodes on top of parent nodes.
-      svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
-
-      // Fade-in entering text.
-      g2.selectAll("text").style("fill-opacity", 0);
-
-      // Transition to the new view.
-      t1.selectAll("text").call(text).style("fill-opacity", 0);
-      t2.selectAll("text").call(text).style("fill-opacity", 1);
-      t1.selectAll("rect").call(rect);
-      t2.selectAll("rect").call(rect);
-
-      // Remove the old node when the transition is finished.
-      t1.remove().each("end", function() {
-        svg.style("shape-rendering", "crispEdges");
-        transitioning = false;
-      });
-    }
-
-    return g;
-  }
-
-  function text(text) {
-    text.attr("x", function(d) { return x(d.x) + 6; })
-        .attr("y", function(d) { return y(d.y) + 6; });
-  }
-
-  function rect(rect) {
-    rect.attr("x", function(d) { return x(d.x); })
-        .attr("y", function(d) { return y(d.y); })
-        .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
-        .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
-  }
-
-  function name(d) {
-    return d.parent
-        ? name(d.parent) + "." + d.name
-        : d.name;
-  }
-});
-
-*/
