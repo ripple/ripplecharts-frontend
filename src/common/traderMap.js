@@ -133,7 +133,14 @@ var MarketMakerMap = function (options){
     isLoading = true;
     loader.transition().style("opacity",1);
     map.transition().style("opacity",0.5);
+    tooltip.transition().style("opacity",0);
     
+    //switch back to accounts display
+    transactions = false;
+    crumb.html("");
+    periodSelect.style("display","");
+    metricSelect.style("display","");
+            
     apiHandler.marketMakers({
       base         : base,
       counter      : counter,
