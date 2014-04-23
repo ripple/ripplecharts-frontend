@@ -1,22 +1,22 @@
-angular.module( 'ripplecharts.marketmakers', [
+angular.module( 'ripplecharts.traders', [
   'ui.state',
   'ui.bootstrap'
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'marketmakers', {
-    url: '/marketmakers',
+  $stateProvider.state( 'traders', {
+    url: '/traders',
     views: {
       "main": {
-        controller: 'MarketmakersCtrl',
-        templateUrl: 'marketmakers/marketmakers.tpl.html'
+        controller: 'TradersCtrl',
+        templateUrl: 'traders/traders.tpl.html'
       }
     },
     data:{ pageTitle: 'Market Makers' }
   });
 })
 
-.controller( 'MarketmakersCtrl', function MarketmakersCtrl( $scope ) {
+.controller( 'TradersCtrl', function TradersCtrl( $scope ) {
 
   var base    = store.session.get('traderBase')    || store.get('traderBase')    || {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
   var counter = store.session.get('traderCounter') || store.get('traderCounter') || {"currency": "XRP"};
@@ -25,7 +25,7 @@ angular.module( 'ripplecharts.marketmakers', [
    
   var map = new MarketMakerMap({
     url    : API,
-    id     : 'marketMakerMap',
+    id     : 'traderMap',
     period : period,
     metric : metric,
     resize : true
