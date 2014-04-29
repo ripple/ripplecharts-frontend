@@ -1,4 +1,5 @@
 var ValueSummary = function (options) {
+
   var self = this,
     outer  = options.id ? 
       d3.select("#"+options.id).attr("class","valueSummary") :
@@ -15,8 +16,8 @@ var ValueSummary = function (options) {
     radius -= margin.top;
     
   var chart = inner.append('svg')
-    .attr("width",  width)
-    .attr("height", height)
+    .attr("width",  radius*2.3)
+    .attr("height", radius*2.3)
     .append("g")
     .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
 
@@ -29,29 +30,17 @@ var ValueSummary = function (options) {
   var labelArc = d3.svg.arc()
       .outerRadius(radius*1.15)
       .innerRadius(radius);
-         
-  //function for determining arc angles.
-  function arcTween(b) {
-    var c = this._current;
-    if (!c) {
-      c = chart.select("path:nth-last-child(2)")[0][0]._current;
-      if (c) c.startAngle = c.endAngle;
-    }
-    
-    if (!c) c = {startAngle: 1.1*Math.PI, endAngle: 1.1*Math.PI}; 
-    var i = d3.interpolate(c, b);
-    this._current = i(0);
-    return function(t) { 
-      return arc(i(t));
-    };
-  }
   
   //arc paths
-  var path          = chart.selectAll("path");     
+  var path          = chart.selectAll("path");    
+  var tooltip       = outer.append("div").attr("class","tooltip"); 
   var transitioning = false;
-  
+  var gateways      = ripple.currencyDropdown();
+  var exchange;
+   
   //load a specific metric
-  this.load = function (z, exchange) {
+  this.load = function (z, ex) {
+    
     if (z) data = z.components;
     else if (data) data.forEach(function(d, i){
       data[i].convertedAmount = 0.0;  
@@ -60,7 +49,8 @@ var ValueSummary = function (options) {
     
     //indicate we are in the midst of transition
     transitioning = true;
-    
+    exchange      = ex;
+        
     //check for XRP - it wont be present for trade volume, so add it at 0
     var hasXRP = false;
     data.forEach(function(d){
@@ -77,9 +67,10 @@ var ValueSummary = function (options) {
       
     //add arcs      
     path = path.data(pie(data));
-    path.enter().append("path").on('mousemove',function(d){
+    path.enter().append("path").on('mousemove',function(d, i){
       if (transitioning) return;
       d3.select(this).transition().duration(100).style("opacity",1);
+      showTooltip(d, i);
     }).on('mouseout', function(d){
       if (transitioning) return;
       d3.select(this).transition().duration(100).style("opacity", "");
@@ -93,6 +84,8 @@ var ValueSummary = function (options) {
       
     path.exit().remove();
     
+    //show data for the first item
+    showTooltip(path.data()[0], 0);
     
     //add labels
     label = inner.selectAll("label").data(path.data());
@@ -103,7 +96,8 @@ var ValueSummary = function (options) {
         if (!d.data.currency && !d.data.base) return "";
         if (d.data.percent<1) return "";
         
-        var label = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
+        //the counter and base are inverted on purpose
+        var label = d.data.currency || d.data.counter.currency+"/"+d.data.base.currency;
         return label+"<b>"+commas(d.data.percent,0)+"%</b>";
       })
       .style("margin-top", function(d){
@@ -121,5 +115,50 @@ var ValueSummary = function (options) {
       }); 
       
     label.exit().remove();
+  }
+  
+  
+  //function for determining arc angles.
+  function arcTween(b) {
+    var c = this._current;
+    if (!c) {
+      c = chart.select("path:nth-last-child(2)")[0][0]._current;
+      if (c) c.startAngle = c.endAngle;
+    }
+    
+    if (!c) c = {startAngle: 1.1*Math.PI, endAngle: 1.1*Math.PI}; 
+    var i = d3.interpolate(c, b);
+    this._current = i(0);
+    return function(t) { 
+      return arc(i(t));
+    };
+  }
+  
+  
+  function showTooltip(d, i) {
+    var currency = d.data.currency || d.data.base.currency
+    var label    = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
+    var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
+    var gateway  = gateways.getName(issuer) || issuer;
+    var amount   = commas(d.data.amount,2);
+    var value    = currency == exchange.currency ? "" : commas(d.value/exchange.rate,2);
+    var count    = d.data.count;
+    
+    tooltip.html("");
+    tooltip.append("div").attr("class","title").html(label+(gateway ? " &middot <small>"+gateway+"</small>" : ""));
+    if (value) tooltip.append("div").attr("class","value")
+      .html("<label>Value:</label> "+value+" <small>"+exchange.currency+"</small>");
+    tooltip.append("div").attr("class","amount")
+      .html("<label>Amount:</label> "+amount+" <small>"+currency+"</small>");
+    if (count) tooltip.append("div").attr("class","count")
+      .html("<label>Count:</label> "+count);
+    
+    tooltip.select(".title small").style("color", color(i));     
+    //gateway name
+    //number of transactions
+    //value of transactions
+    //volume of transaction
+    
+    console.log(label, gateway, d);
   }
 }

@@ -1,9 +1,11 @@
 .valueSummary {
   text-align:center;
+  position:relative;
   
   .inner {
     display:inline-block;
     position:relative;
+    margin-left:-25%;
     
     svg {
       
@@ -31,6 +33,43 @@
       }
     }
   }
+  
+  .tooltip {
+    position:absolute;
+    bottom:-5px;
+    right:5px;
+    padding:5px;
+    background:rgba(255,255,255,.9);
+    border-radius:3px;
+    pointer-events:none;
+    font-size:13px;
+    
+    
+    text-align:right;
+    font-weight:bold;
+    
+    label {
+      display:inline-block;
+      margin:0 5px 0 0;
+      font-size:11px;
+      color:#999;
+    }
+    
+    small {
+      color:#999;
+    }
+    
+    .issuer {
+      font-size:9px;
+      font-weight:normal;
+      margin-bottom:2px;
+    }
+    
+    .title {
+      border-bottom:1px solid #ccc;
+      margin-bottom: 5px;
+    }
+  }
 }
 
 
@@ -50,6 +89,19 @@
         
         b {
         }
+      }
+    }
+    
+    .tooltip {
+      background:rgba(0,0,0,.9); 
+      color:#ccc; 
+      
+      .title {
+        border-color:#333;
+      }
+      
+      label {
+        color:#666;
       }
     }
   }

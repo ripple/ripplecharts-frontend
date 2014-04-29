@@ -102,15 +102,17 @@ angular.module( 'ripplecharts.landing', [
   
   $scope.$watch('metricDetail', function(){
     if (!$scope.valueRate) return;
+    var ex = {rate:$scope.valueRate, currency:$scope.valueCurrency};
+    
     if      ($scope.metricDetail == 'totalNetworkValue') {
       $scope.metricDetailTitle = "Total Network Value";
-      donut.load(totalNetworkValueXRP);
+      donut.load(totalNetworkValueXRP, ex);
     } else if ($scope.metricDetail == 'transactionVolume') {
       $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
-      donut.load(transactionVolumeXRP);
+      donut.load(transactionVolumeXRP, ex);
     } else if ($scope.metricDetail == 'tradeVolume') {
       $scope.metricDetailTitle = "Trade Volume (last 24 hours)";
-      donut.load(tradeVolumeXRP); 
+      donut.load(tradeVolumeXRP, ex); 
     }
   });
   
@@ -159,22 +161,23 @@ angular.module( 'ripplecharts.landing', [
   function showValue (metric) {
     if (typeof $scope.valueRate == 'undefined') return;
     
-    var sign, value, precision;
+    var sign, value, precision,
+      ex = {rate:$scope.valueRate, currency:$scope.valueCurrency};
     
     if (metric=="totalNetworkValue") {
       if (typeof totalNetworkValueXRP == 'undefined') return;
-      if (metric == $scope.metricDetail) donut.load(totalNetworkValueXRP);
+      if (metric == $scope.metricDetail) donut.load(totalNetworkValueXRP, ex);
       value     = totalNetworkValueXRP.total/$scope.valueRate; 
       precision = 0;
     
     } else if (metric=="transactionVolume") {
       if (typeof transactionVolumeXRP == 'undefined') return;
-      if (metric == $scope.metricDetail) donut.load(transactionVolumeXRP);
+      if (metric == $scope.metricDetail) donut.load(transactionVolumeXRP, ex);
       value     = transactionVolumeXRP.total/$scope.valueRate;
       precision = 2;             
     } else if (metric=="tradeVolume") {
       if (typeof tradeVolumeXRP == 'undefined') return;
-      if (metric == $scope.metricDetail) donut.load(tradeVolumeXRP);
+      if (metric == $scope.metricDetail) donut.load(tradeVolumeXRP, ex);
       value     = tradeVolumeXRP.total/$scope.valueRate;     
       precision = 2;
     } 
