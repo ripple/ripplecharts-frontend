@@ -18,7 +18,7 @@ angular.module( 'ripplecharts.landing', [
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
   //var feed = new TransactionFeed({id : 'liveFeed'});
   var api         = new ApiHandler(API),
-    donut         = new ValueSummary({id:"metricDetails"}),
+    donut         = new ValueSummary({id:"metricDetail"}),
     exchangeRates = {};
     
   var valueCurrencies = {
@@ -32,8 +32,8 @@ angular.module( 'ripplecharts.landing', [
   
   $scope.valueCurrency = "USD";
   $scope.valueRate;
-  $scope.metricDetail  = "transactionVolume";
-  
+  $scope.metricDetail      = "transactionVolume";
+  $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
   //dropdown to change currency for metrics  
   var valueSelect = d3.select("#valueCurrency")
     .on("change", function(){
@@ -102,9 +102,16 @@ angular.module( 'ripplecharts.landing', [
   
   $scope.$watch('metricDetail', function(){
     if (!$scope.valueRate) return;
-    if      ($scope.metricDetail == 'totalNetworkValue') donut.load(totalNetworkValueXRP);
-    else if ($scope.metricDetail == 'transactionVolume') donut.load(transactionVolumeXRP);
-    else if ($scope.metricDetail == 'tradeVolume')       donut.load(tradeVolumeXRP); 
+    if      ($scope.metricDetail == 'totalNetworkValue') {
+      $scope.metricDetailTitle = "Total Network Value";
+      donut.load(totalNetworkValueXRP);
+    } else if ($scope.metricDetail == 'transactionVolume') {
+      $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
+      donut.load(transactionVolumeXRP);
+    } else if ($scope.metricDetail == 'tradeVolume') {
+      $scope.metricDetailTitle = "Trade Volume (last 24 hours)";
+      donut.load(tradeVolumeXRP); 
+    }
   });
   
   //stuff to do when leaving the page   

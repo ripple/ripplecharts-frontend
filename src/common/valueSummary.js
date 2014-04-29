@@ -4,8 +4,7 @@ var ValueSummary = function (options) {
       d3.select("#"+options.id).attr("class","valueSummary") :
       d3.select("body").append("div").attr("class","valueSummary");
   
-  var inner = outer.append("div").attr("class","inner");
-
+  var inner  = outer.append("div").attr("class","inner");
   
   var width  = parseInt(outer.style("width"),  10),
     height   = parseInt(outer.style("height"), 10) || width;
@@ -22,22 +21,16 @@ var ValueSummary = function (options) {
     .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
 
   var color = d3.scale.category20();
-
-  var arc = d3.svg.arc()
+  
+  var arc   = d3.svg.arc()
       .outerRadius(radius*0.9)
       .innerRadius(radius*0.4);
-      
+          
   var labelArc = d3.svg.arc()
       .outerRadius(radius*1.15)
       .innerRadius(radius);
          
-//  var enterAntiClockwise = {
-//    startAngle : Math.PI * 2,
-//    endAngle   : Math.PI * 2
-//  };
-    
-
-
+  //function for determining arc angles.
   function arcTween(b) {
     var c = this._current;
     if (!c) {
@@ -53,15 +46,12 @@ var ValueSummary = function (options) {
     };
   }
   
+  //arc paths
   var path = chart.selectAll("path");     
-  var z;
-  var interval;
   
   
-  
-  
-  
-  this.load = function (z) {
+  //load a specific metric
+  this.load = function (z, exchange) {
     
     data = z.components;
     
@@ -73,18 +63,18 @@ var ValueSummary = function (options) {
     });
     if (!hasXRP) data.push({convertedAmount:0.0});     
       
-    
     var pie = d3.layout.pie()
         .sort(null)
         .startAngle(1.1*Math.PI)
         .endAngle(3.1*Math.PI)
         .value(function(d) { return d.convertedAmount; });
-          
+      
+    //add arcs      
     path = path.data(pie(data));
     path.enter().append("path").on('mousemove',function(d){
-      d3.select(this).transition().style("opacity",1);
+      d3.select(this).transition().duration(50).style("opacity",1);
     }).on('mouseout', function(d){
-      d3.select(this).transition().style("opacity", "");
+      d3.select(this).transition().duration(50).style("opacity", "");
     });
     
     var pathUpdate = chart.selectAll("path")
@@ -94,7 +84,6 @@ var ValueSummary = function (options) {
       
     path.exit().remove();
     
-    console.log(path.data());
     
     //add labels
     label = inner.selectAll("label").data(path.data());
