@@ -21,19 +21,16 @@ var ValueSummary = function (options) {
     .append("g")
     .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
 
-  var color = d3.scale.ordinal()
-    .range(["#3399FF", "#5DAEF8", "#86C3FA", "#ADD6FB", "#D6EBFD"]);
+  var color = d3.scale.category20();
 
   var arc = d3.svg.arc()
-      .outerRadius(radius)
+      .outerRadius(radius*0.9)
       .innerRadius(radius*0.4);
-
-  var pie = d3.layout.pie()
-      .sort(null)
-      .startAngle(1.1*Math.PI)
-      .endAngle(3.1*Math.PI)
-      .value(function(d) { return d.value; });
       
+  var labelArc = d3.svg.arc()
+      .outerRadius(radius*1.15)
+      .innerRadius(radius);
+         
 //  var enterAntiClockwise = {
 //    startAngle : Math.PI * 2,
 //    endAngle   : Math.PI * 2
@@ -41,66 +38,90 @@ var ValueSummary = function (options) {
     
 
 
-  function tweenPie(b) {
-    console.log(b);
-    var i = d3.interpolate({startAngle: 1.1*Math.PI, endAngle: 1.1*Math.PI}, b);
+  function arcTween(b) {
+    var c = this._current;
+    if (!c) {
+      c = chart.select("path:nth-last-child(2)")[0][0]._current;
+      if (c) c.startAngle = c.endAngle;
+    }
+    
+    if (!c) c = {startAngle: 1.1*Math.PI, endAngle: 1.1*Math.PI}; 
+    var i = d3.interpolate(c, b);
+    this._current = i(0);
     return function(t) { 
       return arc(i(t));
     };
   }
   
-  var data = [ 
-    {name: "one", value: Math.floor((Math.random()*100)+1)},
-    {name: "two", value:  Math.floor((Math.random()*100)+1)},
-    {name: "three", value:  Math.floor((Math.random()*100)+1)} ];
-
-         
-  var p = pie(data);     
-  //console.log(pie(data));
   var path = chart.selectAll("path");     
   var z;
-  
   var interval;
+  
+  
+  
+  
   
   this.load = function (z) {
     
-    data = [ 
-      {name: "one", value: Math.floor((Math.random()*100)+1)},
-      {name: "two", value:  Math.floor((Math.random()*100)+1)},
-      {name: "three", value:  Math.floor((Math.random()*100)+1)},
-      {name: "four", value:  Math.floor((Math.random()*100)+1)},
-      {name: "five", value:  Math.floor((Math.random()*100)+1)}, 
-      {name: "six", value:  Math.floor((Math.random()*100)+1)}];
-            
+    data = z.components;
     
-    //console.log(pie(data));
-    p = pie(data, function(d, i){return i});
-    console.log(p);
+    //check for XRP - it wont be present for trade volume, so add it at 0
+    var hasXRP = false;
+    data.forEach(function(d){
+      if (d.currency=='XRP') hasXRP = true; 
+      d.percent = d.convertedAmount/z.total*100;
+    });
+    if (!hasXRP) data.push({convertedAmount:0.0});     
+      
+    
+    var pie = d3.layout.pie()
+        .sort(null)
+        .startAngle(1.1*Math.PI)
+        .endAngle(3.1*Math.PI)
+        .value(function(d) { return d.convertedAmount; });
+          
     path = path.data(pie(data));
-    var pathEnter = path.enter().append("path");
+    path.enter().append("path").on('mousemove',function(d){
+      d3.select(this).transition().style("opacity",1);
+    }).on('mouseout', function(d){
+      d3.select(this).transition().style("opacity", "");
+    });
     
     var pathUpdate = chart.selectAll("path")
-      .transition().duration(750).attrTween("d", tweenPie)
-      .attr("id", function(d, i){return "arc_"+i})
-      .style("fill", function(d, i) { return color(i); });
-    
+      .style("fill", function(d, i) { return color(i); })
+      .transition().duration(750).attrTween("d", arcTween)
+      .attr("id", function(d, i){return "arc_"+i});
+      
     path.exit().remove();
-       
-      //.each(function(d) { this._current = d; }); // store the initial angles
-
     
-/*
-    var g = chart.selectAll(".arc")
-      .data(pie(data))
-      .enter().append("g")
-      .attr("class", "arc");
-  
-    g.append("path")
-      .attr("fill", function(d, i) { return color(i); })
-      .transition()
-      .duration(2000)
-      .attrTween("d", tweenPie);
- */   
-    if (!interval) interval = setInterval(self.load, 3000);
+    console.log(path.data());
+    
+    //add labels
+    label = inner.selectAll("label").data(path.data());
+    
+    label.enter().append("label");
+      
+    label.html(function(d){
+        if (!d.data.currency && !d.data.base) return "";
+        if (d.data.percent<1) return "";
+        
+        var label = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
+        return label+"<b>"+commas(d.data.percent,0)+"%</b>";
+      })
+      .style("margin-top", function(d){
+        return ((0 - parseInt(d3.select(this).style("height"), 10))/2)+"px";
+      })
+      .style("margin-left", function(d){
+        return ((0 - parseInt(d3.select(this).style("width"), 10))/2)+"px";
+      })
+      .transition().duration(500)
+      .style("top", function(d){
+        return (labelArc.centroid(d)[1]+125)+"px";
+      })
+      .style("left", function(d){
+        return (labelArc.centroid(d)[0]+125)+"px";
+      }); 
+      
+    label.exit().remove();
   }
 }

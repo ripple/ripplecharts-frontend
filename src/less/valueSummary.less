@@ -3,5 +3,46 @@
   
   .inner {
     display:inline-block;
+    position:relative;
+    
+    svg {
+      
+      path {
+        opacity:.9;
+      }
+    }
+    
+    label {
+      position:absolute;
+      padding:2px 2px;
+      border-radius:3px;
+      font-size:12px;
+      line-height:12px;
+      color:#333;
+      font-family:Arial;
+      b {
+        
+        display:block;
+        margin-left:5px;
+        color:#888;
+        font-size:10px;
+        font-weight:normal
+      }
+    }
+  }
+}
+
+
+
+.dark {
+  
+  .valueSummary {
+    .inner {
+      svg {
+        path {
+          opacity:.65;
+        }
+      }
+    }
   }
 }

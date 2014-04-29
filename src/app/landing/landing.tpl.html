@@ -24,6 +24,7 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="totalNetworkValue"></span>
               <img  ng-hide="totalNetworkValue" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-click="metricDetail='totalNetworkValue'" class="details">Details</span>
             </div>
           </li>
           <li>
@@ -31,6 +32,7 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="transactionVolume"></span>
               <img  ng-hide="transactionVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-click="metricDetail='transactionVolume'" class="details">Details</span>
             </div>
           </li>
           <li>
@@ -38,6 +40,7 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="tradeVolume"></span>
               <img  ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-click="metricDetail='tradeVolume'" class="details">Details</span>
             </div>
           </li>          
           <li>
@@ -66,7 +69,7 @@
       </div>
       <div class="span6">
         <h5>Live Transaction Feed</h5>
-        <div id="liveFeed"></div>
+        <div id="metricDetails"></div>
       </div>
     </div>
     <h5>Top Markets</h5> 
