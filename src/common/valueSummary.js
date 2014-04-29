@@ -47,13 +47,19 @@ var ValueSummary = function (options) {
   }
   
   //arc paths
-  var path = chart.selectAll("path");     
-  
+  var path          = chart.selectAll("path");     
+  var transitioning = false;
   
   //load a specific metric
   this.load = function (z, exchange) {
+    if (z) data = z.components;
+    else if (data) data.forEach(function(d, i){
+      data[i].convertedAmount = 0.0;  
+    });
+    else return;
     
-    data = z.components;
+    //indicate we are in the midst of transition
+    transitioning = true;
     
     //check for XRP - it wont be present for trade volume, so add it at 0
     var hasXRP = false;
@@ -72,15 +78,18 @@ var ValueSummary = function (options) {
     //add arcs      
     path = path.data(pie(data));
     path.enter().append("path").on('mousemove',function(d){
-      d3.select(this).transition().duration(50).style("opacity",1);
+      if (transitioning) return;
+      d3.select(this).transition().duration(100).style("opacity",1);
     }).on('mouseout', function(d){
-      d3.select(this).transition().duration(50).style("opacity", "");
+      if (transitioning) return;
+      d3.select(this).transition().duration(100).style("opacity", "");
     });
     
     var pathUpdate = chart.selectAll("path")
       .style("fill", function(d, i) { return color(i); })
       .transition().duration(750).attrTween("d", arcTween)
-      .attr("id", function(d, i){return "arc_"+i});
+      .attr("id", function(d, i){return "arc_"+i})
+      .each("end", function(){transitioning = false});
       
     path.exit().remove();
     
