@@ -112,8 +112,10 @@
     
     img {
       width:15px;
+      margin-bottom:2px;
       opacity:.1;
-      padding: 5px;
+      padding: 3px;
+      border-radius: 20px;
     }
   }
   
@@ -125,7 +127,6 @@
       width: 15px;
       opacity: .4;
       background: #aaa;
-      border-radius: 20px;
     }
   }
   
@@ -191,6 +192,29 @@
 .dark .landing .stat, .dark .stats label {
   border-top-color:#303030;
   border-bottom-color:#111;
+}
+
+.dark .landing .stat {
+  
+  .details {
+    color:#444;  
+  }
+  
+  .details:hover {
+    color:#666;
+    
+    img {
+      background:#888;
+    }
+  }
+  
+  .details.selected {
+    color:#ccc;
+    
+    img {
+      background:#888;
+    }
+  }
 }
 
 .dark .landing .stats label small {

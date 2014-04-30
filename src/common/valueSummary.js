@@ -36,7 +36,7 @@ var ValueSummary = function (options) {
   var tooltip       = outer.append("div").attr("class","tooltip"); 
   var transitioning = false;
   var gateways      = ripple.currencyDropdown();
-  var exchange;
+  var exchange, current;
    
   //load a specific metric
   this.load = function (z, ex) {
@@ -136,6 +136,10 @@ var ValueSummary = function (options) {
   
   
   function showTooltip(d, i) {
+    
+    if (current===i) return;
+    current = i;
+    
     var currency = d.data.currency || d.data.base.currency
     var label    = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
     var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
@@ -154,11 +158,5 @@ var ValueSummary = function (options) {
       .html("<label>Count:</label> "+count);
     
     tooltip.select(".title small").style("color", color(i));     
-    //gateway name
-    //number of transactions
-    //value of transactions
-    //volume of transaction
-    
-    console.log(label, gateway, d);
   }
 }
