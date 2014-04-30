@@ -32,8 +32,8 @@ angular.module( 'ripplecharts.landing', [
   
   $scope.valueCurrency = "USD";
   $scope.valueRate;
-  $scope.metricDetail      = "transactionVolume";
-  $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
+  $scope.metricDetail      = "tradeVolume";
+  $scope.metricDetailTitle = "Trade Volume (last 24 hours)";
   //dropdown to change currency for metrics  
   var valueSelect = d3.select("#valueCurrency")
     .on("change", function(){
