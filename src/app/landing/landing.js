@@ -16,9 +16,11 @@ angular.module( 'ripplecharts.landing', [
 })
 
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
-  var feed = new TransactionFeed({id : 'liveFeed'});
-  var api  = new ApiHandler(API);
-  var exchangeRates   = {};
+  //var feed = new TransactionFeed({id : 'liveFeed'});
+  var api         = new ApiHandler(API),
+    donut         = new ValueSummary({id:"metricDetail"}),
+    exchangeRates = {};
+    
   var valueCurrencies = {
     "USD" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",  //bitstamp
     "EUR" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",  //bitstamp
@@ -30,7 +32,8 @@ angular.module( 'ripplecharts.landing', [
   
   $scope.valueCurrency = "USD";
   $scope.valueRate;
- 
+  $scope.metricDetail      = "transactionVolume";
+  $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
   //dropdown to change currency for metrics  
   var valueSelect = d3.select("#valueCurrency")
     .on("change", function(){
@@ -49,7 +52,7 @@ angular.module( 'ripplecharts.landing', [
     .html(function(d){return d})
     .attr("selected", function(d) {if (d == $scope.valueCurrency.currency) return true});
      
-  remote.on('transaction_all', feed.handleTransaction); //display transaction feed
+  //remote.on('transaction_all', feed.handleTransaction); //display transaction feed
   remote.on('transaction_all', handleNewAccount); //add to new accounts total
   
   remote.on("connect", function(){
@@ -97,6 +100,21 @@ angular.module( 'ripplecharts.landing', [
     d3.select("#helpButton").node().click();
   }, 100);
   
+  $scope.$watch('metricDetail', function(){
+    if (!$scope.valueRate) return;
+    var ex = {rate:$scope.valueRate, currency:$scope.valueCurrency};
+    
+    if      ($scope.metricDetail == 'totalNetworkValue') {
+      $scope.metricDetailTitle = "Total Network Value";
+      donut.load(totalNetworkValueXRP, ex);
+    } else if ($scope.metricDetail == 'transactionVolume') {
+      $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
+      donut.load(transactionVolumeXRP, ex);
+    } else if ($scope.metricDetail == 'tradeVolume') {
+      $scope.metricDetailTitle = "Trade Volume (last 24 hours)";
+      donut.load(tradeVolumeXRP, ex); 
+    }
+  });
   
   //stuff to do when leaving the page   
   $scope.$on("$destroy", function(){
@@ -143,20 +161,24 @@ angular.module( 'ripplecharts.landing', [
   function showValue (metric) {
     if (typeof $scope.valueRate == 'undefined') return;
     
-    var sign, value, precision;
+    var sign, value, precision,
+      ex = {rate:$scope.valueRate, currency:$scope.valueCurrency};
     
     if (metric=="totalNetworkValue") {
       if (typeof totalNetworkValueXRP == 'undefined') return;
-      value     = totalNetworkValueXRP/$scope.valueRate; 
+      if (metric == $scope.metricDetail) donut.load(totalNetworkValueXRP, ex);
+      value     = totalNetworkValueXRP.total/$scope.valueRate; 
       precision = 0;
     
     } else if (metric=="transactionVolume") {
       if (typeof transactionVolumeXRP == 'undefined') return;
-      value     = transactionVolumeXRP/$scope.valueRate;
+      if (metric == $scope.metricDetail) donut.load(transactionVolumeXRP, ex);
+      value     = transactionVolumeXRP.total/$scope.valueRate;
       precision = 2;             
     } else if (metric=="tradeVolume") {
       if (typeof tradeVolumeXRP == 'undefined') return;
-      value     = tradeVolumeXRP/$scope.valueRate;     
+      if (metric == $scope.metricDetail) donut.load(tradeVolumeXRP, ex);
+      value     = tradeVolumeXRP.total/$scope.valueRate;     
       precision = 2;
     } 
     
@@ -186,22 +208,22 @@ angular.module( 'ripplecharts.landing', [
         
     api.getNetworkValue (null, function(err, data){
       if (err) console.log(err);
-
-      totalNetworkValueXRP = data ? data.total : 0;
+      
+      totalNetworkValueXRP = data;
       showValue("totalNetworkValue");          
     });
     
     api.getVolume24Hours(null, function(err, data){
       if (err) console.log(err);
       
-      transactionVolumeXRP = data ? data.total : 0;
+      transactionVolumeXRP = data;
       showValue("transactionVolume");                
     });
     
     api.getTopMarkets(null, function(err, data){
       if (err) console.log(err);
       
-      tradeVolumeXRP     = data ? data.total : 0;
+      tradeVolumeXRP = data;
       showValue("tradeVolume");    
     });
   }

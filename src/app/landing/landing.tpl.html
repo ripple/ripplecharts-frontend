@@ -24,6 +24,10 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="totalNetworkValue"></span>
               <img  ng-hide="totalNetworkValue" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-click="metricDetail='totalNetworkValue'" class="details" ng-class="{selected : metricDetail == 'totalNetworkValue' }">
+                Detail
+                <img src="assets/images/triangle.svg"/>
+              </span>
             </div>
           </li>
           <li>
@@ -31,6 +35,10 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="transactionVolume"></span>
               <img  ng-hide="transactionVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-click="metricDetail='transactionVolume'" class="details" ng-class="{selected : metricDetail == 'transactionVolume' }">
+                Detail
+                <img src="assets/images/triangle.svg"/>
+              </span>
             </div>
           </li>
           <li>
@@ -38,6 +46,10 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="tradeVolume"></span>
               <img  ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="valueRate" ng-click="metricDetail='tradeVolume'" class="details" ng-class="{selected : metricDetail == 'tradeVolume' }">
+                Detail
+                <img src="assets/images/triangle.svg"/>
+              </span>
             </div>
           </li>          
           <li>
@@ -65,8 +77,8 @@
         </ul>
       </div>
       <div class="span6">
-        <h5>Live Transaction Feed</h5>
-        <div id="liveFeed"></div>
+        <h5  ng-bind="metricDetailTitle"></h5>
+        <div id="metricDetail"></div>
       </div>
     </div>
     <h5>Top Markets</h5> 

@@ -103,6 +103,39 @@
   padding:5px 10px;
   border-top:1px solid #f5f5f5;
   border-bottom:1px solid #ccc;
+  
+  .details {
+    float:right; 
+    font-size:10px;
+    cursor:pointer;
+    color:#ccc;
+    
+    img {
+      width:15px;
+      opacity:.1;
+      padding: 5px;
+    }
+  }
+  
+  .details:hover {
+    text-decoration:underline;
+    color:#999;
+    
+    img {
+      width: 15px;
+      opacity: .4;
+      background: #aaa;
+      border-radius: 20px;
+    }
+  }
+  
+  .details.selected {
+    color:#666;
+    
+    img {
+      opacity:1;
+    }
+  }
 }
 
 .landing .stat small {
@@ -120,7 +153,7 @@
   border-bottom:none;
 } 
 
-.landing .transactionFeed {
+.landing #metricDetail {
   height:250px;
 }
 
@@ -201,7 +234,7 @@
     display:inline-table;
   }
     
- .landing h5, .landing #liveFeed {
+ .landing h5, .landing #metricDetail {
     width:98%;
     display:inline-block;
   }  
@@ -235,11 +268,8 @@
     margin: 3px 0;  
   }
   
-  .landing #liveFeed {
-    height:155px;
-  }
   
-  .landing .stats ul, .landing h5, .landing #liveFeed {
+  .landing .stats ul, .landing h5, .landing #metricDetail {
     width:87%;
   } 
   
@@ -247,7 +277,7 @@
 }
 
 @media (max-width: 480px) {
-  .landing .stats ul, .landing h5, .landing #liveFeed, .landing .helpbox {
+  .landing .stats ul, .landing h5, .landing #metricDetail, .landing .helpbox {
     zoom: .75;
   }
 }
