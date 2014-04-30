@@ -106,9 +106,35 @@
   
   .details {
     float:right; 
-    font-size:11px;
-    opacity:.5;
+    font-size:10px;
     cursor:pointer;
+    color:#ccc;
+    
+    img {
+      width:15px;
+      opacity:.1;
+      padding: 5px;
+    }
+  }
+  
+  .details:hover {
+    text-decoration:underline;
+    color:#999;
+    
+    img {
+      width: 15px;
+      opacity: .4;
+      background: #aaa;
+      border-radius: 20px;
+    }
+  }
+  
+  .details.selected {
+    color:#666;
+    
+    img {
+      opacity:1;
+    }
   }
 }
 
