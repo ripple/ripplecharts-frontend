@@ -85,6 +85,7 @@ var ValueSummary = function (options) {
     path.exit().remove();
     
     //show data for the first item
+    current = null;
     showTooltip(path.data()[0], 0);
     
     //add labels
