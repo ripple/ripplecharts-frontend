@@ -40,6 +40,7 @@ var ValueSummary = function (options) {
    
   //load a specific metric
   this.load = function (z, ex) {
+    var data;
     
     if (z) data = z.components;
     else if (data) data.forEach(function(d, i){
