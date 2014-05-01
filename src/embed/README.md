@@ -22,7 +22,7 @@ of loading from the query string or from custom parameters.
   theme    : "light", "dark"
   type     : "line", "candlestick"
   base     : e.g "{currency:'USD',issuer:'rXaiz....'}"  
-  trade    : e.g "{currency:'BTC',issuer:'rXaiz....'}"
+  counter  : e.g "{currency:'BTC',issuer:'rXaiz....'}"
   start    : e.g "January 2, 2014 1:15pm"   - moment.js readable date/time
   end      : e.g "Feb 12, 2014"             - moment.js readable date/time
   interval : "second","minute","hour","day","week","month"
@@ -34,7 +34,7 @@ of loading from the query string or from custom parameters.
 ####Embedded IFRAME:
 
 ```
-<iframe src='http://ripplecharts.com/embed/pricechart?theme=dark&type=line&trade={"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}&base={"currency":"XRP"}'/>
+<iframe src='http://ripplecharts.com/embed/pricechart?theme=dark&type=line&counter={"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}&base={"currency":"XRP"}'/>
 ```
 
 ####Javascript object:
@@ -58,11 +58,11 @@ of loading from the query string or from custom parameters.
 
  chart.load({
    base : {
-     "currency":"XRP"
+     "currency" : "XRP"
    },
-   trade : {
-     "currency":"USD",
-     "issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+   counter : {
+     "currency" : "USD",
+     "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
    },
      
    interval : "hour",
@@ -72,34 +72,34 @@ of loading from the query string or from custom parameters.
  
  
  //multiple charts
- var one = new PriceChartWidget({id:"FirstChart"});
+ var one = new PriceChartWidget({id : "FirstChart"});
  var two = new PriceChartWidget();
  
  one.load({
-   base:{
-     "currency":"XRP"
+   base : {
+     "currency" : "XRP"
    },
-   trade: {
-     "currency":"USD",
-     "issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+   counter : {
+     "currency" : "USD",
+     "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
    },
    
-   interval:"hour",
-   theme:"dark",
+   interval : "hour",
+   theme : "dark",
    });
  
  
    two.load({
-   base:{
-     "currency":"XRP"
+   base : {
+     "currency" : "XRP"
    },
-   trade: {
-     "currency":"USD",
-     "issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"
+   counter : {
+     "currency" : "USD",
+     "issuer" : "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"
    },
    
-   interval:"hour",
-   theme:"light",
-   type:"line"
+   interval : "hour",
+   theme : "light",
+   type : "line"
  });
  ```
