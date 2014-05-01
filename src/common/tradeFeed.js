@@ -65,7 +65,6 @@ var TradeFeed = function (options) {
   
 //process incoming transaction from the live feed handler  
   function handleTransaction (data) {
-    console.log(data);
     var last = transactions[0];
     
     var trade = {

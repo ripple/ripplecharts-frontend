@@ -125,9 +125,9 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	var EventEmitter = require(28).EventEmitter;
-	var util         = require(29);
-	var LRU          = require(38);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
+	var LRU          = require(39);
 	var Request      = require(2).Request;
 	var Server       = require(16).Server;
 	var Amount       = require(3).Amount;
@@ -351,20 +351,20 @@ var ripple =
 	    self.storage.getPendingTransactions(function(err, transactions) {
 	      if (err || !Array.isArray(transactions)) return;
 
-	      var properties = [
-	        'submittedIDs',
-	        'clientID',
-	        'submitIndex'
-	      ];
-
 	      function resubmitTransaction(tx) {
 	        var transaction = self.transaction();
 	        transaction.parseJson(tx.tx_json);
-	        properties.forEach(function(prop) {
-	          if (typeof tx[prop] !== 'undefined') {
-	            transaction[prop] = tx[prop];
+
+	        Object.keys(tx).forEach(function(prop) {
+	          switch (prop) {
+	            case 'submittedIDs':
+	            case 'clientID':
+	            case 'submitIndex':
+	              transaction[prop] = tx[prop];
+	              break;
 	          }
 	        });
+
 	        transaction.submit();
 	      };
 
@@ -456,16 +456,16 @@ var ripple =
 	  server.on('message', serverMessage);
 
 	  function serverConnect() {
+	    self._connection_count += 1;
+
 	    if (opts.primary || !self._primary_server) {
 	      self._setPrimaryServer(server);
 	    }
-	    switch (++self._connection_count) {
-	      case 1:
-	        self._setState('online');
-	        break;
-	      case self._servers.length:
-	        self.emit('ready');
-	        break;
+	    if (self._connection_count === 1) {
+	      self._setState('online');
+	    }
+	    if (self._connection_count === self._servers.length) {
+	      self.emit('ready');
 	    }
 	  };
 
@@ -811,20 +811,18 @@ var ripple =
 	    request.message.ledger  = ledger;
 	  }
 
-	  var requestFields = [
-	    'full',
-	    'expand',
-	    'transactions',
-	    'accounts'
-	  ];
-
 	  switch (typeof options) {
 	    case 'object':
-	      for (var key in options) {
-	        if (~requestFields.indexOf(key)) {
-	          request.message[key] = true;
+	      Object.keys(options).forEach(function(o) {
+	        switch (o) {
+	          case 'full':
+	          case 'expand':
+	          case 'transactions':
+	          case 'accounts':
+	            request.message[o] = true;
+	            break;
 	        }
-	      }
+	      }, options);
 	      break;
 
 	    case 'function':
@@ -844,7 +842,7 @@ var ripple =
 	  return request;
 	};
 
-	// Only for unit testing.
+	Remote.prototype.requestLedgerClosed =
 	Remote.prototype.requestLedgerHash = function(callback) {
 	  //utils.assert(this.trusted);   // If not trusted, need to check proof.
 	  return new Request(this, 'ledger_closed').callback(callback);
@@ -1087,26 +1085,24 @@ var ripple =
 
 	  var request = new Request(this, 'account_tx');
 
-	  var requestFields = [
-	    'account',
-	    'ledger_index_min',  //earliest
-	    'ledger_index_max',  //latest
-	    'binary',            //false
-	    'count',             //false
-	    'descending',        //false
-	    'offset',            //0
-	    'limit',
+	  Object.keys(options).forEach(function(o) {
+	    switch (o) {
+	      case 'account':
+	      case 'ledger_index_min':  //earliest
+	      case 'ledger_index_max':  //latest
+	      case 'binary':            //false
+	      case 'count':             //false
+	      case 'descending':        //false
+	      case 'offset':            //0
+	      case 'limit':
 
-	    //extended account_tx
-	    'forward',           //false
-	    'marker'
-	  ];
-
-	  for (var key in options) {
-	    if (~requestFields.indexOf(key)) {
-	      request.message[key] = options[key];
+	      //extended account_tx
+	      case 'forward':           //false
+	      case 'marker':
+	        request.message[o] = this[o];
+	      break;
 	    }
-	  }
+	  }, options);
 
 	  function propertiesFilter(obj, transaction) {
 	    var properties = Object.keys(obj);
@@ -1371,6 +1367,7 @@ var ripple =
 	  }
 
 	  var request = this.requestLedgerEntry('account_root');
+
 	  request.accountRoot(account);
 	  request.ledgerChoose(ledger);
 
@@ -1778,7 +1775,7 @@ var ripple =
 	      break;
 
 	    case 'string':
-	      transactionType = source.toLowerCase();
+	      transactionType = transactionTypes[source.toLowerCase()];
 
 	      if (!transactionType) {
 	        throw new Error('Invalid transaction type: ' + transactionType);
@@ -1867,8 +1864,8 @@ var ripple =
 /***/ 2:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(28).EventEmitter;
-	var util         = require(29);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
 	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
 	var Transaction  = require(5).Transaction;
@@ -1876,6 +1873,7 @@ var ripple =
 	var Meta         = require(11).Meta;
 	var OrderBook    = require(18).OrderBook;
 	var RippleError  = require(13).RippleError;
+	var Server       = require(16).Server;
 
 	// Request events emitted:
 	//  'success' : Request successful.
@@ -1886,12 +1884,9 @@ var ripple =
 	function Request(remote, command) {
 	  EventEmitter.call(this);
 
-	  this.remote     = remote;
-	  this.requested  = false;
-	  this.message    = {
-	    command : command,
-	    id      : void(0)
-	  };
+	  this.remote    = remote;
+	  this.requested = false;
+	  this.message   = { command: command, id: void(0) };
 	};
 
 	util.inherits(Request, EventEmitter);
@@ -1906,6 +1901,7 @@ var ripple =
 	  if (this.requested) return;
 
 	  this.requested = true;
+
 	  this.on('error', new Function);
 	  this.emit('request', remote);
 
@@ -1913,7 +1909,7 @@ var ripple =
 	    this.remote._servers.forEach(function(server) {
 	      this.setServer(server);
 	      this.remote.request(this);
-	    }, this );
+	    }, this);
 	  } else {
 	    this.remote.request(this);
 	  }
@@ -1922,24 +1918,26 @@ var ripple =
 	};
 
 	Request.prototype.callback = function(callback, successEvent, errorEvent) {
-	  if (callback && typeof callback === 'function') {
-	    var self = this;
+	  var self = this;
 
-	    function request_success(message) {
-	      callback.call(self, null, message);
-	    }
-
-	    function request_error(error) {
-	      if (!(error instanceof RippleError)) {
-	        error = new RippleError(error);
-	      }
-	      callback.call(self, error);
-	    }
-
-	    this.once(successEvent || 'success', request_success);
-	    this.once(errorEvent   || 'error'  , request_error);
-	    this.request();
+	  if (this.requestsed || typeof callback !== 'function') {
+	    return this;
 	  }
+
+	  function requestSuccess(message) {
+	    callback.call(self, null, message);
+	  };
+
+	  function requestError(error) {
+	    if (!(error instanceof RippleError)) {
+	      error = new RippleError(error);
+	    }
+	    callback.call(self, error);
+	  };
+
+	  this.once(successEvent || 'success', requestSuccess);
+	  this.once(errorEvent   || 'error'  , requestError);
+	  this.request();
 
 	  return this;
 	};
@@ -1947,12 +1945,13 @@ var ripple =
 	Request.prototype.timeout = function(duration, callback) {
 	  var self = this;
 
+	  function requested() {
+	    self.timeout(duration, callback);
+	  };
+
 	  if (!this.requested) {
-	    function requested() {
-	      self.timeout(duration, callback);
-	    }
-	    this.once('request', requested);
-	    return;
+	    // Defer until requested
+	    return this.once('request', requested);
 	  }
 
 	  var emit = this.emit;
@@ -1981,8 +1980,11 @@ var ripple =
 	    case 'object':
 	      selected = server;
 	      break;
+
 	    case 'string':
+	      // Find server with hostname string
 	      var servers = this.remote._servers;
+
 	      for (var i=0, s; s=servers[i]; i++) {
 	        if (s._host === server) {
 	          selected = s;
@@ -1992,18 +1994,19 @@ var ripple =
 	      break;
 	  };
 
-	  this.server = selected;
+	  if (selected instanceof Server) {
+	    this.server = selected;
+	  }
 
 	  return this;
 	};
 
 	Request.prototype.buildPath = function(build) {
-
 	  if (this.remote.local_signing) {
 	    throw new Error(
-	      '`build_path` is completely ignored when doing local signing as ' +
-	      '`Paths` is a component of the signed blob. The `tx_blob` is signed,' +
-	      'sealed and delivered, and the txn unmodified after' );
+	      '`build_path` is completely ignored when doing local signing as '
+	      + '`Paths` is a component of the signed blob. The `tx_blob` is signed,'
+	      + 'sealed and delivered, and the txn unmodified after' );
 	  }
 
 	  if (build) {
@@ -2013,6 +2016,7 @@ var ripple =
 	    // value being `truthy`
 	    delete this.message.build_path
 	  }
+
 	  return this;
 	};
 
@@ -2022,6 +2026,7 @@ var ripple =
 	  } else {
 	    this.message.ledger_hash  = this.remote._ledger_hash;
 	  }
+
 	  return this;
 	};
 
@@ -2040,8 +2045,8 @@ var ripple =
 	  return this;
 	};
 
-	Request.prototype.ledgerSelect = function(ledger_spec) {
-	  switch (ledger_spec) {
+	Request.prototype.ledgerSelect = function(ledger) {
+	  switch (ledger) {
 	    case 'current':
 	    case 'closed':
 	    case 'verified':
@@ -2049,10 +2054,10 @@ var ripple =
 	      break;
 
 	    default:
-	      if (Number(ledger_spec)) {
-	        this.message.ledger_index = ledger_spec;
-	      } else {
-	        this.message.ledger_hash  = ledger_spec;
+	      if (isNaN(ledger)) {
+	        this.message.ledger_hash  = ledger;
+	      } else if (ledger = Number(ledger)) {
+	        this.message.ledger_index = ledger;
 	      }
 	      break;
 	  }
@@ -2065,8 +2070,8 @@ var ripple =
 	  return this;
 	};
 
-	Request.prototype.index = function(hash) {
-	  this.message.index  = hash;
+	Request.prototype.index = function(index) {
+	  this.message.index  = index;
 	  return this;
 	};
 
@@ -2174,7 +2179,7 @@ var ripple =
 
 	Request.prototype.addBook = function (book, snapshot) {
 	  if (!Array.isArray(this.message.books)) {
-	    this.message.books = [];
+	    this.message.books = [ ];
 	  }
 
 	  var json = { };
@@ -3425,12 +3430,12 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter       = require(28).EventEmitter;
-	var util               = require(29);
-	var extend             = require(36);
+	var EventEmitter       = require(30).EventEmitter;
+	var util               = require(31);
+	var extend             = require(35);
 	var Amount             = require(3).Amount;
 	var UInt160            = require(8).UInt160;
-	var TransactionManager = require(21).TransactionManager;
+	var TransactionManager = require(22).TransactionManager;
 
 	/**
 	 * @constructor Account
@@ -3746,8 +3751,9 @@ var ripple =
 	//   - may or may not forward.
 	//
 
-	var EventEmitter     = require(28).EventEmitter;
-	var util             = require(29);
+	var EventEmitter     = require(30).EventEmitter;
+	var util             = require(31);
+	var utils            = require(15);
 	var sjcl             = require(15).sjcl;
 	var Amount           = require(3).Amount;
 	var Currency         = require(3).Currency;
@@ -3755,7 +3761,7 @@ var ripple =
 	var Seed             = require(10).Seed;
 	var SerializedObject = require(12).SerializedObject;
 	var RippleError      = require(13).RippleError;
-	var hashprefixes     = require(23);
+	var hashprefixes     = require(21);
 	var config           = require(17);
 
 	function Transaction(remote) {
@@ -3785,23 +3791,16 @@ var ripple =
 	  // any time it goes on the network
 	  this.submittedIDs = [ ];
 
-	  function finalize(message) {
-	    if (!self.finalized) {
-	      self.finalized = true;
-	      self.emit('cleanup', message);
-	    }
-	  };
-
 	  this.once('success', function(message) {
-	    self.finalized = true;
+	    self.finalize(message);
 	    self.setState('validated');
-	    finalize(message);
+	    self.emit('cleanup', message);
 	  });
 
 	  this.once('error', function(message) {
-	    self.finalized = true;
+	    self.finalize(message);
 	    self.setState('failed');
-	    finalize(message);
+	    self.emit('cleanup', message);
 	  });
 
 	  this.once('submitted', function() {
@@ -3852,6 +3851,18 @@ var ripple =
 	    NoRippleDirect:     0x00010000,
 	    PartialPayment:     0x00020000,
 	    LimitQuality:       0x00040000
+	  }
+	};
+
+	// The following are integer (as opposed to bit) flags
+	// that can be set for particular transactions in the
+	// SetFlag or ClearFlag field
+	Transaction.set_clear_flags = {
+	  AccountSet: {
+	    asfRequireDest:     1,
+	    asfRequireAuth:     2,
+	    asfDisallowXRP:     3,
+	    asfDisableMaster:   4
 	  }
 	};
 
@@ -3911,6 +3922,20 @@ var ripple =
 	  }
 	};
 
+	Transaction.prototype.finalize = function(message) {
+	  this.finalized = true;
+
+	  if (this.result) {
+	    this.result.ledger_index = message.ledger_index;
+	    this.result.ledger_hash  = message.ledger_hash;
+	  } else {
+	    this.result = message;
+	    this.result.tx_json = this.tx_json;
+	  }
+
+	  return this;
+	};
+
 	Transaction.prototype._accountSecret = function(account) {
 	  return this.remote.secrets[account];
 	};
@@ -3964,9 +3989,28 @@ var ripple =
 	 */
 
 	Transaction.prototype.complete = function() {
+	  if (this.remote) {
+	    if (!this.remote.trusted && !this.remote.local_signing) {
+	      this.emit('error', new RippleError('tejServerUntrusted', 'Attempt to give secret to untrusted server'));
+	      return false;
+	    }
+	  }
+
 	  // Try to auto-fill the secret
-	  if (!this._secret && !(this._secret = this._account_secret(this.tx_json.Account))) {
-	    return this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
+	  if (!this._secret && !(this._secret = this._accountSecret(this.tx_json.Account))) {
+	    this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
+	    return false;
+	  }
+
+	  if (typeof this.tx_json.SigningPubKey === 'undefined') {
+	    try {
+	      var seed = Seed.from_json(this._secret);
+	      var key  = seed.get_key(this.tx_json.Account);
+	      this.tx_json.SigningPubKey = key.to_hex_pub();
+	    } catch(e) {
+	      this.emit('error', new RippleError('tejSecretInvalid', 'Invalid secret'));
+	      return false;
+	    }
 	  }
 
 	  // If the Fee hasn't been set, one needs to be computed by
@@ -3978,14 +4022,13 @@ var ripple =
 	    }
 	  }
 
-	  if (typeof this.tx_json.SigningPubKey === 'undefined') {
-	    var seed = Seed.from_json(this._secret);
-	    var key  = seed.get_key(this.tx_json.Account);
-	    this.tx_json.SigningPubKey = key.to_hex_pub();
+	  if (Number(this.tx_json.Fee) > this._maxFee) {
+	    tx.emit('error', new RippleError('tejMaxFeeExceeded', 'Max fee exceeded'));
+	    return false;
 	  }
 
 	  // Set canonical flag - this enables canonicalized signature checking
-	  if (this.canonical) {
+	  if (this.remote && this.remote.local_signing && this.canonical) {
 	    this.tx_json.Flags |= Transaction.flags.Universal.FullyCanonicalSig;
 
 	    // JavaScript converts operands to 32-bit signed ints before doing bitwise
@@ -4196,20 +4239,16 @@ var ripple =
 	Transaction.prototype.setFlags = function(flags) {
 	  if (!flags) return this;
 
-	  var transaction_flags = Transaction.flags[this.tx_json.TransactionType];
 	  var flag_set = Array.isArray(flags) ? flags : Array.prototype.slice.call(arguments);
-
-	  // We plan to not define this field on new Transaction.
-	  if (this.tx_json.Flags === void(0)) {
-	    this.tx_json.Flags = 0;
-	  }
+	  var transaction_flags = Transaction.flags[this.tx_json.TransactionType] || { };
 
 	  for (var i=0, l=flag_set.length; i<l; i++) {
 	    var flag = flag_set[i];
+
 	    if (transaction_flags.hasOwnProperty(flag)) {
 	      this.tx_json.Flags += transaction_flags[flag];
 	    } else {
-	      // XXX Immediately report an error or mark it.
+	      return this.emit('error', new RippleError('tejInvalidFlag'));
 	    }
 	  }
 
@@ -4223,10 +4262,30 @@ var ripple =
 	//  .transfer_rate()
 	//  .wallet_locator()   NYI
 	//  .wallet_size()      NYI
-	Transaction.prototype.accountSet = function(src) {
+
+	/**
+	 *  Construct an 'AccountSet' transaction.
+	 *
+	 *  Note that bit flags can be set using the .setFlags() method
+	 *  but for 'AccountSet' transactions there is an additional way to
+	 *  modify AccountRoot flags. The values available for the SetFlag 
+	 *  and ClearFlag are as follows:
+	 *
+	 *  "asfRequireDest"
+	 *    Require a destination tag
+	 *  "asfRequireAuth"
+	 *    Authorization is required to extend trust
+	 *  "asfDisallowXRP"
+	 *    XRP should not be sent to this account
+	 *  "asfDisableMaster"
+	 *    Disallow use of the master key
+	 */
+	Transaction.prototype.accountSet = function(src, set_flag, clear_flag) {
 	  if (typeof src === 'object') {
 	    var options = src;
-	    src = options.source || options.from;
+	    src = options.source || options.from || options.account;
+	    set_flag = options.set_flag || options.set;
+	    clear_flag = options.clear_flag || options.clear;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4235,6 +4294,21 @@ var ripple =
 
 	  this.tx_json.TransactionType  = 'AccountSet';
 	  this.tx_json.Account          = UInt160.json_rewrite(src);
+
+	  var SetClearFlags = Transaction.set_clear_flags.AccountSet;
+
+	  function prepareFlag(flag) {
+	    return (typeof flag === 'number') ? flag : (SetClearFlags[flag] || SetClearFlags['asf' + flag]);
+	  };
+
+	  if (set_flag && (set_flag = prepareFlag(set_flag))) {
+	    this.tx_json.SetFlag = set_flag;
+	  }
+
+	  if (clear_flag && (clear_flag = prepareFlag(clear_flag))) {
+	    this.tx_json.ClearFlag = clear_flag;
+	  }
+
 	  return this;
 	};
 
@@ -4244,13 +4318,14 @@ var ripple =
 	    signature  = options.signature;
 	    public_key = options.public_key;
 	    generator  = options.generator;
-	    src        = options.source || options.from;
+	    src        = options.source || options.from || options.account;
 	  }
 
 	  this.tx_json.TransactionType = 'Claim';
 	  this.tx_json.Generator       = generator;
 	  this.tx_json.PublicKey       = public_key;
 	  this.tx_json.Signature       = signature;
+
 	  return this;
 	};
 
@@ -4258,7 +4333,7 @@ var ripple =
 	  if (typeof src === 'object') {
 	    var options = src;
 	    sequence = options.sequence;
-	    src      = options.source || options.from;
+	    src      = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4268,6 +4343,7 @@ var ripple =
 	  this.tx_json.TransactionType = 'OfferCancel';
 	  this.tx_json.Account         = UInt160.json_rewrite(src);
 	  this.tx_json.OfferSequence   = Number(sequence);
+
 	  return this;
 	};
 
@@ -4282,7 +4358,7 @@ var ripple =
 	    expiration      = options.expiration;
 	    taker_gets      = options.taker_gets || options.sell;
 	    taker_pays      = options.taker_pays || options.buy;
-	    src             = options.source || options.from;
+	    src             = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4295,15 +4371,7 @@ var ripple =
 	  this.tx_json.TakerGets       = Amount.json_rewrite(taker_gets);
 
 	  if (expiration) {
-	    switch (expiration.constructor) {
-	      case Date:
-	        //offset = (new Date(2000, 0, 1).getTime()) - (new Date(1970, 0, 1).getTime());
-	        this.tx_json.Expiration = expiration.getTime() - 946684800000;
-	        break;
-	      case Number:
-	        this.tx_json.Expiration = expiration;
-	        break;
-	    }
+	    this.tx_json.Expiration = utils.time.toRipple(expiration);
 	  }
 
 	  if (cancel_sequence) {
@@ -4326,6 +4394,7 @@ var ripple =
 
 	  this.tx_json.TransactionType = 'PasswordFund';
 	  this.tx_json.Destination     = UInt160.json_rewrite(dst);
+
 	  return this;
 	};
 
@@ -4336,7 +4405,7 @@ var ripple =
 	    public_key     = options.public_key;
 	    generator      = options.generator;
 	    authorized_key = options.authorized_key;
-	    src            = options.source || options.from;
+	    src            = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4348,7 +4417,37 @@ var ripple =
 	  this.tx_json.Generator       = generator;
 	  this.tx_json.PublicKey       = public_key;
 	  this.tx_json.Signature       = signature;
+
 	  return this;
+	};
+
+
+	/**
+	 *  Construct a 'SetRegularKey' transaction.
+	 *  If the RegularKey is set, the private key that corresponds to
+	 *  it can be used to sign transactions instead of the master key
+	 *
+	 *  The RegularKey must be a valid Ripple Address, or a Hash160 of
+	 *  the public key corresponding to the new private signing key.
+	 */
+	Transaction.prototype.setRegularKey = function(src, regular_key) {
+	  if (typeof src === 'object') {
+	    var options = src;
+	    src = options.address || options.account || options.from;
+	    regular_key = options.regular_key;
+	  }
+
+	  if (!UInt160.is_valid(src)) {
+	    throw new Error('Source address invalid');
+	  }
+
+	  if (!UInt160.is_valid(regular_key)) {
+	    throw new Error('RegularKey must be a valid Ripple Address (a Hash160 of the public key)');
+	  }
+
+	  this.tx_json.TransactionType = 'SetRegularKey';
+	  this.tx_json.Account = UInt160.json_rewrite(src);
+	  this.tx_json.RegularKey = UInt160.json_rewrite(regular_key);
 	};
 
 	// Construct a 'payment' transaction.
@@ -4373,10 +4472,11 @@ var ripple =
 	    var options = src;
 	    amount = options.amount;
 	    dst    = options.destination || options.to;
-	    src    = options.source || options.from;
-	    if (options.invoiceID) {
-	      this.invoiceID(options.invoiceID);
-	    }
+	    src    = options.source || options.from || options.account;
+	  }
+
+	  if (src.invoiceID) {
+	    this.invoiceID(src.invoiceID);
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4406,7 +4506,7 @@ var ripple =
 	    quality_out = options.quality_out;
 	    quality_in  = options.quality_in;
 	    limit       = options.limit;
-	    src         = options.source || options.from;
+	    src         = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4440,7 +4540,7 @@ var ripple =
 	    public_key     = options.public_key;
 	    authorized_key = options.authorized_key;
 	    amount         = options.amount;
-	    src            = options.source || options.from;
+	    src            = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -4452,6 +4552,7 @@ var ripple =
 	  this.tx_json.RegularKey       = authorized_key;
 	  this.tx_json.PublicKey        = public_key;
 	  this.tx_json.Signature        = signature;
+
 	  return this;
 	};
 
@@ -4481,11 +4582,11 @@ var ripple =
 	  var account = this.tx_json.Account;
 
 	  if (typeof account !== 'string') {
-	    this.emit('error', new RippleError('tejInvalidAccount', 'Account is unspecified'));
-	  } else {
-	    // YYY Might check paths for invalid accounts.
-	    this.remote.account(account).submit(this);
+	    return this.emit('error', new RippleError('tejInvalidAccount', 'Account is unspecified'));
 	  }
+
+	  // YYY Might check paths for invalid accounts.
+	  this.remote.account(account).submit(this);
 
 	  return this;
 	};
@@ -4548,10 +4649,10 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	
-	var extend    = require(36);
+	var extend    = require(35);
 
 	var UInt160 = require(8).UInt160;
-	var Float = require(22).Float;
+	var Float = require(23).Float;
 	var utils = require(15);
 
 	//
@@ -4786,7 +4887,7 @@ var ripple =
 
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
-	var extend  = require(36);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -4963,7 +5064,7 @@ var ripple =
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(36);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -5077,7 +5178,7 @@ var ripple =
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(36);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -5118,7 +5219,7 @@ var ripple =
 
 	var utils   = require(15);
 	var sjcl    = utils.sjcl;
-	var extend  = require(36);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -5235,7 +5336,7 @@ var ripple =
 /***/ 11:
 /***/ function(module, exports, require) {
 
-	var extend  = require(36);
+	var extend  = require(35);
 	var utils   = require(15);
 	var UInt160 = require(8).UInt160;
 	var Amount  = require(3).Amount;
@@ -5411,10 +5512,10 @@ var ripple =
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, Buffer) {var binformat  = require(14);
-	var extend     = require(36);
-	var stypes     = require(26);
+	var extend     = require(35);
+	var stypes     = require(28);
 	var UInt256    = require(9).UInt256;
-	var assert     = require(30);
+	var assert     = require(32);
 
 	var utils      = require(15);
 	var sjcl       = utils.sjcl;
@@ -5710,15 +5811,15 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}(require, require(27).Buffer))
+	/* WEBPACK VAR INJECTION */}(require, require(29).Buffer))
 
 /***/ },
 
 /***/ 13:
 /***/ function(module, exports, require) {
 
-	var util   = require(29);
-	var extend = require(36);
+	var util   = require(31);
+	var extend = require(35);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -6329,7 +6430,12 @@ var ripple =
 	    rpepoch = rpepoch.getTime();
 	  }
 
-	  return Math.round(rpepoch/1000) - 0x386D4380;
+	  return Math.round(rpepoch / 1000) - 0x386D4380;
+	};
+
+	exports.time = {
+	  fromRipple:  toTimestamp,
+	  toRipple:    fromTimestamp
 	};
 
 	exports.trace         = trace;
@@ -6346,8 +6452,8 @@ var ripple =
 
 	// Going up three levels is needed to escape the src-cov folder used for the
 	// test coverage stuff.
-	exports.sjcl = require(31);
-	exports.jsbn = require(32);
+	exports.sjcl = require(26);
+	exports.jsbn = require(27);
 
 	// vim:sw=2:sts=2:ts=8:et
 
@@ -6357,8 +6463,8 @@ var ripple =
 /***/ 16:
 /***/ function(module, exports, require) {
 
-	var util         = require(29);
-	var EventEmitter = require(28).EventEmitter;
+	var util         = require(31);
+	var EventEmitter = require(30).EventEmitter;
 	var Transaction = require(5).Transaction;
 	var Amount       = require(3).Amount;
 	var utils        = require(15);
@@ -6959,7 +7065,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = require(36);
+	var extend = require(35);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -6984,9 +7090,9 @@ var ripple =
 
 	// var network = require("./network.js");
 
-	var EventEmitter = require(28).EventEmitter;
-	var util         = require(29);
-	var extend       = require(36);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
+	var extend       = require(35);
 	var Amount       = require(3).Amount;
 	var UInt160      = require(8).UInt160;
 	var Currency     = require(6).Currency;
@@ -7278,10 +7384,10 @@ var ripple =
 /***/ 19:
 /***/ function(module, exports, require) {
 
-	var EventEmitter = require(28).EventEmitter;
-	var util         = require(29);
+	var EventEmitter = require(30).EventEmitter;
+	var util         = require(31);
 	var Amount       = require(3).Amount;
-	var extend       = require(36);
+	var extend       = require(35);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -7408,11 +7514,41 @@ var ripple =
 /***/ 21:
 /***/ function(module, exports, require) {
 
-	var util         = require(29);
-	var EventEmitter = require(28).EventEmitter;
+	/**
+	 * Prefix for hashing functions.
+	 *
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
+	 */
+
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
+
+
+/***/ },
+
+/***/ 22:
+/***/ function(module, exports, require) {
+
+	var util         = require(31);
+	var EventEmitter = require(30).EventEmitter;
 	var Transaction  = require(5).Transaction;
 	var RippleError  = require(13).RippleError;
-	var PendingQueue = require(35).TransactionQueue;
+	var PendingQueue = require(37).TransactionQueue;
 
 	/**
 	 * @constructor TransactionManager
@@ -7594,25 +7730,34 @@ var ripple =
 	    fill.account_set(self._accountID);
 	    fill.tx_json.Sequence = sequence;
 	    fill.once('submitted', callback);
+
+	    // Secrets may be set on a per-transaction basis
+	    if (tx._secret) {
+	      fill.secret(tx._secret);
+	    }
+
 	    fill.submit();
 	  };
 
 	  function sequenceLoaded(err, sequence) {
 	    if (typeof sequence !== 'number') {
-	      callback(new Error('Failed to fetch account transaction sequence'));
-	      return;
+	      return callback(new Error('Failed to fetch account transaction sequence'));
 	    }
 
 	    var sequenceDif = tx.tx_json.Sequence - sequence;
 	    var submitted = 0;
 
-	    for (var i=sequence; i<tx.tx_json.Sequence; i++) {
-	      submitFill(i, function() {
+	    ;(function nextFill(sequence) {
+	      if (sequence >= tx.tx_json.Sequence) return;
+
+	      submitFill(sequence, function() {
 	        if (++submitted === sequenceDif) {
 	          callback();
+	        } else {
+	          nextFill(sequence + 1);
 	        }
 	      });
-	    }
+	    })(sequence);
 	  };
 
 	  this._loadSequence(sequenceLoaded);
@@ -7788,6 +7933,7 @@ var ripple =
 
 	  function transactionRetry(message) {
 	    if (tx.finalized) return;
+
 	    self._fillSequence(tx, function() {
 	      self._resubmit(1, tx);
 	    });
@@ -7990,27 +8136,22 @@ var ripple =
 	    tx.tx_json.Sequence = this._nextSequence++;
 	  }
 
+	  // Attach secret, associate transaction with a server, attach fee.
+	  // If the transaction can't complete, decrement sequence so that
+	  // subsequent transactions
+	  if (!tx.complete()) {
+	    this._nextSequence--;
+	    return;
+	  }
+
 	  tx.attempts = 0;
 
-	  // Attach secret, associate transaction with a server, attach fee
-	  tx.complete();
-
-	  var fee = Number(tx.tx_json.Fee);
-
-	  if (!tx._secret && !tx.tx_json.TxnSignature) {
-	    tx.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
-	  } else if (!remote.trusted && !remote.local_signing) {
-	    tx.emit('error', new RippleError('tejServerUntrusted', 'Attempt to give secret to untrusted server'));
-	  } else if (fee && fee > this._maxFee) {
-	    tx.emit('error', new RippleError('tejMaxFeeExceeded', 'Max fee exceeded'));
-	  } else {
-	    // ND: this is the ONLY place we put the tx into the queue. The
-	    // TransactionQueue queue is merely a list, so any mutations to tx._hash
-	    // will cause subsequent look ups (eg. inside 'transaction-outbound'
-	    // validated transaction clearing) to fail.
-	    this._pending.push(tx);
-	    this._request(tx);
-	  }
+	  // ND: this is the ONLY place we put the tx into the queue. The
+	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
+	  // will cause subsequent look ups (eg. inside 'transaction-outbound'
+	  // validated transaction clearing) to fail.
+	  this._pending.push(tx);
+	  this._request(tx);
 	};
 
 	exports.TransactionManager = TransactionManager;
@@ -8018,7 +8159,7 @@ var ripple =
 
 /***/ },
 
-/***/ 22:
+/***/ 23:
 /***/ function(module, exports, require) {
 
 	/**
@@ -8077,36 +8218,6 @@ var ripple =
 
 	  return value * multiplier;
 	};
-
-
-/***/ },
-
-/***/ 23:
-/***/ function(module, exports, require) {
-
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
-
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
 
 
 /***/ },
@@ -8350,7 +8461,7 @@ var ripple =
 
 	  if ("number" === typeof j &&
 	      j === +j &&
-	      j > 0) {
+	      j >= 0) {
 	    // XXX Better, faster way to get BigInteger from JS int?
 	    this._value = new BigInteger(""+j);
 	  }
@@ -8517,2864 +8628,6 @@ var ripple =
 /***/ },
 
 /***/ 26:
-/***/ function(module, exports, require) {
-
-	/**
-	 * Type definitions for binary format.
-	 *
-	 * This file should not be included directly. Instead, find the format you're
-	 * trying to parse or serialize in binformat.js and pass that to
-	 * SerializedObject.parse() or SerializedObject.serialize().
-	 */
-
-	var assert    = require(30);
-	var extend    = require(36);
-	var binformat = require(14);
-	var utils     = require(15);
-	var sjcl      = utils.sjcl;
-
-	var UInt128   = require(37).UInt128;
-	var UInt160   = require(8).UInt160;
-	var UInt256   = require(9).UInt256;
-	var Base      = require(7).Base;
-
-	var amount    = require(3);
-	var Amount    = amount.Amount;
-	var Currency  = amount.Currency;
-
-	// Shortcuts
-	var hex       = sjcl.codec.hex;
-	var bytes     = sjcl.codec.bytes;
-
-	var BigInteger = utils.jsbn.BigInteger;
-
-
-	var SerializedType = function (methods) {
-	  extend(this, methods);
-	};
-
-	function isNumber(val) {
-	  return typeof val === 'number' && isFinite(val);
-	};
-
-	function isString(val) {
-	  return typeof val === 'string';
-	};
-
-	function isHexInt64String(val) {
-	  return isString(val) && /^[0-9A-F]{0,16}$/i.test(val);
-	};
-
-	function isCurrencyString(val) {
-	  return isString(val) && /^[A-Z0-9]{3}$/.test(val);
-	};
-
-	function isBigInteger(val) {
-	  return val instanceof BigInteger;
-	};
-
-	function serialize_hex(so, hexData, noLength) {
-	  var byteData = bytes.fromBits(hex.toBits(hexData));
-	  if (!noLength) {
-	    SerializedType.serialize_varint(so, byteData.length);
-	  }
-	  so.append(byteData);
-	};
-
-	/**
-	 * parses bytes as hex
-	 */
-	function convert_bytes_to_hex (byte_array) {
-	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array)).toUpperCase();
-	};
-
-	SerializedType.serialize_varint = function (so, val) {
-	  if (val < 0) {
-	    throw new Error('Variable integers are unsigned.');
-	  }
-
-	  if (val <= 192) {
-	    so.append([val]);
-	  } else if (val <= 12480) {
-	    val -= 193;
-	    so.append([193 + (val >>> 8), val & 0xff]);
-	  } else if (val <= 918744) {
-	    val -= 12481;
-	    so.append([
-	              241 + (val >>> 16),
-	              val >>> 8 & 0xff,
-	              val & 0xff
-	    ]);
-	  } else {
-	    throw new Error('Variable integer overflow.');
-	  }
-	};
-
-	SerializedType.prototype.parse_varint = function (so) {
-	  var b1 = so.read(1)[0], b2, b3;
-	  var result;
-
-	  if (b1 > 254) {
-	    throw new Error('Invalid varint length indicator');
-	  }
-
-	  if (b1 <= 192) {
-	    result = b1;
-	  } else if (b1 <= 240) {
-	    b2 = so.read(1)[0];
-	    result = 193 + (b1 - 193) * 256 + b2;
-	  } else if (b1 <= 254) {
-	    b2 = so.read(1)[0];
-	    b3 = so.read(1)[0];
-	    result = 12481 + (b1 - 241) * 65536 + b2 * 256 + b3
-	  }
-
-	  return result;
-	};
-
-	// In the following, we assume that the inputs are in the proper range. Is this correct?
-	// Helper functions for 1-, 2-, and 4-byte integers.
-
-	/**
-	 * Convert an integer value into an array of bytes.
-	 *
-	 * The result is appended to the serialized object ('so').
-	 */
-	function append_byte_array(so, val, bytes) {
-	  if (!isNumber(val)) {
-	    throw new Error('Value is not a number');
-	  }
-
-	  if (val < 0 || val >= Math.pow(256, bytes)) {
-	    throw new Error('Value out of bounds');
-	  }
-
-	  var newBytes = [ ];
-
-	  for (var i=0; i<bytes; i++) {
-	    newBytes.unshift(val >>> (i * 8) & 0xff);
-	  }
-
-	  so.append(newBytes);
-	};
-
-	// Convert a certain number of bytes from the serialized object ('so') into an integer.
-	function readAndSum(so, bytes) {
-	  var sum = 0;
-
-	  if (bytes > 4) {
-	    throw new Error("This function only supports up to four bytes.");
-	  }
-
-	  for (var i=0; i<bytes; i++) {
-	    var byte = so.read(1)[0];
-	    sum += (byte << (8 * (bytes - i - 1)));
-	  }
-
-	  // Convert to unsigned integer
-	  return sum >>> 0;
-	};
-
-	var STInt8 = exports.Int8 = new SerializedType({
-	  serialize: function (so, val) {
-	    append_byte_array(so, val, 1);
-	  },
-	  parse: function (so) {
-	    return readAndSum(so, 1);
-	  }
-	});
-
-	STInt8.id = 16;
-
-	var STInt16 = exports.Int16 = new SerializedType({
-	  serialize: function (so, val) {
-	    append_byte_array(so, val, 2);
-	  },
-	  parse: function (so) {
-	    return readAndSum(so, 2);
-	  }
-	});
-
-	STInt16.id = 1;
-
-	var STInt32 = exports.Int32 = new SerializedType({
-	  serialize: function (so, val) {
-	    append_byte_array(so, val, 4);
-	  },
-	  parse: function (so) {
-	    return readAndSum(so, 4);
-	  }
-	});
-
-	STInt32.id = 2;
-
-	var STInt64 = exports.Int64 = new SerializedType({
-	  serialize: function (so, val) {
-	    var bigNumObject;
-
-	    if (isNumber(val)) {
-	      val = Math.floor(val);
-	      if (val < 0) {
-	        throw new Error('Negative value for unsigned Int64 is invalid.');
-	      }
-	      bigNumObject = new BigInteger(String(val), 10);
-	    } else if (isString(val)) {
-	      if (!isHexInt64String(val)) {
-	        throw new Error('Not a valid hex Int64.');
-	      }
-	      bigNumObject = new BigInteger(val, 16);
-	    } else if (isBigInteger(val)) {
-	      if (val.compareTo(BigInteger.ZERO) < 0) {
-	        throw new Error('Negative value for unsigned Int64 is invalid.');
-	      }
-	      bigNumObject = val;
-	    } else {
-	      throw new Error('Invalid type for Int64');
-	    }
-
-	    var hex = bigNumObject.toString(16);
-
-	    if (hex.length > 16) {
-	      throw new Error('Int64 is too large');
-	    }
-
-	    while (hex.length < 16) {
-	      hex = '0' + hex;
-	    }
-
-	    serialize_hex(so, hex, true); //noLength = true
-	  },
-	  parse: function (so) {
-	    var result = new BigInteger(so.read(8), 256);
-	    assert(result instanceof BigInteger);
-	    return result;
-	  }
-	});
-
-	STInt64.id = 3;
-
-	var STHash128 = exports.Hash128 = new SerializedType({
-	  serialize: function (so, val) {
-	    var hash = UInt128.from_json(val);
-	    if (!hash.is_valid()) {
-	      throw new Error('Invalid Hash128');
-	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
-	  },
-	  parse: function (so) {
-	    return UInt128.from_bytes(so.read(16));
-	  }
-	});
-
-	STHash128.id = 4;
-
-	var STHash256 = exports.Hash256 = new SerializedType({
-	  serialize: function (so, val) {
-	    var hash = UInt256.from_json(val);
-	    if (!hash.is_valid()) {
-	      throw new Error('Invalid Hash256');
-	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
-	  },
-	  parse: function (so) {
-	    return UInt256.from_bytes(so.read(32));
-	  }
-	});
-
-	STHash256.id = 5;
-
-	var STHash160 = exports.Hash160 = new SerializedType({
-	  serialize: function (so, val) {
-	    var hash = UInt160.from_json(val);
-	    if (!hash.is_valid()) {
-	      throw new Error('Invalid Hash160');
-	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
-	  },
-	  parse: function (so) {
-	    return UInt160.from_bytes(so.read(20));
-	  }
-	});
-
-	STHash160.id = 17;
-
-	// Internal
-	var STCurrency = new SerializedType({
-	  serialize: function (so, val, xrp_as_ascii) {
-	    var currencyData = val.to_bytes();
-
-	    if (!currencyData) {
-	      throw new Error('Tried to serialize invalid/unimplemented currency type.');
-	    }
-
-	    so.append(currencyData);
-	  },
-	  parse: function (so) {
-	    var bytes = so.read(20);
-	    var currency = Currency.from_bytes(bytes);
-	    // XXX Disabled check. Theoretically, the Currency class should support any
-	    //     UInt160 value and consider it valid. But it doesn't, so for the
-	    //     deserialization to be usable, we need to allow invalid results for now.
-	    //if (!currency.is_valid()) {
-	    //  throw new Error('Invalid currency: '+convert_bytes_to_hex(bytes));
-	    //}
-	    return currency;
-	  }
-	});
-
-	var STAmount = exports.Amount = new SerializedType({
-	  serialize: function (so, val) {
-	    var amount = Amount.from_json(val);
-	    if (!amount.is_valid()) {
-	      throw new Error('Not a valid Amount object.');
-	    }
-
-	    // Amount (64-bit integer)
-	    var valueBytes = utils.arraySet(8, 0);
-
-	    if (amount.is_native()) {
-	      var valueHex = amount._value.toString(16);
-
-	      // Enforce correct length (64 bits)
-	      if (valueHex.length > 16) {
-	        throw new Error('Value out of bounds');
-	      }
-
-	      while (valueHex.length < 16) {
-	        valueHex = '0' + valueHex;
-	      }
-
-	      valueBytes = bytes.fromBits(hex.toBits(valueHex));
-	      // Clear most significant two bits - these bits should already be 0 if
-	      // Amount enforces the range correctly, but we'll clear them anyway just
-	      // so this code can make certain guarantees about the encoded value.
-	      valueBytes[0] &= 0x3f;
-	      if (!amount.is_negative()) valueBytes[0] |= 0x40;
-	    } else {
-	      var hi = 0, lo = 0;
-
-	      // First bit: non-native
-	      hi |= 1 << 31;
-
-	      if (!amount.is_zero()) {
-	        // Second bit: non-negative?
-	        if (!amount.is_negative()) hi |= 1 << 30;
-	        // Next eight bits: offset/exponent
-	        hi |= ((97 + amount._offset) & 0xff) << 22;
-	        // Remaining 52 bits: mantissa
-	        hi |= amount._value.shiftRight(32).intValue() & 0x3fffff;
-	        lo = amount._value.intValue() & 0xffffffff;
-	      }
-
-	      valueBytes = sjcl.codec.bytes.fromBits([hi, lo]);
-	    }
-
-	    so.append(valueBytes);
-
-	    if (!amount.is_native()) {
-	      // Currency (160-bit hash)
-	      var currency = amount.currency();
-	      STCurrency.serialize(so, currency, true);
-
-	      // Issuer (160-bit hash)
-	      so.append(amount.issuer().to_bytes());
-	    }
-	  },
-	  parse: function (so) {
-	    var amount = new Amount();
-	    var value_bytes = so.read(8);
-	    var is_zero = !(value_bytes[0] & 0x7f);
-
-	    for (var i=1; i<8; i++) {
-	      is_zero = is_zero && !value_bytes[i];
-	    }
-
-	    if (value_bytes[0] & 0x80) {
-	      //non-native
-	      var currency = STCurrency.parse(so);
-	      var issuer_bytes = so.read(20);
-	      var issuer = UInt160.from_bytes(issuer_bytes);
-	      issuer.set_version(Base.VER_ACCOUNT_ID);
-	      var offset = ((value_bytes[0] & 0x3f) << 2) + (value_bytes[1] >>> 6) - 97;
-	      var mantissa_bytes = value_bytes.slice(1);
-	      mantissa_bytes[0] &= 0x3f;
-	      var value = new BigInteger(mantissa_bytes, 256);
-
-	      if (value.equals(BigInteger.ZERO) && !is_zero ) {
-	        throw new Error('Invalid zero representation');
-	      }
-
-	      amount._value = value;
-	      amount._offset = offset;
-	      amount._currency    = currency;
-	      amount._issuer      = issuer;
-	      amount._is_native   = false;
-	    } else {
-	      //native
-	      var integer_bytes = value_bytes.slice();
-	      integer_bytes[0] &= 0x3f;
-	      amount._value = new BigInteger(integer_bytes, 256);
-	      amount._is_native   = true;
-	    }
-	    amount._is_negative = !is_zero && !(value_bytes[0] & 0x40);
-	    return amount;
-	  }
-	});
-
-	STAmount.id = 6;
-
-	var STVL = exports.VariableLength = exports.VL = new SerializedType({
-	  serialize: function (so, val) {
-	    if (typeof val === 'string') {
-	      serialize_hex(so, val);
-	    } else {
-	      throw new Error('Unknown datatype.');
-	    }
-	  },
-	  parse: function (so) {
-	    var len = this.parse_varint(so);
-	    return convert_bytes_to_hex(so.read(len));
-	  }
-	});
-
-	STVL.id = 7;
-
-	var STAccount = exports.Account = new SerializedType({
-	  serialize: function (so, val) {
-	    var account = UInt160.from_json(val);
-	    if (!account.is_valid()) {
-	      throw new Error('Invalid account!');
-	    }
-	    serialize_hex(so, account.to_hex());
-	  },
-	  parse: function (so) {
-	    var len = this.parse_varint(so);
-
-	    if (len !== 20) {
-	      throw new Error('Non-standard-length account ID');
-	    }
-
-	    var result = UInt160.from_bytes(so.read(len));
-	    result.set_version(Base.VER_ACCOUNT_ID);
-
-	    //console.log('PARSED 160:', result.to_json());
-	    if (false && !result.is_valid()) {
-	      throw new Error('Invalid Account');
-	    }
-
-	    return result;
-	  }
-	});
-
-	STAccount.id = 8;
-
-	var STPathSet = exports.PathSet = new SerializedType({
-	  typeBoundary:  0xff,
-	  typeEnd:       0x00,
-	  typeAccount:   0x01,
-	  typeCurrency:  0x10,
-	  typeIssuer:    0x20,
-	  serialize: function (so, val) {
-	    for (var i=0, l=val.length; i<l; i++) {
-	      // Boundary
-	      if (i) {
-	        STInt8.serialize(so, this.typeBoundary);
-	      }
-
-	      for (var j=0, l2=val[i].length; j<l2; j++) {
-	        var entry = val[i][j];
-	        //if (entry.hasOwnProperty('_value')) {entry = entry._value;}
-	        var type = 0;
-
-	        if (entry.account)  type |= this.typeAccount;
-	        if (entry.currency) type |= this.typeCurrency;
-	        if (entry.issuer)   type |= this.typeIssuer;
-
-	        STInt8.serialize(so, type);
-	        if (entry.account) {
-	          so.append(UInt160.from_json(entry.account).to_bytes());
-	        }
-
-	        if (entry.currency) {
-	          var currency = Currency.from_json(entry.currency, entry.non_native);
-	          STCurrency.serialize(so, currency);
-	        }
-
-	        if (entry.issuer) {
-	          so.append(UInt160.from_json(entry.issuer).to_bytes());
-	        }
-	      }
-	    }
-	    STInt8.serialize(so, this.typeEnd);
-	  },
-	  parse: function (so) {
-	    // should return a list of lists:
-	    /*
-	       [
-	       [entry, entry],
-	       [entry, entry, entry],
-	       [entry],
-	       []
-	       ]
-
-	       each entry has one or more of the following attributes: amount, currency, issuer.
-	       */
-
-	    var path_list    = [];
-	    var current_path = [];
-	    var tag_byte;
-
-	    while ((tag_byte = so.read(1)[0]) !== this.typeEnd) {
-	      //TODO: try/catch this loop, and catch when we run out of data without reaching the end of the data structure.
-	      //Now determine: is this an end, boundary, or entry-begin-tag?
-	      //console.log('Tag byte:', tag_byte);
-	      if (tag_byte === this.typeBoundary) {
-	        //console.log('Boundary');
-	        if (current_path) { //close the current path, if there is one,
-	          path_list.push(current_path);
-	        }
-	        current_path = []; //and start a new one.
-	      } else {
-	        //It's an entry-begin tag.
-	        //console.log('It's an entry-begin tag.');
-	        var entry = {};
-
-	        if (tag_byte & this.typeAccount) {
-	          //console.log('entry.account');
-	          /*var bta = so.read(20);
-	            console.log('BTA:', bta);*/
-	          entry.account = STHash160.parse(so);
-	          entry.account.set_version(Base.VER_ACCOUNT_ID);
-	        }
-	        if (tag_byte & this.typeCurrency) {
-	          //console.log('entry.currency');
-	          entry.currency = STCurrency.parse(so);
-	          if (entry.currency.to_json() === "XRP" &&
-	              !entry.currency.is_native()) {
-	            entry.non_native = true;
-	          }
-	        }
-	        if (tag_byte & this.typeIssuer) {
-	          //console.log('entry.issuer');
-	          entry.issuer = STHash160.parse(so);
-	          // Enable and set correct type of base-58 encoding
-	          entry.issuer.set_version(Base.VER_ACCOUNT_ID);
-	          //console.log('DONE WITH ISSUER!');
-	        }
-
-	        if (entry.account || entry.currency || entry.issuer) {
-	          current_path.push(entry);
-	        } else {
-	          throw new Error('Invalid path entry'); //It must have at least something in it.
-	        }
-	      }
-	    }
-
-	    if (current_path) {
-	      //close the current path, if there is one,
-	      path_list.push(current_path);
-	    }
-
-	    return path_list;
-	  }
-	});
-
-	STPathSet.id = 18;
-
-	var STVector256 = exports.Vector256 = new SerializedType({
-	  serialize: function (so, val) { //Assume val is an array of STHash256 objects.
-	    var length_as_varint = SerializedType.serialize_varint(so, val.length * 32);
-	    for (var i=0, l=val.length; i<l; i++) {
-	      STHash256.serialize(so, val[i]);
-	    }
-	  },
-	  parse: function (so) {
-	    var length = this.parse_varint(so);
-	    var output = [];
-	    // length is number of bytes not number of Hash256
-	    for (var i=0; i<length / 32; i++) {
-	      output.push(STHash256.parse(so));
-	    }
-	    return output;
-	  }
-	});
-
-	STVector256.id = 19;
-
-	exports.serialize = exports.serialize_whatever = serialize;
-
-	function serialize(so, field_name, value) {
-	  //so: a byte-stream to serialize into.
-	  //field_name: a string for the field name ('LedgerEntryType' etc.)
-	  //value: the value of that field.
-	  var field_coordinates = binformat.fieldsInverseMap[field_name];
-	  var type_bits         = field_coordinates[0];
-	  var field_bits        = field_coordinates[1];
-	  var tag_byte          = (type_bits < 16 ? type_bits << 4 : 0) | (field_bits < 16 ? field_bits : 0);
-
-	  if (field_name === "LedgerEntryType" && "string" === typeof value) {
-	    value = binformat.ledger[value][0];
-	  }
-
-	  if (field_name === "TransactionResult" && "string" === typeof value) {
-	    value = binformat.ter[value];
-	  }
-
-	  STInt8.serialize(so, tag_byte);
-
-	  if (type_bits >= 16) {
-	    STInt8.serialize(so, type_bits);
-	  }
-
-	  if (field_bits >= 16) {
-	    STInt8.serialize(so, field_bits);
-	  }
-
-	  // Get the serializer class (ST...) for a field based on the type bits.
-	  var serialized_object_type = exports[binformat.types[type_bits]];
-	  //do something with val[keys] and val[keys[i]];
-	  serialized_object_type.serialize(so, value);
-	}
-
-	//Take the serialized object, figure out what type/field it is, and return the parsing of that.
-	exports.parse = exports.parse_whatever = parse;
-
-	function parse(so) {
-	  var tag_byte   = so.read(1)[0];
-	  var type_bits  = tag_byte >> 4;
-
-	  if (type_bits === 0) {
-	    type_bits = so.read(1)[0];
-	  }
-
-	  // Get the parser class (ST...) for a field based on the type bits.
-	  var type = exports[binformat.types[type_bits]];
-
-	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
-
-	  var field_bits = tag_byte & 0x0f;
-	  var field_name = (field_bits === 0)
-	  ? field_name = binformat.fields[type_bits][so.read(1)[0]]
-	  : field_name = binformat.fields[type_bits][field_bits];
-
-	  assert(field_name, 'Unknown field - header byte is 0x' + tag_byte.toString(16));
-
-	  return [ field_name, type.parse(so) ]; //key, value
-	};
-
-	function sort_fields(keys) {
-	  function sort_field_compare(a, b) {
-	    var a_field_coordinates = binformat.fieldsInverseMap[a];
-	    var a_type_bits         = a_field_coordinates[0];
-	    var a_field_bits        = a_field_coordinates[1];
-	    var b_field_coordinates = binformat.fieldsInverseMap[b];
-	    var b_type_bits         = b_field_coordinates[0];
-	    var b_field_bits        = b_field_coordinates[1];
-
-	    // Sort by type id first, then by field id
-	    return a_type_bits !== b_type_bits ? a_type_bits - b_type_bits : a_field_bits - b_field_bits;
-	  };
-
-	  return keys.sort(sort_field_compare);
-	}
-
-	var STObject = exports.Object = new SerializedType({
-	  serialize: function (so, val, no_marker) {
-	    var keys = Object.keys(val);
-
-	    // Ignore lowercase field names - they're non-serializable fields by
-	    // convention.
-	    keys = keys.filter(function (key) {
-	      return key[0] !== key[0].toLowerCase();
-	    });
-
-	    keys.forEach(function (key) {
-	      if ("undefined" === typeof binformat.fieldsInverseMap[key]) {
-	        throw new Error("JSON contains unknown field: '" + key + "'");
-	      }
-	    });
-
-	    // Sort fields
-	    keys = sort_fields(keys);
-
-	    for (var i=0; i<keys.length; i++) {
-	      serialize(so, keys[i], val[keys[i]]);
-	    }
-	    if (!no_marker) STInt8.serialize(so, 0xe1); //Object ending marker
-	  },
-
-	  parse: function (so) {
-	    var output = {};
-	    while (so.peek(1)[0] !== 0xe1) {
-	      var keyval = parse(so);
-	      output[keyval[0]] = keyval[1];
-	    }
-	    so.read(1);
-	    return output;
-	  }
-	});
-
-	STObject.id = 14;
-
-	var STArray = exports.Array = new SerializedType({
-	  serialize: function (so, val) {
-	    for (var i=0, l=val.length; i<l; i++) {
-	      var keys = Object.keys(val[i]);
-
-	      if (keys.length !== 1) {
-	        throw Error('Cannot serialize an array containing non-single-key objects');
-	      }
-
-	      var field_name = keys[0];
-	      var value = val[i][field_name];
-	      serialize(so, field_name, value);
-	    }
-	    STInt8.serialize(so, 0xf1); //Array ending marker
-	  },
-
-	  parse: function (so) {
-	    var output = [ ];
-
-	    while (so.peek(1)[0] !== 0xf1) {
-	      var keyval = parse(so);
-	      var obj = { };
-	      obj[keyval[0]] = keyval[1];
-	      output.push(obj);
-	    }
-
-	    so.read(1);
-
-	    return output;
-	  }
-	});
-
-	STArray.id = 15;
-
-
-/***/ },
-
-/***/ 27:
-/***/ function(module, exports, require) {
-
-	/* WEBPACK VAR INJECTION */(function(require, Buffer) {function SlowBuffer (size) {
-	    this.length = size;
-	};
-
-	var assert = require(30);
-
-	exports.INSPECT_MAX_BYTES = 50;
-
-
-	function toHex(n) {
-	  if (n < 16) return '0' + n.toString(16);
-	  return n.toString(16);
-	}
-
-	function utf8ToBytes(str) {
-	  var byteArray = [];
-	  for (var i = 0; i < str.length; i++)
-	    if (str.charCodeAt(i) <= 0x7F)
-	      byteArray.push(str.charCodeAt(i));
-	    else {
-	      var h = encodeURIComponent(str.charAt(i)).substr(1).split('%');
-	      for (var j = 0; j < h.length; j++)
-	        byteArray.push(parseInt(h[j], 16));
-	    }
-
-	  return byteArray;
-	}
-
-	function asciiToBytes(str) {
-	  var byteArray = []
-	  for (var i = 0; i < str.length; i++ )
-	    // Node's code seems to be doing this and not & 0x7F..
-	    byteArray.push( str.charCodeAt(i) & 0xFF );
-
-	  return byteArray;
-	}
-
-	function base64ToBytes(str) {
-	  return require(47).toByteArray(str);
-	}
-
-	SlowBuffer.byteLength = function (str, encoding) {
-	  switch (encoding || "utf8") {
-	    case 'hex':
-	      return str.length / 2;
-
-	    case 'utf8':
-	    case 'utf-8':
-	      return utf8ToBytes(str).length;
-
-	    case 'ascii':
-	      return str.length;
-
-	    case 'base64':
-	      return base64ToBytes(str).length;
-
-	    default:
-	      throw new Error('Unknown encoding');
-	  }
-	};
-
-	function blitBuffer(src, dst, offset, length) {
-	  var pos, i = 0;
-	  while (i < length) {
-	    if ((i+offset >= dst.length) || (i >= src.length))
-	      break;
-
-	    dst[i + offset] = src[i];
-	    i++;
-	  }
-	  return i;
-	}
-
-	SlowBuffer.prototype.utf8Write = function (string, offset, length) {
-	  var bytes, pos;
-	  return SlowBuffer._charsWritten =  blitBuffer(utf8ToBytes(string), this, offset, length);
-	};
-
-	SlowBuffer.prototype.asciiWrite = function (string, offset, length) {
-	  var bytes, pos;
-	  return SlowBuffer._charsWritten =  blitBuffer(asciiToBytes(string), this, offset, length);
-	};
-
-	SlowBuffer.prototype.base64Write = function (string, offset, length) {
-	  var bytes, pos;
-	  return SlowBuffer._charsWritten = blitBuffer(base64ToBytes(string), this, offset, length);
-	};
-
-	SlowBuffer.prototype.base64Slice = function (start, end) {
-	  var bytes = Array.prototype.slice.apply(this, arguments)
-	  return require(47).fromByteArray(bytes);
-	}
-
-	function decodeUtf8Char(str) {
-	  try {
-	    return decodeURIComponent(str);
-	  } catch (err) {
-	    return String.fromCharCode(0xFFFD); // UTF 8 invalid char
-	  }
-	}
-
-	SlowBuffer.prototype.utf8Slice = function () {
-	  var bytes = Array.prototype.slice.apply(this, arguments);
-	  var res = "";
-	  var tmp = "";
-	  var i = 0;
-	  while (i < bytes.length) {
-	    if (bytes[i] <= 0x7F) {
-	      res += decodeUtf8Char(tmp) + String.fromCharCode(bytes[i]);
-	      tmp = "";
-	    } else
-	      tmp += "%" + bytes[i].toString(16);
-
-	    i++;
-	  }
-
-	  return res + decodeUtf8Char(tmp);
-	}
-
-	SlowBuffer.prototype.asciiSlice = function () {
-	  var bytes = Array.prototype.slice.apply(this, arguments);
-	  var ret = "";
-	  for (var i = 0; i < bytes.length; i++)
-	    ret += String.fromCharCode(bytes[i]);
-	  return ret;
-	}
-
-	SlowBuffer.prototype.inspect = function() {
-	  var out = [],
-	      len = this.length;
-	  for (var i = 0; i < len; i++) {
-	    out[i] = toHex(this[i]);
-	    if (i == exports.INSPECT_MAX_BYTES) {
-	      out[i + 1] = '...';
-	      break;
-	    }
-	  }
-	  return '<SlowBuffer ' + out.join(' ') + '>';
-	};
-
-
-	SlowBuffer.prototype.hexSlice = function(start, end) {
-	  var len = this.length;
-
-	  if (!start || start < 0) start = 0;
-	  if (!end || end < 0 || end > len) end = len;
-
-	  var out = '';
-	  for (var i = start; i < end; i++) {
-	    out += toHex(this[i]);
-	  }
-	  return out;
-	};
-
-
-	SlowBuffer.prototype.toString = function(encoding, start, end) {
-	  encoding = String(encoding || 'utf8').toLowerCase();
-	  start = +start || 0;
-	  if (typeof end == 'undefined') end = this.length;
-
-	  // Fastpath empty strings
-	  if (+end == start) {
-	    return '';
-	  }
-
-	  switch (encoding) {
-	    case 'hex':
-	      return this.hexSlice(start, end);
-
-	    case 'utf8':
-	    case 'utf-8':
-	      return this.utf8Slice(start, end);
-
-	    case 'ascii':
-	      return this.asciiSlice(start, end);
-
-	    case 'binary':
-	      return this.binarySlice(start, end);
-
-	    case 'base64':
-	      return this.base64Slice(start, end);
-
-	    case 'ucs2':
-	    case 'ucs-2':
-	      return this.ucs2Slice(start, end);
-
-	    default:
-	      throw new Error('Unknown encoding');
-	  }
-	};
-
-
-	SlowBuffer.prototype.hexWrite = function(string, offset, length) {
-	  offset = +offset || 0;
-	  var remaining = this.length - offset;
-	  if (!length) {
-	    length = remaining;
-	  } else {
-	    length = +length;
-	    if (length > remaining) {
-	      length = remaining;
-	    }
-	  }
-
-	  // must be an even number of digits
-	  var strLen = string.length;
-	  if (strLen % 2) {
-	    throw new Error('Invalid hex string');
-	  }
-	  if (length > strLen / 2) {
-	    length = strLen / 2;
-	  }
-	  for (var i = 0; i < length; i++) {
-	    var byte = parseInt(string.substr(i * 2, 2), 16);
-	    if (isNaN(byte)) throw new Error('Invalid hex string');
-	    this[offset + i] = byte;
-	  }
-	  SlowBuffer._charsWritten = i * 2;
-	  return i;
-	};
-
-
-	SlowBuffer.prototype.write = function(string, offset, length, encoding) {
-	  // Support both (string, offset, length, encoding)
-	  // and the legacy (string, encoding, offset, length)
-	  if (isFinite(offset)) {
-	    if (!isFinite(length)) {
-	      encoding = length;
-	      length = undefined;
-	    }
-	  } else {  // legacy
-	    var swap = encoding;
-	    encoding = offset;
-	    offset = length;
-	    length = swap;
-	  }
-
-	  offset = +offset || 0;
-	  var remaining = this.length - offset;
-	  if (!length) {
-	    length = remaining;
-	  } else {
-	    length = +length;
-	    if (length > remaining) {
-	      length = remaining;
-	    }
-	  }
-	  encoding = String(encoding || 'utf8').toLowerCase();
-
-	  switch (encoding) {
-	    case 'hex':
-	      return this.hexWrite(string, offset, length);
-
-	    case 'utf8':
-	    case 'utf-8':
-	      return this.utf8Write(string, offset, length);
-
-	    case 'ascii':
-	      return this.asciiWrite(string, offset, length);
-
-	    case 'binary':
-	      return this.binaryWrite(string, offset, length);
-
-	    case 'base64':
-	      return this.base64Write(string, offset, length);
-
-	    case 'ucs2':
-	    case 'ucs-2':
-	      return this.ucs2Write(string, offset, length);
-
-	    default:
-	      throw new Error('Unknown encoding');
-	  }
-	};
-
-
-	// slice(start, end)
-	SlowBuffer.prototype.slice = function(start, end) {
-	  if (end === undefined) end = this.length;
-
-	  if (end > this.length) {
-	    throw new Error('oob');
-	  }
-	  if (start > end) {
-	    throw new Error('oob');
-	  }
-
-	  return new Buffer(this, end - start, +start);
-	};
-
-	SlowBuffer.prototype.copy = function(target, targetstart, sourcestart, sourceend) {
-	  var temp = [];
-	  for (var i=sourcestart; i<sourceend; i++) {
-	    assert.ok(typeof this[i] !== 'undefined', "copying undefined buffer bytes!");
-	    temp.push(this[i]);
-	  }
-
-	  for (var i=targetstart; i<targetstart+temp.length; i++) {
-	    target[i] = temp[i-targetstart];
-	  }
-	};
-
-	function coerce(length) {
-	  // Coerce length to a number (possibly NaN), round up
-	  // in case it's fractional (e.g. 123.456) then do a
-	  // double negate to coerce a NaN to 0. Easy, right?
-	  length = ~~Math.ceil(+length);
-	  return length < 0 ? 0 : length;
-	}
-
-
-	// Buffer
-
-	function Buffer(subject, encoding, offset) {
-	  if (!(this instanceof Buffer)) {
-	    return new Buffer(subject, encoding, offset);
-	  }
-
-	  var type;
-
-	  // Are we slicing?
-	  if (typeof offset === 'number') {
-	    this.length = coerce(encoding);
-	    this.parent = subject;
-	    this.offset = offset;
-	  } else {
-	    // Find the length
-	    switch (type = typeof subject) {
-	      case 'number':
-	        this.length = coerce(subject);
-	        break;
-
-	      case 'string':
-	        this.length = Buffer.byteLength(subject, encoding);
-	        break;
-
-	      case 'object': // Assume object is an array
-	        this.length = coerce(subject.length);
-	        break;
-
-	      default:
-	        throw new Error('First argument needs to be a number, ' +
-	                        'array or string.');
-	    }
-
-	    if (this.length > Buffer.poolSize) {
-	      // Big buffer, just alloc one.
-	      this.parent = new SlowBuffer(this.length);
-	      this.offset = 0;
-
-	    } else {
-	      // Small buffer.
-	      if (!pool || pool.length - pool.used < this.length) allocPool();
-	      this.parent = pool;
-	      this.offset = pool.used;
-	      pool.used += this.length;
-	    }
-
-	    // Treat array-ish objects as a byte array.
-	    if (isArrayIsh(subject)) {
-	      for (var i = 0; i < this.length; i++) {
-	        this.parent[i + this.offset] = subject[i];
-	      }
-	    } else if (type == 'string') {
-	      // We are a string
-	      this.length = this.write(subject, 0, encoding);
-	    }
-	  }
-
-	}
-
-	function isArrayIsh(subject) {
-	  return Array.isArray(subject) || Buffer.isBuffer(subject) ||
-	         subject && typeof subject === 'object' &&
-	         typeof subject.length === 'number';
-	}
-
-	exports.SlowBuffer = SlowBuffer;
-	exports.Buffer = Buffer;
-
-	Buffer.poolSize = 8 * 1024;
-	var pool;
-
-	function allocPool() {
-	  pool = new SlowBuffer(Buffer.poolSize);
-	  pool.used = 0;
-	}
-
-
-	// Static methods
-	Buffer.isBuffer = function isBuffer(b) {
-	  return b instanceof Buffer || b instanceof SlowBuffer;
-	};
-
-	Buffer.concat = function (list, totalLength) {
-	  if (!Array.isArray(list)) {
-	    throw new Error("Usage: Buffer.concat(list, [totalLength])\n \
-	      list should be an Array.");
-	  }
-
-	  if (list.length === 0) {
-	    return new Buffer(0);
-	  } else if (list.length === 1) {
-	    return list[0];
-	  }
-
-	  if (typeof totalLength !== 'number') {
-	    totalLength = 0;
-	    for (var i = 0; i < list.length; i++) {
-	      var buf = list[i];
-	      totalLength += buf.length;
-	    }
-	  }
-
-	  var buffer = new Buffer(totalLength);
-	  var pos = 0;
-	  for (var i = 0; i < list.length; i++) {
-	    var buf = list[i];
-	    buf.copy(buffer, pos);
-	    pos += buf.length;
-	  }
-	  return buffer;
-	};
-
-	// Inspect
-	Buffer.prototype.inspect = function inspect() {
-	  var out = [],
-	      len = this.length;
-
-	  for (var i = 0; i < len; i++) {
-	    out[i] = toHex(this.parent[i + this.offset]);
-	    if (i == exports.INSPECT_MAX_BYTES) {
-	      out[i + 1] = '...';
-	      break;
-	    }
-	  }
-
-	  return '<Buffer ' + out.join(' ') + '>';
-	};
-
-
-	Buffer.prototype.get = function get(i) {
-	  if (i < 0 || i >= this.length) throw new Error('oob');
-	  return this.parent[this.offset + i];
-	};
-
-
-	Buffer.prototype.set = function set(i, v) {
-	  if (i < 0 || i >= this.length) throw new Error('oob');
-	  return this.parent[this.offset + i] = v;
-	};
-
-
-	// write(string, offset = 0, length = buffer.length-offset, encoding = 'utf8')
-	Buffer.prototype.write = function(string, offset, length, encoding) {
-	  // Support both (string, offset, length, encoding)
-	  // and the legacy (string, encoding, offset, length)
-	  if (isFinite(offset)) {
-	    if (!isFinite(length)) {
-	      encoding = length;
-	      length = undefined;
-	    }
-	  } else {  // legacy
-	    var swap = encoding;
-	    encoding = offset;
-	    offset = length;
-	    length = swap;
-	  }
-
-	  offset = +offset || 0;
-	  var remaining = this.length - offset;
-	  if (!length) {
-	    length = remaining;
-	  } else {
-	    length = +length;
-	    if (length > remaining) {
-	      length = remaining;
-	    }
-	  }
-	  encoding = String(encoding || 'utf8').toLowerCase();
-
-	  var ret;
-	  switch (encoding) {
-	    case 'hex':
-	      ret = this.parent.hexWrite(string, this.offset + offset, length);
-	      break;
-
-	    case 'utf8':
-	    case 'utf-8':
-	      ret = this.parent.utf8Write(string, this.offset + offset, length);
-	      break;
-
-	    case 'ascii':
-	      ret = this.parent.asciiWrite(string, this.offset + offset, length);
-	      break;
-
-	    case 'binary':
-	      ret = this.parent.binaryWrite(string, this.offset + offset, length);
-	      break;
-
-	    case 'base64':
-	      // Warning: maxLength not taken into account in base64Write
-	      ret = this.parent.base64Write(string, this.offset + offset, length);
-	      break;
-
-	    case 'ucs2':
-	    case 'ucs-2':
-	      ret = this.parent.ucs2Write(string, this.offset + offset, length);
-	      break;
-
-	    default:
-	      throw new Error('Unknown encoding');
-	  }
-
-	  Buffer._charsWritten = SlowBuffer._charsWritten;
-
-	  return ret;
-	};
-
-
-	// toString(encoding, start=0, end=buffer.length)
-	Buffer.prototype.toString = function(encoding, start, end) {
-	  encoding = String(encoding || 'utf8').toLowerCase();
-
-	  if (typeof start == 'undefined' || start < 0) {
-	    start = 0;
-	  } else if (start > this.length) {
-	    start = this.length;
-	  }
-
-	  if (typeof end == 'undefined' || end > this.length) {
-	    end = this.length;
-	  } else if (end < 0) {
-	    end = 0;
-	  }
-
-	  start = start + this.offset;
-	  end = end + this.offset;
-
-	  switch (encoding) {
-	    case 'hex':
-	      return this.parent.hexSlice(start, end);
-
-	    case 'utf8':
-	    case 'utf-8':
-	      return this.parent.utf8Slice(start, end);
-
-	    case 'ascii':
-	      return this.parent.asciiSlice(start, end);
-
-	    case 'binary':
-	      return this.parent.binarySlice(start, end);
-
-	    case 'base64':
-	      return this.parent.base64Slice(start, end);
-
-	    case 'ucs2':
-	    case 'ucs-2':
-	      return this.parent.ucs2Slice(start, end);
-
-	    default:
-	      throw new Error('Unknown encoding');
-	  }
-	};
-
-
-	// byteLength
-	Buffer.byteLength = SlowBuffer.byteLength;
-
-
-	// fill(value, start=0, end=buffer.length)
-	Buffer.prototype.fill = function fill(value, start, end) {
-	  value || (value = 0);
-	  start || (start = 0);
-	  end || (end = this.length);
-
-	  if (typeof value === 'string') {
-	    value = value.charCodeAt(0);
-	  }
-	  if (!(typeof value === 'number') || isNaN(value)) {
-	    throw new Error('value is not a number');
-	  }
-
-	  if (end < start) throw new Error('end < start');
-
-	  // Fill 0 bytes; we're done
-	  if (end === start) return 0;
-	  if (this.length == 0) return 0;
-
-	  if (start < 0 || start >= this.length) {
-	    throw new Error('start out of bounds');
-	  }
-
-	  if (end < 0 || end > this.length) {
-	    throw new Error('end out of bounds');
-	  }
-
-	  return this.parent.fill(value,
-	                          start + this.offset,
-	                          end + this.offset);
-	};
-
-
-	// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-	Buffer.prototype.copy = function(target, target_start, start, end) {
-	  var source = this;
-	  start || (start = 0);
-	  end || (end = this.length);
-	  target_start || (target_start = 0);
-
-	  if (end < start) throw new Error('sourceEnd < sourceStart');
-
-	  // Copy 0 bytes; we're done
-	  if (end === start) return 0;
-	  if (target.length == 0 || source.length == 0) return 0;
-
-	  if (target_start < 0 || target_start >= target.length) {
-	    throw new Error('targetStart out of bounds');
-	  }
-
-	  if (start < 0 || start >= source.length) {
-	    throw new Error('sourceStart out of bounds');
-	  }
-
-	  if (end < 0 || end > source.length) {
-	    throw new Error('sourceEnd out of bounds');
-	  }
-
-	  // Are we oob?
-	  if (end > this.length) {
-	    end = this.length;
-	  }
-
-	  if (target.length - target_start < end - start) {
-	    end = target.length - target_start + start;
-	  }
-
-	  return this.parent.copy(target.parent,
-	                          target_start + target.offset,
-	                          start + this.offset,
-	                          end + this.offset);
-	};
-
-
-	// slice(start, end)
-	Buffer.prototype.slice = function(start, end) {
-	  if (end === undefined) end = this.length;
-	  if (end > this.length) throw new Error('oob');
-	  if (start > end) throw new Error('oob');
-
-	  return new Buffer(this.parent, end - start, +start + this.offset);
-	};
-
-
-	// Legacy methods for backwards compatibility.
-
-	Buffer.prototype.utf8Slice = function(start, end) {
-	  return this.toString('utf8', start, end);
-	};
-
-	Buffer.prototype.binarySlice = function(start, end) {
-	  return this.toString('binary', start, end);
-	};
-
-	Buffer.prototype.asciiSlice = function(start, end) {
-	  return this.toString('ascii', start, end);
-	};
-
-	Buffer.prototype.utf8Write = function(string, offset) {
-	  return this.write(string, offset, 'utf8');
-	};
-
-	Buffer.prototype.binaryWrite = function(string, offset) {
-	  return this.write(string, offset, 'binary');
-	};
-
-	Buffer.prototype.asciiWrite = function(string, offset) {
-	  return this.write(string, offset, 'ascii');
-	};
-
-	Buffer.prototype.readUInt8 = function(offset, noAssert) {
-	  var buffer = this;
-
-	  if (!noAssert) {
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  return buffer.parent[buffer.offset + offset];
-	};
-
-	function readUInt16(buffer, offset, isBigEndian, noAssert) {
-	  var val = 0;
-
-
-	  if (!noAssert) {
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 1 < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  if (isBigEndian) {
-	    val = buffer.parent[buffer.offset + offset] << 8;
-	    val |= buffer.parent[buffer.offset + offset + 1];
-	  } else {
-	    val = buffer.parent[buffer.offset + offset];
-	    val |= buffer.parent[buffer.offset + offset + 1] << 8;
-	  }
-
-	  return val;
-	}
-
-	Buffer.prototype.readUInt16LE = function(offset, noAssert) {
-	  return readUInt16(this, offset, false, noAssert);
-	};
-
-	Buffer.prototype.readUInt16BE = function(offset, noAssert) {
-	  return readUInt16(this, offset, true, noAssert);
-	};
-
-	function readUInt32(buffer, offset, isBigEndian, noAssert) {
-	  var val = 0;
-
-	  if (!noAssert) {
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 3 < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  if (isBigEndian) {
-	    val = buffer.parent[buffer.offset + offset + 1] << 16;
-	    val |= buffer.parent[buffer.offset + offset + 2] << 8;
-	    val |= buffer.parent[buffer.offset + offset + 3];
-	    val = val + (buffer.parent[buffer.offset + offset] << 24 >>> 0);
-	  } else {
-	    val = buffer.parent[buffer.offset + offset + 2] << 16;
-	    val |= buffer.parent[buffer.offset + offset + 1] << 8;
-	    val |= buffer.parent[buffer.offset + offset];
-	    val = val + (buffer.parent[buffer.offset + offset + 3] << 24 >>> 0);
-	  }
-
-	  return val;
-	}
-
-	Buffer.prototype.readUInt32LE = function(offset, noAssert) {
-	  return readUInt32(this, offset, false, noAssert);
-	};
-
-	Buffer.prototype.readUInt32BE = function(offset, noAssert) {
-	  return readUInt32(this, offset, true, noAssert);
-	};
-
-
-	/*
-	 * Signed integer types, yay team! A reminder on how two's complement actually
-	 * works. The first bit is the signed bit, i.e. tells us whether or not the
-	 * number should be positive or negative. If the two's complement value is
-	 * positive, then we're done, as it's equivalent to the unsigned representation.
-	 *
-	 * Now if the number is positive, you're pretty much done, you can just leverage
-	 * the unsigned translations and return those. Unfortunately, negative numbers
-	 * aren't quite that straightforward.
-	 *
-	 * At first glance, one might be inclined to use the traditional formula to
-	 * translate binary numbers between the positive and negative values in two's
-	 * complement. (Though it doesn't quite work for the most negative value)
-	 * Mainly:
-	 *  - invert all the bits
-	 *  - add one to the result
-	 *
-	 * Of course, this doesn't quite work in Javascript. Take for example the value
-	 * of -128. This could be represented in 16 bits (big-endian) as 0xff80. But of
-	 * course, Javascript will do the following:
-	 *
-	 * > ~0xff80
-	 * -65409
-	 *
-	 * Whoh there, Javascript, that's not quite right. But wait, according to
-	 * Javascript that's perfectly correct. When Javascript ends up seeing the
-	 * constant 0xff80, it has no notion that it is actually a signed number. It
-	 * assumes that we've input the unsigned value 0xff80. Thus, when it does the
-	 * binary negation, it casts it into a signed value, (positive 0xff80). Then
-	 * when you perform binary negation on that, it turns it into a negative number.
-	 *
-	 * Instead, we're going to have to use the following general formula, that works
-	 * in a rather Javascript friendly way. I'm glad we don't support this kind of
-	 * weird numbering scheme in the kernel.
-	 *
-	 * (BIT-MAX - (unsigned)val + 1) * -1
-	 *
-	 * The astute observer, may think that this doesn't make sense for 8-bit numbers
-	 * (really it isn't necessary for them). However, when you get 16-bit numbers,
-	 * you do. Let's go back to our prior example and see how this will look:
-	 *
-	 * (0xffff - 0xff80 + 1) * -1
-	 * (0x007f + 1) * -1
-	 * (0x0080) * -1
-	 */
-	Buffer.prototype.readInt8 = function(offset, noAssert) {
-	  var buffer = this;
-	  var neg;
-
-	  if (!noAssert) {
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  neg = buffer.parent[buffer.offset + offset] & 0x80;
-	  if (!neg) {
-	    return (buffer.parent[buffer.offset + offset]);
-	  }
-
-	  return ((0xff - buffer.parent[buffer.offset + offset] + 1) * -1);
-	};
-
-	function readInt16(buffer, offset, isBigEndian, noAssert) {
-	  var neg, val;
-
-	  if (!noAssert) {
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 1 < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  val = readUInt16(buffer, offset, isBigEndian, noAssert);
-	  neg = val & 0x8000;
-	  if (!neg) {
-	    return val;
-	  }
-
-	  return (0xffff - val + 1) * -1;
-	}
-
-	Buffer.prototype.readInt16LE = function(offset, noAssert) {
-	  return readInt16(this, offset, false, noAssert);
-	};
-
-	Buffer.prototype.readInt16BE = function(offset, noAssert) {
-	  return readInt16(this, offset, true, noAssert);
-	};
-
-	function readInt32(buffer, offset, isBigEndian, noAssert) {
-	  var neg, val;
-
-	  if (!noAssert) {
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 3 < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  val = readUInt32(buffer, offset, isBigEndian, noAssert);
-	  neg = val & 0x80000000;
-	  if (!neg) {
-	    return (val);
-	  }
-
-	  return (0xffffffff - val + 1) * -1;
-	}
-
-	Buffer.prototype.readInt32LE = function(offset, noAssert) {
-	  return readInt32(this, offset, false, noAssert);
-	};
-
-	Buffer.prototype.readInt32BE = function(offset, noAssert) {
-	  return readInt32(this, offset, true, noAssert);
-	};
-
-	function readFloat(buffer, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset + 3 < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  return require(39).readIEEE754(buffer, offset, isBigEndian,
-	      23, 4);
-	}
-
-	Buffer.prototype.readFloatLE = function(offset, noAssert) {
-	  return readFloat(this, offset, false, noAssert);
-	};
-
-	Buffer.prototype.readFloatBE = function(offset, noAssert) {
-	  return readFloat(this, offset, true, noAssert);
-	};
-
-	function readDouble(buffer, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset + 7 < buffer.length,
-	        'Trying to read beyond buffer length');
-	  }
-
-	  return require(39).readIEEE754(buffer, offset, isBigEndian,
-	      52, 8);
-	}
-
-	Buffer.prototype.readDoubleLE = function(offset, noAssert) {
-	  return readDouble(this, offset, false, noAssert);
-	};
-
-	Buffer.prototype.readDoubleBE = function(offset, noAssert) {
-	  return readDouble(this, offset, true, noAssert);
-	};
-
-
-	/*
-	 * We have to make sure that the value is a valid integer. This means that it is
-	 * non-negative. It has no fractional component and that it does not exceed the
-	 * maximum allowed value.
-	 *
-	 *      value           The number to check for validity
-	 *
-	 *      max             The maximum value
-	 */
-	function verifuint(value, max) {
-	  assert.ok(typeof (value) == 'number',
-	      'cannot write a non-number as a number');
-
-	  assert.ok(value >= 0,
-	      'specified a negative value for writing an unsigned value');
-
-	  assert.ok(value <= max, 'value is larger than maximum value for type');
-
-	  assert.ok(Math.floor(value) === value, 'value has a fractional component');
-	}
-
-	Buffer.prototype.writeUInt8 = function(value, offset, noAssert) {
-	  var buffer = this;
-
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset < buffer.length,
-	        'trying to write beyond buffer length');
-
-	    verifuint(value, 0xff);
-	  }
-
-	  buffer.parent[buffer.offset + offset] = value;
-	};
-
-	function writeUInt16(buffer, value, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 1 < buffer.length,
-	        'trying to write beyond buffer length');
-
-	    verifuint(value, 0xffff);
-	  }
-
-	  if (isBigEndian) {
-	    buffer.parent[buffer.offset + offset] = (value & 0xff00) >>> 8;
-	    buffer.parent[buffer.offset + offset + 1] = value & 0x00ff;
-	  } else {
-	    buffer.parent[buffer.offset + offset + 1] = (value & 0xff00) >>> 8;
-	    buffer.parent[buffer.offset + offset] = value & 0x00ff;
-	  }
-	}
-
-	Buffer.prototype.writeUInt16LE = function(value, offset, noAssert) {
-	  writeUInt16(this, value, offset, false, noAssert);
-	};
-
-	Buffer.prototype.writeUInt16BE = function(value, offset, noAssert) {
-	  writeUInt16(this, value, offset, true, noAssert);
-	};
-
-	function writeUInt32(buffer, value, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 3 < buffer.length,
-	        'trying to write beyond buffer length');
-
-	    verifuint(value, 0xffffffff);
-	  }
-
-	  if (isBigEndian) {
-	    buffer.parent[buffer.offset + offset] = (value >>> 24) & 0xff;
-	    buffer.parent[buffer.offset + offset + 1] = (value >>> 16) & 0xff;
-	    buffer.parent[buffer.offset + offset + 2] = (value >>> 8) & 0xff;
-	    buffer.parent[buffer.offset + offset + 3] = value & 0xff;
-	  } else {
-	    buffer.parent[buffer.offset + offset + 3] = (value >>> 24) & 0xff;
-	    buffer.parent[buffer.offset + offset + 2] = (value >>> 16) & 0xff;
-	    buffer.parent[buffer.offset + offset + 1] = (value >>> 8) & 0xff;
-	    buffer.parent[buffer.offset + offset] = value & 0xff;
-	  }
-	}
-
-	Buffer.prototype.writeUInt32LE = function(value, offset, noAssert) {
-	  writeUInt32(this, value, offset, false, noAssert);
-	};
-
-	Buffer.prototype.writeUInt32BE = function(value, offset, noAssert) {
-	  writeUInt32(this, value, offset, true, noAssert);
-	};
-
-
-	/*
-	 * We now move onto our friends in the signed number category. Unlike unsigned
-	 * numbers, we're going to have to worry a bit more about how we put values into
-	 * arrays. Since we are only worrying about signed 32-bit values, we're in
-	 * slightly better shape. Unfortunately, we really can't do our favorite binary
-	 * & in this system. It really seems to do the wrong thing. For example:
-	 *
-	 * > -32 & 0xff
-	 * 224
-	 *
-	 * What's happening above is really: 0xe0 & 0xff = 0xe0. However, the results of
-	 * this aren't treated as a signed number. Ultimately a bad thing.
-	 *
-	 * What we're going to want to do is basically create the unsigned equivalent of
-	 * our representation and pass that off to the wuint* functions. To do that
-	 * we're going to do the following:
-	 *
-	 *  - if the value is positive
-	 *      we can pass it directly off to the equivalent wuint
-	 *  - if the value is negative
-	 *      we do the following computation:
-	 *         mb + val + 1, where
-	 *         mb   is the maximum unsigned value in that byte size
-	 *         val  is the Javascript negative integer
-	 *
-	 *
-	 * As a concrete value, take -128. In signed 16 bits this would be 0xff80. If
-	 * you do out the computations:
-	 *
-	 * 0xffff - 128 + 1
-	 * 0xffff - 127
-	 * 0xff80
-	 *
-	 * You can then encode this value as the signed version. This is really rather
-	 * hacky, but it should work and get the job done which is our goal here.
-	 */
-
-	/*
-	 * A series of checks to make sure we actually have a signed 32-bit number
-	 */
-	function verifsint(value, max, min) {
-	  assert.ok(typeof (value) == 'number',
-	      'cannot write a non-number as a number');
-
-	  assert.ok(value <= max, 'value larger than maximum allowed value');
-
-	  assert.ok(value >= min, 'value smaller than minimum allowed value');
-
-	  assert.ok(Math.floor(value) === value, 'value has a fractional component');
-	}
-
-	function verifIEEE754(value, max, min) {
-	  assert.ok(typeof (value) == 'number',
-	      'cannot write a non-number as a number');
-
-	  assert.ok(value <= max, 'value larger than maximum allowed value');
-
-	  assert.ok(value >= min, 'value smaller than minimum allowed value');
-	}
-
-	Buffer.prototype.writeInt8 = function(value, offset, noAssert) {
-	  var buffer = this;
-
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset < buffer.length,
-	        'Trying to write beyond buffer length');
-
-	    verifsint(value, 0x7f, -0x80);
-	  }
-
-	  if (value >= 0) {
-	    buffer.writeUInt8(value, offset, noAssert);
-	  } else {
-	    buffer.writeUInt8(0xff + value + 1, offset, noAssert);
-	  }
-	};
-
-	function writeInt16(buffer, value, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 1 < buffer.length,
-	        'Trying to write beyond buffer length');
-
-	    verifsint(value, 0x7fff, -0x8000);
-	  }
-
-	  if (value >= 0) {
-	    writeUInt16(buffer, value, offset, isBigEndian, noAssert);
-	  } else {
-	    writeUInt16(buffer, 0xffff + value + 1, offset, isBigEndian, noAssert);
-	  }
-	}
-
-	Buffer.prototype.writeInt16LE = function(value, offset, noAssert) {
-	  writeInt16(this, value, offset, false, noAssert);
-	};
-
-	Buffer.prototype.writeInt16BE = function(value, offset, noAssert) {
-	  writeInt16(this, value, offset, true, noAssert);
-	};
-
-	function writeInt32(buffer, value, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 3 < buffer.length,
-	        'Trying to write beyond buffer length');
-
-	    verifsint(value, 0x7fffffff, -0x80000000);
-	  }
-
-	  if (value >= 0) {
-	    writeUInt32(buffer, value, offset, isBigEndian, noAssert);
-	  } else {
-	    writeUInt32(buffer, 0xffffffff + value + 1, offset, isBigEndian, noAssert);
-	  }
-	}
-
-	Buffer.prototype.writeInt32LE = function(value, offset, noAssert) {
-	  writeInt32(this, value, offset, false, noAssert);
-	};
-
-	Buffer.prototype.writeInt32BE = function(value, offset, noAssert) {
-	  writeInt32(this, value, offset, true, noAssert);
-	};
-
-	function writeFloat(buffer, value, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 3 < buffer.length,
-	        'Trying to write beyond buffer length');
-
-	    verifIEEE754(value, 3.4028234663852886e+38, -3.4028234663852886e+38);
-	  }
-
-	  require(39).writeIEEE754(buffer, value, offset, isBigEndian,
-	      23, 4);
-	}
-
-	Buffer.prototype.writeFloatLE = function(value, offset, noAssert) {
-	  writeFloat(this, value, offset, false, noAssert);
-	};
-
-	Buffer.prototype.writeFloatBE = function(value, offset, noAssert) {
-	  writeFloat(this, value, offset, true, noAssert);
-	};
-
-	function writeDouble(buffer, value, offset, isBigEndian, noAssert) {
-	  if (!noAssert) {
-	    assert.ok(value !== undefined && value !== null,
-	        'missing value');
-
-	    assert.ok(typeof (isBigEndian) === 'boolean',
-	        'missing or invalid endian');
-
-	    assert.ok(offset !== undefined && offset !== null,
-	        'missing offset');
-
-	    assert.ok(offset + 7 < buffer.length,
-	        'Trying to write beyond buffer length');
-
-	    verifIEEE754(value, 1.7976931348623157E+308, -1.7976931348623157E+308);
-	  }
-
-	  require(39).writeIEEE754(buffer, value, offset, isBigEndian,
-	      52, 8);
-	}
-
-	Buffer.prototype.writeDoubleLE = function(value, offset, noAssert) {
-	  writeDouble(this, value, offset, false, noAssert);
-	};
-
-	Buffer.prototype.writeDoubleBE = function(value, offset, noAssert) {
-	  writeDouble(this, value, offset, true, noAssert);
-	};
-
-	SlowBuffer.prototype.readUInt8 = Buffer.prototype.readUInt8;
-	SlowBuffer.prototype.readUInt16LE = Buffer.prototype.readUInt16LE;
-	SlowBuffer.prototype.readUInt16BE = Buffer.prototype.readUInt16BE;
-	SlowBuffer.prototype.readUInt32LE = Buffer.prototype.readUInt32LE;
-	SlowBuffer.prototype.readUInt32BE = Buffer.prototype.readUInt32BE;
-	SlowBuffer.prototype.readInt8 = Buffer.prototype.readInt8;
-	SlowBuffer.prototype.readInt16LE = Buffer.prototype.readInt16LE;
-	SlowBuffer.prototype.readInt16BE = Buffer.prototype.readInt16BE;
-	SlowBuffer.prototype.readInt32LE = Buffer.prototype.readInt32LE;
-	SlowBuffer.prototype.readInt32BE = Buffer.prototype.readInt32BE;
-	SlowBuffer.prototype.readFloatLE = Buffer.prototype.readFloatLE;
-	SlowBuffer.prototype.readFloatBE = Buffer.prototype.readFloatBE;
-	SlowBuffer.prototype.readDoubleLE = Buffer.prototype.readDoubleLE;
-	SlowBuffer.prototype.readDoubleBE = Buffer.prototype.readDoubleBE;
-	SlowBuffer.prototype.writeUInt8 = Buffer.prototype.writeUInt8;
-	SlowBuffer.prototype.writeUInt16LE = Buffer.prototype.writeUInt16LE;
-	SlowBuffer.prototype.writeUInt16BE = Buffer.prototype.writeUInt16BE;
-	SlowBuffer.prototype.writeUInt32LE = Buffer.prototype.writeUInt32LE;
-	SlowBuffer.prototype.writeUInt32BE = Buffer.prototype.writeUInt32BE;
-	SlowBuffer.prototype.writeInt8 = Buffer.prototype.writeInt8;
-	SlowBuffer.prototype.writeInt16LE = Buffer.prototype.writeInt16LE;
-	SlowBuffer.prototype.writeInt16BE = Buffer.prototype.writeInt16BE;
-	SlowBuffer.prototype.writeInt32LE = Buffer.prototype.writeInt32LE;
-	SlowBuffer.prototype.writeInt32BE = Buffer.prototype.writeInt32BE;
-	SlowBuffer.prototype.writeFloatLE = Buffer.prototype.writeFloatLE;
-	SlowBuffer.prototype.writeFloatBE = Buffer.prototype.writeFloatBE;
-	SlowBuffer.prototype.writeDoubleLE = Buffer.prototype.writeDoubleLE;
-	SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
-	
-	/* WEBPACK VAR INJECTION */}(require, require(27).Buffer))
-
-/***/ },
-
-/***/ 28:
-/***/ function(module, exports, require) {
-
-	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
-	var isArray = require(40);
-	var indexOf = require(41);
-
-
-
-	// By default EventEmitters will print a warning if more than
-	// 10 listeners are added to it. This is a useful default which
-	// helps finding memory leaks.
-	//
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	var defaultMaxListeners = 10;
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!this._events) this._events = {};
-	  this._maxListeners = n;
-	};
-
-
-	EventEmitter.prototype.emit = function(type) {
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events || !this._events.error ||
-	        (isArray(this._events.error) && !this._events.error.length))
-	    {
-	      if (arguments[1] instanceof Error) {
-	        throw arguments[1]; // Unhandled 'error' event
-	      } else {
-	        throw new Error("Uncaught, unspecified 'error' event.");
-	      }
-	      return false;
-	    }
-	  }
-
-	  if (!this._events) return false;
-	  var handler = this._events[type];
-	  if (!handler) return false;
-
-	  if (typeof handler == 'function') {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        var args = Array.prototype.slice.call(arguments, 1);
-	        handler.apply(this, args);
-	    }
-	    return true;
-
-	  } else if (isArray(handler)) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-
-	    var listeners = handler.slice();
-	    for (var i = 0, l = listeners.length; i < l; i++) {
-	      listeners[i].apply(this, args);
-	    }
-	    return true;
-
-	  } else {
-	    return false;
-	  }
-	};
-
-	// EventEmitter is defined in src/node_events.cc
-	// EventEmitter.prototype.emit() is also defined there.
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('addListener only takes instances of Function');
-	  }
-
-	  if (!this._events) this._events = {};
-
-	  // To avoid recursion in the case that type == "newListeners"! Before
-	  // adding it to the listeners, first emit "newListeners".
-	  this.emit('newListener', type, listener);
-	  if (!this._events[type]) {
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  } else if (isArray(this._events[type])) {
-
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-
-	  } else {
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-	  }
-
-	  // Check for listener leak
-	  if (isArray(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (this._maxListeners !== undefined) {
-	      m = this._maxListeners;
-	    } else {
-	      m = defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(events) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      console.trace();
-	    }
-	  }
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('.once only takes instances of Function');
-	  }
-
-	  var self = this;
-	  function g() {
-	    self.removeListener(type, g);
-	    listener.apply(this, arguments);
-	  }
-
-	  g.listener = listener;
-	  self.on(type, g);
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  if ('function' !== typeof listener) {
-	    throw new Error('removeListener only takes instances of Function');
-	  }
-
-	  // does not use listeners(), so no side effect of creating _events[type]
-	  if (!this._events || !this._events[type]) return this;
-
-	  var list = this._events[type];
-
-	  if (isArray(list)) {
-	    var position = -1;
-	    for (var i = 0, length = list.length; i < length; i++) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener))
-	      {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0) return this;
-	    list.splice(position, 1);
-	    if (list.length == 0)
-	      delete this._events[type];
-	  } else if (list === listener ||
-	             (list.listener && list.listener === listener)) {
-	    delete this._events[type];
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  if (arguments.length === 0) {
-	    this._events = {};
-	    return this;
-	  }
-
-	  // does not use listeners(), so no side effect of creating _events[type]
-	  if (type && this._events && this._events[type]) this._events[type] = null;
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  if (!this._events) this._events = {};
-	  if (!this._events[type]) this._events[type] = [];
-	  if (!isArray(this._events[type])) {
-	    this._events[type] = [this._events[type]];
-	  }
-	  return this._events[type];
-	};
-
-
-/***/ },
-
-/***/ 29:
-/***/ function(module, exports, require) {
-
-	var events = require(28);
-
-	var isArray = require(40);
-	var Object_keys = require(43);
-	var Object_getOwnPropertyNames = require(44);
-	var Object_create = require(45);
-	var isRegExp = require(46);
-
-	exports.isArray = isArray;
-	exports.isDate = isDate;
-	exports.isRegExp = isRegExp;
-
-
-	exports.print = function () {};
-	exports.puts = function () {};
-	exports.debug = function() {};
-
-	exports.inspect = function(obj, showHidden, depth, colors) {
-	  var seen = [];
-
-	  var stylize = function(str, styleType) {
-	    // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-	    var styles =
-	        { 'bold' : [1, 22],
-	          'italic' : [3, 23],
-	          'underline' : [4, 24],
-	          'inverse' : [7, 27],
-	          'white' : [37, 39],
-	          'grey' : [90, 39],
-	          'black' : [30, 39],
-	          'blue' : [34, 39],
-	          'cyan' : [36, 39],
-	          'green' : [32, 39],
-	          'magenta' : [35, 39],
-	          'red' : [31, 39],
-	          'yellow' : [33, 39] };
-
-	    var style =
-	        { 'special': 'cyan',
-	          'number': 'blue',
-	          'boolean': 'yellow',
-	          'undefined': 'grey',
-	          'null': 'bold',
-	          'string': 'green',
-	          'date': 'magenta',
-	          // "name": intentionally not styling
-	          'regexp': 'red' }[styleType];
-
-	    if (style) {
-	      return '\033[' + styles[style][0] + 'm' + str +
-	             '\033[' + styles[style][1] + 'm';
-	    } else {
-	      return str;
-	    }
-	  };
-	  if (! colors) {
-	    stylize = function(str, styleType) { return str; };
-	  }
-
-	  function format(value, recurseTimes) {
-	    // Provide a hook for user-specified inspect functions.
-	    // Check that value is an object with an inspect function on it
-	    if (value && typeof value.inspect === 'function' &&
-	        // Filter out the util module, it's inspect function is special
-	        value !== exports &&
-	        // Also filter out any prototype objects using the circular check.
-	        !(value.constructor && value.constructor.prototype === value)) {
-	      return value.inspect(recurseTimes);
-	    }
-
-	    // Primitive types cannot have properties
-	    switch (typeof value) {
-	      case 'undefined':
-	        return stylize('undefined', 'undefined');
-
-	      case 'string':
-	        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-	                                                 .replace(/'/g, "\\'")
-	                                                 .replace(/\\"/g, '"') + '\'';
-	        return stylize(simple, 'string');
-
-	      case 'number':
-	        return stylize('' + value, 'number');
-
-	      case 'boolean':
-	        return stylize('' + value, 'boolean');
-	    }
-	    // For some reason typeof null is "object", so special case here.
-	    if (value === null) {
-	      return stylize('null', 'null');
-	    }
-
-	    // Look up the keys of the object.
-	    var visible_keys = Object_keys(value);
-	    var keys = showHidden ? Object_getOwnPropertyNames(value) : visible_keys;
-
-	    // Functions without properties can be shortcutted.
-	    if (typeof value === 'function' && keys.length === 0) {
-	      if (isRegExp(value)) {
-	        return stylize('' + value, 'regexp');
-	      } else {
-	        var name = value.name ? ': ' + value.name : '';
-	        return stylize('[Function' + name + ']', 'special');
-	      }
-	    }
-
-	    // Dates without properties can be shortcutted
-	    if (isDate(value) && keys.length === 0) {
-	      return stylize(value.toUTCString(), 'date');
-	    }
-
-	    var base, type, braces;
-	    // Determine the object type
-	    if (isArray(value)) {
-	      type = 'Array';
-	      braces = ['[', ']'];
-	    } else {
-	      type = 'Object';
-	      braces = ['{', '}'];
-	    }
-
-	    // Make functions say that they are functions
-	    if (typeof value === 'function') {
-	      var n = value.name ? ': ' + value.name : '';
-	      base = (isRegExp(value)) ? ' ' + value : ' [Function' + n + ']';
-	    } else {
-	      base = '';
-	    }
-
-	    // Make dates with properties first say the date
-	    if (isDate(value)) {
-	      base = ' ' + value.toUTCString();
-	    }
-
-	    if (keys.length === 0) {
-	      return braces[0] + base + braces[1];
-	    }
-
-	    if (recurseTimes < 0) {
-	      if (isRegExp(value)) {
-	        return stylize('' + value, 'regexp');
-	      } else {
-	        return stylize('[Object]', 'special');
-	      }
-	    }
-
-	    seen.push(value);
-
-	    var output = keys.map(function(key) {
-	      var name, str;
-	      if (value.__lookupGetter__) {
-	        if (value.__lookupGetter__(key)) {
-	          if (value.__lookupSetter__(key)) {
-	            str = stylize('[Getter/Setter]', 'special');
-	          } else {
-	            str = stylize('[Getter]', 'special');
-	          }
-	        } else {
-	          if (value.__lookupSetter__(key)) {
-	            str = stylize('[Setter]', 'special');
-	          }
-	        }
-	      }
-	      if (visible_keys.indexOf(key) < 0) {
-	        name = '[' + key + ']';
-	      }
-	      if (!str) {
-	        if (seen.indexOf(value[key]) < 0) {
-	          if (recurseTimes === null) {
-	            str = format(value[key]);
-	          } else {
-	            str = format(value[key], recurseTimes - 1);
-	          }
-	          if (str.indexOf('\n') > -1) {
-	            if (isArray(value)) {
-	              str = str.split('\n').map(function(line) {
-	                return '  ' + line;
-	              }).join('\n').substr(2);
-	            } else {
-	              str = '\n' + str.split('\n').map(function(line) {
-	                return '   ' + line;
-	              }).join('\n');
-	            }
-	          }
-	        } else {
-	          str = stylize('[Circular]', 'special');
-	        }
-	      }
-	      if (typeof name === 'undefined') {
-	        if (type === 'Array' && key.match(/^\d+$/)) {
-	          return str;
-	        }
-	        name = JSON.stringify('' + key);
-	        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-	          name = name.substr(1, name.length - 2);
-	          name = stylize(name, 'name');
-	        } else {
-	          name = name.replace(/'/g, "\\'")
-	                     .replace(/\\"/g, '"')
-	                     .replace(/(^"|"$)/g, "'");
-	          name = stylize(name, 'string');
-	        }
-	      }
-
-	      return name + ': ' + str;
-	    });
-
-	    seen.pop();
-
-	    var numLinesEst = 0;
-	    var length = output.reduce(function(prev, cur) {
-	      numLinesEst++;
-	      if (cur.indexOf('\n') >= 0) numLinesEst++;
-	      return prev + cur.length + 1;
-	    }, 0);
-
-	    if (length > 50) {
-	      output = braces[0] +
-	               (base === '' ? '' : base + '\n ') +
-	               ' ' +
-	               output.join(',\n  ') +
-	               ' ' +
-	               braces[1];
-
-	    } else {
-	      output = braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-	    }
-
-	    return output;
-	  }
-	  return format(obj, (typeof depth === 'undefined' ? 2 : depth));
-	};
-
-
-	function isDate(d) {
-	  if (d instanceof Date) return true;
-	  if (typeof d !== 'object') return false;
-	  var properties = Date.prototype && Object_getOwnPropertyNames(Date.prototype);
-	  var proto = d.__proto__ && Object_getOwnPropertyNames(d.__proto__);
-	  return JSON.stringify(proto) === JSON.stringify(properties);
-	}
-
-	function pad(n) {
-	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-	}
-
-	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-	              'Oct', 'Nov', 'Dec'];
-
-	// 26 Feb 16:19:34
-	function timestamp() {
-	  var d = new Date();
-	  var time = [pad(d.getHours()),
-	              pad(d.getMinutes()),
-	              pad(d.getSeconds())].join(':');
-	  return [d.getDate(), months[d.getMonth()], time].join(' ');
-	}
-
-	exports.log = function (msg) {};
-
-	exports.pump = null;
-
-	exports.inherits = function(ctor, superCtor) {
-	  ctor.super_ = superCtor;
-	  ctor.prototype = Object_create(superCtor.prototype, {
-	    constructor: {
-	      value: ctor,
-	      enumerable: false,
-	      writable: true,
-	      configurable: true
-	    }
-	  });
-	};
-
-	var formatRegExp = /%[sdj%]/g;
-	exports.format = function(f) {
-	  if (typeof f !== 'string') {
-	    var objects = [];
-	    for (var i = 0; i < arguments.length; i++) {
-	      objects.push(exports.inspect(arguments[i]));
-	    }
-	    return objects.join(' ');
-	  }
-
-	  var i = 1;
-	  var args = arguments;
-	  var len = args.length;
-	  var str = String(f).replace(formatRegExp, function(x) {
-	    if (x === '%%') return '%';
-	    if (i >= len) return x;
-	    switch (x) {
-	      case '%s': return String(args[i++]);
-	      case '%d': return Number(args[i++]);
-	      case '%j': return JSON.stringify(args[i++]);
-	      default:
-	        return x;
-	    }
-	  });
-	  for(var x = args[i]; i < len; x = args[++i]){
-	    if (x === null || typeof x !== 'object') {
-	      str += ' ' + x;
-	    } else {
-	      str += ' ' + exports.inspect(x);
-	    }
-	  }
-	  return str;
-	};
-
-
-/***/ },
-
-/***/ 30:
-/***/ function(module, exports, require) {
-
-	// UTILITY
-	var util = require(29);
-	var pSlice = Array.prototype.slice;
-
-	var objectKeys = require(43);
-	var isRegExp = require(46);
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.message = options.message;
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	};
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (value === undefined) {
-	    return '' + value;
-	  }
-	  if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
-	    return value.toString();
-	  }
-	  if (typeof value === 'function' || value instanceof RegExp) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (typeof s == 'string') {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	assert.AssertionError.prototype.toString = function() {
-	  if (this.message) {
-	    return [this.name + ':', this.message].join(' ');
-	  } else {
-	    return [
-	      this.name + ':',
-	      truncate(JSON.stringify(this.actual, replacer), 128),
-	      this.operator,
-	      truncate(JSON.stringify(this.expected, replacer), 128)
-	    ].join(' ');
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-
-	assert.AssertionError.__proto__ = Error.prototype;
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!!!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (require(27).Buffer.isBuffer(actual) && require(27).Buffer.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (actual instanceof Date && expected instanceof Date) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (isRegExp(actual) && isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (typeof actual != 'object' && typeof expected != 'object') {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isUndefinedOrNull(value) {
-	  return value === null || value === undefined;
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  //~~~I've managed to break Object.keys through screwy arguments passing.
-	  //   Converting to array solves the problem.
-	  if (isArguments(a)) {
-	    if (!isArguments(b)) {
-	      return false;
-	    }
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  try {
-	    var ka = objectKeys(a),
-	        kb = objectKeys(b),
-	        key, i;
-	  } catch (e) {//happens when one is a string literal and the other isn't
-	    return false;
-	  }
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (isRegExp(expected)) {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (typeof expected === 'string') {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
-
-
-/***/ },
-
-/***/ 31:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {/** @fileOverview Javascript cryptography implementation.
@@ -15521,11 +12774,11 @@ var ripple =
 	  }
 	};
 	
-	/* WEBPACK VAR INJECTION */}(require, require(42)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(36)(module)))
 
 /***/ },
 
-/***/ 32:
+/***/ 27:
 /***/ function(module, exports, require) {
 
 	// Copyright (c) 2005  Tom Wu
@@ -16742,6 +13995,2864 @@ var ripple =
 
 /***/ },
 
+/***/ 28:
+/***/ function(module, exports, require) {
+
+	/**
+	 * Type definitions for binary format.
+	 *
+	 * This file should not be included directly. Instead, find the format you're
+	 * trying to parse or serialize in binformat.js and pass that to
+	 * SerializedObject.parse() or SerializedObject.serialize().
+	 */
+
+	var assert    = require(32);
+	var extend    = require(35);
+	var binformat = require(14);
+	var utils     = require(15);
+	var sjcl      = utils.sjcl;
+
+	var UInt128   = require(38).UInt128;
+	var UInt160   = require(8).UInt160;
+	var UInt256   = require(9).UInt256;
+	var Base      = require(7).Base;
+
+	var amount    = require(3);
+	var Amount    = amount.Amount;
+	var Currency  = amount.Currency;
+
+	// Shortcuts
+	var hex       = sjcl.codec.hex;
+	var bytes     = sjcl.codec.bytes;
+
+	var BigInteger = utils.jsbn.BigInteger;
+
+
+	var SerializedType = function (methods) {
+	  extend(this, methods);
+	};
+
+	function isNumber(val) {
+	  return typeof val === 'number' && isFinite(val);
+	};
+
+	function isString(val) {
+	  return typeof val === 'string';
+	};
+
+	function isHexInt64String(val) {
+	  return isString(val) && /^[0-9A-F]{0,16}$/i.test(val);
+	};
+
+	function isCurrencyString(val) {
+	  return isString(val) && /^[A-Z0-9]{3}$/.test(val);
+	};
+
+	function isBigInteger(val) {
+	  return val instanceof BigInteger;
+	};
+
+	function serialize_hex(so, hexData, noLength) {
+	  var byteData = bytes.fromBits(hex.toBits(hexData));
+	  if (!noLength) {
+	    SerializedType.serialize_varint(so, byteData.length);
+	  }
+	  so.append(byteData);
+	};
+
+	/**
+	 * parses bytes as hex
+	 */
+	function convert_bytes_to_hex (byte_array) {
+	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array)).toUpperCase();
+	};
+
+	SerializedType.serialize_varint = function (so, val) {
+	  if (val < 0) {
+	    throw new Error('Variable integers are unsigned.');
+	  }
+
+	  if (val <= 192) {
+	    so.append([val]);
+	  } else if (val <= 12480) {
+	    val -= 193;
+	    so.append([193 + (val >>> 8), val & 0xff]);
+	  } else if (val <= 918744) {
+	    val -= 12481;
+	    so.append([
+	              241 + (val >>> 16),
+	              val >>> 8 & 0xff,
+	              val & 0xff
+	    ]);
+	  } else {
+	    throw new Error('Variable integer overflow.');
+	  }
+	};
+
+	SerializedType.prototype.parse_varint = function (so) {
+	  var b1 = so.read(1)[0], b2, b3;
+	  var result;
+
+	  if (b1 > 254) {
+	    throw new Error('Invalid varint length indicator');
+	  }
+
+	  if (b1 <= 192) {
+	    result = b1;
+	  } else if (b1 <= 240) {
+	    b2 = so.read(1)[0];
+	    result = 193 + (b1 - 193) * 256 + b2;
+	  } else if (b1 <= 254) {
+	    b2 = so.read(1)[0];
+	    b3 = so.read(1)[0];
+	    result = 12481 + (b1 - 241) * 65536 + b2 * 256 + b3
+	  }
+
+	  return result;
+	};
+
+	// In the following, we assume that the inputs are in the proper range. Is this correct?
+	// Helper functions for 1-, 2-, and 4-byte integers.
+
+	/**
+	 * Convert an integer value into an array of bytes.
+	 *
+	 * The result is appended to the serialized object ('so').
+	 */
+	function append_byte_array(so, val, bytes) {
+	  if (!isNumber(val)) {
+	    throw new Error('Value is not a number');
+	  }
+
+	  if (val < 0 || val >= Math.pow(256, bytes)) {
+	    throw new Error('Value out of bounds');
+	  }
+
+	  var newBytes = [ ];
+
+	  for (var i=0; i<bytes; i++) {
+	    newBytes.unshift(val >>> (i * 8) & 0xff);
+	  }
+
+	  so.append(newBytes);
+	};
+
+	// Convert a certain number of bytes from the serialized object ('so') into an integer.
+	function readAndSum(so, bytes) {
+	  var sum = 0;
+
+	  if (bytes > 4) {
+	    throw new Error("This function only supports up to four bytes.");
+	  }
+
+	  for (var i=0; i<bytes; i++) {
+	    var byte = so.read(1)[0];
+	    sum += (byte << (8 * (bytes - i - 1)));
+	  }
+
+	  // Convert to unsigned integer
+	  return sum >>> 0;
+	};
+
+	var STInt8 = exports.Int8 = new SerializedType({
+	  serialize: function (so, val) {
+	    append_byte_array(so, val, 1);
+	  },
+	  parse: function (so) {
+	    return readAndSum(so, 1);
+	  }
+	});
+
+	STInt8.id = 16;
+
+	var STInt16 = exports.Int16 = new SerializedType({
+	  serialize: function (so, val) {
+	    append_byte_array(so, val, 2);
+	  },
+	  parse: function (so) {
+	    return readAndSum(so, 2);
+	  }
+	});
+
+	STInt16.id = 1;
+
+	var STInt32 = exports.Int32 = new SerializedType({
+	  serialize: function (so, val) {
+	    append_byte_array(so, val, 4);
+	  },
+	  parse: function (so) {
+	    return readAndSum(so, 4);
+	  }
+	});
+
+	STInt32.id = 2;
+
+	var STInt64 = exports.Int64 = new SerializedType({
+	  serialize: function (so, val) {
+	    var bigNumObject;
+
+	    if (isNumber(val)) {
+	      val = Math.floor(val);
+	      if (val < 0) {
+	        throw new Error('Negative value for unsigned Int64 is invalid.');
+	      }
+	      bigNumObject = new BigInteger(String(val), 10);
+	    } else if (isString(val)) {
+	      if (!isHexInt64String(val)) {
+	        throw new Error('Not a valid hex Int64.');
+	      }
+	      bigNumObject = new BigInteger(val, 16);
+	    } else if (isBigInteger(val)) {
+	      if (val.compareTo(BigInteger.ZERO) < 0) {
+	        throw new Error('Negative value for unsigned Int64 is invalid.');
+	      }
+	      bigNumObject = val;
+	    } else {
+	      throw new Error('Invalid type for Int64');
+	    }
+
+	    var hex = bigNumObject.toString(16);
+
+	    if (hex.length > 16) {
+	      throw new Error('Int64 is too large');
+	    }
+
+	    while (hex.length < 16) {
+	      hex = '0' + hex;
+	    }
+
+	    serialize_hex(so, hex, true); //noLength = true
+	  },
+	  parse: function (so) {
+	    var result = new BigInteger(so.read(8), 256);
+	    assert(result instanceof BigInteger);
+	    return result;
+	  }
+	});
+
+	STInt64.id = 3;
+
+	var STHash128 = exports.Hash128 = new SerializedType({
+	  serialize: function (so, val) {
+	    var hash = UInt128.from_json(val);
+	    if (!hash.is_valid()) {
+	      throw new Error('Invalid Hash128');
+	    }
+	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	  },
+	  parse: function (so) {
+	    return UInt128.from_bytes(so.read(16));
+	  }
+	});
+
+	STHash128.id = 4;
+
+	var STHash256 = exports.Hash256 = new SerializedType({
+	  serialize: function (so, val) {
+	    var hash = UInt256.from_json(val);
+	    if (!hash.is_valid()) {
+	      throw new Error('Invalid Hash256');
+	    }
+	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	  },
+	  parse: function (so) {
+	    return UInt256.from_bytes(so.read(32));
+	  }
+	});
+
+	STHash256.id = 5;
+
+	var STHash160 = exports.Hash160 = new SerializedType({
+	  serialize: function (so, val) {
+	    var hash = UInt160.from_json(val);
+	    if (!hash.is_valid()) {
+	      throw new Error('Invalid Hash160');
+	    }
+	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	  },
+	  parse: function (so) {
+	    return UInt160.from_bytes(so.read(20));
+	  }
+	});
+
+	STHash160.id = 17;
+
+	// Internal
+	var STCurrency = new SerializedType({
+	  serialize: function (so, val, xrp_as_ascii) {
+	    var currencyData = val.to_bytes();
+
+	    if (!currencyData) {
+	      throw new Error('Tried to serialize invalid/unimplemented currency type.');
+	    }
+
+	    so.append(currencyData);
+	  },
+	  parse: function (so) {
+	    var bytes = so.read(20);
+	    var currency = Currency.from_bytes(bytes);
+	    // XXX Disabled check. Theoretically, the Currency class should support any
+	    //     UInt160 value and consider it valid. But it doesn't, so for the
+	    //     deserialization to be usable, we need to allow invalid results for now.
+	    //if (!currency.is_valid()) {
+	    //  throw new Error('Invalid currency: '+convert_bytes_to_hex(bytes));
+	    //}
+	    return currency;
+	  }
+	});
+
+	var STAmount = exports.Amount = new SerializedType({
+	  serialize: function (so, val) {
+	    var amount = Amount.from_json(val);
+	    if (!amount.is_valid()) {
+	      throw new Error('Not a valid Amount object.');
+	    }
+
+	    // Amount (64-bit integer)
+	    var valueBytes = utils.arraySet(8, 0);
+
+	    if (amount.is_native()) {
+	      var valueHex = amount._value.toString(16);
+
+	      // Enforce correct length (64 bits)
+	      if (valueHex.length > 16) {
+	        throw new Error('Value out of bounds');
+	      }
+
+	      while (valueHex.length < 16) {
+	        valueHex = '0' + valueHex;
+	      }
+
+	      valueBytes = bytes.fromBits(hex.toBits(valueHex));
+	      // Clear most significant two bits - these bits should already be 0 if
+	      // Amount enforces the range correctly, but we'll clear them anyway just
+	      // so this code can make certain guarantees about the encoded value.
+	      valueBytes[0] &= 0x3f;
+	      if (!amount.is_negative()) valueBytes[0] |= 0x40;
+	    } else {
+	      var hi = 0, lo = 0;
+
+	      // First bit: non-native
+	      hi |= 1 << 31;
+
+	      if (!amount.is_zero()) {
+	        // Second bit: non-negative?
+	        if (!amount.is_negative()) hi |= 1 << 30;
+	        // Next eight bits: offset/exponent
+	        hi |= ((97 + amount._offset) & 0xff) << 22;
+	        // Remaining 52 bits: mantissa
+	        hi |= amount._value.shiftRight(32).intValue() & 0x3fffff;
+	        lo = amount._value.intValue() & 0xffffffff;
+	      }
+
+	      valueBytes = sjcl.codec.bytes.fromBits([hi, lo]);
+	    }
+
+	    so.append(valueBytes);
+
+	    if (!amount.is_native()) {
+	      // Currency (160-bit hash)
+	      var currency = amount.currency();
+	      STCurrency.serialize(so, currency, true);
+
+	      // Issuer (160-bit hash)
+	      so.append(amount.issuer().to_bytes());
+	    }
+	  },
+	  parse: function (so) {
+	    var amount = new Amount();
+	    var value_bytes = so.read(8);
+	    var is_zero = !(value_bytes[0] & 0x7f);
+
+	    for (var i=1; i<8; i++) {
+	      is_zero = is_zero && !value_bytes[i];
+	    }
+
+	    if (value_bytes[0] & 0x80) {
+	      //non-native
+	      var currency = STCurrency.parse(so);
+	      var issuer_bytes = so.read(20);
+	      var issuer = UInt160.from_bytes(issuer_bytes);
+	      issuer.set_version(Base.VER_ACCOUNT_ID);
+	      var offset = ((value_bytes[0] & 0x3f) << 2) + (value_bytes[1] >>> 6) - 97;
+	      var mantissa_bytes = value_bytes.slice(1);
+	      mantissa_bytes[0] &= 0x3f;
+	      var value = new BigInteger(mantissa_bytes, 256);
+
+	      if (value.equals(BigInteger.ZERO) && !is_zero ) {
+	        throw new Error('Invalid zero representation');
+	      }
+
+	      amount._value = value;
+	      amount._offset = offset;
+	      amount._currency    = currency;
+	      amount._issuer      = issuer;
+	      amount._is_native   = false;
+	    } else {
+	      //native
+	      var integer_bytes = value_bytes.slice();
+	      integer_bytes[0] &= 0x3f;
+	      amount._value = new BigInteger(integer_bytes, 256);
+	      amount._is_native   = true;
+	    }
+	    amount._is_negative = !is_zero && !(value_bytes[0] & 0x40);
+	    return amount;
+	  }
+	});
+
+	STAmount.id = 6;
+
+	var STVL = exports.VariableLength = exports.VL = new SerializedType({
+	  serialize: function (so, val) {
+	    if (typeof val === 'string') {
+	      serialize_hex(so, val);
+	    } else {
+	      throw new Error('Unknown datatype.');
+	    }
+	  },
+	  parse: function (so) {
+	    var len = this.parse_varint(so);
+	    return convert_bytes_to_hex(so.read(len));
+	  }
+	});
+
+	STVL.id = 7;
+
+	var STAccount = exports.Account = new SerializedType({
+	  serialize: function (so, val) {
+	    var account = UInt160.from_json(val);
+	    if (!account.is_valid()) {
+	      throw new Error('Invalid account!');
+	    }
+	    serialize_hex(so, account.to_hex());
+	  },
+	  parse: function (so) {
+	    var len = this.parse_varint(so);
+
+	    if (len !== 20) {
+	      throw new Error('Non-standard-length account ID');
+	    }
+
+	    var result = UInt160.from_bytes(so.read(len));
+	    result.set_version(Base.VER_ACCOUNT_ID);
+
+	    //console.log('PARSED 160:', result.to_json());
+	    if (false && !result.is_valid()) {
+	      throw new Error('Invalid Account');
+	    }
+
+	    return result;
+	  }
+	});
+
+	STAccount.id = 8;
+
+	var STPathSet = exports.PathSet = new SerializedType({
+	  typeBoundary:  0xff,
+	  typeEnd:       0x00,
+	  typeAccount:   0x01,
+	  typeCurrency:  0x10,
+	  typeIssuer:    0x20,
+	  serialize: function (so, val) {
+	    for (var i=0, l=val.length; i<l; i++) {
+	      // Boundary
+	      if (i) {
+	        STInt8.serialize(so, this.typeBoundary);
+	      }
+
+	      for (var j=0, l2=val[i].length; j<l2; j++) {
+	        var entry = val[i][j];
+	        //if (entry.hasOwnProperty('_value')) {entry = entry._value;}
+	        var type = 0;
+
+	        if (entry.account)  type |= this.typeAccount;
+	        if (entry.currency) type |= this.typeCurrency;
+	        if (entry.issuer)   type |= this.typeIssuer;
+
+	        STInt8.serialize(so, type);
+	        if (entry.account) {
+	          so.append(UInt160.from_json(entry.account).to_bytes());
+	        }
+
+	        if (entry.currency) {
+	          var currency = Currency.from_json(entry.currency, entry.non_native);
+	          STCurrency.serialize(so, currency);
+	        }
+
+	        if (entry.issuer) {
+	          so.append(UInt160.from_json(entry.issuer).to_bytes());
+	        }
+	      }
+	    }
+	    STInt8.serialize(so, this.typeEnd);
+	  },
+	  parse: function (so) {
+	    // should return a list of lists:
+	    /*
+	       [
+	       [entry, entry],
+	       [entry, entry, entry],
+	       [entry],
+	       []
+	       ]
+
+	       each entry has one or more of the following attributes: amount, currency, issuer.
+	       */
+
+	    var path_list    = [];
+	    var current_path = [];
+	    var tag_byte;
+
+	    while ((tag_byte = so.read(1)[0]) !== this.typeEnd) {
+	      //TODO: try/catch this loop, and catch when we run out of data without reaching the end of the data structure.
+	      //Now determine: is this an end, boundary, or entry-begin-tag?
+	      //console.log('Tag byte:', tag_byte);
+	      if (tag_byte === this.typeBoundary) {
+	        //console.log('Boundary');
+	        if (current_path) { //close the current path, if there is one,
+	          path_list.push(current_path);
+	        }
+	        current_path = []; //and start a new one.
+	      } else {
+	        //It's an entry-begin tag.
+	        //console.log('It's an entry-begin tag.');
+	        var entry = {};
+
+	        if (tag_byte & this.typeAccount) {
+	          //console.log('entry.account');
+	          /*var bta = so.read(20);
+	            console.log('BTA:', bta);*/
+	          entry.account = STHash160.parse(so);
+	          entry.account.set_version(Base.VER_ACCOUNT_ID);
+	        }
+	        if (tag_byte & this.typeCurrency) {
+	          //console.log('entry.currency');
+	          entry.currency = STCurrency.parse(so);
+	          if (entry.currency.to_json() === "XRP" &&
+	              !entry.currency.is_native()) {
+	            entry.non_native = true;
+	          }
+	        }
+	        if (tag_byte & this.typeIssuer) {
+	          //console.log('entry.issuer');
+	          entry.issuer = STHash160.parse(so);
+	          // Enable and set correct type of base-58 encoding
+	          entry.issuer.set_version(Base.VER_ACCOUNT_ID);
+	          //console.log('DONE WITH ISSUER!');
+	        }
+
+	        if (entry.account || entry.currency || entry.issuer) {
+	          current_path.push(entry);
+	        } else {
+	          throw new Error('Invalid path entry'); //It must have at least something in it.
+	        }
+	      }
+	    }
+
+	    if (current_path) {
+	      //close the current path, if there is one,
+	      path_list.push(current_path);
+	    }
+
+	    return path_list;
+	  }
+	});
+
+	STPathSet.id = 18;
+
+	var STVector256 = exports.Vector256 = new SerializedType({
+	  serialize: function (so, val) { //Assume val is an array of STHash256 objects.
+	    var length_as_varint = SerializedType.serialize_varint(so, val.length * 32);
+	    for (var i=0, l=val.length; i<l; i++) {
+	      STHash256.serialize(so, val[i]);
+	    }
+	  },
+	  parse: function (so) {
+	    var length = this.parse_varint(so);
+	    var output = [];
+	    // length is number of bytes not number of Hash256
+	    for (var i=0; i<length / 32; i++) {
+	      output.push(STHash256.parse(so));
+	    }
+	    return output;
+	  }
+	});
+
+	STVector256.id = 19;
+
+	exports.serialize = exports.serialize_whatever = serialize;
+
+	function serialize(so, field_name, value) {
+	  //so: a byte-stream to serialize into.
+	  //field_name: a string for the field name ('LedgerEntryType' etc.)
+	  //value: the value of that field.
+	  var field_coordinates = binformat.fieldsInverseMap[field_name];
+	  var type_bits         = field_coordinates[0];
+	  var field_bits        = field_coordinates[1];
+	  var tag_byte          = (type_bits < 16 ? type_bits << 4 : 0) | (field_bits < 16 ? field_bits : 0);
+
+	  if (field_name === "LedgerEntryType" && "string" === typeof value) {
+	    value = binformat.ledger[value][0];
+	  }
+
+	  if (field_name === "TransactionResult" && "string" === typeof value) {
+	    value = binformat.ter[value];
+	  }
+
+	  STInt8.serialize(so, tag_byte);
+
+	  if (type_bits >= 16) {
+	    STInt8.serialize(so, type_bits);
+	  }
+
+	  if (field_bits >= 16) {
+	    STInt8.serialize(so, field_bits);
+	  }
+
+	  // Get the serializer class (ST...) for a field based on the type bits.
+	  var serialized_object_type = exports[binformat.types[type_bits]];
+	  //do something with val[keys] and val[keys[i]];
+	  serialized_object_type.serialize(so, value);
+	}
+
+	//Take the serialized object, figure out what type/field it is, and return the parsing of that.
+	exports.parse = exports.parse_whatever = parse;
+
+	function parse(so) {
+	  var tag_byte   = so.read(1)[0];
+	  var type_bits  = tag_byte >> 4;
+
+	  if (type_bits === 0) {
+	    type_bits = so.read(1)[0];
+	  }
+
+	  // Get the parser class (ST...) for a field based on the type bits.
+	  var type = exports[binformat.types[type_bits]];
+
+	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
+
+	  var field_bits = tag_byte & 0x0f;
+	  var field_name = (field_bits === 0)
+	  ? field_name = binformat.fields[type_bits][so.read(1)[0]]
+	  : field_name = binformat.fields[type_bits][field_bits];
+
+	  assert(field_name, 'Unknown field - header byte is 0x' + tag_byte.toString(16));
+
+	  return [ field_name, type.parse(so) ]; //key, value
+	};
+
+	function sort_fields(keys) {
+	  function sort_field_compare(a, b) {
+	    var a_field_coordinates = binformat.fieldsInverseMap[a];
+	    var a_type_bits         = a_field_coordinates[0];
+	    var a_field_bits        = a_field_coordinates[1];
+	    var b_field_coordinates = binformat.fieldsInverseMap[b];
+	    var b_type_bits         = b_field_coordinates[0];
+	    var b_field_bits        = b_field_coordinates[1];
+
+	    // Sort by type id first, then by field id
+	    return a_type_bits !== b_type_bits ? a_type_bits - b_type_bits : a_field_bits - b_field_bits;
+	  };
+
+	  return keys.sort(sort_field_compare);
+	}
+
+	var STObject = exports.Object = new SerializedType({
+	  serialize: function (so, val, no_marker) {
+	    var keys = Object.keys(val);
+
+	    // Ignore lowercase field names - they're non-serializable fields by
+	    // convention.
+	    keys = keys.filter(function (key) {
+	      return key[0] !== key[0].toLowerCase();
+	    });
+
+	    keys.forEach(function (key) {
+	      if ("undefined" === typeof binformat.fieldsInverseMap[key]) {
+	        throw new Error("JSON contains unknown field: '" + key + "'");
+	      }
+	    });
+
+	    // Sort fields
+	    keys = sort_fields(keys);
+
+	    for (var i=0; i<keys.length; i++) {
+	      serialize(so, keys[i], val[keys[i]]);
+	    }
+	    if (!no_marker) STInt8.serialize(so, 0xe1); //Object ending marker
+	  },
+
+	  parse: function (so) {
+	    var output = {};
+	    while (so.peek(1)[0] !== 0xe1) {
+	      var keyval = parse(so);
+	      output[keyval[0]] = keyval[1];
+	    }
+	    so.read(1);
+	    return output;
+	  }
+	});
+
+	STObject.id = 14;
+
+	var STArray = exports.Array = new SerializedType({
+	  serialize: function (so, val) {
+	    for (var i=0, l=val.length; i<l; i++) {
+	      var keys = Object.keys(val[i]);
+
+	      if (keys.length !== 1) {
+	        throw Error('Cannot serialize an array containing non-single-key objects');
+	      }
+
+	      var field_name = keys[0];
+	      var value = val[i][field_name];
+	      serialize(so, field_name, value);
+	    }
+	    STInt8.serialize(so, 0xf1); //Array ending marker
+	  },
+
+	  parse: function (so) {
+	    var output = [ ];
+
+	    while (so.peek(1)[0] !== 0xf1) {
+	      var keyval = parse(so);
+	      var obj = { };
+	      obj[keyval[0]] = keyval[1];
+	      output.push(obj);
+	    }
+
+	    so.read(1);
+
+	    return output;
+	  }
+	});
+
+	STArray.id = 15;
+
+
+/***/ },
+
+/***/ 29:
+/***/ function(module, exports, require) {
+
+	/* WEBPACK VAR INJECTION */(function(require, Buffer) {function SlowBuffer (size) {
+	    this.length = size;
+	};
+
+	var assert = require(32);
+
+	exports.INSPECT_MAX_BYTES = 50;
+
+
+	function toHex(n) {
+	  if (n < 16) return '0' + n.toString(16);
+	  return n.toString(16);
+	}
+
+	function utf8ToBytes(str) {
+	  var byteArray = [];
+	  for (var i = 0; i < str.length; i++)
+	    if (str.charCodeAt(i) <= 0x7F)
+	      byteArray.push(str.charCodeAt(i));
+	    else {
+	      var h = encodeURIComponent(str.charAt(i)).substr(1).split('%');
+	      for (var j = 0; j < h.length; j++)
+	        byteArray.push(parseInt(h[j], 16));
+	    }
+
+	  return byteArray;
+	}
+
+	function asciiToBytes(str) {
+	  var byteArray = []
+	  for (var i = 0; i < str.length; i++ )
+	    // Node's code seems to be doing this and not & 0x7F..
+	    byteArray.push( str.charCodeAt(i) & 0xFF );
+
+	  return byteArray;
+	}
+
+	function base64ToBytes(str) {
+	  return require(47).toByteArray(str);
+	}
+
+	SlowBuffer.byteLength = function (str, encoding) {
+	  switch (encoding || "utf8") {
+	    case 'hex':
+	      return str.length / 2;
+
+	    case 'utf8':
+	    case 'utf-8':
+	      return utf8ToBytes(str).length;
+
+	    case 'ascii':
+	      return str.length;
+
+	    case 'base64':
+	      return base64ToBytes(str).length;
+
+	    default:
+	      throw new Error('Unknown encoding');
+	  }
+	};
+
+	function blitBuffer(src, dst, offset, length) {
+	  var pos, i = 0;
+	  while (i < length) {
+	    if ((i+offset >= dst.length) || (i >= src.length))
+	      break;
+
+	    dst[i + offset] = src[i];
+	    i++;
+	  }
+	  return i;
+	}
+
+	SlowBuffer.prototype.utf8Write = function (string, offset, length) {
+	  var bytes, pos;
+	  return SlowBuffer._charsWritten =  blitBuffer(utf8ToBytes(string), this, offset, length);
+	};
+
+	SlowBuffer.prototype.asciiWrite = function (string, offset, length) {
+	  var bytes, pos;
+	  return SlowBuffer._charsWritten =  blitBuffer(asciiToBytes(string), this, offset, length);
+	};
+
+	SlowBuffer.prototype.base64Write = function (string, offset, length) {
+	  var bytes, pos;
+	  return SlowBuffer._charsWritten = blitBuffer(base64ToBytes(string), this, offset, length);
+	};
+
+	SlowBuffer.prototype.base64Slice = function (start, end) {
+	  var bytes = Array.prototype.slice.apply(this, arguments)
+	  return require(47).fromByteArray(bytes);
+	}
+
+	function decodeUtf8Char(str) {
+	  try {
+	    return decodeURIComponent(str);
+	  } catch (err) {
+	    return String.fromCharCode(0xFFFD); // UTF 8 invalid char
+	  }
+	}
+
+	SlowBuffer.prototype.utf8Slice = function () {
+	  var bytes = Array.prototype.slice.apply(this, arguments);
+	  var res = "";
+	  var tmp = "";
+	  var i = 0;
+	  while (i < bytes.length) {
+	    if (bytes[i] <= 0x7F) {
+	      res += decodeUtf8Char(tmp) + String.fromCharCode(bytes[i]);
+	      tmp = "";
+	    } else
+	      tmp += "%" + bytes[i].toString(16);
+
+	    i++;
+	  }
+
+	  return res + decodeUtf8Char(tmp);
+	}
+
+	SlowBuffer.prototype.asciiSlice = function () {
+	  var bytes = Array.prototype.slice.apply(this, arguments);
+	  var ret = "";
+	  for (var i = 0; i < bytes.length; i++)
+	    ret += String.fromCharCode(bytes[i]);
+	  return ret;
+	}
+
+	SlowBuffer.prototype.inspect = function() {
+	  var out = [],
+	      len = this.length;
+	  for (var i = 0; i < len; i++) {
+	    out[i] = toHex(this[i]);
+	    if (i == exports.INSPECT_MAX_BYTES) {
+	      out[i + 1] = '...';
+	      break;
+	    }
+	  }
+	  return '<SlowBuffer ' + out.join(' ') + '>';
+	};
+
+
+	SlowBuffer.prototype.hexSlice = function(start, end) {
+	  var len = this.length;
+
+	  if (!start || start < 0) start = 0;
+	  if (!end || end < 0 || end > len) end = len;
+
+	  var out = '';
+	  for (var i = start; i < end; i++) {
+	    out += toHex(this[i]);
+	  }
+	  return out;
+	};
+
+
+	SlowBuffer.prototype.toString = function(encoding, start, end) {
+	  encoding = String(encoding || 'utf8').toLowerCase();
+	  start = +start || 0;
+	  if (typeof end == 'undefined') end = this.length;
+
+	  // Fastpath empty strings
+	  if (+end == start) {
+	    return '';
+	  }
+
+	  switch (encoding) {
+	    case 'hex':
+	      return this.hexSlice(start, end);
+
+	    case 'utf8':
+	    case 'utf-8':
+	      return this.utf8Slice(start, end);
+
+	    case 'ascii':
+	      return this.asciiSlice(start, end);
+
+	    case 'binary':
+	      return this.binarySlice(start, end);
+
+	    case 'base64':
+	      return this.base64Slice(start, end);
+
+	    case 'ucs2':
+	    case 'ucs-2':
+	      return this.ucs2Slice(start, end);
+
+	    default:
+	      throw new Error('Unknown encoding');
+	  }
+	};
+
+
+	SlowBuffer.prototype.hexWrite = function(string, offset, length) {
+	  offset = +offset || 0;
+	  var remaining = this.length - offset;
+	  if (!length) {
+	    length = remaining;
+	  } else {
+	    length = +length;
+	    if (length > remaining) {
+	      length = remaining;
+	    }
+	  }
+
+	  // must be an even number of digits
+	  var strLen = string.length;
+	  if (strLen % 2) {
+	    throw new Error('Invalid hex string');
+	  }
+	  if (length > strLen / 2) {
+	    length = strLen / 2;
+	  }
+	  for (var i = 0; i < length; i++) {
+	    var byte = parseInt(string.substr(i * 2, 2), 16);
+	    if (isNaN(byte)) throw new Error('Invalid hex string');
+	    this[offset + i] = byte;
+	  }
+	  SlowBuffer._charsWritten = i * 2;
+	  return i;
+	};
+
+
+	SlowBuffer.prototype.write = function(string, offset, length, encoding) {
+	  // Support both (string, offset, length, encoding)
+	  // and the legacy (string, encoding, offset, length)
+	  if (isFinite(offset)) {
+	    if (!isFinite(length)) {
+	      encoding = length;
+	      length = undefined;
+	    }
+	  } else {  // legacy
+	    var swap = encoding;
+	    encoding = offset;
+	    offset = length;
+	    length = swap;
+	  }
+
+	  offset = +offset || 0;
+	  var remaining = this.length - offset;
+	  if (!length) {
+	    length = remaining;
+	  } else {
+	    length = +length;
+	    if (length > remaining) {
+	      length = remaining;
+	    }
+	  }
+	  encoding = String(encoding || 'utf8').toLowerCase();
+
+	  switch (encoding) {
+	    case 'hex':
+	      return this.hexWrite(string, offset, length);
+
+	    case 'utf8':
+	    case 'utf-8':
+	      return this.utf8Write(string, offset, length);
+
+	    case 'ascii':
+	      return this.asciiWrite(string, offset, length);
+
+	    case 'binary':
+	      return this.binaryWrite(string, offset, length);
+
+	    case 'base64':
+	      return this.base64Write(string, offset, length);
+
+	    case 'ucs2':
+	    case 'ucs-2':
+	      return this.ucs2Write(string, offset, length);
+
+	    default:
+	      throw new Error('Unknown encoding');
+	  }
+	};
+
+
+	// slice(start, end)
+	SlowBuffer.prototype.slice = function(start, end) {
+	  if (end === undefined) end = this.length;
+
+	  if (end > this.length) {
+	    throw new Error('oob');
+	  }
+	  if (start > end) {
+	    throw new Error('oob');
+	  }
+
+	  return new Buffer(this, end - start, +start);
+	};
+
+	SlowBuffer.prototype.copy = function(target, targetstart, sourcestart, sourceend) {
+	  var temp = [];
+	  for (var i=sourcestart; i<sourceend; i++) {
+	    assert.ok(typeof this[i] !== 'undefined', "copying undefined buffer bytes!");
+	    temp.push(this[i]);
+	  }
+
+	  for (var i=targetstart; i<targetstart+temp.length; i++) {
+	    target[i] = temp[i-targetstart];
+	  }
+	};
+
+	function coerce(length) {
+	  // Coerce length to a number (possibly NaN), round up
+	  // in case it's fractional (e.g. 123.456) then do a
+	  // double negate to coerce a NaN to 0. Easy, right?
+	  length = ~~Math.ceil(+length);
+	  return length < 0 ? 0 : length;
+	}
+
+
+	// Buffer
+
+	function Buffer(subject, encoding, offset) {
+	  if (!(this instanceof Buffer)) {
+	    return new Buffer(subject, encoding, offset);
+	  }
+
+	  var type;
+
+	  // Are we slicing?
+	  if (typeof offset === 'number') {
+	    this.length = coerce(encoding);
+	    this.parent = subject;
+	    this.offset = offset;
+	  } else {
+	    // Find the length
+	    switch (type = typeof subject) {
+	      case 'number':
+	        this.length = coerce(subject);
+	        break;
+
+	      case 'string':
+	        this.length = Buffer.byteLength(subject, encoding);
+	        break;
+
+	      case 'object': // Assume object is an array
+	        this.length = coerce(subject.length);
+	        break;
+
+	      default:
+	        throw new Error('First argument needs to be a number, ' +
+	                        'array or string.');
+	    }
+
+	    if (this.length > Buffer.poolSize) {
+	      // Big buffer, just alloc one.
+	      this.parent = new SlowBuffer(this.length);
+	      this.offset = 0;
+
+	    } else {
+	      // Small buffer.
+	      if (!pool || pool.length - pool.used < this.length) allocPool();
+	      this.parent = pool;
+	      this.offset = pool.used;
+	      pool.used += this.length;
+	    }
+
+	    // Treat array-ish objects as a byte array.
+	    if (isArrayIsh(subject)) {
+	      for (var i = 0; i < this.length; i++) {
+	        this.parent[i + this.offset] = subject[i];
+	      }
+	    } else if (type == 'string') {
+	      // We are a string
+	      this.length = this.write(subject, 0, encoding);
+	    }
+	  }
+
+	}
+
+	function isArrayIsh(subject) {
+	  return Array.isArray(subject) || Buffer.isBuffer(subject) ||
+	         subject && typeof subject === 'object' &&
+	         typeof subject.length === 'number';
+	}
+
+	exports.SlowBuffer = SlowBuffer;
+	exports.Buffer = Buffer;
+
+	Buffer.poolSize = 8 * 1024;
+	var pool;
+
+	function allocPool() {
+	  pool = new SlowBuffer(Buffer.poolSize);
+	  pool.used = 0;
+	}
+
+
+	// Static methods
+	Buffer.isBuffer = function isBuffer(b) {
+	  return b instanceof Buffer || b instanceof SlowBuffer;
+	};
+
+	Buffer.concat = function (list, totalLength) {
+	  if (!Array.isArray(list)) {
+	    throw new Error("Usage: Buffer.concat(list, [totalLength])\n \
+	      list should be an Array.");
+	  }
+
+	  if (list.length === 0) {
+	    return new Buffer(0);
+	  } else if (list.length === 1) {
+	    return list[0];
+	  }
+
+	  if (typeof totalLength !== 'number') {
+	    totalLength = 0;
+	    for (var i = 0; i < list.length; i++) {
+	      var buf = list[i];
+	      totalLength += buf.length;
+	    }
+	  }
+
+	  var buffer = new Buffer(totalLength);
+	  var pos = 0;
+	  for (var i = 0; i < list.length; i++) {
+	    var buf = list[i];
+	    buf.copy(buffer, pos);
+	    pos += buf.length;
+	  }
+	  return buffer;
+	};
+
+	// Inspect
+	Buffer.prototype.inspect = function inspect() {
+	  var out = [],
+	      len = this.length;
+
+	  for (var i = 0; i < len; i++) {
+	    out[i] = toHex(this.parent[i + this.offset]);
+	    if (i == exports.INSPECT_MAX_BYTES) {
+	      out[i + 1] = '...';
+	      break;
+	    }
+	  }
+
+	  return '<Buffer ' + out.join(' ') + '>';
+	};
+
+
+	Buffer.prototype.get = function get(i) {
+	  if (i < 0 || i >= this.length) throw new Error('oob');
+	  return this.parent[this.offset + i];
+	};
+
+
+	Buffer.prototype.set = function set(i, v) {
+	  if (i < 0 || i >= this.length) throw new Error('oob');
+	  return this.parent[this.offset + i] = v;
+	};
+
+
+	// write(string, offset = 0, length = buffer.length-offset, encoding = 'utf8')
+	Buffer.prototype.write = function(string, offset, length, encoding) {
+	  // Support both (string, offset, length, encoding)
+	  // and the legacy (string, encoding, offset, length)
+	  if (isFinite(offset)) {
+	    if (!isFinite(length)) {
+	      encoding = length;
+	      length = undefined;
+	    }
+	  } else {  // legacy
+	    var swap = encoding;
+	    encoding = offset;
+	    offset = length;
+	    length = swap;
+	  }
+
+	  offset = +offset || 0;
+	  var remaining = this.length - offset;
+	  if (!length) {
+	    length = remaining;
+	  } else {
+	    length = +length;
+	    if (length > remaining) {
+	      length = remaining;
+	    }
+	  }
+	  encoding = String(encoding || 'utf8').toLowerCase();
+
+	  var ret;
+	  switch (encoding) {
+	    case 'hex':
+	      ret = this.parent.hexWrite(string, this.offset + offset, length);
+	      break;
+
+	    case 'utf8':
+	    case 'utf-8':
+	      ret = this.parent.utf8Write(string, this.offset + offset, length);
+	      break;
+
+	    case 'ascii':
+	      ret = this.parent.asciiWrite(string, this.offset + offset, length);
+	      break;
+
+	    case 'binary':
+	      ret = this.parent.binaryWrite(string, this.offset + offset, length);
+	      break;
+
+	    case 'base64':
+	      // Warning: maxLength not taken into account in base64Write
+	      ret = this.parent.base64Write(string, this.offset + offset, length);
+	      break;
+
+	    case 'ucs2':
+	    case 'ucs-2':
+	      ret = this.parent.ucs2Write(string, this.offset + offset, length);
+	      break;
+
+	    default:
+	      throw new Error('Unknown encoding');
+	  }
+
+	  Buffer._charsWritten = SlowBuffer._charsWritten;
+
+	  return ret;
+	};
+
+
+	// toString(encoding, start=0, end=buffer.length)
+	Buffer.prototype.toString = function(encoding, start, end) {
+	  encoding = String(encoding || 'utf8').toLowerCase();
+
+	  if (typeof start == 'undefined' || start < 0) {
+	    start = 0;
+	  } else if (start > this.length) {
+	    start = this.length;
+	  }
+
+	  if (typeof end == 'undefined' || end > this.length) {
+	    end = this.length;
+	  } else if (end < 0) {
+	    end = 0;
+	  }
+
+	  start = start + this.offset;
+	  end = end + this.offset;
+
+	  switch (encoding) {
+	    case 'hex':
+	      return this.parent.hexSlice(start, end);
+
+	    case 'utf8':
+	    case 'utf-8':
+	      return this.parent.utf8Slice(start, end);
+
+	    case 'ascii':
+	      return this.parent.asciiSlice(start, end);
+
+	    case 'binary':
+	      return this.parent.binarySlice(start, end);
+
+	    case 'base64':
+	      return this.parent.base64Slice(start, end);
+
+	    case 'ucs2':
+	    case 'ucs-2':
+	      return this.parent.ucs2Slice(start, end);
+
+	    default:
+	      throw new Error('Unknown encoding');
+	  }
+	};
+
+
+	// byteLength
+	Buffer.byteLength = SlowBuffer.byteLength;
+
+
+	// fill(value, start=0, end=buffer.length)
+	Buffer.prototype.fill = function fill(value, start, end) {
+	  value || (value = 0);
+	  start || (start = 0);
+	  end || (end = this.length);
+
+	  if (typeof value === 'string') {
+	    value = value.charCodeAt(0);
+	  }
+	  if (!(typeof value === 'number') || isNaN(value)) {
+	    throw new Error('value is not a number');
+	  }
+
+	  if (end < start) throw new Error('end < start');
+
+	  // Fill 0 bytes; we're done
+	  if (end === start) return 0;
+	  if (this.length == 0) return 0;
+
+	  if (start < 0 || start >= this.length) {
+	    throw new Error('start out of bounds');
+	  }
+
+	  if (end < 0 || end > this.length) {
+	    throw new Error('end out of bounds');
+	  }
+
+	  return this.parent.fill(value,
+	                          start + this.offset,
+	                          end + this.offset);
+	};
+
+
+	// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+	Buffer.prototype.copy = function(target, target_start, start, end) {
+	  var source = this;
+	  start || (start = 0);
+	  end || (end = this.length);
+	  target_start || (target_start = 0);
+
+	  if (end < start) throw new Error('sourceEnd < sourceStart');
+
+	  // Copy 0 bytes; we're done
+	  if (end === start) return 0;
+	  if (target.length == 0 || source.length == 0) return 0;
+
+	  if (target_start < 0 || target_start >= target.length) {
+	    throw new Error('targetStart out of bounds');
+	  }
+
+	  if (start < 0 || start >= source.length) {
+	    throw new Error('sourceStart out of bounds');
+	  }
+
+	  if (end < 0 || end > source.length) {
+	    throw new Error('sourceEnd out of bounds');
+	  }
+
+	  // Are we oob?
+	  if (end > this.length) {
+	    end = this.length;
+	  }
+
+	  if (target.length - target_start < end - start) {
+	    end = target.length - target_start + start;
+	  }
+
+	  return this.parent.copy(target.parent,
+	                          target_start + target.offset,
+	                          start + this.offset,
+	                          end + this.offset);
+	};
+
+
+	// slice(start, end)
+	Buffer.prototype.slice = function(start, end) {
+	  if (end === undefined) end = this.length;
+	  if (end > this.length) throw new Error('oob');
+	  if (start > end) throw new Error('oob');
+
+	  return new Buffer(this.parent, end - start, +start + this.offset);
+	};
+
+
+	// Legacy methods for backwards compatibility.
+
+	Buffer.prototype.utf8Slice = function(start, end) {
+	  return this.toString('utf8', start, end);
+	};
+
+	Buffer.prototype.binarySlice = function(start, end) {
+	  return this.toString('binary', start, end);
+	};
+
+	Buffer.prototype.asciiSlice = function(start, end) {
+	  return this.toString('ascii', start, end);
+	};
+
+	Buffer.prototype.utf8Write = function(string, offset) {
+	  return this.write(string, offset, 'utf8');
+	};
+
+	Buffer.prototype.binaryWrite = function(string, offset) {
+	  return this.write(string, offset, 'binary');
+	};
+
+	Buffer.prototype.asciiWrite = function(string, offset) {
+	  return this.write(string, offset, 'ascii');
+	};
+
+	Buffer.prototype.readUInt8 = function(offset, noAssert) {
+	  var buffer = this;
+
+	  if (!noAssert) {
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  return buffer.parent[buffer.offset + offset];
+	};
+
+	function readUInt16(buffer, offset, isBigEndian, noAssert) {
+	  var val = 0;
+
+
+	  if (!noAssert) {
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 1 < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  if (isBigEndian) {
+	    val = buffer.parent[buffer.offset + offset] << 8;
+	    val |= buffer.parent[buffer.offset + offset + 1];
+	  } else {
+	    val = buffer.parent[buffer.offset + offset];
+	    val |= buffer.parent[buffer.offset + offset + 1] << 8;
+	  }
+
+	  return val;
+	}
+
+	Buffer.prototype.readUInt16LE = function(offset, noAssert) {
+	  return readUInt16(this, offset, false, noAssert);
+	};
+
+	Buffer.prototype.readUInt16BE = function(offset, noAssert) {
+	  return readUInt16(this, offset, true, noAssert);
+	};
+
+	function readUInt32(buffer, offset, isBigEndian, noAssert) {
+	  var val = 0;
+
+	  if (!noAssert) {
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 3 < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  if (isBigEndian) {
+	    val = buffer.parent[buffer.offset + offset + 1] << 16;
+	    val |= buffer.parent[buffer.offset + offset + 2] << 8;
+	    val |= buffer.parent[buffer.offset + offset + 3];
+	    val = val + (buffer.parent[buffer.offset + offset] << 24 >>> 0);
+	  } else {
+	    val = buffer.parent[buffer.offset + offset + 2] << 16;
+	    val |= buffer.parent[buffer.offset + offset + 1] << 8;
+	    val |= buffer.parent[buffer.offset + offset];
+	    val = val + (buffer.parent[buffer.offset + offset + 3] << 24 >>> 0);
+	  }
+
+	  return val;
+	}
+
+	Buffer.prototype.readUInt32LE = function(offset, noAssert) {
+	  return readUInt32(this, offset, false, noAssert);
+	};
+
+	Buffer.prototype.readUInt32BE = function(offset, noAssert) {
+	  return readUInt32(this, offset, true, noAssert);
+	};
+
+
+	/*
+	 * Signed integer types, yay team! A reminder on how two's complement actually
+	 * works. The first bit is the signed bit, i.e. tells us whether or not the
+	 * number should be positive or negative. If the two's complement value is
+	 * positive, then we're done, as it's equivalent to the unsigned representation.
+	 *
+	 * Now if the number is positive, you're pretty much done, you can just leverage
+	 * the unsigned translations and return those. Unfortunately, negative numbers
+	 * aren't quite that straightforward.
+	 *
+	 * At first glance, one might be inclined to use the traditional formula to
+	 * translate binary numbers between the positive and negative values in two's
+	 * complement. (Though it doesn't quite work for the most negative value)
+	 * Mainly:
+	 *  - invert all the bits
+	 *  - add one to the result
+	 *
+	 * Of course, this doesn't quite work in Javascript. Take for example the value
+	 * of -128. This could be represented in 16 bits (big-endian) as 0xff80. But of
+	 * course, Javascript will do the following:
+	 *
+	 * > ~0xff80
+	 * -65409
+	 *
+	 * Whoh there, Javascript, that's not quite right. But wait, according to
+	 * Javascript that's perfectly correct. When Javascript ends up seeing the
+	 * constant 0xff80, it has no notion that it is actually a signed number. It
+	 * assumes that we've input the unsigned value 0xff80. Thus, when it does the
+	 * binary negation, it casts it into a signed value, (positive 0xff80). Then
+	 * when you perform binary negation on that, it turns it into a negative number.
+	 *
+	 * Instead, we're going to have to use the following general formula, that works
+	 * in a rather Javascript friendly way. I'm glad we don't support this kind of
+	 * weird numbering scheme in the kernel.
+	 *
+	 * (BIT-MAX - (unsigned)val + 1) * -1
+	 *
+	 * The astute observer, may think that this doesn't make sense for 8-bit numbers
+	 * (really it isn't necessary for them). However, when you get 16-bit numbers,
+	 * you do. Let's go back to our prior example and see how this will look:
+	 *
+	 * (0xffff - 0xff80 + 1) * -1
+	 * (0x007f + 1) * -1
+	 * (0x0080) * -1
+	 */
+	Buffer.prototype.readInt8 = function(offset, noAssert) {
+	  var buffer = this;
+	  var neg;
+
+	  if (!noAssert) {
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  neg = buffer.parent[buffer.offset + offset] & 0x80;
+	  if (!neg) {
+	    return (buffer.parent[buffer.offset + offset]);
+	  }
+
+	  return ((0xff - buffer.parent[buffer.offset + offset] + 1) * -1);
+	};
+
+	function readInt16(buffer, offset, isBigEndian, noAssert) {
+	  var neg, val;
+
+	  if (!noAssert) {
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 1 < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  val = readUInt16(buffer, offset, isBigEndian, noAssert);
+	  neg = val & 0x8000;
+	  if (!neg) {
+	    return val;
+	  }
+
+	  return (0xffff - val + 1) * -1;
+	}
+
+	Buffer.prototype.readInt16LE = function(offset, noAssert) {
+	  return readInt16(this, offset, false, noAssert);
+	};
+
+	Buffer.prototype.readInt16BE = function(offset, noAssert) {
+	  return readInt16(this, offset, true, noAssert);
+	};
+
+	function readInt32(buffer, offset, isBigEndian, noAssert) {
+	  var neg, val;
+
+	  if (!noAssert) {
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 3 < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  val = readUInt32(buffer, offset, isBigEndian, noAssert);
+	  neg = val & 0x80000000;
+	  if (!neg) {
+	    return (val);
+	  }
+
+	  return (0xffffffff - val + 1) * -1;
+	}
+
+	Buffer.prototype.readInt32LE = function(offset, noAssert) {
+	  return readInt32(this, offset, false, noAssert);
+	};
+
+	Buffer.prototype.readInt32BE = function(offset, noAssert) {
+	  return readInt32(this, offset, true, noAssert);
+	};
+
+	function readFloat(buffer, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset + 3 < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  return require(42).readIEEE754(buffer, offset, isBigEndian,
+	      23, 4);
+	}
+
+	Buffer.prototype.readFloatLE = function(offset, noAssert) {
+	  return readFloat(this, offset, false, noAssert);
+	};
+
+	Buffer.prototype.readFloatBE = function(offset, noAssert) {
+	  return readFloat(this, offset, true, noAssert);
+	};
+
+	function readDouble(buffer, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset + 7 < buffer.length,
+	        'Trying to read beyond buffer length');
+	  }
+
+	  return require(42).readIEEE754(buffer, offset, isBigEndian,
+	      52, 8);
+	}
+
+	Buffer.prototype.readDoubleLE = function(offset, noAssert) {
+	  return readDouble(this, offset, false, noAssert);
+	};
+
+	Buffer.prototype.readDoubleBE = function(offset, noAssert) {
+	  return readDouble(this, offset, true, noAssert);
+	};
+
+
+	/*
+	 * We have to make sure that the value is a valid integer. This means that it is
+	 * non-negative. It has no fractional component and that it does not exceed the
+	 * maximum allowed value.
+	 *
+	 *      value           The number to check for validity
+	 *
+	 *      max             The maximum value
+	 */
+	function verifuint(value, max) {
+	  assert.ok(typeof (value) == 'number',
+	      'cannot write a non-number as a number');
+
+	  assert.ok(value >= 0,
+	      'specified a negative value for writing an unsigned value');
+
+	  assert.ok(value <= max, 'value is larger than maximum value for type');
+
+	  assert.ok(Math.floor(value) === value, 'value has a fractional component');
+	}
+
+	Buffer.prototype.writeUInt8 = function(value, offset, noAssert) {
+	  var buffer = this;
+
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset < buffer.length,
+	        'trying to write beyond buffer length');
+
+	    verifuint(value, 0xff);
+	  }
+
+	  buffer.parent[buffer.offset + offset] = value;
+	};
+
+	function writeUInt16(buffer, value, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 1 < buffer.length,
+	        'trying to write beyond buffer length');
+
+	    verifuint(value, 0xffff);
+	  }
+
+	  if (isBigEndian) {
+	    buffer.parent[buffer.offset + offset] = (value & 0xff00) >>> 8;
+	    buffer.parent[buffer.offset + offset + 1] = value & 0x00ff;
+	  } else {
+	    buffer.parent[buffer.offset + offset + 1] = (value & 0xff00) >>> 8;
+	    buffer.parent[buffer.offset + offset] = value & 0x00ff;
+	  }
+	}
+
+	Buffer.prototype.writeUInt16LE = function(value, offset, noAssert) {
+	  writeUInt16(this, value, offset, false, noAssert);
+	};
+
+	Buffer.prototype.writeUInt16BE = function(value, offset, noAssert) {
+	  writeUInt16(this, value, offset, true, noAssert);
+	};
+
+	function writeUInt32(buffer, value, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 3 < buffer.length,
+	        'trying to write beyond buffer length');
+
+	    verifuint(value, 0xffffffff);
+	  }
+
+	  if (isBigEndian) {
+	    buffer.parent[buffer.offset + offset] = (value >>> 24) & 0xff;
+	    buffer.parent[buffer.offset + offset + 1] = (value >>> 16) & 0xff;
+	    buffer.parent[buffer.offset + offset + 2] = (value >>> 8) & 0xff;
+	    buffer.parent[buffer.offset + offset + 3] = value & 0xff;
+	  } else {
+	    buffer.parent[buffer.offset + offset + 3] = (value >>> 24) & 0xff;
+	    buffer.parent[buffer.offset + offset + 2] = (value >>> 16) & 0xff;
+	    buffer.parent[buffer.offset + offset + 1] = (value >>> 8) & 0xff;
+	    buffer.parent[buffer.offset + offset] = value & 0xff;
+	  }
+	}
+
+	Buffer.prototype.writeUInt32LE = function(value, offset, noAssert) {
+	  writeUInt32(this, value, offset, false, noAssert);
+	};
+
+	Buffer.prototype.writeUInt32BE = function(value, offset, noAssert) {
+	  writeUInt32(this, value, offset, true, noAssert);
+	};
+
+
+	/*
+	 * We now move onto our friends in the signed number category. Unlike unsigned
+	 * numbers, we're going to have to worry a bit more about how we put values into
+	 * arrays. Since we are only worrying about signed 32-bit values, we're in
+	 * slightly better shape. Unfortunately, we really can't do our favorite binary
+	 * & in this system. It really seems to do the wrong thing. For example:
+	 *
+	 * > -32 & 0xff
+	 * 224
+	 *
+	 * What's happening above is really: 0xe0 & 0xff = 0xe0. However, the results of
+	 * this aren't treated as a signed number. Ultimately a bad thing.
+	 *
+	 * What we're going to want to do is basically create the unsigned equivalent of
+	 * our representation and pass that off to the wuint* functions. To do that
+	 * we're going to do the following:
+	 *
+	 *  - if the value is positive
+	 *      we can pass it directly off to the equivalent wuint
+	 *  - if the value is negative
+	 *      we do the following computation:
+	 *         mb + val + 1, where
+	 *         mb   is the maximum unsigned value in that byte size
+	 *         val  is the Javascript negative integer
+	 *
+	 *
+	 * As a concrete value, take -128. In signed 16 bits this would be 0xff80. If
+	 * you do out the computations:
+	 *
+	 * 0xffff - 128 + 1
+	 * 0xffff - 127
+	 * 0xff80
+	 *
+	 * You can then encode this value as the signed version. This is really rather
+	 * hacky, but it should work and get the job done which is our goal here.
+	 */
+
+	/*
+	 * A series of checks to make sure we actually have a signed 32-bit number
+	 */
+	function verifsint(value, max, min) {
+	  assert.ok(typeof (value) == 'number',
+	      'cannot write a non-number as a number');
+
+	  assert.ok(value <= max, 'value larger than maximum allowed value');
+
+	  assert.ok(value >= min, 'value smaller than minimum allowed value');
+
+	  assert.ok(Math.floor(value) === value, 'value has a fractional component');
+	}
+
+	function verifIEEE754(value, max, min) {
+	  assert.ok(typeof (value) == 'number',
+	      'cannot write a non-number as a number');
+
+	  assert.ok(value <= max, 'value larger than maximum allowed value');
+
+	  assert.ok(value >= min, 'value smaller than minimum allowed value');
+	}
+
+	Buffer.prototype.writeInt8 = function(value, offset, noAssert) {
+	  var buffer = this;
+
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset < buffer.length,
+	        'Trying to write beyond buffer length');
+
+	    verifsint(value, 0x7f, -0x80);
+	  }
+
+	  if (value >= 0) {
+	    buffer.writeUInt8(value, offset, noAssert);
+	  } else {
+	    buffer.writeUInt8(0xff + value + 1, offset, noAssert);
+	  }
+	};
+
+	function writeInt16(buffer, value, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 1 < buffer.length,
+	        'Trying to write beyond buffer length');
+
+	    verifsint(value, 0x7fff, -0x8000);
+	  }
+
+	  if (value >= 0) {
+	    writeUInt16(buffer, value, offset, isBigEndian, noAssert);
+	  } else {
+	    writeUInt16(buffer, 0xffff + value + 1, offset, isBigEndian, noAssert);
+	  }
+	}
+
+	Buffer.prototype.writeInt16LE = function(value, offset, noAssert) {
+	  writeInt16(this, value, offset, false, noAssert);
+	};
+
+	Buffer.prototype.writeInt16BE = function(value, offset, noAssert) {
+	  writeInt16(this, value, offset, true, noAssert);
+	};
+
+	function writeInt32(buffer, value, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 3 < buffer.length,
+	        'Trying to write beyond buffer length');
+
+	    verifsint(value, 0x7fffffff, -0x80000000);
+	  }
+
+	  if (value >= 0) {
+	    writeUInt32(buffer, value, offset, isBigEndian, noAssert);
+	  } else {
+	    writeUInt32(buffer, 0xffffffff + value + 1, offset, isBigEndian, noAssert);
+	  }
+	}
+
+	Buffer.prototype.writeInt32LE = function(value, offset, noAssert) {
+	  writeInt32(this, value, offset, false, noAssert);
+	};
+
+	Buffer.prototype.writeInt32BE = function(value, offset, noAssert) {
+	  writeInt32(this, value, offset, true, noAssert);
+	};
+
+	function writeFloat(buffer, value, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 3 < buffer.length,
+	        'Trying to write beyond buffer length');
+
+	    verifIEEE754(value, 3.4028234663852886e+38, -3.4028234663852886e+38);
+	  }
+
+	  require(42).writeIEEE754(buffer, value, offset, isBigEndian,
+	      23, 4);
+	}
+
+	Buffer.prototype.writeFloatLE = function(value, offset, noAssert) {
+	  writeFloat(this, value, offset, false, noAssert);
+	};
+
+	Buffer.prototype.writeFloatBE = function(value, offset, noAssert) {
+	  writeFloat(this, value, offset, true, noAssert);
+	};
+
+	function writeDouble(buffer, value, offset, isBigEndian, noAssert) {
+	  if (!noAssert) {
+	    assert.ok(value !== undefined && value !== null,
+	        'missing value');
+
+	    assert.ok(typeof (isBigEndian) === 'boolean',
+	        'missing or invalid endian');
+
+	    assert.ok(offset !== undefined && offset !== null,
+	        'missing offset');
+
+	    assert.ok(offset + 7 < buffer.length,
+	        'Trying to write beyond buffer length');
+
+	    verifIEEE754(value, 1.7976931348623157E+308, -1.7976931348623157E+308);
+	  }
+
+	  require(42).writeIEEE754(buffer, value, offset, isBigEndian,
+	      52, 8);
+	}
+
+	Buffer.prototype.writeDoubleLE = function(value, offset, noAssert) {
+	  writeDouble(this, value, offset, false, noAssert);
+	};
+
+	Buffer.prototype.writeDoubleBE = function(value, offset, noAssert) {
+	  writeDouble(this, value, offset, true, noAssert);
+	};
+
+	SlowBuffer.prototype.readUInt8 = Buffer.prototype.readUInt8;
+	SlowBuffer.prototype.readUInt16LE = Buffer.prototype.readUInt16LE;
+	SlowBuffer.prototype.readUInt16BE = Buffer.prototype.readUInt16BE;
+	SlowBuffer.prototype.readUInt32LE = Buffer.prototype.readUInt32LE;
+	SlowBuffer.prototype.readUInt32BE = Buffer.prototype.readUInt32BE;
+	SlowBuffer.prototype.readInt8 = Buffer.prototype.readInt8;
+	SlowBuffer.prototype.readInt16LE = Buffer.prototype.readInt16LE;
+	SlowBuffer.prototype.readInt16BE = Buffer.prototype.readInt16BE;
+	SlowBuffer.prototype.readInt32LE = Buffer.prototype.readInt32LE;
+	SlowBuffer.prototype.readInt32BE = Buffer.prototype.readInt32BE;
+	SlowBuffer.prototype.readFloatLE = Buffer.prototype.readFloatLE;
+	SlowBuffer.prototype.readFloatBE = Buffer.prototype.readFloatBE;
+	SlowBuffer.prototype.readDoubleLE = Buffer.prototype.readDoubleLE;
+	SlowBuffer.prototype.readDoubleBE = Buffer.prototype.readDoubleBE;
+	SlowBuffer.prototype.writeUInt8 = Buffer.prototype.writeUInt8;
+	SlowBuffer.prototype.writeUInt16LE = Buffer.prototype.writeUInt16LE;
+	SlowBuffer.prototype.writeUInt16BE = Buffer.prototype.writeUInt16BE;
+	SlowBuffer.prototype.writeUInt32LE = Buffer.prototype.writeUInt32LE;
+	SlowBuffer.prototype.writeUInt32BE = Buffer.prototype.writeUInt32BE;
+	SlowBuffer.prototype.writeInt8 = Buffer.prototype.writeInt8;
+	SlowBuffer.prototype.writeInt16LE = Buffer.prototype.writeInt16LE;
+	SlowBuffer.prototype.writeInt16BE = Buffer.prototype.writeInt16BE;
+	SlowBuffer.prototype.writeInt32LE = Buffer.prototype.writeInt32LE;
+	SlowBuffer.prototype.writeInt32BE = Buffer.prototype.writeInt32BE;
+	SlowBuffer.prototype.writeFloatLE = Buffer.prototype.writeFloatLE;
+	SlowBuffer.prototype.writeFloatBE = Buffer.prototype.writeFloatBE;
+	SlowBuffer.prototype.writeDoubleLE = Buffer.prototype.writeDoubleLE;
+	SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
+	
+	/* WEBPACK VAR INJECTION */}(require, require(29).Buffer))
+
+/***/ },
+
+/***/ 30:
+/***/ function(module, exports, require) {
+
+	var EventEmitter = exports.EventEmitter = function EventEmitter() {};
+	var isArray = require(40);
+	var indexOf = require(41);
+
+
+
+	// By default EventEmitters will print a warning if more than
+	// 10 listeners are added to it. This is a useful default which
+	// helps finding memory leaks.
+	//
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	var defaultMaxListeners = 10;
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!this._events) this._events = {};
+	  this._maxListeners = n;
+	};
+
+
+	EventEmitter.prototype.emit = function(type) {
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events || !this._events.error ||
+	        (isArray(this._events.error) && !this._events.error.length))
+	    {
+	      if (arguments[1] instanceof Error) {
+	        throw arguments[1]; // Unhandled 'error' event
+	      } else {
+	        throw new Error("Uncaught, unspecified 'error' event.");
+	      }
+	      return false;
+	    }
+	  }
+
+	  if (!this._events) return false;
+	  var handler = this._events[type];
+	  if (!handler) return false;
+
+	  if (typeof handler == 'function') {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        var args = Array.prototype.slice.call(arguments, 1);
+	        handler.apply(this, args);
+	    }
+	    return true;
+
+	  } else if (isArray(handler)) {
+	    var args = Array.prototype.slice.call(arguments, 1);
+
+	    var listeners = handler.slice();
+	    for (var i = 0, l = listeners.length; i < l; i++) {
+	      listeners[i].apply(this, args);
+	    }
+	    return true;
+
+	  } else {
+	    return false;
+	  }
+	};
+
+	// EventEmitter is defined in src/node_events.cc
+	// EventEmitter.prototype.emit() is also defined there.
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('addListener only takes instances of Function');
+	  }
+
+	  if (!this._events) this._events = {};
+
+	  // To avoid recursion in the case that type == "newListeners"! Before
+	  // adding it to the listeners, first emit "newListeners".
+	  this.emit('newListener', type, listener);
+	  if (!this._events[type]) {
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  } else if (isArray(this._events[type])) {
+
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+
+	  } else {
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+	  }
+
+	  // Check for listener leak
+	  if (isArray(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (this._maxListeners !== undefined) {
+	      m = this._maxListeners;
+	    } else {
+	      m = defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(events) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      console.trace();
+	    }
+	  }
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('.once only takes instances of Function');
+	  }
+
+	  var self = this;
+	  function g() {
+	    self.removeListener(type, g);
+	    listener.apply(this, arguments);
+	  }
+
+	  g.listener = listener;
+	  self.on(type, g);
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  if ('function' !== typeof listener) {
+	    throw new Error('removeListener only takes instances of Function');
+	  }
+
+	  // does not use listeners(), so no side effect of creating _events[type]
+	  if (!this._events || !this._events[type]) return this;
+
+	  var list = this._events[type];
+
+	  if (isArray(list)) {
+	    var position = -1;
+	    for (var i = 0, length = list.length; i < length; i++) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener))
+	      {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0) return this;
+	    list.splice(position, 1);
+	    if (list.length == 0)
+	      delete this._events[type];
+	  } else if (list === listener ||
+	             (list.listener && list.listener === listener)) {
+	    delete this._events[type];
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  if (arguments.length === 0) {
+	    this._events = {};
+	    return this;
+	  }
+
+	  // does not use listeners(), so no side effect of creating _events[type]
+	  if (type && this._events && this._events[type]) this._events[type] = null;
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  if (!this._events) this._events = {};
+	  if (!this._events[type]) this._events[type] = [];
+	  if (!isArray(this._events[type])) {
+	    this._events[type] = [this._events[type]];
+	  }
+	  return this._events[type];
+	};
+
+
+/***/ },
+
+/***/ 31:
+/***/ function(module, exports, require) {
+
+	var events = require(30);
+
+	var isArray = require(40);
+	var Object_keys = require(43);
+	var Object_getOwnPropertyNames = require(44);
+	var Object_create = require(45);
+	var isRegExp = require(46);
+
+	exports.isArray = isArray;
+	exports.isDate = isDate;
+	exports.isRegExp = isRegExp;
+
+
+	exports.print = function () {};
+	exports.puts = function () {};
+	exports.debug = function() {};
+
+	exports.inspect = function(obj, showHidden, depth, colors) {
+	  var seen = [];
+
+	  var stylize = function(str, styleType) {
+	    // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+	    var styles =
+	        { 'bold' : [1, 22],
+	          'italic' : [3, 23],
+	          'underline' : [4, 24],
+	          'inverse' : [7, 27],
+	          'white' : [37, 39],
+	          'grey' : [90, 39],
+	          'black' : [30, 39],
+	          'blue' : [34, 39],
+	          'cyan' : [36, 39],
+	          'green' : [32, 39],
+	          'magenta' : [35, 39],
+	          'red' : [31, 39],
+	          'yellow' : [33, 39] };
+
+	    var style =
+	        { 'special': 'cyan',
+	          'number': 'blue',
+	          'boolean': 'yellow',
+	          'undefined': 'grey',
+	          'null': 'bold',
+	          'string': 'green',
+	          'date': 'magenta',
+	          // "name": intentionally not styling
+	          'regexp': 'red' }[styleType];
+
+	    if (style) {
+	      return '\033[' + styles[style][0] + 'm' + str +
+	             '\033[' + styles[style][1] + 'm';
+	    } else {
+	      return str;
+	    }
+	  };
+	  if (! colors) {
+	    stylize = function(str, styleType) { return str; };
+	  }
+
+	  function format(value, recurseTimes) {
+	    // Provide a hook for user-specified inspect functions.
+	    // Check that value is an object with an inspect function on it
+	    if (value && typeof value.inspect === 'function' &&
+	        // Filter out the util module, it's inspect function is special
+	        value !== exports &&
+	        // Also filter out any prototype objects using the circular check.
+	        !(value.constructor && value.constructor.prototype === value)) {
+	      return value.inspect(recurseTimes);
+	    }
+
+	    // Primitive types cannot have properties
+	    switch (typeof value) {
+	      case 'undefined':
+	        return stylize('undefined', 'undefined');
+
+	      case 'string':
+	        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+	                                                 .replace(/'/g, "\\'")
+	                                                 .replace(/\\"/g, '"') + '\'';
+	        return stylize(simple, 'string');
+
+	      case 'number':
+	        return stylize('' + value, 'number');
+
+	      case 'boolean':
+	        return stylize('' + value, 'boolean');
+	    }
+	    // For some reason typeof null is "object", so special case here.
+	    if (value === null) {
+	      return stylize('null', 'null');
+	    }
+
+	    // Look up the keys of the object.
+	    var visible_keys = Object_keys(value);
+	    var keys = showHidden ? Object_getOwnPropertyNames(value) : visible_keys;
+
+	    // Functions without properties can be shortcutted.
+	    if (typeof value === 'function' && keys.length === 0) {
+	      if (isRegExp(value)) {
+	        return stylize('' + value, 'regexp');
+	      } else {
+	        var name = value.name ? ': ' + value.name : '';
+	        return stylize('[Function' + name + ']', 'special');
+	      }
+	    }
+
+	    // Dates without properties can be shortcutted
+	    if (isDate(value) && keys.length === 0) {
+	      return stylize(value.toUTCString(), 'date');
+	    }
+
+	    var base, type, braces;
+	    // Determine the object type
+	    if (isArray(value)) {
+	      type = 'Array';
+	      braces = ['[', ']'];
+	    } else {
+	      type = 'Object';
+	      braces = ['{', '}'];
+	    }
+
+	    // Make functions say that they are functions
+	    if (typeof value === 'function') {
+	      var n = value.name ? ': ' + value.name : '';
+	      base = (isRegExp(value)) ? ' ' + value : ' [Function' + n + ']';
+	    } else {
+	      base = '';
+	    }
+
+	    // Make dates with properties first say the date
+	    if (isDate(value)) {
+	      base = ' ' + value.toUTCString();
+	    }
+
+	    if (keys.length === 0) {
+	      return braces[0] + base + braces[1];
+	    }
+
+	    if (recurseTimes < 0) {
+	      if (isRegExp(value)) {
+	        return stylize('' + value, 'regexp');
+	      } else {
+	        return stylize('[Object]', 'special');
+	      }
+	    }
+
+	    seen.push(value);
+
+	    var output = keys.map(function(key) {
+	      var name, str;
+	      if (value.__lookupGetter__) {
+	        if (value.__lookupGetter__(key)) {
+	          if (value.__lookupSetter__(key)) {
+	            str = stylize('[Getter/Setter]', 'special');
+	          } else {
+	            str = stylize('[Getter]', 'special');
+	          }
+	        } else {
+	          if (value.__lookupSetter__(key)) {
+	            str = stylize('[Setter]', 'special');
+	          }
+	        }
+	      }
+	      if (visible_keys.indexOf(key) < 0) {
+	        name = '[' + key + ']';
+	      }
+	      if (!str) {
+	        if (seen.indexOf(value[key]) < 0) {
+	          if (recurseTimes === null) {
+	            str = format(value[key]);
+	          } else {
+	            str = format(value[key], recurseTimes - 1);
+	          }
+	          if (str.indexOf('\n') > -1) {
+	            if (isArray(value)) {
+	              str = str.split('\n').map(function(line) {
+	                return '  ' + line;
+	              }).join('\n').substr(2);
+	            } else {
+	              str = '\n' + str.split('\n').map(function(line) {
+	                return '   ' + line;
+	              }).join('\n');
+	            }
+	          }
+	        } else {
+	          str = stylize('[Circular]', 'special');
+	        }
+	      }
+	      if (typeof name === 'undefined') {
+	        if (type === 'Array' && key.match(/^\d+$/)) {
+	          return str;
+	        }
+	        name = JSON.stringify('' + key);
+	        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+	          name = name.substr(1, name.length - 2);
+	          name = stylize(name, 'name');
+	        } else {
+	          name = name.replace(/'/g, "\\'")
+	                     .replace(/\\"/g, '"')
+	                     .replace(/(^"|"$)/g, "'");
+	          name = stylize(name, 'string');
+	        }
+	      }
+
+	      return name + ': ' + str;
+	    });
+
+	    seen.pop();
+
+	    var numLinesEst = 0;
+	    var length = output.reduce(function(prev, cur) {
+	      numLinesEst++;
+	      if (cur.indexOf('\n') >= 0) numLinesEst++;
+	      return prev + cur.length + 1;
+	    }, 0);
+
+	    if (length > 50) {
+	      output = braces[0] +
+	               (base === '' ? '' : base + '\n ') +
+	               ' ' +
+	               output.join(',\n  ') +
+	               ' ' +
+	               braces[1];
+
+	    } else {
+	      output = braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+	    }
+
+	    return output;
+	  }
+	  return format(obj, (typeof depth === 'undefined' ? 2 : depth));
+	};
+
+
+	function isDate(d) {
+	  if (d instanceof Date) return true;
+	  if (typeof d !== 'object') return false;
+	  var properties = Date.prototype && Object_getOwnPropertyNames(Date.prototype);
+	  var proto = d.__proto__ && Object_getOwnPropertyNames(d.__proto__);
+	  return JSON.stringify(proto) === JSON.stringify(properties);
+	}
+
+	function pad(n) {
+	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+	}
+
+	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+	              'Oct', 'Nov', 'Dec'];
+
+	// 26 Feb 16:19:34
+	function timestamp() {
+	  var d = new Date();
+	  var time = [pad(d.getHours()),
+	              pad(d.getMinutes()),
+	              pad(d.getSeconds())].join(':');
+	  return [d.getDate(), months[d.getMonth()], time].join(' ');
+	}
+
+	exports.log = function (msg) {};
+
+	exports.pump = null;
+
+	exports.inherits = function(ctor, superCtor) {
+	  ctor.super_ = superCtor;
+	  ctor.prototype = Object_create(superCtor.prototype, {
+	    constructor: {
+	      value: ctor,
+	      enumerable: false,
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+	};
+
+	var formatRegExp = /%[sdj%]/g;
+	exports.format = function(f) {
+	  if (typeof f !== 'string') {
+	    var objects = [];
+	    for (var i = 0; i < arguments.length; i++) {
+	      objects.push(exports.inspect(arguments[i]));
+	    }
+	    return objects.join(' ');
+	  }
+
+	  var i = 1;
+	  var args = arguments;
+	  var len = args.length;
+	  var str = String(f).replace(formatRegExp, function(x) {
+	    if (x === '%%') return '%';
+	    if (i >= len) return x;
+	    switch (x) {
+	      case '%s': return String(args[i++]);
+	      case '%d': return Number(args[i++]);
+	      case '%j': return JSON.stringify(args[i++]);
+	      default:
+	        return x;
+	    }
+	  });
+	  for(var x = args[i]; i < len; x = args[++i]){
+	    if (x === null || typeof x !== 'object') {
+	      str += ' ' + x;
+	    } else {
+	      str += ' ' + exports.inspect(x);
+	    }
+	  }
+	  return str;
+	};
+
+
+/***/ },
+
+/***/ 32:
+/***/ function(module, exports, require) {
+
+	// UTILITY
+	var util = require(31);
+	var pSlice = Array.prototype.slice;
+
+	var objectKeys = require(43);
+	var isRegExp = require(46);
+
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
+
+	var assert = module.exports = ok;
+
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
+
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.message = options.message;
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
+	};
+	util.inherits(assert.AssertionError, Error);
+
+	function replacer(key, value) {
+	  if (value === undefined) {
+	    return '' + value;
+	  }
+	  if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+	    return value.toString();
+	  }
+	  if (typeof value === 'function' || value instanceof RegExp) {
+	    return value.toString();
+	  }
+	  return value;
+	}
+
+	function truncate(s, n) {
+	  if (typeof s == 'string') {
+	    return s.length < n ? s : s.slice(0, n);
+	  } else {
+	    return s;
+	  }
+	}
+
+	assert.AssertionError.prototype.toString = function() {
+	  if (this.message) {
+	    return [this.name + ':', this.message].join(' ');
+	  } else {
+	    return [
+	      this.name + ':',
+	      truncate(JSON.stringify(this.actual, replacer), 128),
+	      this.operator,
+	      truncate(JSON.stringify(this.expected, replacer), 128)
+	    ].join(' ');
+	  }
+	};
+
+	// assert.AssertionError instanceof Error
+
+	assert.AssertionError.__proto__ = Error.prototype;
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!!!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
+	  }
+	};
+
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+	  }
+	};
+
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
+
+	  } else if (require(29).Buffer.isBuffer(actual) && require(29).Buffer.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
+
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
+	    }
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (actual instanceof Date && expected instanceof Date) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (isRegExp(actual) && isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (typeof actual != 'object' && typeof expected != 'object') {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isUndefinedOrNull(value) {
+	  return value === null || value === undefined;
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  //~~~I've managed to break Object.keys through screwy arguments passing.
+	  //   Converting to array solves the problem.
+	  if (isArguments(a)) {
+	    if (!isArguments(b)) {
+	      return false;
+	    }
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  try {
+	    var ka = objectKeys(a),
+	        kb = objectKeys(b),
+	        key, i;
+	  } catch (e) {//happens when one is a string literal and the other isn't
+	    return false;
+	  }
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
+	  }
+
+	  if (isRegExp(expected)) {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
+
+	  if (typeof expected === 'string') {
+	    message = expected;
+	    expected = null;
+	  }
+
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
+	  }
+
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
+
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
+	  }
+
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
+	  }
+
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
+
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
+	};
+
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
+	};
+
+	assert.ifError = function(err) { if (err) {throw err;}};
+
+
+/***/ },
+
 /***/ 33:
 /***/ function(module, exports, require) {
 
@@ -16902,157 +17013,6 @@ var ripple =
 /***/ 35:
 /***/ function(module, exports, require) {
 
-	
-	/**
-	 * Manager for pending transactions
-	 */
-
-	var Transaction = require(5).Transaction;
-
-	function TransactionQueue() {
-	  var self = this;
-
-	  this._queue         = [ ];
-	  this._idCache       = { };
-	  this._sequenceCache = { };
-	  this._save          = void(0);
-	};
-
-	TransactionQueue.prototype.clearCache = function() {
-	  this._idCache       = { };
-	  this._sequenceCache = { };
-	};
-
-	TransactionQueue.prototype.getMinLedger = function() {
-	  var minLedger = Infinity;
-
-	  for (var i=0; i<this._queue.length; i++) {
-	    var submitIndex = this._queue[i].submitIndex;
-
-	    if (typeof submitIndex !== 'number') {
-	      // If any pending transactions don't have a submit index,
-	      // return -1 for scanning all previous transactions
-	      minLedger = -1;
-	      break;
-	    }
-
-	    if (submitIndex < minLedger) {
-	      minLedger = submitIndex;
-	    }
-	  };
-
-	  if (!isFinite(minLedger)) minLedger = -1;
-
-	  if (minLedger !== -1) minLedger -= 1;
-
-	  return minLedger;
-	};
-
-	TransactionQueue.prototype.save = function() {
-	  if (typeof this._save !== 'function') return;
-
-	  this._save(this._queue.map(function(tx) {
-	    return {
-	      tx_json: tx.tx_json,
-	      submittedIDs: tx.submittedIDs
-	    }
-	  }));
-	};
-
-	/**
-	 * Store received (validated) sequence
-	 */
-
-	TransactionQueue.prototype.addReceivedSequence = function(sequence) {
-	  this._sequenceCache[sequence] = true;
-	};
-
-	/**
-	 * Store received (validated) ID transaction
-	 */
-
-	TransactionQueue.prototype.addReceivedId = function(id, transaction) {
-	  this._idCache[id] = transaction;
-	};
-
-	/**
-	 * Get received (validated) transaction by ID
-	 */
-
-	TransactionQueue.prototype.getReceived = function(id) {
-	  return this._idCache[id];
-	};
-
-	/**
-	 * Check that sequence number has been consumed by a validated
-	 * transaction
-	 */
-
-	TransactionQueue.prototype.hasSequence = function(sequence) {
-	  return this._sequenceCache[sequence] || false;
-	};
-
-	/**
-	 * Get a submitted transaction by ID. Transactions
-	 * may have multiple associated IDs.
-	 */
-
-	TransactionQueue.prototype.getSubmission = function(id, callback) {
-	  var result = false;
-
-	  for (var i=0, tx; tx=this._queue[i]; i++) {
-	    if (~tx.submittedIDs.indexOf(id)) {
-	      result = tx;
-	      break;
-	    }
-	  }
-
-	  return result;
-	};
-
-	/**
-	 * Remove a transaction from the queue
-	 */
-
-	TransactionQueue.prototype.remove = function(tx) {
-	  // ND: We are just removing the Transaction by identity
-	  var i = this._queue.length;
-
-	  while (i--) {
-	    if (this._queue[i] === tx) {
-	      this._queue.splice(i, 1);
-	      break;
-	    }
-	  }
-
-	  if (!this._queue.length) {
-	    this.clearCache();
-	  }
-
-	  this.save();
-	};
-
-	TransactionQueue.prototype.push = function(tx) {
-	  this._queue.push(tx);
-	  this.save();
-	};
-
-	TransactionQueue.prototype.forEach = function(fn) {
-	  this._queue.forEach(fn);
-	};
-
-	TransactionQueue.prototype.length = function() {
-	  return this._queue.length;
-	};
-
-	exports.TransactionQueue = TransactionQueue;
-
-
-/***/ },
-
-/***/ 36:
-/***/ function(module, exports, require) {
-
 	var hasOwn = Object.prototype.hasOwnProperty;
 	var toString = Object.prototype.toString;
 
@@ -17135,13 +17095,148 @@ var ripple =
 
 /***/ },
 
+/***/ 36:
+/***/ function(module, exports, require) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
+
+/***/ },
+
 /***/ 37:
+/***/ function(module, exports, require) {
+
+	
+	/**
+	 * Manager for pending transactions
+	 */
+
+	var Transaction = require(5).Transaction;
+	var LRU = require(39);
+
+	function TransactionQueue() {
+	  var self = this;
+
+	  this._queue         = [ ];
+	  this._idCache       = LRU({ max: 100 });
+	  this._sequenceCache = LRU({ max: 100 });
+	  this._save          = void(0);
+	};
+
+	TransactionQueue.prototype.save = function() {
+	  if (typeof this._save !== 'function') return;
+
+	  this._save(this._queue.map(function(tx) {
+	    return {
+	      tx_json: tx.tx_json,
+	      submittedIDs: tx.submittedIDs
+	    }
+	  }));
+	};
+
+	/**
+	 * Store received (validated) sequence
+	 */
+
+	TransactionQueue.prototype.addReceivedSequence = function(sequence) {
+	  this._sequenceCache.set(String(sequence), true);
+	};
+
+	/**
+	 * Store received (validated) ID transaction
+	 */
+
+	TransactionQueue.prototype.addReceivedId = function(id, transaction) {
+	  this._idCache.set(id, transaction);
+	};
+
+	/**
+	 * Get received (validated) transaction by ID
+	 */
+
+	TransactionQueue.prototype.getReceived = function(id) {
+	  return this._idCache.get(id);
+	};
+
+	/**
+	 * Check that sequence number has been consumed by a validated
+	 * transaction
+	 */
+
+	TransactionQueue.prototype.hasSequence = function(sequence) {
+	  return this._sequenceCache.has(String(sequence));
+	};
+
+	/**
+	 * Get a submitted transaction by ID. Transactions
+	 * may have multiple associated IDs.
+	 */
+
+	TransactionQueue.prototype.getSubmission = function(id, callback) {
+	  var result = false;
+
+	  for (var i=0, tx; tx=this._queue[i]; i++) {
+	    if (~tx.submittedIDs.indexOf(id)) {
+	      result = tx;
+	      break;
+	    }
+	  }
+
+	  return result;
+	};
+
+	/**
+	 * Remove a transaction from the queue
+	 */
+
+	TransactionQueue.prototype.remove = function(tx) {
+	  // ND: We are just removing the Transaction by identity
+	  var i = this._queue.length;
+
+	  while (i--) {
+	    if (this._queue[i] === tx) {
+	      this._queue.splice(i, 1);
+	      break;
+	    }
+	  }
+
+	  this.save();
+	};
+
+	TransactionQueue.prototype.push = function(tx) {
+	  this._queue.push(tx);
+	  this.save();
+	};
+
+	TransactionQueue.prototype.forEach = function(fn) {
+	  this._queue.forEach(fn);
+	};
+
+	TransactionQueue.prototype.length = function() {
+	  return this._queue.length;
+	};
+
+	exports.TransactionQueue = TransactionQueue;
+
+
+/***/ },
+
+/***/ 38:
 /***/ function(module, exports, require) {
 
 	var sjcl    = require(15).sjcl;
 	var utils   = require(15);
 	var config  = require(17);
-	var extend  = require(36);
+	var extend  = require(35);
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -17171,7 +17266,7 @@ var ripple =
 
 /***/ },
 
-/***/ 38:
+/***/ 39:
 /***/ function(module, exports, require) {
 
 	/* WEBPACK VAR INJECTION */(function(require, module) {;(function () { // closure for web browsers
@@ -17427,11 +17522,49 @@ var ripple =
 
 	})()
 	
-	/* WEBPACK VAR INJECTION */}(require, require(42)(module)))
+	/* WEBPACK VAR INJECTION */}(require, require(36)(module)))
 
 /***/ },
 
-/***/ 39:
+/***/ 40:
+/***/ function(module, exports, require) {
+
+	module.exports = typeof Array.isArray === 'function'
+	    ? Array.isArray
+	    : function (xs) {
+	        return Object.prototype.toString.call(xs) === '[object Array]'
+	    }
+	;
+
+	/*
+
+	alternative
+
+	function isArray(ar) {
+	  return ar instanceof Array ||
+	         Array.isArray(ar) ||
+	         (ar && ar !== Object.prototype && isArray(ar.__proto__));
+	}
+
+	*/
+
+/***/ },
+
+/***/ 41:
+/***/ function(module, exports, require) {
+
+	module.exports = function indexOf (xs, x) {
+	    if (xs.indexOf) return xs.indexOf(x);
+	    for (var i = 0; i < xs.length; i++) {
+	        if (x === xs[i]) return i;
+	    }
+	    return -1;
+	}
+
+
+/***/ },
+
+/***/ 42:
 /***/ function(module, exports, require) {
 
 	exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
@@ -17518,61 +17651,6 @@ var ripple =
 
 	  buffer[offset + i - d] |= s * 128;
 	};
-
-
-/***/ },
-
-/***/ 40:
-/***/ function(module, exports, require) {
-
-	module.exports = typeof Array.isArray === 'function'
-	    ? Array.isArray
-	    : function (xs) {
-	        return Object.prototype.toString.call(xs) === '[object Array]'
-	    }
-	;
-
-	/*
-
-	alternative
-
-	function isArray(ar) {
-	  return ar instanceof Array ||
-	         Array.isArray(ar) ||
-	         (ar && ar !== Object.prototype && isArray(ar.__proto__));
-	}
-
-	*/
-
-/***/ },
-
-/***/ 41:
-/***/ function(module, exports, require) {
-
-	module.exports = function indexOf (xs, x) {
-	    if (xs.indexOf) return xs.indexOf(x);
-	    for (var i = 0; i < xs.length; i++) {
-	        if (x === xs[i]) return i;
-	    }
-	    return -1;
-	}
-
-
-/***/ },
-
-/***/ 42:
-/***/ function(module, exports, require) {
-
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
-		}
-		return module;
-	}
 
 
 /***/ },

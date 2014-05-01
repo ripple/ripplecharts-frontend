@@ -115,6 +115,7 @@ function gotoThing() {
     eraseGraph();
     //window.location.hash = string;
     remote.request_tx(string, handleIndividualTransaction);
+    if (!isConnected()) remote.connect();
   } else {
     changeMode('individual');
     refocus(string,true);
@@ -171,6 +172,8 @@ var requestRepetitionInterval = setInterval(function(){
 
 //Repeatable methods for fetching from server
 function serverGetLines(address) {
+  if (!isConnected) remote.connect();
+    
   if ($.isEmptyObject(nodes[nodeMap[address]].trustLines)) {
     //Get trust lines for address         ?  ??current?
     var rral = (function() {return function() {
@@ -189,6 +192,9 @@ function serverGetLines(address) {
 }
 
 function serverGetInfo(address) {
+  
+  if (!isConnected) remote.connect();
+  
   //console.log("serverGetInfo", address);
   if (nodes[nodeMap[address]] && nodes[nodeMap[address]].account.index) {
     // Don't do anything if we already have information about this account.
@@ -210,6 +216,9 @@ function serverGetInfo(address) {
 var TRANSACTION_PAGE_LENGTH = 13;
 
 function getNextTransactionPage() {
+  
+  if (!isConnected) remote.connect();
+    
   //request transactions for the current account, with offset = nodes[nodeMap[address]].transactions.length
   var rrat = (function() {return function(){
     var x = remote.request_account_tx({
@@ -2065,6 +2074,7 @@ window.onhashchange = function(){
   this.suspend = function (){
     force.stop();
     removeResizeListener(window, resizeGraph); 
+    clearInterval(requestRepetitionInterval);
   }
   
   function isConnected(remote) {

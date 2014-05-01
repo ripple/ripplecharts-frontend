@@ -283,7 +283,7 @@ function createTransactionProcessor(viewOpts, resultHandler) {
         value    = [value[1], value[0], 1/value[2], value[3], value[4], value[5], value[6]];
       }
 
-      console.log(value);
+      //console.log(value);
       if (!viewOpts.reduce) resultHandler({key: key, value: value});
       else resultHandler(offersExercisedReduce([value], false));
        
