@@ -47,6 +47,13 @@ var ValueSummary = function (options) {
     });
     else return;
     
+    if (!data) {
+      tooltip.html("");
+      path.data([]).exit().remove();
+      inner.selectAll("label").data([]).exit().remove();
+      return;
+    }
+    
     //indicate we are in the midst of transition
     transitioning = true;
     exchange      = ex;
@@ -146,7 +153,7 @@ var ValueSummary = function (options) {
     var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
     var gateway  = gateways.getName(issuer) || issuer;
     var amount   = commas(d.data.amount,2);
-    var value    = currency == exchange.currency ? "" : commas(d.value/exchange.rate,2);
+    var value    = currency === exchange.currency || !exchange.rate ? "" : commas(d.value/exchange.rate,2);
     var count    = d.data.count;
     
     tooltip.html("");
