@@ -16,7 +16,7 @@ var TotalAccounts = function (options) {
       {name: "month",  interval:"hour",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"day",  offset: function(d) { return d3.time.year.offset(d, -3); }}
+      {name: "max",    interval:"month",  offset: function(d) { return new Date("Jan 1 2013 Z")}}
     ])
   .enter().append("a")
     .attr("href", "#")
