@@ -147,12 +147,12 @@ var TradeFeed = function (options) {
       counter       : self.counter
       
     }, function(data){
-
+      
       if (data && data.length) {
         //TODO: should be comparing the existing high and low      
         high   = data[0].high;
         low    = data[0].low;
-        volume = data[0].volume;
+        volume = data[0].baseVolume;
         if (!close) close = data[0].close; //dont overwrite existing
       }
       

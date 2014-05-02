@@ -40,7 +40,7 @@ var PriceChartWidget = function (options) {
   //need to create a div here so that we can apply the theme, if necessary
   if (options.id) {
     div        = d3.select("#"+options.id);
-    console.log(div);
+
   } else {
     options.id = "pc"+Math.random().toString(36).substring(5); //get random ID;
     div        = d3.select("body").append("div").attr("id", options.id);  
