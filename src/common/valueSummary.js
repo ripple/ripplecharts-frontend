@@ -37,18 +37,23 @@ var ValueSummary = function (options) {
   var transitioning = false;
   var gateways      = ripple.currencyDropdown();
   var exchange, current;
+  var data = [];
    
   //load a specific metric
   this.load = function (z, ex) {
-    var data;
     
-    if (z) data = z.components;
-    else if (data) data.forEach(function(d, i){
-      data[i].convertedAmount = 0.0;  
-    });
-    else return;
+    if (z && z.components) {
+      data = [];
+      z.components.forEach(function(d){
+        if (d.convertedAmount) data.push(d);
+      });
+    } else if (data) {
+      data.forEach(function(d, i){
+        data[i].convertedAmount = 0.0;  
+      });
+    } else return;
     
-    if (!data) {
+    if (!data || !data.length) {
       tooltip.html("");
       path.data([]).exit().remove();
       inner.selectAll("label").data([]).exit().remove();
@@ -63,10 +68,10 @@ var ValueSummary = function (options) {
     var hasXRP = false;
     data.forEach(function(d){
       if (d.currency=='XRP') hasXRP = true; 
-      d.percent = d.convertedAmount/z.total*100;
+      d.percent = z && z.total ? d.convertedAmount/z.total*100 : 0.00;
     });
     if (!hasXRP) data.push({convertedAmount:0.0});     
-      
+ 
     var pie = d3.layout.pie()
         .sort(null)
         .startAngle(1.1*Math.PI)
@@ -131,7 +136,8 @@ var ValueSummary = function (options) {
   function arcTween(b) {
     var c = this._current;
     if (!c) {
-      c = chart.select("path:nth-last-child(2)")[0][0]._current;
+      if (chart.select("path:nth-last-child(2)")[0][0]) 
+        c = chart.select("path:nth-last-child(2)")[0][0]._current;
       if (c) c.startAngle = c.endAngle;
     }
     
