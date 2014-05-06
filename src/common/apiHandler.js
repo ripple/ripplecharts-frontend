@@ -154,8 +154,8 @@ ApiHandler = function (url) {
     return handleRequest(request, params, callback);    
   }
   
-  this.marketMakers = function (params, callback) {
-    var request = apiRequest("marketMakers");
+  this.marketTraders = function (params, callback) {
+    var request = apiRequest("marketTraders");
     return handleRequest(request, params, callback);    
   }
   

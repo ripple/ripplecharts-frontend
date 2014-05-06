@@ -44,7 +44,7 @@ var MarketMakerMap = function (options){
   var periodSelect = div.append("div").attr("class","periodSelect selectList");
   
   periodSelect.append("label").html("Period:");
-  periodSelect.selectAll("a").data(["24h","3d","7d","30d"])
+  periodSelect.selectAll("a").data(["24h","3d","7d"])
     .enter().append("a")
     .text(function(d){return d})
     .classed("selected", function(d) { return d === period })
@@ -141,7 +141,7 @@ var MarketMakerMap = function (options){
     periodSelect.style("display","");
     metricSelect.style("display","");
             
-    apiHandler.marketMakers({
+    apiHandler.marketTraders({
       base         : base,
       counter      : counter,
       period       : period,
