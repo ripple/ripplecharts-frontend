@@ -110,8 +110,7 @@ var ValueSummary = function (options) {
         if (!d.data.currency && !d.data.base) return "";
         if (d.data.percent<2) return "";
         
-        //the counter and base are inverted on purpose
-        var label = d.data.currency || d.data.counter.currency+"/"+d.data.base.currency;
+        var label = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
         return label+"<b>"+commas(d.data.percent,0)+"%</b>";
       })
       .style("margin-top", function(d){
