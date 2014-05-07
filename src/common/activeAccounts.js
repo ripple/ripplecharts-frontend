@@ -1,4 +1,4 @@
-var MarketMakerMap = function (options){
+var ActiveAccounts = function (options){
   var self     = this,
     apiHandler = new ApiHandler(options.url);
   

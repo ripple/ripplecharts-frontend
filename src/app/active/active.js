@@ -1,31 +1,31 @@
-angular.module( 'ripplecharts.traders', [
+angular.module( 'ripplecharts.activeAccounts', [
   'ui.state',
   'ui.bootstrap'
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'traders', {
-    url: '/traders',
+  $stateProvider.state( 'activeAccounts', {
+    url: '/active_accounts',
     views: {
       "main": {
-        controller: 'TradersCtrl',
-        templateUrl: 'traders/traders.tpl.html'
+        controller: 'ActiveAccountsCtrl',
+        templateUrl: 'active/active.tpl.html'
       }
     },
-    data:{ pageTitle: 'Market Makers' }
+    data:{ pageTitle: 'Active Accounts' }
   });
 })
 
-.controller( 'TradersCtrl', function TradersCtrl( $scope ) {
+.controller( 'ActiveAccountsCtrl', function ActiveAccountsCtrl( $scope ) {
 
   var base    = store.session.get('traderBase')    || store.get('traderBase')    || {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
   var counter = store.session.get('traderCounter') || store.get('traderCounter') || {"currency": "XRP"};
   var period  = store.session.get('traderPeriod')  || store.get('traderPeriod')  || "24h";
   var metric  = store.session.get('traderMetric')  || store.get('traderMetric')  || "volume";
    
-  var map = new MarketMakerMap({
+  var map = new ActiveAccounts({
     url    : API,
-    id     : 'traderMap',
+    id     : 'activeAccounts',
     period : period,
     metric : metric,
     resize : true
