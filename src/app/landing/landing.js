@@ -106,7 +106,7 @@ angular.module( 'ripplecharts.landing', [
     
     if      ($scope.metricDetail == 'totalNetworkValue') {
       $scope.metricDetailTitle = "Total Network Value";
-      donut.load(totalNetworkValueXRP, ex);
+      donut.load(totalNetworkValueXRP, ex, true);
     } else if ($scope.metricDetail == 'transactionVolume') {
       $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
       donut.load(transactionVolumeXRP, ex);
@@ -166,7 +166,7 @@ angular.module( 'ripplecharts.landing', [
 
     if (metric=="totalNetworkValue") {
       if (typeof totalNetworkValueXRP === 'undefined') return;
-      if (metric === $scope.metricDetail) donut.load(totalNetworkValueXRP, ex);
+      if (metric === $scope.metricDetail) donut.load(totalNetworkValueXRP, ex, true);
       value     = totalNetworkValueXRP.total/$scope.valueRate; 
       precision = 0;
     

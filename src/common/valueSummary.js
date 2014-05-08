@@ -21,9 +21,21 @@ var ValueSummary = function (options) {
     .append("g")
     .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
 
-  var color = d3.scale.category20();
+  var toggle = outer.append("label").attr("class","xrpToggle");
+    
+    toggle.append("input").attr("type", "checkbox")
+      .property("checked", true)
+      .on('click', function(){
+        hideXRP = !d3.select(this).property("checked");
+        self.load(null, exchange, true);
+      });
+      
+    toggle.append("b");  
+    toggle.append("span").html("include XRP");  
+     
+  var color  = d3.scale.category20();
   
-  var arc   = d3.svg.arc()
+  var arc    = d3.svg.arc()
       .outerRadius(radius*0.9)
       .innerRadius(radius*0.4);
           
@@ -36,24 +48,21 @@ var ValueSummary = function (options) {
   var tooltip       = outer.append("div").attr("class","tooltip"); 
   var transitioning = false;
   var gateways      = ripple.currencyDropdown();
-  var exchange, current;
+  var exchange, current, total, hideXRP;
   var data = [];
    
   //load a specific metric
-  this.load = function (z, ex) {
+  this.load = function (z, ex, xrpToggle) {
     
     if (z && z.components) {
-      data = [];
+      total = z.total || 0;
+      data  = [];
       z.components.forEach(function(d){
-        if (d.convertedAmount) data.push(d);
+        if (d.convertedAmount) data.push(JSON.parse(JSON.stringify(d)));
       });
-    } else if (data) {
-      data.forEach(function(d, i){
-        data[i].convertedAmount = 0.0;  
-      });
-    } else return;
+    } else if (!data) return;
     
-    if (!data || !data.length) {
+    if (!data.length) {
       tooltip.html("");
       path.data([]).exit().remove();
       inner.selectAll("label").data([]).exit().remove();
@@ -64,21 +73,46 @@ var ValueSummary = function (options) {
     transitioning = true;
     exchange      = ex;
         
-    //check for XRP - it wont be present for trade volume, so add it at 0
-    var hasXRP = false;
+    //check for XRP, set the percentages
+    var XRPObj;
     data.forEach(function(d){
-      if (d.currency=='XRP') hasXRP = true; 
-      d.percent = z && z.total ? d.convertedAmount/z.total*100 : 0.00;
+      if (d.currency=='XRP') XRPObj = d;   
+      d.percent = total ? d.convertedAmount/total*100 : 0.00;
     });
-    if (!hasXRP) data.push({convertedAmount:0.0});     
- 
+    
+    //XRP wont be present for trade volume, so add it at 0
+    if (!XRPObj) data.push({convertedAmount:0.0});     
+    
+    //if the XRP toggle is active and XRP should be hidden
+    //adjust the total, set the XRP amount to 0, and
+    //recalculate the percentages
+    else if (xrpToggle && hideXRP) {
+      var adjusted = total - XRPObj.amount;
+      data.forEach(function(d){
+        if (d.currency=='XRP') d.convertedAmount = 0;  
+        d.percent = adjusted ? d.convertedAmount/adjusted*100 : 0.00;        
+      });
+
+    //otherwise, reset the converted amount and set percentage
+    } else {
+      XRPObj.convertedAmount = XRPObj.amount;
+      XRPObj.percent = total ? XRPObj.amount/total*100 : 0.00;
+    }
+    
+    //sort by issuer, reversed
+    data.sort(function(a, b){
+      var i1 = a.base ? a.base.issuer : a.issuer;
+      var i2 = b.base ? b.base.issuer : b.issuer;
+      return i2 ? i2.localeCompare(i1) : 0;
+    });
+    
     var pie = d3.layout.pie()
         .sort(null)
         .startAngle(1.1*Math.PI)
         .endAngle(3.1*Math.PI)
         .value(function(d) { return d.convertedAmount; });
       
-    //add arcs      
+    //add arcs         
     path = path.data(pie(data));
     path.enter().append("path").on('mousemove',function(d, i){
       if (transitioning) return;
@@ -128,6 +162,8 @@ var ValueSummary = function (options) {
       }); 
       
     label.exit().remove();
+   
+    toggle.style("display", xrpToggle ? "block" : "none"); 
   }
   
   
