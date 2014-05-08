@@ -611,7 +611,7 @@ function CapChart(options) {
       }
        
       
-      console.log(lines);
+      //console.log(lines);
       color.domain(legend.map(function(d){return d.address})); 
       lines = filterByLegend(lines, legend);
       
