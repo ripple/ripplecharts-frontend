@@ -101,8 +101,8 @@ var ValueSummary = function (options) {
     
     //sort by issuer, reversed
     data.sort(function(a, b){
-      var i1 = a.base ? a.base.issuer : a.issuer;
-      var i2 = b.base ? b.base.issuer : b.issuer;
+      var i1 = a.base ? a.base.issuer : a.issuer || "a"; //make XRP last
+      var i2 = b.base ? b.base.issuer : b.issuer || "a"; //make XRP last
       return i2 ? i2.localeCompare(i1) : 0;
     });
     
@@ -190,8 +190,9 @@ var ValueSummary = function (options) {
     if (current===i) return;
     current = i;
     
-    var currency = d.data.currency || d.data.base.currency
-    var label    = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
+    var currency = d.data.base ? d.data.base.currency : d.data.currency;
+    var counter  = d.data.counter ? d.data.counter.currency : "";
+    var label    = counter ? currency+"/"+counter : currency;
     var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
     var gateway  = gateways.getName(issuer) || issuer;
     var amount   = commas(d.data.amount,2);
