@@ -70,13 +70,6 @@
             "hotwallets": []
             }]
     },{
-        "name": "Ripple Money",
-        "accounts": [{
-            "address": "rkH1aQbL2ajA7HUsx8VQRuL3VaEByHELm",
-            "currencies": ["GBP"],
-            "hotwallets": []
-            }]
-    },{
         "name": "Justcoin",
         "accounts": [{
             "address": "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
@@ -88,13 +81,6 @@
         "accounts": [{
             "address": "rM8199qFwspxiWNZRChZdZbGN5WrCepVP1",
             "currencies": ["CNY"],
-            "hotwallets": []
-            }]
-    }, {
-        "name": "Peercover",
-        "accounts": [{
-            "address": "ra9eZxMbJrUcgV8ui7aPc161FgrqWScQxV",
-            "currencies": ["USD","DOG","BTC","NXT"],
             "hotwallets": []
             }]
     }, {
