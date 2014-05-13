@@ -49,20 +49,6 @@
             "hotwallets": ["r9xAQUyqs53QH2PLxe7iFbNbpU2RA9QtZx"]
             }]
     }, {
-        "name": "Dividend Rippler",
-        "accounts": [{
-            "address": "rfYv1TXnwgDDK4WQNbFALykYuEBnrR4pDX",
-            "currencies": ["BTC", "LTC", "NMC", "TRC"],
-            "hotwallets": []
-            }]
-    }, {
-        "name": "TTBit",
-        "accounts": [{
-            "address": "rGwUWgN5BEg3QGNY3RX2HfYowjUTZdid3E",
-            "currencies": ["DYM"],
-            "hotwallets": []
-            }]
-    }, {
         "name": "RippleUnion",
         "accounts": [{
             "address": "r3ADD8kXSUKHd6zTCKfnKT3zV9EZHjzp1S",
