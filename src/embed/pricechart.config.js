@@ -11,7 +11,7 @@ module.exports = {
     js: [  
       'vendor/moment/moment.js',
       'vendor/d3/d3.js',
-      'deps/ripple-0.7.35.js',
+      'deps/ripple-0.7.36.js',
       'src/common/apiHandler.js',
       'src/common/priceChart.js',
       'src/embed/pricechart-script.js' 
