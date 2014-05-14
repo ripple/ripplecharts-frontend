@@ -583,7 +583,7 @@ function CapChart(options) {
         path.enter().append("path")
           .on("mousemove", movingInGround);
         path.transition()
-          .attr({class: "area", d: function(d) { return area(d.values); } });
+          .attr({"class": "area", d: function(d) { return area(d.values); } });
           
         path.style("fill", function(d) { return color(d.address); });
         path.exit().remove();
@@ -865,6 +865,8 @@ function CapChart(options) {
   
   
   function commas (number, precision) {
+    if (number===0) return 0;
+    if (!number) return null;
     var parts = number.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     if (precision && parts[1]) parts[1] = parts[1].substring(0,precision);
