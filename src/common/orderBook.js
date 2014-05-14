@@ -132,20 +132,25 @@ var OrderBook = function (options) {
         d.TakerPays = d.taker_pays_funded;
       }
 
-      d.TakerGets = ripple.Amount.from_json(d.TakerGets);
-      d.TakerPays = ripple.Amount.from_json(d.TakerPays);
+      d.TakerGets = Amount.from_json(d.TakerGets);
+      d.TakerPays = Amount.from_json(d.TakerPays);
 
-      d.price = ripple.Amount.from_quality(d.BookDirectory, "1", "1");
-
-      if (action !== "asks") d.price = ripple.Amount.from_json("1/1/1").divide(d.price);
-      
-      // Adjust for drops: The result would be a million times too large.
-      if (d[action === "asks" ? "TakerPays" : "TakerGets"].is_native())
-        d.price  = d.price.divide(ripple.Amount.from_json("1000000"));
-
-      // Adjust for drops: The result would be a million times too small.
-      if (d[action === "asks" ? "TakerGets" : "TakerPays"].is_native())
-        d.price  = d.price.multiply(ripple.Amount.from_json("1000000"));
+      if (action === "asks") {
+        d.price = Amount.from_quality(d.BookDirectory,
+                                      d.TakerPays.currency(),
+                                      d.TakerPays.issuer(), {
+          base_currency: d.TakerGets.currency(),
+          reference_date: new Date()
+        });
+      } else {
+        d.price = Amount.from_quality(d.BookDirectory,
+                                      d.TakerGets.currency(),
+                                      d.TakerGets.issuer(), {
+          inverse: true,
+          base_currency: d.TakerPays.currency(),
+          reference_date: new Date()
+        });
+      }
           
       if (rowCount++ > max_rows) break;
 
