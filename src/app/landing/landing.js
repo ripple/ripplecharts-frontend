@@ -134,7 +134,8 @@ angular.module( 'ripplecharts.landing', [
   function getTotalAccounts () {
     api.getTotalAccounts(null, function(err, total){
       if (err) console.log(err);
-      totalAccounts = total; //save for new account updates;
+
+      if (total) totalAccounts = total; //save for new account updates;
       $scope.totalAccounts = total ? commas(total) : " ";
       $scope.$apply();
       
@@ -151,7 +152,7 @@ angular.module( 'ripplecharts.landing', [
       if (affNode.CreatedNode && 
           affNode.CreatedNode.LedgerEntryType === "AccountRoot" ) {
 
-          $scope.totalAccounts = commas(++totalAccounts);
+          $scope.totalAccounts = totalAccounts ? commas(++totalAccounts) : " ";
           $scope.$apply();
       }
     });    
