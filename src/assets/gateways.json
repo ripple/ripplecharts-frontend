@@ -97,6 +97,14 @@
             "currencies": ["NZD","BTC","USD","AUD"],
             "hotwallets": ["rGAmy1w1ENyTJ9BCAEicYyRM2Yk1iWZ7Z5"]
             }]
+    }, {
+        "name": "Ripple LatAm",
+        "accounts": [{
+            "address": "rP5ShE8dGBH6hHtNvRESdMceen36XFBQmh",
+            "currencies": ["BRL","UYU","PEN","MXN","BTC","LTC","USD","CLP","ARS"],
+            "hotwallets": ["raoFdQah8c8owTj4TPMr8o1WntnXybXCgB"],
+            "domain": "ripplelatam.com"
+            }]
     }
     
 ]
