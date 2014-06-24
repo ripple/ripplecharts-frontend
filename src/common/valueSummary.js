@@ -33,8 +33,38 @@ var ValueSummary = function (options) {
     toggle.append("b");  
     toggle.append("span").html("include XRP");  
      
-  var color  = d3.scale.category20();
+  //var color  = d3.scale.category20();
+  var color = function (d) {
+    var currency = "";
+    if (d.data.base) {
+      currency = d.data.base.currency;  
+    } else if (d.data.currency) {
+      currency = d.data.currency;
+    }
+    
+    var colors = {
+      'XRP'     : '#346aa9',
+      'USD'     : [50,180,80],
+      'BTC'     : [220,130,70],
+      'EUR'     : [250,230,50],
+      'CNY'     : [200,40,50],
+      'JPY'     : [140,70,110],
+      'CAD'     : [130,100,190],
+      'other'   : [60,60,160]
+    };
+    var c = colors[currency] || colors.other;
+    var rank = d.data.rank - 1;
+    if (typeof c !== 'string') {
+      c[0] = parseInt(c[0] * (1+rank*0.35), 10);
+      c[1] = parseInt(c[1] * (1+rank*0.35), 10);
+      c[2] = parseInt(c[2] * (1+rank*0.35), 10);
   
+       c = 'rgb('+c[0]+','+c[1]+','+c[2]+')';      
+    }
+
+    return c;
+  }
+    
   var arc    = d3.svg.arc()
       .outerRadius(radius*0.9)
       .innerRadius(radius*0.4);
@@ -74,14 +104,22 @@ var ValueSummary = function (options) {
     exchange      = ex;
         
     //check for XRP, set the percentages
-    var XRPObj;
+    var XRPObj, currencies = {};
     data.forEach(function(d){
       if (d.currency=='XRP') XRPObj = d;   
       d.percent = total ? d.convertedAmount/total*100 : 0.00;
+      
+      //rank based on order of apperance. we could
+      //do by percent, but then the colors would
+      //change between metrics.
+      var c = d.currency || d.base.currency;
+      if (currencies[c]) currencies[c]++;
+      else currencies[c] = 1;
+      d.rank = currencies[c];
     });
     
     //XRP wont be present for trade volume, so add it at 0
-    if (!XRPObj) data.push({convertedAmount:0.0});     
+    if (!XRPObj) data.push({currency:'XRP', convertedAmount:0.0});     
     
     //if the XRP toggle is active and XRP should be hidden
     //adjust the total, set the XRP amount to 0, and
@@ -101,8 +139,8 @@ var ValueSummary = function (options) {
     
     //sort by issuer, reversed
     data.sort(function(a, b){
-      var i1 = a.base ? a.base.issuer : a.issuer || "a"; //make XRP last
-      var i2 = b.base ? b.base.issuer : b.issuer || "a"; //make XRP last
+      var i1 = a.base ? a.base.currency+a.base.issuer : a.currency || "Z"; //make XRP first
+      var i2 = b.base ? b.base.currency+b.base.issuer : b.currency || "Z"; //make XRP first
       return i2 ? i2.localeCompare(i1) : 0;
     });
     
@@ -124,16 +162,26 @@ var ValueSummary = function (options) {
     });
     
     var pathUpdate = chart.selectAll("path")
-      .style("fill", function(d, i) { return color(i); })
+      .style("fill", function(d, i) { return color(d); })
       .transition().duration(750).attrTween("d", arcTween)
       .attr("id", function(d, i){return "arc_"+i})
       .each("end", function(){transitioning = false});
       
     path.exit().remove();
     
-    //show data for the first item
+    //show data for the first item,
+    //unless it has no volume
     current = null;
-    showTooltip(path.data()[0], 0);
+    var i = 0;
+    var d = path.data()[i];
+    while (d && !d.data.convertedAmount) {
+      i++;
+      d = path.data()[i]; 
+    }
+    
+    if (d) {
+      showTooltip(d, i);
+    }
     
     //add labels
     label = inner.selectAll("label").data(path.data());
@@ -142,9 +190,20 @@ var ValueSummary = function (options) {
       
     label.html(function(d){
         if (!d.data.currency && !d.data.base) return "";
+        if (!d.data.convertedAmount) return "";
         if (d.data.percent<2) return "";
         
-        var label = d.data.currency || d.data.base.currency+"/"+d.data.counter.currency;
+        var label;        
+        if (d.data.base) {
+          if (d.data.base.currency === 'BTC') {
+            label = d.data.base.currency+"/"+d.data.counter.currency;
+          } else {
+            label = d.data.counter.currency+"/"+d.data.base.currency;
+          }
+        } else {
+          label = d.data.currency;
+        }
+
         return label+"<b>"+commas(d.data.percent,0)+"%</b>";
       })
       .style("margin-top", function(d){
@@ -189,10 +248,19 @@ var ValueSummary = function (options) {
     
     if (current===i) return;
     current = i;
-    
+ 
+    var label;        
+    if (d.data.base) {
+      if (d.data.base.currency === 'BTC') {
+        label = d.data.base.currency+"/"+d.data.counter.currency;
+      } else {
+        label = d.data.counter.currency+"/"+d.data.base.currency;
+      }
+    } else {
+      label = d.data.currency;
+    }
+           
     var currency = d.data.base ? d.data.base.currency : d.data.currency;
-    var counter  = d.data.counter ? d.data.counter.currency : "";
-    var label    = counter ? currency+"/"+counter : currency;
     var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
     var gateway  = gateways.getName(issuer) || issuer;
     var amount   = commas(d.data.amount,2);
@@ -208,6 +276,6 @@ var ValueSummary = function (options) {
     if (count) tooltip.append("div").attr("class","count")
       .html("<label>Count:</label> "+count);
     
-    tooltip.select(".title small").style("color", color(i));     
+    tooltip.select(".title small").style("color", color(d));     
   }
 }

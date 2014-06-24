@@ -26,7 +26,7 @@ var COLOR_TABLE = {
           ["#edd2ad","#dcbfa6"],
           ["#f1e4d1","#e9dacd"]],
       
-  "CNY": [["#fcf5a1","#fedb3d"],
+  "EUR": [["#fcf5a1","#fedb3d"],
 /*YELLOW*/["#fdf7b4","#ffe069"],
           ["#fdf7c4","#ffe68d"],
           ["#fefad8","#ffed83"],
@@ -62,7 +62,7 @@ var COLOR_TABLE = {
           ["#c8b8da","#b29ecc"],
           ["#e0d8eb","#d4cae4"]],
       
-  "EUR": [["#b76e99","#863d66"],
+  "JPY": [["#b76e99","#863d66"],
 /*PINK*/  ["#c389ab","#9c6283"],
           ["#d0a4be","#b2879f"],
           ["#dcbfd0","#c9abbc"],
@@ -71,13 +71,13 @@ var COLOR_TABLE = {
 var HIGH_SATURATION_COLORS = {
   "__N": "#f00", //RED  
   "BTC": "#fa0", //ORANGE
-  "CNY": "#af0", //YELLOW
+  "EUR": "#af0", //YELLOW
   "USD": "#0f0", //LIME
   "AUD": "#0fa", //GREEN
   "XRP": "#0af", //BLUE
   "___": "#00f", //INDIGO
   "CAD": "#a0f", //VIOLET
-  "EUR": "#f0a"  //PINK
+  "JPY": "#f0a"  //PINK
 };
 var HEX_TO_PERCENT = {"0":0,"a":0.67,"f":1};
 
