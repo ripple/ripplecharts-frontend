@@ -21,14 +21,14 @@ angular.module( 'ripplecharts.multimarkets', [
     store.get('multimarkets') || 
     Options.multimarkets || [
     {
-      base  : {currency:"XRP"},
-      trade : {currency:"USD",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}},
+      base    : {currency:"XRP"},
+      counter : {currency:"USD",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}},
     {
-      base  : {currency:"XRP"},
-      trade : {currency:"CNY",issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}},
+      base    : {currency:"XRP"},
+      counter : {currency:"CNY",issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}},
     {
-      base  : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-      trade : {currency:"XRP"}}
+      base    : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      counter : {currency:"XRP"}}
     ];
     
     
@@ -49,8 +49,8 @@ angular.module( 'ripplecharts.multimarkets', [
   markets.on('chartClick', function(chart){
     var path = "/markets/"+chart.base.currency+
       (chart.base.issuer ? ":"+chart.base.issuer : "")+
-      "/"+chart.trade.currency+
-      (chart.trade.issuer ? ":"+chart.trade.issuer : "");
+      "/"+chart.counter.currency+
+      (chart.counter.issuer ? ":"+chart.counter.issuer : "");
     $location.path(path);
     $scope.$apply();  
   });
