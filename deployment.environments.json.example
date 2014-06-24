@@ -14,7 +14,7 @@
     "ga_id"       : "",
     "api"         : "REPLACEME",
     "domain"      : "http://staging.example.com",
-    "bucket"      : "staging-bucket"
+    "bucket"      : "staging-bucket",
     "cloudflare_domain": "REPLACEME"
   },
   
