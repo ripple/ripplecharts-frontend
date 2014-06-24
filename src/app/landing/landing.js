@@ -75,13 +75,23 @@ angular.module( 'ripplecharts.landing', [
   markets.list([
     {
       base    : {currency:"XRP"},
-      counter : {currency:"USD",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}},
-    {
+      counter : {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+    }, {
+      base    : {currency:'XRP'},
+      counter : {currency:'JPY', issuer: 'rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6'}
+    }, {
+      base    : {currency:'BTC', issuer: 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
+      counter : {currency:'XRP'}
+    }, {
       base    : {currency:"XRP"},
-      counter : {currency:"CNY",issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}},
-    {
-      base    : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-      counter : {currency:"XRP"}}
+      counter : {currency:"CNY", issuer:"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}
+    }, {
+      base    : {currency:'XRP'},
+      counter : {currency:'USD', issuer: 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'}
+    }, {
+      base    : {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      counter : {currency:"XRP"}
+    }
     ]);
 
 

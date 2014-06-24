@@ -15,12 +15,13 @@ var MiniChart = function(base, counter, markets) {
     priceScale  = d3.scale.linear(),
     volumeScale = d3.scale.linear(),
     xAxis       = d3.svg.axis().scale(xScale).ticks(6),
-    priceAxis   = d3.svg.axis().scale(priceScale).orient("right");  
+    priceAxis   = d3.svg.axis().scale(priceScale).orient("right").tickSize(2, 0, 0);  
   
   var margin = {top: 0, right: 40, bottom: 20, left: 0};
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
-  var height = width/1.5>200 ? width/1.5 : 200;
-
+  var height = width/2>150 ? width/2 : 150;
+  console.log(width, height);
+  
   if (markets.options.fixed) {
     header = self.div.append("div").attr("class","chartHeader");
   } else {
@@ -340,7 +341,7 @@ var MiniChart = function(base, counter, markets) {
   function resizeChart() {
     old    = width;
     width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
-    height = width/1.5>200 ? width/1.5 : 200;
+    height = width/2>150 ? width/2 : 150
     
     if (old != width) {
       drawChart(); 
@@ -397,7 +398,7 @@ var MultiMarket = function (options) {
 //resize the "add chart" button to keep the same dimensions as the charts
   function resizeButton() {
     width   = parseInt(add.style('width'), 10)-40; //subtract chart margin
-    height  = width/1.5>200 ? width/1.5 : 200;
+    height  = width/2>150 ? width/2 : 150
     height += 83; //add height of details, dropdowns, borders
     add.style({height: height+"px", "line-height":height+"px"});
   }
