@@ -157,11 +157,16 @@ angular.module( 'ripplecharts.markets', [
       list.push(JSON.parse(JSON.stringify(data[i])));
     }
     
-    var csv   = jsonToCSV(list); 
-    var title = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv"; 
-    toCSV.attr("href", "data:text/csv;charset=utf-8," + escape(csv));
-    toCSV.attr("download", title);
-    toCSV.attr("target", "_blank");
+    var csv = jsonToCSV(list); 
+    if (!!Modernizr.prefixed('requestFileSystem', window)) {
+      var blob  = new Blob([csv], {'type':'application/octet-stream'});
+      this.href = window.URL.createObjectURL(blob);     
+    } else {
+      this.href = "data:text/csv;charset=utf-8," + escape(csv);
+    }
+
+    this.download = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv";  
+    this.target   = "_blank";
   });
   
   priceChart.onStateChange = function(state) {
@@ -170,9 +175,7 @@ angular.module( 'ripplecharts.markets', [
   }
   
   loaded = true;
-//the code below should not be needed as it should load via the 'online' indicator
-//d3.select("#interval .selected")[0][0].click(); //to load the first chart
-     
+       
 //set up the order book      
   function emitHandler (type, data) {
     if (type=='spread') {
