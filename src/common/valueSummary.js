@@ -105,9 +105,11 @@ var ValueSummary = function (options) {
         
     //check for XRP, set the percentages
     var XRPObj, currencies = {};
-    data.forEach(function(d){
+    data.forEach(function(d) {
       if (d.currency=='XRP') XRPObj = d;   
+      
       d.percent = total ? d.convertedAmount/total*100 : 0.00;
+      console.log(d.percent);
       
       //rank based on order of apperance. we could
       //do by percent, but then the colors would
@@ -133,7 +135,7 @@ var ValueSummary = function (options) {
 
     //otherwise, reset the converted amount and set percentage
     } else {
-      XRPObj.convertedAmount = XRPObj.amount;
+      XRPObj.convertedAmount = XRPObj.amount || 0.0;
       XRPObj.percent = total ? XRPObj.amount/total*100 : 0.00;
     }
     
@@ -150,6 +152,7 @@ var ValueSummary = function (options) {
         .endAngle(3.1*Math.PI)
         .value(function(d) { return d.convertedAmount; });
       
+    console.log(data);
     //add arcs         
     path = path.data(pie(data));
     path.enter().append("path").on('mousemove',function(d, i){
