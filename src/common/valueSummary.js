@@ -109,7 +109,6 @@ var ValueSummary = function (options) {
       if (d.currency=='XRP') XRPObj = d;   
       
       d.percent = total ? d.convertedAmount/total*100 : 0.00;
-      console.log(d.percent);
       
       //rank based on order of apperance. we could
       //do by percent, but then the colors would
@@ -152,7 +151,6 @@ var ValueSummary = function (options) {
         .endAngle(3.1*Math.PI)
         .value(function(d) { return d.convertedAmount; });
       
-    console.log(data);
     //add arcs         
     path = path.data(pie(data));
     path.enter().append("path").on('mousemove',function(d, i){

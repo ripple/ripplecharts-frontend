@@ -20,7 +20,6 @@ var MiniChart = function(base, counter, markets) {
   var margin = {top: 0, right: 40, bottom: 20, left: 0};
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
   var height = width/2>150 ? width/2 : 150;
-  console.log(width, height);
   
   if (markets.options.fixed) {
     header = self.div.append("div").attr("class","chartHeader");
@@ -267,6 +266,9 @@ var MiniChart = function(base, counter, markets) {
     }
     
     //console.log(open, high, low, last);          
+    self.lineData.forEach(function(d){
+      console.log(d.startTime.format());
+    });
     
     svg.datum(self.lineData).transition().style("opacity",1);
     
