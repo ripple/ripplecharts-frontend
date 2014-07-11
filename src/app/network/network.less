@@ -1,0 +1,165 @@
+body {
+  /*background-color:black;
+  color:#bbb;
+  font-family: "Open Sans",Helvetica,Arial,"Lucida Grande",sans-serif;*/
+}
+
+
+.geography path {
+  stroke-width: 1px;
+  stroke: #ccc;
+  fill: #ccc;
+}
+.dark .geography path {
+  stroke: #333;
+  fill: #333;
+}
+
+#locationdetails {
+  position: absolute;
+  top: 350px;
+  left: 6px;
+  font-size: 10pt;
+  padding: 2px;
+  border: 1px solid transparent;
+  display:none;
+}
+
+#main {
+  width: 100%;
+  margin-left:10px;
+  margin-right:10px;
+}
+
+#world {
+  width: 960px;
+  position:relative;
+  margin-top:-4%;
+  transform-origin: top left;
+  -webkit-transform-origin: top left;
+  -moz-transform-origin: top left;
+}
+
+#information {
+  margin-top:10px;
+}
+
+.heading {
+  font-size: 18px;
+  /*color:white;*/
+}
+
+.number {
+  font-size: 24px;
+  /*color:white;*/
+}
+
+.heading, .number {
+  color:black;
+}
+.dark .heading, .dark .number {
+  color:white;
+}
+
+.datum {
+  margin-top:15px;
+  margin-bottom:15px;
+}
+
+.keylabel {
+	margin-left:10px;
+}
+
+@keyframes drift {
+  from {} to {
+    transform:translate(-10000px, 0px);
+  }
+}
+
+@-webkit-keyframes drift {
+  from {} to {
+    -webkit-transform:translate(-10000px, 0px);
+  }
+}
+
+@-moz-keyframes drift {
+  from {} to {
+	-moz-transform:translate(-10000px, 0px);
+  }
+}
+
+/* television */
+@media all and (min-width: 1280px) {
+  #worldandriver {
+    float:right;
+    width: ~"e('calc(100% - 260px)')";
+    border-left: 1px solid gray;
+  }
+  
+  #information {
+    float:left;
+    width: 240px;
+    padding-right: 10px;
+  }
+  
+  #zooming {
+    display:block !important;
+  }
+  
+  .quarter:not(:first-child) {
+    border-top: 1px solid gray;
+  }
+}
+
+/* computer */
+@media all and (max-width: 1280px) and (min-width: 840px) {
+
+  #world {
+    margin-left: auto;
+    margin-right:auto;
+  }
+  .quarter {
+    width: 25%;
+    float:left;
+  }
+  #activity {
+    border-bottom: 1px solid gray;
+  }
+}
+
+/* tablet */
+@media all and (max-width: 840px) and (min-width: 480px) {
+  #zooming {
+    display:block !important;
+  }
+  #world {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  #activity {
+    border-bottom: 1px solid gray;
+  }
+
+  .quarter {
+    width: 50%;
+    float: left;
+  }
+  
+  #halfway {
+    clear: both;
+    border-bottom: 1px solid gray;
+    margin-bottom: 10px;
+  }
+}
+
+/* mobile */
+@media all and (max-width: 480px) {
+  #world {
+    display: none;
+  }
+  .quarter {
+    width: 100%;
+    border-top: 1px solid gray;
+  }
+}

@@ -1,0 +1,81 @@
+<div id="main">
+  <div id="worldandriver">
+    <div id="world">
+      <div id="locationdetails">
+        <span class="ipaddress"></span><br/>
+        ISP: <span class="company"></span><br/>
+        <span class="city"></span>
+      </div>
+    </div>
+    <!-- <div style="clear:both;"></div> -->
+    <div id="activity">
+      <div style="width:140px; float:left; line-height:30px; padding-left:10px">
+        <div class="heading">Ledger Activity</div>
+        <div id="riverkey"></div>
+      </div>
+      <div style="width:calc(100% - 150px); float:right;" id="riverContainer">
+        <svg width=100% height=195 id="river"></svg>
+      </div>
+      <div style="clear:both;"></div>
+    </div>
+  </div>
+	<div id="information">
+		<div class="quarter">
+			<div class="heading">Ledger</div>
+			<div class="datum">
+				Last close interval (sec.)<br/>
+				<span class="number" id="lastcloseinterval">&nbsp;</span>
+			</div>
+			<div class="datum">
+				Avg. close interval (sec.)<br/>
+				<span class="number" id="averagecloseinterval">&nbsp;</span>
+			</div>
+			<div id="barchart"></div>
+		</div>
+		<div class="quarter">
+			<div class="heading">Pathfinding</div>
+			<div class="datum">
+				Avg. pathfinding speed (sec.)<br/>
+				<span class="number" id="pathfindingspeed">&nbsp;</span>
+			</div>
+			<div class="datum">
+				<div style="width:60%; float:left;">
+					% successful<br/>
+					<span class="number"><span id="successfulpathfindpercent">&nbsp;</span>%</span>
+				</div>
+				<div style="width:35%; float:left;">
+					<svg width=50 height=50 id="successpie"></svg>
+				</div>
+				<div style="clear:both"></div>
+			</div>
+		</div>
+    
+    <div id="halfway"></div>
+    
+		<div class="quarter">
+			<div class="heading">Transactions</div>
+			<div class="datum">
+				Transactions (24 hours)<br/>
+				<span class="number" id="lastdaytransactions">&nbsp;</span>
+			</div>
+			<div class="datum">
+				Transaction time (avg.)<br/>
+				<span class="number" id="transactiontime">&nbsp;</span>
+			</div>
+		</div>
+		<div class="quarter">
+			<div class="heading">Network</div>
+			<div class="datum">
+				Latest rippled version<br/>
+				<span class="number" id="rippledversion">&nbsp;</span>
+			</div>
+			<div class="datum">
+				Peers connected<br/>
+				<span class="number" id="numberofpeers">&nbsp;</span>
+			</div>
+		</div>
+		<div style="clear:both;"></div>
+	</div>
+</div>
+<div id="zooming" style="display:none"></div>
+<div style="clear:both;"></div>
