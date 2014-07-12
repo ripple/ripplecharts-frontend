@@ -1,13 +1,14 @@
 {
   "name": "ripplecharts",
   "version": "0.0.1",
-  "devDependencies": {
-    "angular": "~1.2.15",
-    "angular-mocks": "~1.0.7",
-    "bootstrap": "~2.3.2",
-    "angular-bootstrap": "~0.3.0",
+  "devDependencies": {},
+  "dependencies": {
+    "angular": "1.2.15",
+    "angular-mocks": "1.2.15",
+    "bootstrap": "3.0.3",
+    "angular-bootstrap": "~0.11.0",
+    "angular-ui-utils": "0.0.3",
     "angular-ui-router": "~0.0.1",
-    "angular-ui-utils": "~0.0.3",
     "moment": "",
     "underscore": "",
     "store": "",
@@ -19,8 +20,7 @@
     "jquery": "~2.0.3",
     "jscrollpane": "~2.0.14"
   },
-  "dependencies": {},
   "resolutions": {
-    "angular": "~1.2.15"
+    "angular": "1.2.15"
   }
 }

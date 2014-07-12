@@ -157,23 +157,27 @@
 /*
  * Responsive tweaks 
  */
-
-.markets .span3 {
-  width: 26.5% !important;
-  margin-left: 1% !important;
+.markets.row {
+  margin: 0 !important;  
 }
 
-.markets .span3 .helpbox{
+.markets .col-md-3 {
+  width: 27.8% !important;
+  padding:0 0 0 10px !important;
+}
+
+.markets .col-md-3 .helpbox{
   margin-left:0;
   margin-right:0;
 }
 
-.markets .span9 {
+.markets .col-md-9 {
   margin:0 !important;
   width: 72% !important;
+  padding:0 !important;
 }
 
-.markets .span9 .helpbox {
+.markets .col-md-9 .helpbox {
   margin-left:60px;
   margin-right:60px;
 }
@@ -190,17 +194,17 @@
 
 @media (max-width: 979px) {
   
-  .markets .span3, .markets .span9 {
+  .markets .col-md-3, .markets .col-md-9 {
     width:100% !important;
     margin: 0 !important;
   }
   
-  .markets .span3 {
+  .markets .col-md-3 {
     display:table;
     border-bottom:1px solid rgba(150,150,150,.2); 
   }
   
-  .markets .span3 .helpbox {
+  .markets .col-md-3 .helpbox {
     display:table-caption;
     margin-left:60px;
     margin-right:60px;
@@ -252,12 +256,12 @@
 
 @media (max-width: 600px) {
 
-  .markets .span3 {
+  .markets .col-md-3 {
     display:block;
     border-color:#ccc;
   }
   
-  .markets .span3 .helpbox {
+  .markets .col-md-3 .helpbox {
     display:inherit;
   }
 
@@ -270,7 +274,7 @@
     height:73px;
   }
      
-  .dark #tradeFeed .tableWrap,  .dark .markets .span3 {
+  .dark #tradeFeed .tableWrap,  .dark .markets .col-md-3 {
     border-color:#444;
   }
      
@@ -336,7 +340,7 @@
     width:35px;
   }
   
-  .markets .span3 .showHelp {
+  .markets .col-md-3 .showHelp {
     margin:10px;  
   } 
   

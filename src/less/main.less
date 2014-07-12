@@ -15,16 +15,17 @@
  * project should be imported as the rest are just wasting space.
  */
 
+@import '../../vendor/bootstrap/less/normalize.less';
 @import '../../vendor/bootstrap/less/mixins.less';
-@import '../../vendor/bootstrap/less/reset.less';
+//@import '../../vendor/bootstrap/less/reset.less';
 @import '../../vendor/bootstrap/less/forms.less';
 @import '../../vendor/bootstrap/less/utilities.less';
 @import '../../vendor/bootstrap/less/scaffolding.less';
 @import '../../vendor/bootstrap/less/type.less';
 @import '../../vendor/bootstrap/less/grid.less';
-@import '../../vendor/bootstrap/less/layouts.less';
+//@import '../../vendor/bootstrap/less/layouts.less';
 @import '../../vendor/bootstrap/less/navs.less';
-@import '../../vendor/bootstrap/less/responsive.less';
+//@import '../../vendor/bootstrap/less/responsive.less';
 //@import '../../vendor/bootstrap/less/navbar.less';
 //@import '../../vendor/bootstrap/less/buttons.less';
 //@import '../../vendor/bootstrap/less/button-groups.less';
@@ -55,6 +56,13 @@ html {
   overflow:auto;
 }
 
+ul {
+  padding:0;  
+}
+
+label {
+  font-weight:normal;
+}
 
 label {
   cursor:auto; /* override bootstrap */ 
@@ -65,7 +73,7 @@ code, pre, .pre {
   margin: 10px 0;
   background-color: #EFEFEF;
   border: 1px solid #DADADA;
-  .border-radius(3px);
+  border-radius:3px;
 }
 
 code {
@@ -241,8 +249,8 @@ h1, h2, h3, h4 {
 
 #helpButton {
   float: right;
-  width: 12px;
-  height: 12px;
+  width: 24px;
+  height: 24px;
   padding: 4px;
   margin: 13px 13px 13px 5px;
   font-size: 12px;
