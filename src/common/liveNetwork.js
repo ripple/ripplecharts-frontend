@@ -247,6 +247,7 @@ function isTransaction(item) {
 }
 
 function displayItem(item, duration) {
+  $(".loader").hide();
 	switch(item.type) {
 		case "transaction":
 			displayTransaction(item.transaction);
