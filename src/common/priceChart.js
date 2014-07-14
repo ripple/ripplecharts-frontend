@@ -554,7 +554,7 @@ PriceChart = function (options) {
         "<span class='high'><small>H:</small><b>" + h + "</b></span>" +
         "<span class='low'><small>L:</small><b>" + l + "</b></span>" +
         "<span><small>C:</small><b>" + c  + "</b></span>" +
-        "<span><small>VWAP:</small><b>" + a + "</b></span>" +
+        "<span class='vwap'><small>VWAP:</small><b>" + a + "</b></span>" +
         "<span class='volume'><small>Vol:</small><b>" + v + " " + base.currency + "</b></span>")
         .style("opacity",1);
 
