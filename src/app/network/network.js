@@ -12,7 +12,7 @@ angular.module( 'ripplecharts.network', [
         templateUrl: 'network/network.tpl.html'
       }
     },
-    data:{ pageTitle: 'Live Network' }
+    data:{ pageTitle: 'Live Ripple Network' }
   });
 })
 
@@ -23,10 +23,10 @@ angular.module( 'ripplecharts.network', [
   });
   
   $scope.$on("$destroy", function(){
-    console.log("DESTROYING");
+    //console.log("DESTROYING");
     network.stop();
   });
-  console.log("CREATING!");
+  //console.log("CREATING!");
   network.start();
   //network.start();
   /*$scope.$on("$new", function() {
