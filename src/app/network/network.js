@@ -24,9 +24,10 @@ angular.module( 'ripplecharts.network', [
   
   $scope.$on("$destroy", function(){
     console.log("DESTROYING");
-    network.suspend();
+    network.stop();
   });
   console.log("CREATING!");
+  network.start();
   //network.start();
   /*$scope.$on("$new", function() {
     console.log("CREATING!");

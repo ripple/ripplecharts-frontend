@@ -173,6 +173,7 @@ for (var i=0; i<RIVER_KEY.length; i++) {
 
 // Create the river itself
 function River(container) {
+  console.log("Creating river!");
 	var r = {};
 	var LABEL_STAGGER = 15;
 	var LANE_WIDTH = 30;
@@ -184,9 +185,14 @@ function River(container) {
   //console.log("RIVER CONTAINER WIDTH:", );
 	
 	r.addCircle = function(laneNumber, color, radius) {
+    //console.log("adding circle!", laneNumber, color, radius);
 		var cy = (LANE_WIDTH/2) + (LANE_WIDTH+2) * (laneNumber+1); /*23 + LANE_WIDTH + LANE_WIDTH*laneNumber;*/
 		var tt = d3.select("#river");
     var xPosition = $(container[0]).width()
+    if (xPosition === 0) {
+      console.log("OWC!");
+      return; // This indicates that the River object is bound to a no-longer-existent container.
+    }
 		var circles = drawDottedCircle(tt, radius, xPosition, cy, color, "drifting");
 		disappearOnCompletion($(circles[0][0]));
 		disappearOnCompletion($(circles[1][0]));
@@ -257,6 +263,7 @@ function displayItem(item, duration) {
 }
 
 function displayTransaction(tx) {
+  //console.log("DISPLAYING TRANSACTION!");
 	var index = riverLabels.indexOf(tx.TransactionType);
 	if (index < 0) {
 		index = riverLabels.length-1;
@@ -507,14 +514,14 @@ return {
     d3.selectAll(".hole").style("fill", $("body").hasClass("dark") ? "black" : "white");
   },
   
-  suspend: function() {
-    //socket.close();
+  stop: function() {
+    socket.io.disconnect();
     metaQueue.clear();
     d3.selectAll(".drifting").remove();
   },
   
   start: function() {
-    socket.open();
+    socket.io.connect();
   }
 };
 

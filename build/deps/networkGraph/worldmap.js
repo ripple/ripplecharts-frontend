@@ -189,6 +189,7 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 					[toLoc.longitude, toLoc.latitude]
 				]
 			};
+      //console.log("ARC COORDINATES:", JSON.stringify(arc.coordinates));
 			linkContainer.append("path").datum(arc).attr({
 				d:path, "class":"serverlink",
 				source:source, target:target,
