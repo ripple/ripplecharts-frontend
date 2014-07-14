@@ -94,10 +94,13 @@ module.exports = {
     css: [
       'vendor/angular-snap/angular-snap.css',
       'vendor/snapjs/snap.css',
-      'vendor/jscrollpane/style/jquery.jscrollpane.css',
-      //'vendor/font-awesome/css/font-awesome.css',  //Using CDN for now
+      'vendor/jscrollpane/style/jquery.jscrollpane.css'
     ],
     assets: [
+    ],
+    
+    fonts: [
+      'vendor/bootstrap/dist/fonts/*'
     ]
   },
 };
