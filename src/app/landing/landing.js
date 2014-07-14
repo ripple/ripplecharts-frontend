@@ -16,24 +16,29 @@ angular.module( 'ripplecharts.landing', [
 })
 
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
-  //var feed = new TransactionFeed({id : 'liveFeed'});
-  var api         = new ApiHandler(API),
-    donut         = new ValueSummary({id:"metricDetail"}),
-    exchangeRates = {};
-    
+
+  var api   = new ApiHandler(API);
+  var donut = new ValueSummary({id:"metricDetail"});
+
+  var exchangeRates   = {};
   var valueCurrencies = {
     "USD" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",  //bitstamp
-    "EUR" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",  //bitstamp
+    "EUR" : "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q", //snapswap
+    "JPY" : "rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6", //ripple trade japan
     "CNY" : "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA", //rippleChina
     "XRP" : ""
   }
   
-  var totalAccounts, totalNetworkValueXRP, transactionVolumeXRP, tradeVolumeXRP;
+  var totalAccounts
+  var totalNetworkValueXRP;
+  var transactionVolumeXRP;
+  var tradeVolumeXRP;
   
-  $scope.valueCurrency = "USD";
   $scope.valueRate;
+  $scope.valueCurrency     = "USD";
   $scope.metricDetail      = "tradeVolume";
   $scope.metricDetailTitle = "Trade Volume (last 24 hours)";
+
   //dropdown to change currency for metrics  
   var valueSelect = d3.select("#valueCurrency")
     .on("change", function(){
@@ -195,6 +200,7 @@ angular.module( 'ripplecharts.landing', [
     
     switch ($scope.valueCurrency) {
       case "USD": sign = "$"; break;
+      case "JPY": sign = "¥"; break;
       case "CNY": sign = "¥"; break;
       case "EUR": sign = "€"; break;
       case "XRP": sign = "";  break;
