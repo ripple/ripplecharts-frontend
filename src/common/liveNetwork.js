@@ -172,7 +172,6 @@ for (var i=0; i<RIVER_KEY.length; i++) {
 
 // Create the river itself
 function River(container) {
-  console.log("Creating river!");
 	var r = {};
 	var LABEL_STAGGER = 15;
 	var LANE_WIDTH = 30;
