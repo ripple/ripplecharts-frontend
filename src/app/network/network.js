@@ -21,6 +21,17 @@ angular.module( 'ripplecharts.network', [
   $scope.$parent.$watch("theme", function() {
     network.changeTheme();
   });
+  
+  $scope.$on("$destroy", function(){
+    console.log("DESTROYING");
+    network.suspend();
+  });
+  console.log("CREATING!");
+  //network.start();
+  /*$scope.$on("$new", function() {
+    console.log("CREATING!");
+  });*/
+  
   //stop the listeners when leaving page  
   /*$scope.$on("$destroy", function(){ 
     network.suspend();
