@@ -177,57 +177,68 @@ function River(container) {
 	var r = {};
 	var LABEL_STAGGER = 15;
 	var LANE_WIDTH = 30;
+  
+  var isActive = true;
 	
 	function disappearOnCompletion(jElement) {
 		jElement.bind("animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd", function(){ $(this).remove(); });
 	}
   
+  r.deactivate = function() {
+    isActive = false;
+  }
+  
   //console.log("RIVER CONTAINER WIDTH:", );
 	
 	r.addCircle = function(laneNumber, color, radius) {
-    //console.log("adding circle!", laneNumber, color, radius);
-		var cy = (LANE_WIDTH/2) + (LANE_WIDTH+2) * (laneNumber+1); /*23 + LANE_WIDTH + LANE_WIDTH*laneNumber;*/
-		var tt = d3.select("#river");
-    var xPosition = $(container[0]).width()
-    if (xPosition === 0) {
-      console.log("OWC!");
-      return; // This indicates that the River object is bound to a no-longer-existent container.
+    if (isActive) {
+      //console.log("adding circle!", laneNumber, color, radius);
+      var cy = (LANE_WIDTH/2) + (LANE_WIDTH+2) * (laneNumber+1); /*23 + LANE_WIDTH + LANE_WIDTH*laneNumber;*/
+      var tt = d3.select("#river");
+      var xPosition = $(container[0]).width()
+      console.log("XPOSITION!", xPosition);
+      /*if (xPosition === 0) {
+        //console.log("OWC!");
+        return; // This indicates that the River object is bound to a no-longer-existent container.
+      }*/
+      var circles = drawDottedCircle(tt, radius, xPosition, cy, color, "drifting");
+      disappearOnCompletion($(circles[0][0]));
+      disappearOnCompletion($(circles[1][0]));
     }
-		var circles = drawDottedCircle(tt, radius, xPosition, cy, color, "drifting");
-		disappearOnCompletion($(circles[0][0]));
-		disappearOnCompletion($(circles[1][0]));
-	}
+	};
 	
 	var lastInsertedLineAt, textY = LABEL_STAGGER;
 	r.addLine = function(labelText, hash){//color) {
-    var color = colorFromHash(hash);
-		//color = color || "#888";
-		var le = container.append("g").attr("class","drifting");
-		var now = new Date();
-		if (now - lastInsertedLineAt < 1000 ) {
-			textY += LABEL_STAGGER;
-		} else {
-			lastInsertedLineAt = now;
-			textY = LABEL_STAGGER;
-		}
-    var xPosition = $(container[0]).width();
-		le.append("text").attr({
-			x:xPosition+2,
-			y:textY,
-			fill:color,
-			"font-size":"10pt",
-      "class":"ledgernumber",
-      hash:hash
-		}).text(labelText);
-		le.append("line").attr({
-			x1:xPosition,
-			x2:xPosition,
-			y1:0,
-			y2:400,
-			stroke:"#888"
-		});
-		disappearOnCompletion($(le[0]));
-	}
+    if (isActive) {
+      var color = colorFromHash(hash);
+      //color = color || "#888";
+      var le = container.append("g").attr("class","drifting");
+      var now = new Date();
+      if (now - lastInsertedLineAt < 1000 ) {
+        textY += LABEL_STAGGER;
+      } else {
+        lastInsertedLineAt = now;
+        textY = LABEL_STAGGER;
+      }
+      var xPosition = $(container[0]).width();
+      le.append("text").attr({
+        x:xPosition+2,
+        y:textY,
+        fill:color,
+        "font-size":"10pt",
+        "class":"ledgernumber",
+        hash:hash
+      }).text(labelText);
+      le.append("line").attr({
+        x1:xPosition,
+        x2:xPosition,
+        y1:0,
+        y2:400,
+        stroke:"#888"
+      });
+      disappearOnCompletion($(le[0]));
+    }
+	};
 	
 	return r;
 }
@@ -516,6 +527,7 @@ return {
   
   stop: function() {
     socket.io.disconnect();
+    river.deactivate();
     metaQueue.clear();
     d3.selectAll(".drifting").remove();
   },
