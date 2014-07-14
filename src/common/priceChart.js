@@ -537,22 +537,25 @@ PriceChart = function (options) {
         h = ripple.Amount.from_human(d.high).to_human({max_sig_digits:6});
         l = ripple.Amount.from_human(d.low).to_human({max_sig_digits:6});
         c = ripple.Amount.from_human(d.close).to_human({max_sig_digits:6});
+        a = ripple.Amount.from_human(d.vwap).to_human({max_sig_digits:6});
         v = ripple.Amount.from_human(d.baseVolume).to_human({max_sig_digits:6}); 
       } else {
         o = d.open.toFixed(4);
         h = d.high.toFixed(4);
         l = d.low.toFixed(4);
         c = d.close.toFixed(4);
+        c = d.vwap.toFixed(4);
         v = d.baseVolume.toFixed(2);
       }
 
       var details = div.select('.chartDetails');
       details.html("<span class='date'>"+ parseDate(d.startTime.local(), chartInterval) + 
-        "</span><span>O:<b>" + o  + "</b></span>" +
-        "<span class='high'>H:<b>" + h + "</b></span>" +
-        "<span class='low'>L:<b>" + l + "</b></span>" +
-        "<span>C:<b>" + c  + "</b></span>" +
-        "<span class='volume'>Volume:<b>" + v + " " + base.currency + "</b></span>")
+        "</span><span><small>O:</small><b>" + o  + "</b></span>" +
+        "<span class='high'><small>H:</small><b>" + h + "</b></span>" +
+        "<span class='low'><small>L:</small><b>" + l + "</b></span>" +
+        "<span><small>C:</small><b>" + c  + "</b></span>" +
+        "<span><small>VWAP:</small><b>" + a + "</b></span>" +
+        "<span class='volume'><small>Vol:</small><b>" + v + " " + base.currency + "</b></span>")
         .style("opacity",1);
 
       hover.transition().duration(50).attr("transform", "translate(" + xScale(d.startTime) + ")");
