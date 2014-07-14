@@ -144,7 +144,7 @@ var KEY_RADIUS = 15;
 
 function drawDottedCircle(container, radius, cx, cy, coloring, cssClass) {
 	var attributes = {
-		class:cssClass, r:radius, opacity:0.33,
+		class:cssClass, r:radius, opacity:0.5,
 		fill:coloring,  cx:cx,    cy:cy
 	};
 	var c1 = container.append("circle").attr(attributes);
@@ -193,8 +193,9 @@ function River(container) {
 	}
 	
 	var lastInsertedLineAt, textY = LABEL_STAGGER;
-	r.addLine = function(labelText, color) {
-		color = color || "#888";
+	r.addLine = function(labelText, hash){//color) {
+    var color = colorFromHash(hash);
+		//color = color || "#888";
 		var le = container.append("g").attr("class","drifting");
 		var now = new Date();
 		if (now - lastInsertedLineAt < 1000 ) {
@@ -208,7 +209,9 @@ function River(container) {
 			x:xPosition+2,
 			y:textY,
 			fill:color,
-			"font-size":"10pt"
+			"font-size":"10pt",
+      "class":"ledgernumber",
+      hash:hash
 		}).text(labelText);
 		le.append("line").attr({
 			x1:xPosition,
@@ -285,8 +288,8 @@ function displayLedger(ledger, duration) {
 		$("#lastcloseinterval").text((duration/1000).toFixed(3));
 		barchart.addPoint(duration);
 	}
-	var color = colorFromHash(ledger.ledger_hash); //This might be confusing?
-	river.addLine(commas(ledger.ledger_index), color);
+	//var color = colorFromHash(ledger.ledger_hash); //This might be confusing?
+	river.addLine(commas(ledger.ledger_index), ledger.ledger_hash);
 }
 function commas(number) {
 	var parts = number.toString().split(".");
@@ -477,37 +480,41 @@ function drawPercentagePie(container, data) {
 	container.append("circle").attr({
 		cx: radius,
 		cy: radius,
-		r: radius / 3
-	}).style({stroke:"none",fill:"black"});
+		r: radius / 3,
+    "class": "hole"
+	}).style({
+    stroke: "none",
+    fill: ($("body").hasClass("dark") ? "black" : "white")
+  });
 }
 
-/*
-var that = {};
 
-that.changeTheme = function() {
-  d3.selectAll(".servercircle").attr("stroke",function(){
-    var hash = $(this).attr("hash");
-    if (hash) {
-      return colorFromHash($(this).attr("hash"));
-    } else {
-      return "none";
-    }
-  });
-};
-
-return that;
-*/
 
 return {
   changeTheme: function() {
-    d3.selectAll(".servercircle,.serverlink").attr("stroke",function(){
-      var hash = $(this).attr("hash");
-      if (hash) {
-        return colorFromHash($(this).attr("hash"));
-      } else {
-        return "none";
-      }
-    });
+    function refreshColor(selection, attributeName) {
+      return selection.attr(attributeName, function(){
+        var hash = $(this).attr("hash");
+        if (hash) {
+          return colorFromHash($(this).attr("hash"));
+        } else {
+          return "none";
+        }
+      });
+    }
+    refreshColor(d3.selectAll(".servercircle,.serverlink"), "stroke");
+    refreshColor(d3.selectAll(".ledgernumber"), "fill");
+    d3.selectAll(".hole").style("fill", $("body").hasClass("dark") ? "black" : "white");
+  },
+  
+  suspend: function() {
+    //socket.close();
+    metaQueue.clear();
+    d3.selectAll(".drifting").remove();
+  },
+  
+  start: function() {
+    socket.open();
   }
 };
 
