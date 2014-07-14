@@ -3,7 +3,6 @@ liveNetwork = function() {
 
 
 
-
 // Display / Setup
 
 var DRIFTING_TIME_SECONDS = 180;
@@ -188,19 +187,11 @@ function River(container) {
     isActive = false;
   }
   
-  //console.log("RIVER CONTAINER WIDTH:", );
-	
 	r.addCircle = function(laneNumber, color, radius) {
     if (isActive) {
-      //console.log("adding circle!", laneNumber, color, radius);
-      var cy = (LANE_WIDTH/2) + (LANE_WIDTH+2) * (laneNumber+1); /*23 + LANE_WIDTH + LANE_WIDTH*laneNumber;*/
+      var cy = (LANE_WIDTH/2) + (LANE_WIDTH+2) * (laneNumber+1);
       var tt = d3.select("#river");
       var xPosition = $(container[0]).width()
-      console.log("XPOSITION!", xPosition);
-      /*if (xPosition === 0) {
-        //console.log("OWC!");
-        return; // This indicates that the River object is bound to a no-longer-existent container.
-      }*/
       var circles = drawDottedCircle(tt, radius, xPosition, cy, color, "drifting");
       disappearOnCompletion($(circles[0][0]));
       disappearOnCompletion($(circles[1][0]));
@@ -211,7 +202,6 @@ function River(container) {
 	r.addLine = function(labelText, hash){//color) {
     if (isActive) {
       var color = colorFromHash(hash);
-      //color = color || "#888";
       var le = container.append("g").attr("class","drifting");
       var now = new Date();
       if (now - lastInsertedLineAt < 1000 ) {
@@ -508,6 +498,9 @@ function drawPercentagePie(container, data) {
 
 
 
+
+
+// External interface
 return {
   changeTheme: function() {
     function refreshColor(selection, attributeName) {
@@ -536,5 +529,9 @@ return {
     socket.io.connect();
   }
 };
+
+
+
+
 
 };
