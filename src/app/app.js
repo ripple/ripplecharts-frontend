@@ -36,7 +36,7 @@ angular.element(document).ready(function() {
   })
   
   .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
-    $scope.theme = store.get('theme') || Options.theme;
+    $scope.theme = store.get('theme') || Options.theme || 'dark';
     $scope.$watch('theme', function(){store.set('theme', $scope.theme)});
     
     $scope.snapOptions = {
