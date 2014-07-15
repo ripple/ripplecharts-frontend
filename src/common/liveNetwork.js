@@ -10,6 +10,7 @@ function crossBrowserCSS(basic) {
 	return basic+
 		"; -webkit-"+basic+
 		"; -moz-"+basic+
+    "; -o-"+basic+
 		";";
 }
 function setDriftingTime(seconds) {
