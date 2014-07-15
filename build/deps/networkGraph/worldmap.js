@@ -189,12 +189,11 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 					[toLoc.longitude, toLoc.latitude]
 				]
 			};
-      //console.log("ARC COORDINATES:", JSON.stringify(arc.coordinates));
 			linkContainer.append("path").datum(arc).attr({
 				d:path, "class":"serverlink",
 				source:source, target:target,
-				stroke:"none", "stroke-width":0.25, //stroke=none
-				opacity:1, fill:"none" //Change this when we get more lines
+				stroke:"none", "stroke-width":0.25,
+				opacity:1, fill:"none"
 			});
 		}
 	};
@@ -209,9 +208,9 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 			flashCircle(circleID, hash, color, ANIMATION_DURATION);
 			eraseLinks(circleID);
 			drawLinks(circleID);
-		} else {
+		} /*else {
 			console.log("No such server as", name);
-		}
+		}*/
 	};
 	function flashCircle(circleID, hash, color, animationDuration) {
 		var circle = circleContainer.select("#"+circleID);
