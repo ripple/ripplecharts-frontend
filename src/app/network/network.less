@@ -19,7 +19,7 @@
 }
 
 #main {
-  width: ~"e('calc(100% - 20px)')";
+  width: calc(~"~'100% - 20px'");
   margin-left:10px;
   margin-right:10px;
   overflow-x: hidden;
@@ -73,24 +73,115 @@
     transform:translate(-10000px, 0px);
   }
 }
-
 @-webkit-keyframes drift {
   from {} to {
     -webkit-transform:translate(-10000px, 0px);
   }
 }
-
 @-moz-keyframes drift {
   from {} to {
-	-moz-transform:translate(-10000px, 0px);
+    -moz-transform:translate(-10000px, 0px);
   }
 }
+@-o-keyframes drift {
+  from {} to {
+    -o-transform:translate(-10000px, 0px);
+  }
+}
+
+.flashercircle {
+  transform: scale(1);
+  -webkit-transform: scale(1);
+  -moz-transform-origin: center;
+  -o-transform-origin: center;
+  
+  transform-origin: center;
+  -webkit-transform-origin: center;
+  -moz-transform-origin: center;
+  -o-transform-origin: center;
+}
+
+.flashercircle.rippling {
+  animation-name:expandingcircle,thinningcircle;
+  -webkit-animation-name:expandingcircle,thinningcircle;
+  -moz-animation-name:expandingcircle,thinningcircle;
+  -o-animation-name:expandingcircle,thinningcircle;
+  
+  animation-duration:0.8s,0.8s;
+  -webkit-animation-duration:0.8s,0.8s;
+  -moz-animation-duration:0.8s,0.8s;
+  -o-animation-duration:0.8s,0.8s;
+  
+  animation-timing-function:linear,cubic-bezier(0,1,0,1);
+  -webkit-animation-timing-function:linear,cubic-bezier(0,1,0,1);
+  -moz-animation-timing-function:linear,cubic-bezier(0,1,0,1);
+  -o-animation-timing-function:linear,cubic-bezier(0,1,0,1);
+}
+
+@keyframes expandingcircle {
+  from {
+    transform: scale(1);
+  } to {
+    transform: scale(75);
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes expandingcircle {
+  from {
+    -webkit-transform: scale(1);
+  } to {
+    -webkit-transform: scale(75);
+    opacity: 0;
+  }
+}
+
+@-moz-keyframes expandingcircle {
+  from {
+    -moz-transform: scale(1);
+  } to {
+    -moz-transform: scale(75);
+    opacity: 0;
+  }
+}
+
+@-o-keyframes expandingcircle {
+  from {
+    -o-transform: scale(1);
+  } to {
+    -o-transform: scale(75);
+    opacity: 0;
+  }
+}
+
+
+@keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+@-webkit-keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+@-moz-keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+@-o-keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+
 
 /* television */
 @media all and (min-width: 1280px) {
   #worldandriver {
     float:right;
-    width: ~"e('calc(100% - 260px)')";
+    width: calc(~"~'100% - 260px'");
     border-left: 1px solid gray;
   }
   
