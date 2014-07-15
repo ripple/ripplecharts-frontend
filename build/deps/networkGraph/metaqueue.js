@@ -52,11 +52,8 @@ function MetaQueue(isEnder, isTimeful, onDischarge) {
         lowerQueue = [];
         if (!startedYet && upperQueue.length >= 2) {
           startedYet = true;
-          //this.play();
-          //console.log("initializing monitor");
           monitor();
         } else if (startedYet && !running) {
-          //console.log("restarting monitor");
           monitor();
         }
       }
@@ -66,48 +63,31 @@ function MetaQueue(isEnder, isTimeful, onDischarge) {
 	var dischargementsInProgress = 0;
 	function dischargeQueue(queue, callback) {
 		dischargementsInProgress++;
-		//console.log("START DQ", dischargementsInProgress);
 		var numberOfTimefulItems = queue.filter(isTimeful).length;
 		var delay = queue.duration / (1+numberOfTimefulItems);
-		//console.log("DURATION", queue.duration, numberOfTimefulItems);
 		function dischargeNext() {
 			var item = queue.shift();
 			if (item) {
 				onDischarge(item, queue.duration);
 				if (isTimeful(item)) {
-					//console.log("delaying...");
 					setTimeout(dischargeNext, delay);
 				} else {
 					setTimeout(dischargeNext, 0);
 				}
 			} else {
-				//console.log("FINISH DQ", dischargementsInProgress);
 				dischargementsInProgress--;
 				callback();
 			}
 		}
 		setTimeout(dischargeNext, delay);
 	}
-	/*
+
 	function monitor() {
-		if (!paused && upperQueue.length) {
-			var queue = upperQueue.shift();
-			dischargeQueue(queue, monitor);
-		} else {
-			setTimeout(monitor, 100);
-		}
-	}
-	
-	monitor();*/
-	
-	function monitor() {
-		//console.log("MONITOR");
 		if (upperQueue.length) {
 			running = true;
 			dischargeQueue(upperQueue.shift(), monitor);
 		} else {
 			running = false;
-			//console.log("resting monitor");
 		}
 	}
 	
