@@ -265,7 +265,6 @@ function displayItem(item, duration) {
 }
 
 function displayTransaction(tx) {
-  //console.log("DISPLAYING TRANSACTION!");
 	var index = riverLabels.indexOf(tx.TransactionType);
 	if (index < 0) {
 		index = riverLabels.length-1;
@@ -406,14 +405,17 @@ function getRippleChartsData() {
 		var total = response.results.slice(0,24).map(function(x){return x.count}).reduce(function(a,b){return a+b});
 		var average = 86400/total;
 		$("#averagecloseinterval").text(average.toFixed(3));
-		barchart = new Barchart(d3.select("#barchart"),
-			average*1000,	//baseline
-			800,			//deviance
-			50,				//height
-			4				//barWidth
-		);
+    if (!barchart) {
+      barchart = new Barchart(d3.select("#barchart"),
+        average*1000,	//baseline
+        800,			//deviance
+        50,				//height
+        4				//barWidth
+      );
+    }
 	});
 }
+var rippleChartsDataGetter = setInterval(getRippleChartsData, 60*1000); //Every 60 seconds
 getRippleChartsData();
 
 // Get peer data from Rippled proxy
@@ -450,9 +452,11 @@ function getPathfindStats() {
 		]);
 	});
 }
+var pathfindStatsGetter = setInterval(getPathfindStats, 30*60*1000); //Every 30 minutes
 getPathfindStats();
 
 function drawPercentagePie(container, data) {
+  container.selectAll("path, circle").remove();
 	var je = $(container[0]);
 	var diameter = Math.min(je.width(), je.height());
 	var radius = diameter / 2;
@@ -523,6 +527,8 @@ return {
     socket.io.disconnect();
     river.deactivate();
     metaQueue.clear();
+    clearInterval(pathfindStatsGetter);
+    clearInterval(rippleChartsDataGetter);
     d3.selectAll(".drifting").remove();
   },
   
