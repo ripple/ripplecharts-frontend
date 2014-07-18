@@ -36,7 +36,7 @@ var MiniChart = function(base, counter, markets) {
   
   loaded = false;
   
-  details  = self.div.append("table").attr("class", "chartDetails").append("tr");
+  details  = self.div.append('div').attr("class", "chartDetails");
   wrap     = self.div.append("div");
              
   loader = self.div.append("img")
@@ -122,8 +122,8 @@ var MiniChart = function(base, counter, markets) {
     self.request = self.markets.apiHandler.offersExercised({
       startTime     : new Date(),
       endTime       : d3.time.day.offset(new Date(), -1),
-      timeIncrement : "hour",
-      timeMultiple  : 1,
+      timeIncrement : "minute",
+      timeMultiple  : 15,
       descending    : false,
       base          : self.base,
       counter       : self.counter
@@ -152,12 +152,12 @@ var MiniChart = function(base, counter, markets) {
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom);  
     
-    range    = details.append("td").attr("class","range");
-    showHigh = details.select(".range").append("div").attr("class","high");
-    showLow  = details.select(".range").append("div").attr("class","low");
-    change   = details.append("td").attr("class","change"); 
-    volume   = details.append("td").attr("class","volume"); 
-    
+    change   = details.append('div').attr("class","change"); 
+    range    = details.append('div').attr("class","range");
+    showHigh = details.select(".range").append('span').attr("class","high");
+    showLow  = details.select(".range").append('span').attr("class","low");
+    volume   = details.append('div').attr("class","volume"); 
+
     pointer = svg.append("path")
       .attr("class","pointer")
       .attr("d", "M 0 0 L 7 -7 L 40 -7 L 40 7 L 7 7 L 0 0")
@@ -266,9 +266,9 @@ var MiniChart = function(base, counter, markets) {
     }
     
     //console.log(open, high, low, last);          
-    self.lineData.forEach(function(d){
-      console.log(d.startTime.format());
-    });
+    //self.lineData.forEach(function(d){
+    //  console.log(d.startTime.format());
+    //});
     
     svg.datum(self.lineData).transition().style("opacity",1);
     
@@ -331,7 +331,7 @@ var MiniChart = function(base, counter, markets) {
     showHigh.html("<label>H:</label> "+amountToHuman(high));
     showLow.html("<label>L:</label> "+amountToHuman(low));
     change.html((pct>0 ? "+":"")+amountToHuman(pct)+"%").style(changeStyle);
-    volume.html("<label>Vol:</label>"+vol+"<small>"+self.base.currency+"</small>");  
+    volume.html("<label>V:</label> "+vol+"<small>"+self.base.currency+"</small>");  
     
     //show the chart and details
     details.selectAll("td").style("opacity",1);
@@ -401,7 +401,7 @@ var MultiMarket = function (options) {
   function resizeButton() {
     width   = parseInt(add.style('width'), 10)-40; //subtract chart margin
     height  = width/2>150 ? width/2 : 150
-    height += 83; //add height of details, dropdowns, borders
+    height += 88; //add height of details, dropdowns, borders
     add.style({height: height+"px", "line-height":height+"px"});
   }
   

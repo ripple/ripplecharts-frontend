@@ -13,7 +13,7 @@ var TotalAccounts = function (options) {
   var interval = list.selectAll("a")
     .data([
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
-      {name: "month",  interval:"hour",  offset: function(d) { return d3.time.month.offset(d, -1); }},
+      {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
       {name: "max",    interval:"month",  offset: function(d) { return new Date("Jan 1 2013 Z")}}

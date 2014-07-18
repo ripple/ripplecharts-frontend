@@ -34,8 +34,10 @@
 .multiMarket .chartDetails {
   width:100%;
   border-collapse:collapse;
-  min-height:40px;
+  min-height:42px;
+  overflow:hidden;
   border-bottom:1px solid #ddd;
+  padding:0 15px 0 10px;
 }
 
 @-moz-document url-prefix() {
@@ -45,16 +47,15 @@
 }  
   
 .multiMarket .chartDetails label {display:inline}
-.multiMarket .chartDetails td {vertical-align:bottom}
-.multiMarket .chartDetails .range {text-align:left; padding: 2px 5px; font-size:12px; font-weight:bold;}
-.multiMarket .chartDetails .range div {vertical-align:bottom; overflow:hidden}
-.multiMarket .chartDetails .range label {font-size:10px; line-height:12px; font-weight:bold; display:inline-block; margin:0; width:13px}
-.multiMarket .chartDetails .range .high {color:#2a2}
-.multiMarket .chartDetails .range .low {color:#c33}
-.multiMarket .chartDetails .change {font-size:18px; font-weight:bold}
-.multiMarket .chartDetails .volume {font-size:18px; font-weight:bold; text-align:right}
-.multiMarket .chartDetails .volume label {padding:0 5px; font-size:12px; color:#999; font-weight:normal}
-.multiMarket .chartDetails .volume small {padding:0 5px; font-size:12px; color:#999; font-weight:normal}
+.multiMarket .chartDetails .range {float:left; text-align:left; padding-top:2px; font-size:12px; font-weight:bold; overflow:hidden}
+.multiMarket .chartDetails .range span {padding-right:5px}
+.multiMarket .chartDetails .range label {font-size:10px; line-height:12px; font-weight:bold; display:inline-block; margin:0; padding-left:5px}
+.multiMarket .chartDetails .range .high {color:#2a2;}
+.multiMarket .chartDetails .range .low {color:#c33;}
+.multiMarket .chartDetails .change {padding:0 5px; font-weight:bold;  font-size:20px; float:right; padding:7px 3px}
+.multiMarket .chartDetails .volume {font-size:14px; font-weight:bold; float:left; clear:left}
+.multiMarket .chartDetails .volume label {padding-left:5px; font-size:11px; color:#999; font-weight:bold}
+.multiMarket .chartDetails .volume small {padding:0 5px; font-size:11px; color:#999; font-weight:normal}
 
 
 .multiMarket .chart {
@@ -272,10 +273,6 @@
   background:@darkLine;
 }
 
-.dark .multiMarket .chartDetails {
-  border-color: #333;
-}
-
 .dark .multiMarket .grid line {
   stroke:#222;
 }
@@ -306,6 +303,11 @@
 
 .dark .multiMarket .chartHeader small {
   color:#555;
+}
+
+.dark .multiMarket .chartDetails {
+  background:rgba(255,255,255,.1);
+  border-color: #333;
 }
 
 .dark .multiMarket .chartDetails .volume {
