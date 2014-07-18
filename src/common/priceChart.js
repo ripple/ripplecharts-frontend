@@ -531,14 +531,14 @@ PriceChart = function (options) {
       o, h, l, c, v;
 
     if (d) {
-      
       if (ripple && ripple.Amount) {
-        o = ripple.Amount.from_human(d.open).to_human({max_sig_digits:6});
-        h = ripple.Amount.from_human(d.high).to_human({max_sig_digits:6});
-        l = ripple.Amount.from_human(d.low).to_human({max_sig_digits:6});
-        c = ripple.Amount.from_human(d.close).to_human({max_sig_digits:6});
-        a = ripple.Amount.from_human(d.vwap).to_human({max_sig_digits:6});
-        v = ripple.Amount.from_human(d.baseVolume).to_human({max_sig_digits:6}); 
+        o = filter(d.open, counter.currency);
+        h = filter(d.high,  counter.currency);
+        l = filter(d.low,   counter.currency);
+        c = filter(d.close, counter.currency);
+        a = filter(d.vwap,  counter.currency);
+        v = filter(d.baseVolume, base.currency);
+        
       } else {
         o = d.open.toFixed(4);
         h = d.high.toFixed(4);
@@ -572,7 +572,10 @@ PriceChart = function (options) {
     }
   }
 
-
+  function filter(amount, currency) {
+    return ripple.Amount.from_human(amount + " " + currency).to_human({max_sig_digits:6});  
+  }
+  
 //apply rules to get the start times to line up nicely
   function getAlignedCandle(time) {
     var aligned;

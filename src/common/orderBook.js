@@ -310,8 +310,8 @@ var OrderBook = function (options) {
       var quantity = d.showTakerPays ? d.showTakerPays : d.showTakerGets;
       hover.attr("transform", "translate(" + xScale(d.showPrice) + ")").style("opacity",1);
       focus.attr("transform", "translate(" + xScale(d.showPrice) + "," + yScale(d.showSum) + ")").style("opacity",1); 
-      details.html("<span>Quantity:<b>" + quantity + 
-        "</b></span><span>Total<b>" +d.showSum + " " + options.base.currency + "</b></span>" + 
+      details.html("<span>Quantity:<b> " + quantity + 
+        "</b></span><span>Total:<b> " +d.showSum + " " + options.base.currency + "</b></span>" + 
         "<span> @ <b>" + d.showPrice + " " + options.trade.currency + "</b></span>")
         .style("opacity",1);
     }
