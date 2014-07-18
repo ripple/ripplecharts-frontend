@@ -317,19 +317,20 @@ var MiniChart = function(base, counter, markets) {
     
     if (lastY<20) lastY += 20; //reposition last price below line if its too high on the graph.
     
+    var showLast = amountToHuman(last, self.counter.currency);
     if (update) {
       horizontal.transition().duration(600).attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
       pointer.transition().duration(600).attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
-      lastPrice.transition().duration(600).attr("transform","translate(0, "+lastY+")").text(amountToHuman(last));
+      lastPrice.transition().duration(600).attr("transform","translate(0, "+lastY+")").text(showLast);
     } else {
       horizontal.attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
       pointer.attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
-      lastPrice.attr("transform","translate(0, "+lastY+")").text(amountToHuman(last));
+      lastPrice.attr("transform","translate(0, "+lastY+")").text(showLast);
     }
     
-    vol = amountToHuman(vol, {min_precision:0, max_sig_digits:7});
-    showHigh.html("<label>H:</label> "+amountToHuman(high));
-    showLow.html("<label>L:</label> "+amountToHuman(low));
+    vol = amountToHuman(vol, self.base.currency, {min_precision:0, max_sig_digits:7});
+    showHigh.html("<label>H:</label> "+amountToHuman(high, self.counter.currency));
+    showLow.html("<label>L:</label> "+amountToHuman(low, self.counter.currency));
     change.html((pct>0 ? "+":"")+amountToHuman(pct)+"%").style(changeStyle);
     volume.html("<label>V:</label> "+vol+"<small>"+self.base.currency+"</small>");  
     
@@ -362,12 +363,14 @@ var MiniChart = function(base, counter, markets) {
      
 
 //present amount in human readable format  
-  function amountToHuman (d, opts) {
+  function amountToHuman (d, currency, opts) {
+    if (currency) d += " " + currency;
     if (!opts) opts = {
           precision      : 6,
           min_precision  : 2,
           max_sig_digits : 7
       }
+  
     return ripple.Amount.from_human(d).to_human(opts);     
   }
 }

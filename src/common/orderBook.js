@@ -163,12 +163,12 @@ var OrderBook = function (options) {
     offers.forEach(function(offer,index) {
       if (sum) sum = offer.sum = sum.add(offer[type]);
       else sum = offer.sum = offer[type];
-      
-      offer.showSum   = parseFloat(valueFilter(offer.sum));
-      offer.showPrice = parseFloat(valueFilter(offer.price));
-      
+
+      offer.showSum   = valueFilter(offer.sum);
+      offer.showPrice = valueFilter(offer.price);
+
       var showValue = action === 'bids' ? 'TakerPays' : 'TakerGets';
-      offer['show' + showValue] = parseFloat(valueFilter(offer[showValue]));
+      offer['show' + showValue] = valueFilter(offer[showValue]);
       //console.log(offer.showPrice, offer.showSum, offer['show' + showValue]);
     });
 
@@ -328,7 +328,7 @@ var OrderBook = function (options) {
     
     function filter (d) {
       if (!d) return "&nbsp";
-      value = ripple.Amount.from_human(d).to_human({
+      value = d.to_human({
           precision      : 5,
           min_precision  : 5,
           max_sig_digits : 7
@@ -357,9 +357,9 @@ var OrderBook = function (options) {
     rowEnter.append("td").attr("class","price");
     row.exit().remove();
     
-    row.select(".sum").html(function(offer){return filter(offer.showSum)});
-    row.select(".size").html(function(offer){return filter(offer.showTakerPays)});
-    row.select(".price").html(function(offer){return filter(offer.showPrice)});
+    row.select(".sum").html(function(offer){return filter(offer.sum)});
+    row.select(".size").html(function(offer){return filter(offer.TakerPays)});
+    row.select(".price").html(function(offer){return filter(offer.price)});
     row.attr("title", function (d){ return d.Account; });
     
     row      = asksBody.selectAll("tr").data(pad(self.offers.asks.slice(0,length),length));
@@ -370,9 +370,9 @@ var OrderBook = function (options) {
     rowEnter.append("td").attr("class","sum");
     row.exit().remove();
     
-    row.select(".sum").html(function(offer){return filter(offer.showSum)});
-    row.select(".size").html(function(offer){return filter(offer.showTakerGets)});
-    row.select(".price").html(function(offer){return filter(offer.showPrice)}); 
+    row.select(".sum").html(function(offer){return filter(offer.sum)});
+    row.select(".size").html(function(offer){return filter(offer.TakerGets)});
+    row.select(".price").html(function(offer){return filter(offer.price)}); 
     row.attr("title", function (d){ return d.Account; });
     
     emitSpread();
@@ -408,14 +408,14 @@ var OrderBook = function (options) {
     }
   }
   
-  function valueFilter (price, opts) {
-    return ripple.Amount.from_json(price).to_human(
+  function valueFilter (amount, opts) {
+    return parseFloat(amount.to_human(
       opts ? opts : {
         precision      : 8,
         min_precision  : 0,
         max_sig_digits : 8,
         group_sep      : false
-    });  
+    }));  
   }
   
   
@@ -438,8 +438,8 @@ var OrderBook = function (options) {
         
     
       options.emit('spread', {
-        bid : self.offers.bids[0] ? ripple.Amount.from_human(self.offers.bids[0].showPrice).to_human(opts) : "0.0",
-        ask : self.offers.asks[0] ? ripple.Amount.from_human(self.offers.asks[0].showPrice).to_human(opts) : "0.0"
+        bid : self.offers.bids[0] ? self.offers.bids[0].price.to_human(opts) : "0.0",
+        ask : self.offers.asks[0] ? self.offers.asks[0].price.to_human(opts) : "0.0"
       });
     }  
   }

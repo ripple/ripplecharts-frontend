@@ -5,6 +5,12 @@ var TradeFeed = function (options) {
     transactions = [],
     listener, dailyTimer, high, low, close, volume;
  
+  var numberFormat = {
+    precision      : 6,
+    min_precision  : 0,
+    max_sig_digits : 8
+  };
+       
   var summary = div.append("div").attr('class', 'summary');
   var price = summary.append("div").attr('class', 'price');
   price.append("span").attr('class', 'amount');
@@ -69,8 +75,8 @@ var TradeFeed = function (options) {
     
     var trade = {
       time   : moment.utc(data.value[5]),
-      amount : data.value[0],
-      price  : data.value[2],
+      amount : valueFilter(data.value[0], self.base.currency),
+      price  : valueFilter(data.value[2], self.counter.currency),
       type   : ''
     }
     
@@ -108,28 +114,18 @@ var TradeFeed = function (options) {
     rows.exit().remove();
     
     rows.select(".type").attr('class', function(d){return "type "+d.type}); 
-    rows.select(".amount").html(function(d){return valueFilter(d.amount)+" <small>"+self.base.currency+"</small>"});
+    rows.select(".amount").html(function(d){return d.amount+" <small>"+self.base.currency+"</small>"});
     rows.select(".time").html(function(d){return d.time.local().format('h:mm:ss a')});
-    rows.select(".price").html(function(d){return valueFilter(d.price)}); 
+    rows.select(".price").html(function(d){return d.price}); 
   }
  
  
 //make values human readable  
-  function valueFilter (d) {
+  function valueFilter (d, currency) {
     if (!d) return "&nbsp";
-    value = ripple.Amount.from_human(d).to_human({
-        precision      : 6,
-        min_precision  : 0,
-        max_sig_digits : 8
-    }); 
-    
-    //its possible there are other reasons for value being empty, but right
-    //now i am assuming it is below the minimum threshold
+    var value = ripple.Amount.from_human(d + " " + currency).to_human(numberFormat);
     if (!value) return "> 0.000001"; //must match min_precision variable
-    var parts = value.split(".");
-    var decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0') : null;
-    value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
-    return value;        
+    return value;      
   }
  
  
@@ -166,10 +162,10 @@ var TradeFeed = function (options) {
 
 //display 24 hour stats from the known values
   function updateDailyStats () {
-      daily.select(".high").html("<small>H:</small> "+valueFilter(high));
-      daily.select(".low").html("<small>L:</small> "+valueFilter(low));
-      daily.select(".volume").html("<small>VOL:</small> "+valueFilter(volume)+"<small>"+self.base.currency+"</small>");
-      price.select(".amount").html(valueFilter(close));
+      daily.select(".high").html("<small>H:</small> "+valueFilter(high, self.counter.currency));
+      daily.select(".low").html("<small>L:</small> "+valueFilter(low, self.counter.currency));
+      daily.select(".volume").html("<small>VOL:</small> "+valueFilter(volume, self.base.currency)+"<small>"+self.base.currency+"</small>");
+      price.select(".amount").html(valueFilter(close, self.counter.currency));
       price.select(".pair").html(self.base.currency+"/"+self.counter.currency);
   }
 
@@ -200,8 +196,15 @@ var TradeFeed = function (options) {
     }, function(data){
 
       loader.transition().style('opacity',0);
-      transactions = transactions.concat(data).slice(0,50);   
-      updateTrades()
+      
+      data.forEach(function(d) {
+        d.amount   = valueFilter(d.amount, self.base.currency);
+        d.price    = valueFilter(d.price, self.counter.currency);
+        transactions.push(d);  
+      });
+      
+      transactions = transactions.slice(0,50);   
+      updateTrades();
            
     }, function (error){
 
