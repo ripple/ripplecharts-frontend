@@ -221,16 +221,16 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 			fill:"transparent"
 		});
 		flasher.attr(circleAttributes).attr("stroke",color);
-    flasher.classed("rippling", true);
+    /*flasher.classed("rippling", true);
     setTimeout(function(){
       flasher.classed("rippling", false);
-    }, 800);
+    }, 800);*/
     
-		/*flasher.transition().ease("linear").duration(animationDuration).attr({
+		flasher.transition().ease("linear").duration(animationDuration).attr({
 			r: 300,
 			opacity: 0,
 			"stroke-width":0
-		});*/
+		});
 	}
 	// Draw a line from this circle to all others with the same ledger hash
 	function drawLinks(circleID) {
