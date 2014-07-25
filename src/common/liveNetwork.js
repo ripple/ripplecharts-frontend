@@ -415,6 +415,7 @@ function getRippleChartsData() {
     }
 	});
 }
+
 var rippleChartsDataGetter = setInterval(getRippleChartsData, 60*1000); //Every 60 seconds
 getRippleChartsData();
 
