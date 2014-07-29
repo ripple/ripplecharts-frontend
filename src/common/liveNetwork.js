@@ -428,7 +428,7 @@ function getPeerInfo() {
 		if (data.length) {
 			latestVersion = data
 				.filter(function(x){return x.rippled_version})
-        .map(function(x){return x.rippled_version.slice(1+x.rippled_version.indexOf("-"))})
+				.map(function(x){return x.rippled_version.slice(1+x.rippled_version.indexOf("-"))})
 				.reduce(function(a,b){return semver.gt(a,b) ? a : b});
 		}
 		$("#rippledversion").text(latestVersion);
