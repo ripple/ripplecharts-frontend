@@ -425,11 +425,10 @@ function getPeerInfo() {
 		var data = JSON.parse(result);
 		$("#numberofpeers").text(data.length);
 		var latestVersion = "";
-		var prefix = "Ripple-";
 		if (data.length) {
-			latestVersion = prefix + data
+			latestVersion = data
 				.filter(function(x){return x.rippled_version})
-				.map(function(x){return x.rippled_version.slice(prefix.length)})
+        .map(function(x){return x.rippled_version.slice(1+x.rippled_version.indexOf("-"))})
 				.reduce(function(a,b){return semver.gt(a,b) ? a : b});
 		}
 		$("#rippledversion").text(latestVersion);
