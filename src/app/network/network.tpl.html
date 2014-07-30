@@ -62,25 +62,36 @@
 		<div class="quarter">
 			<div class="heading">Ledger</div>
 			<div class="datum" title="The time in seconds for the Ripple validators to reach consensus for the most recent ledger.">
-				Last close interval (sec.)<br/>
-				<span class="number" id="lastcloseinterval">&nbsp;</span>
+				Last close interval<br/>
+				<span class="number">
+          <span id="lastcloseinterval">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
 			</div>
 			<div class="datum" title="The average time in seconds for the Ripple validators to reach consensus over the last 24 hours">
-				Avg. close interval (sec.)<br/>
-				<span class="number" id="averagecloseinterval">&nbsp;</span>
+				Avg. close interval (24 hours)<br/>
+				<span class="number">
+          <span id="averagecloseinterval">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
 			</div>
 			<div id="barchart" title="The bar chart shows how the most recent ledger close intervals varied from the average close interval. A red bar indicates it took more time for a ledger to close, and a green bar indicates less time."></div>
 		</div>
 		<div class="quarter">
 			<div class="heading">Pathfinding</div>
-			<div class="datum" title="The time needed to find an efficient path on the network to exchange between two currencies.">
-				Avg. pathfinding speed (sec.)<br/>
-				<span class="number" id="pathfindingspeed">&nbsp;</span>
+			<div class="datum" title="The average time needed to find an efficient path for an exchange between two currencies or asset types on Ripple Trade. Average calculated for the last 24 hours.">
+				Avg. pathfinding time (24 hours)<br/>
+				<span class="number">
+          <span id="pathfindingspeed">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
 			</div>
-			<div class="datum" title="The fraction of time the network was successfully able to find a path to exchange between two currencies. The pie chart to the right visually represents this success rate.">
+			<div class="datum" title="The fraction of time the protocol was successfully able to find a path to exchange between two assets when accessed through Ripple Trade. The pie chart to the right visually represents this success rate.">
 				<div style="width:60%; float:left;">
 					% successful<br/>
-					<span class="number"><span id="successfulpathfindpercent">&nbsp;</span>%</span>
+					<span class="number">
+            <span id="successfulpathfindpercent">&nbsp;</span><span class="unit">%</span>
+          </span>
 				</div>
 				<div style="width:35%; float:left;">
 					<svg width=50 height=50 id="successpie"></svg>
@@ -95,11 +106,14 @@
 			<div class="heading">Transactions</div>
 			<div class="datum" title="The total number of transactions that closed in the past 24 hours. Transactions include payments, alteration of offers or trust lines, or any other modifications of the ledger.">
 				# of transactions (24 hours)<br/>
-				<span class="number" id="lastdaytransactions">&nbsp;</span>
+				<span class="number" id="lastdaytransactions"></span>
 			</div>
 			<div class="datum" title="The average time over the past 24 hours (in seconds) that it took to complete a transaction on Ripple Trade.">
-				Avg. transaction time<br/>
-				<span class="number" id="transactiontime">&nbsp;</span>
+				Avg. transaction time (24 hours)<br/>
+				<span class="number">
+          <span id="transactiontime">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
 			</div>
 		</div>
 		<div class="quarter">
@@ -109,7 +123,7 @@
 				<span class="number" id="rippledversion">&nbsp;</span>
 			</div>
 			<div class="datum" title="Total number of servers connected.">
-				Peers connected<br/>
+				# of peers connected<br/>
 				<span class="number" id="numberofpeers">&nbsp;</span>
 			</div>
 		</div>

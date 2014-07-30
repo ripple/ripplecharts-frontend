@@ -293,7 +293,7 @@ function extractValue(amount) {
 
 function displayLedger(ledger, duration) {
 	if (duration && barchart) {
-		$("#lastcloseinterval").text((duration/1000).toFixed(3));
+		$("#lastcloseinterval").text((duration/1000).toFixed(3)).siblings(".unit").show();
 		barchart.addPoint(duration);
 	}
 	//var color = colorFromHash(ledger.ledger_hash); //This might be confusing?
@@ -404,7 +404,7 @@ function getRippleChartsData() {
 	}, function(response){
 		var total = response.results.slice(0,24).map(function(x){return x.count}).reduce(function(a,b){return a+b});
 		var average = 86400/total;
-		$("#averagecloseinterval").text(average.toFixed(3));
+		$("#averagecloseinterval").text(average.toFixed(3)).siblings(".unit").show();
     if (!barchart) {
       barchart = new Barchart(d3.select("#barchart"),
         average*1000,	//baseline
@@ -443,9 +443,9 @@ function getPathfindStats() {
 		var averageSpeed = data.pathfind_average_time;
 		var percentSuccessful = data.pathfind_successes / data.pathfind_count * 100;
 		var transactionTime = data.transaction_average_time;
-		$("#pathfindingspeed").text(averageSpeed.toFixed(3));
-		$("#successfulpathfindpercent").text(percentSuccessful.toFixed(1));
-		$("#transactiontime").text(transactionTime.toFixed(3));
+		$("#pathfindingspeed").text(averageSpeed.toFixed(3)).siblings(".unit").show();
+		$("#successfulpathfindpercent").text(percentSuccessful.toFixed(1)).siblings(".unit").show();
+		$("#transactiontime").text(transactionTime.toFixed(3)).siblings(".unit").show();
 		drawPercentagePie(d3.select("#successpie"), [
 			[100 - percentSuccessful+0.001, "#a63"],
 			[percentSuccessful-0.001,       "#684"]
