@@ -431,7 +431,11 @@ function getPeerInfo() {
 				.map(function(x){return x.rippled_version.slice(1+x.rippled_version.indexOf("-"))})
 				.reduce(function(a,b){return semver.gt(a,b) ? a : b});
 		}
-		$("#rippledversion").text(latestVersion);
+		$("#latestrippledversion").text(latestVersion);
+    for (var i=0; i<data.length; i++) {
+      var datum = data[i];
+      worldMap.insertRippledVersionInfo(datum.ip, datum.rippled_version);
+    }
 	});
 }
 getPeerInfo();

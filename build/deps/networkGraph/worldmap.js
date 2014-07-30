@@ -14,6 +14,7 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 	
 	var locations = [];
 	var locationNameExists = {};
+  var rippledVersions = {};
 	
 	function drawCircles(mapContainer2, cssClass, idPrefix) {
 		return mapContainer2.selectAll("circle."+cssClass).data(locations).enter().append("circle")
@@ -134,6 +135,7 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 		d3.event.stopPropagation();
 	});
 	function setDetails(details) {
+    detailsContainer.select(".rippledversion").text(rippledVersions[details.query] || "(unknown version)");
 		detailsContainer.select(".ipaddress").text(details.query);
 		detailsContainer.select(".company").text(details.isp);
 		var cityText = [
@@ -198,7 +200,11 @@ function WorldMap(mapContainer, detailsContainer, width, height, geography, circ
 		}
 	};
 	
-	
+    // Insert information about rippled version. 
+  wm.insertRippledVersionInfo = function(name, version) {
+    rippledVersions[name] = version;
+  }
+
 	// We want this to do nothing if the circle isn't on the map yet.
 	wm.flashCircle = function(name, hash, coloringFunction) {
 		var circleID = htmlIDFormat(name);
