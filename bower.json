@@ -19,8 +19,5 @@
     "jquery": "~2.0.3",
     "jscrollpane": "~2.0.14"
   },
-  "dependencies": {},
-  "resolutions": {
-    "angular": "~1.2.15"
-  }
+  "dependencies": {}
 }
