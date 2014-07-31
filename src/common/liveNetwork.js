@@ -48,7 +48,7 @@ function resizeMap() {
 $(resizeMap);
 
 // Clear drifting objects on loss of focus 
-var windowHasFocus = true;
+/*var windowHasFocus = true;
 var then = new Date();
 setInterval(function(){
 	var now = new Date();
@@ -61,7 +61,7 @@ setInterval(function(){
 	} else {
 		windowHasFocus = true;
 	}
-}, 400);
+}, 400);*/
 
 
 // URLs
@@ -185,14 +185,29 @@ function River(container) {
     isActive = false;
   }
   
-	r.addCircle = function(laneNumber, color, radius) {
+	r.addCircle = function(laneNumber, color, radius, note) {
     if (isActive) {
       var cy = (LANE_WIDTH/2) + (LANE_WIDTH+2) * (laneNumber+1);
       var tt = d3.select("#river");
-      var xPosition = $(container[0]).width()
-      var circles = drawDottedCircle(tt, radius, xPosition, cy, color, "drifting");
-      disappearOnCompletion($(circles[0][0]));
-      disappearOnCompletion($(circles[1][0]));
+      var xPosition = $(container[0]).width();
+      var g = tt.append("g").attr({
+        "class":"drifting"
+      });
+      var circles = drawDottedCircle(g, radius, xPosition, cy, color, "");
+      if (note) {
+        g.append("text").attr({
+          x: xPosition+2,
+          y: cy+4,
+          fill:"white",
+          "font-size":"12px"
+        }).style({"display":"none", "pointer-events":"none"}).text(note);
+        circles[0].on("mouseover", function(){
+          $(this).siblings("text").show();
+        }).on("mouseout", function(){
+          $(this).siblings("text").hide();
+        });
+      }
+      disappearOnCompletion($(g[0]));
     }
 	};
 	
@@ -267,7 +282,16 @@ function displayTransaction(tx) {
 	if (index < 0) {
 		index = riverLabels.length-1;
 	}
-	river.addCircle(index,RIVER_KEY[index][1],computeSize(tx));
+  var note = false;
+  if (tx.TransactionType === "Payment") {
+    var amount = tx.Amount;
+    if ("string" === typeof amount) {
+      note = Math.round(amount/1000000) + " XRP";
+    } else {
+      note = parseFloat(amount.value).toFixed(2) + " " + amount.currency;
+    }
+  }
+	river.addCircle(index,RIVER_KEY[index][1],computeSize(tx), note);
 }
 function computeSize(tx){
 	switch (tx.TransactionType) {
