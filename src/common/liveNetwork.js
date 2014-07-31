@@ -283,13 +283,17 @@ function displayTransaction(tx) {
 		index = riverLabels.length-1;
 	}
   var note = false;
+  var amount;
   if (tx.TransactionType === "Payment") {
-    var amount = tx.Amount;
+    amount = tx.Amount;
     if ("string" === typeof amount) {
       note = Math.round(amount/1000000) + " XRP";
     } else {
       note = parseFloat(amount.value).toFixed(2) + " " + amount.currency;
     }
+  } else if (tx.TransactionType === "TrustSet") {
+    amount = tx.LimitAmount;
+    note = parseFloat(amount.value).toFixed(2) + " " + amount.currency + " " + amount.issuer.substring(0,7) + "...";
   }
 	river.addCircle(index,RIVER_KEY[index][1],computeSize(tx), note);
 }
@@ -464,11 +468,15 @@ function getPathfindStats() {
 	$.get(MIXPANEL_PROXY_URL, function(result){
 		var data = JSON.parse(result);	
 		var averageSpeed = data.pathfind_average_time;
+    var slowestSpeed = data.pathfind_max_time;
 		var percentSuccessful = data.pathfind_successes / data.pathfind_count * 100;
 		var transactionTime = data.transaction_average_time;
+    var transactionMax = data.transaction_max_time;
 		$("#pathfindingspeed").text(averageSpeed.toFixed(3)).siblings(".unit").show();
+    $("#pathfindingmax").text(slowestSpeed.toFixed(3)).siblings(".unit").show();
 		$("#successfulpathfindpercent").text(percentSuccessful.toFixed(1)).siblings(".unit").show();
 		$("#transactiontime").text(transactionTime.toFixed(3)).siblings(".unit").show();
+    $("#transactionmax").text(transactionMax.toFixed(3)).siblings(".unit").show();
 		drawPercentagePie(d3.select("#successpie"), [
 			[100 - percentSuccessful+0.001, "#a63"],
 			[percentSuccessful-0.001,       "#684"]
