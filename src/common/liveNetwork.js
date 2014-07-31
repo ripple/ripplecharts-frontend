@@ -1,8 +1,6 @@
 liveNetwork = function() {
 
 
-
-
 // Display / Setup
 
 var DRIFTING_TIME_SECONDS = 180;
@@ -58,7 +56,7 @@ setInterval(function(){
 	then = now;
 	if (elapsed > 800) {
 		windowHasFocus = false;
-		metaQueue.clear();
+    ledgerQueue.reset();
 		d3.selectAll(".drifting").remove();
 	} else {
 		windowHasFocus = true;
@@ -291,12 +289,12 @@ function extractValue(amount) {
 	return amount.value || parseInt(amount,10)/XRP_SCALAR;
 }
 
-function displayLedger(ledger, duration) {
+function displayLedger(ledger) {
+  var duration = ledger.timeSinceLast;
 	if (duration && barchart) {
-		$("#lastcloseinterval").text((duration/1000).toFixed(3)).siblings(".unit").show();
-		barchart.addPoint(duration);
+		$("#lastcloseinterval").text((duration).toFixed(3)).siblings(".unit").show();
+		barchart.addPoint(duration*1000);
 	}
-	//var color = colorFromHash(ledger.ledger_hash); //This might be confusing?
 	river.addLine(commas(ledger.ledger_index), ledger.ledger_hash);
 }
 function commas(number) {
@@ -330,35 +328,32 @@ function colorFromHash(hash) {
     }
     result = "#"+inverseScaledHex(cyan)+inverseScaledHex(magenta)+inverseScaledHex(yellow);
   }
-  //console.log("COLOR!", result);
 	return result;
 }
 
-var metaQueue = new MetaQueue(isLedger, isTransaction, displayItem);
-
+var ledgerQueue = new LedgerQueue(displayItem, isTransaction);
 
 //Using the network monitor server:
 var socket = io(RIPPLED_PROXY_URL);
 socket.on('transaction', function(x){
-	metaQueue.enqueue(x);
+	ledgerQueue.enqueueEvent(x);
 });
 socket.on('ledger_closed', function(x){
-	var lastEnqueuedLedger = metaQueue.getLastEnqueuedEnder();
-	if (!lastEnqueuedLedger || x.ledger_index > lastEnqueuedLedger.ledger_index) {
-		if (!x.type) {
-			x.type = "ledgerClosed";
-		}
-		metaQueue.enqueue(x);
-	}
+
+  if (!x.type) {
+    x.type = "ledgerClosed";
+  }
+  x.timestamp = new Date() / 1000;
+  ledgerQueue.enqueueLedger(x);
 });
 socket.on('peer_ledger', function(x){
-	x = JSON.parse(x);
+  x = JSON.parse(x);
 	worldMap.addIpAddress(x.ip);
-	metaQueue.enqueue({
+	ledgerQueue.enqueueEvent({
 		type: "flashEvent",
 		address: x.ip,
 		hash: x.ledger_hash
-	})
+	});
 });
 
 
@@ -530,7 +525,7 @@ return {
   stop: function() {
     socket.io.disconnect();
     river.deactivate();
-    metaQueue.clear();
+    ledgerQueue.reset();
     clearInterval(pathfindStatsGetter);
     clearInterval(rippleChartsDataGetter);
     d3.selectAll(".drifting").remove();
