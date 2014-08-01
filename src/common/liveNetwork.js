@@ -277,6 +277,29 @@ function displayItem(item, duration) {
 	}
 }
 
+var translateAddress = (function() {
+  var memo = {};
+  return function(address) {
+    if (memo[address]) {
+      return memo[address];
+    } else {
+      var result = " ";
+      loop: for (var i=0; i<gateways.length; i++) { //Uses global variable "gateways"
+        var gw = gateways[i];
+        for (var j=0; j<gw.accounts.length; j++) {
+          var acc = gw.accounts[j];
+          if (acc.address === address) {
+            result = gw.name;
+            break loop;
+          }
+        }
+      }
+      memo[address] = result;
+      return result;
+    }
+  }
+})();
+
 function displayTransaction(tx) {
 	var index = riverLabels.indexOf(tx.TransactionType);
 	if (index < 0) {
@@ -293,7 +316,7 @@ function displayTransaction(tx) {
     }
   } else if (tx.TransactionType === "TrustSet") {
     amount = tx.LimitAmount;
-    note = parseFloat(amount.value).toFixed(2) + " " + amount.currency + " " + amount.issuer.substring(0,7) + "...";
+    note = parseFloat(amount.value).toFixed(2) + " " + amount.currency + " " + translateAddress(amount.issuer);
   }
 	river.addCircle(index,RIVER_KEY[index][1],computeSize(tx), note);
 }
