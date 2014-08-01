@@ -1,8 +1,71 @@
 .light .snap-content {
   background:#fff;
+  border-left:1px solid #e8e8e8;
 }
 
+.light .snap-drawers {
+  background:#fff;  
+}
+
+.light .header {
+  border-bottom:1px solid #e8e8e8;
+  background:#f9f9f9;
+}
+
+.light .header .wrapper {
+  background: #fff;
+  border-color: #f9f9f9;
+}
 
 .light .theme {
   color:#ccc;
+}
+
+.light .logo {
+  float:left;
+  display:inline-block;
+  width:220px;
+  height:40px;
+  background-image:url('images/logo.png');
+  margin:4px 0;
+
+// Pixel ratio: 2
+  @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
+    background-image: url('images/logoLarge.png');
+    background-size: 220px 40px;
+  }
+}
+
+.light #helpButton {
+  color: #999;
+  background: #ddd;
+  border: 2px solid #bbb;
+}
+
+.light #helpButton:hover {
+  background:#e5e5e5;
+  color:#777;
+  border-color:#999;  
+}
+
+.light #helpButton:active {
+  background:@rippleBlue;
+  border-color:#eee;
+  color:#eee;
+}
+
+.light footer {
+  border-color: #eee;
+}
+
+.light footer .footerInner {
+  color:#999;
+}
+
+.light footer a {
+  color:#999;
+}
+
+footer a:hover {
+  color:#bbb;
 }
