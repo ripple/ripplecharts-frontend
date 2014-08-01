@@ -1,0 +1,267 @@
+.geography path {
+  stroke-width: 1px;
+  stroke: #ccc;
+  fill: #ccc;
+}
+.dark .geography path {
+  stroke: #333;
+  fill: #333;
+}
+
+#locationdetails {
+  position: absolute;
+  top: 345px;
+  left: 6px;
+  font-size: 10px;
+  padding: 2px;
+  border: 1px solid transparent;
+  display:none;
+}
+
+#footnote {
+  position: absolute;  
+  top: 393px;  
+  right: 6px;  
+  font-size: 8px;
+}
+
+#main {
+  margin-left:10px;
+  margin-right:10px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+#world {
+  width: 960px;
+  position:relative;
+  margin-top:-4%;
+  transform-origin: top left;
+  -webkit-transform-origin: top left;
+  -moz-transform-origin: top left;
+}
+
+#information {
+  margin-top:10px;
+}
+
+.heading {
+  font-size: 18px;
+}
+
+.number {
+  font-size: 24px;
+}
+
+.unit {
+  display: none;
+}
+
+.heading, .number {
+  color:black;
+}
+.dark .heading, .dark .number {
+  color:white;
+}
+
+.datum {
+  margin-top:15px;
+  margin-bottom:15px;
+  cursor:help;
+}
+
+#barchart {
+  cursor:help;
+}
+
+.keylabel {
+	margin-left:10px;
+}
+
+@keyframes drift {
+  from {} to {
+    transform:translate(-10000px, 0px);
+  }
+}
+@-webkit-keyframes drift {
+  from {} to {
+    -webkit-transform:translate(-10000px, 0px);
+  }
+}
+@-moz-keyframes drift {
+  from {} to {
+    -moz-transform:translate(-10000px, 0px);
+  }
+}
+@-o-keyframes drift {
+  from {} to {
+    -o-transform:translate(-10000px, 0px);
+  }
+}
+
+
+.flashercircle {
+  transform: scale(1);
+  -webkit-transform: scale(1);
+  -moz-transform: scale(1);
+  -o-transform: scale(1);
+
+  transform-origin: center center;
+  -webkit-transform-origin: center center;
+  -moz-transform-origin: center center;
+  -o-transform-origin: center center;
+}
+
+.flashercircle.rippling {
+  animation-name:expandingcircle,thinningcircle;
+  -webkit-animation-name:expandingcircle,thinningcircle;
+  -moz-animation-name:expandingcircle,thinningcircle;
+  -o-animation-name:expandingcircle,thinningcircle;
+  
+  animation-duration:0.8s,0.8s;
+  -webkit-animation-duration:0.8s,0.8s;
+  -moz-animation-duration:0.8s,0.8s;
+  -o-animation-duration:0.8s,0.8s;
+  
+  animation-timing-function:linear,cubic-bezier(0,1,0,1);
+  -webkit-animation-timing-function:linear,cubic-bezier(0,1,0,1);
+  -moz-animation-timing-function:linear,cubic-bezier(0,1,0,1);
+  -o-animation-timing-function:linear,cubic-bezier(0,1,0,1);
+}
+
+@keyframes expandingcircle {
+  from {
+    transform: scale(1);
+  } to {
+    transform: scale(75);
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes expandingcircle {
+  from {
+    -webkit-transform: scale(1);
+  } to {
+    -webkit-transform: scale(75);
+    opacity: 0;
+  }
+}
+
+@-moz-keyframes expandingcircle {
+  from {
+    -moz-transform: scale(1);
+  } to {
+    -moz-transform: scale(75);
+    opacity: 0;
+  }
+}
+
+@-o-keyframes expandingcircle {
+  from {
+    -o-transform: scale(1);
+  } to {
+    -o-transform: scale(75);
+    opacity: 0;
+  }
+}
+
+
+@keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+@-webkit-keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+@-moz-keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+@-o-keyframes thinningcircle {
+  from {} to {
+    stroke-width: 0;
+  }
+}
+
+
+/* television */
+@media all and (min-width: 1280px) {
+  #worldandriver {
+    float:right;
+    width: calc(~"~'100% - 260px'");
+    border-left: 1px solid gray;
+  }
+  
+  #information {
+    float:left;
+    width: 240px;
+    padding-right: 10px;
+  }
+  
+  #zooming {
+    display:block !important;
+  }
+  
+  .quarter:not(:first-child) {
+    border-top: 1px solid gray;
+  }
+}
+
+/* computer */
+@media all and (max-width: 1279px) and (min-width: 880px) {
+  #world {
+    margin-left: auto;
+    margin-right:auto;
+  }
+  .quarter {
+    width: 25%;
+    float:left;
+  }
+  #activity {
+    border-bottom: 1px solid gray;
+  }
+}
+
+@media all and (max-width: 960px) and (min-width: 480px) {
+  #zooming {
+    display:block !important;
+  }
+}
+
+/* tablet */
+@media all and (max-width: 879px) and (min-width: 480px) {
+  #world {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  #activity {
+    border-bottom: 1px solid gray;
+  }
+
+  .quarter {
+    width: 50%;
+    float: left;
+  }
+  
+  #halfway {
+    clear: both;
+    border-bottom: 1px solid gray;
+    margin-bottom: 10px;
+  }
+}
+
+/* mobile */
+@media all and (max-width: 479px) {
+  #world {
+    display: none;
+  }
+  .quarter {
+    width: 100%;
+    border-top: 1px solid gray;
+  }
+}
