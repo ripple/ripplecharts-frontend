@@ -16,7 +16,7 @@ var TotalAccounts = function (options) {
       {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"month",  offset: function(d) { return new Date("Jan 1 2013 Z")}}
+      {name: "max",    interval:"month",  offset: function(d) { return new Date("Dec 31 2012 0:00:00")}}
     ])
   .enter().append("a")
     .attr("href", "#")
@@ -50,7 +50,7 @@ var TotalAccounts = function (options) {
   function selectRange (d) {
     var end   = new Date();
     var start = d.offset(end);
-
+    
     //$('#startTime').datepicker('setValue', start);
     //$('#endTime').datepicker('setValue', end);
     update(d.interval, start, end);
@@ -72,15 +72,15 @@ var TotalAccounts = function (options) {
             
     } else {
       if (basisRequest) basisRequest.abort();
-      basisRequest = apiHandler.getTotalAccounts(start, function(total){
+      basisRequest = apiHandler.getTotalAccounts(start, function(err, total) {
         chart.basis = total;
-      });
-      
-      updateHelper({
-        startTime     : start,
-        endTime       : end,
-        timeIncrement : increment,
-        descending    : true
+
+        updateHelper({
+          startTime     : start,
+          endTime       : end,
+          timeIncrement : increment,
+          descending    : true
+        });
       });
     } 
   } 

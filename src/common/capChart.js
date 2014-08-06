@@ -44,7 +44,7 @@ function CapChart(options) {
  
  
 //add currency dropdown    
-  var currencyList = ['BTC','USD','CAD','CNY','EUR','GBP','JPY','ILS','LTC','XAG','XAU'];
+  var currencyList = ['BTC','USD','CAD','CNY','EUR','GBP','JPY','ILS','LTC','NZD','XAG','XAU'];
   if (self.dataType=='Transaction Volume') currencyList.unshift("XRP");
   var currencyDropdown = ripple.currencyDropdown(currencyList).selected({currency:self.currency})
     .on("change", function(currency) {

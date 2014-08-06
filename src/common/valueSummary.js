@@ -22,9 +22,10 @@ var ValueSummary = function (options) {
     .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
 
   var toggle = outer.append("label").attr("class","xrpToggle");
+  var hideXRP = true;
     
     toggle.append("input").attr("type", "checkbox")
-      .property("checked", true)
+      .property("checked", !hideXRP)
       .on('click', function(){
         hideXRP = !d3.select(this).property("checked");
         self.load(null, exchange, true);
@@ -78,7 +79,7 @@ var ValueSummary = function (options) {
   var tooltip       = outer.append("div").attr("class","tooltip"); 
   var transitioning = false;
   var gateways      = ripple.currencyDropdown();
-  var exchange, current, total, hideXRP;
+  var exchange, current, total;
   var data = [];
    
   //load a specific metric
