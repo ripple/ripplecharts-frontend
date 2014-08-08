@@ -193,13 +193,18 @@ function CapChart(options) {
 
     var issuers = self.currency=="XRP" ? [""] : currencyDropdown.getIssuers(self.currency);    
     for (var i=0; i<issuers.length; i++) {
-      loadSendDataHelper(range, {currency:self.currency, issuer:issuers[i]}, issuers.length);
+      loadSendDataHelper(range, issuers[i], issuers.length);
     }       
   }
   
   function loadSendDataHelper(range, c, count) {
-    var end = moment.utc();
-
+    
+    //save a scope version of the current currency,
+    //as it may change before its loaded.  Also it
+    //could be different that c.currency for demmurage
+    var currency = self.currency; 
+    var end      = moment.utc();
+    
     apiHandler.valueSent({
       startTime     : range.offset(end),
       endTime       : end,
@@ -208,28 +213,28 @@ function CapChart(options) {
       issuer        : c.issuer
       
     }, function(data){  
-      if (!sendDataCache[c.currency]) 
-        sendDataCache[c.currency] = {};
-      if (!sendDataCache[c.currency][range.name])
-        sendDataCache[c.currency][range.name] = {raw:[]};
+      if (!sendDataCache[currency]) 
+        sendDataCache[currency] = {};
+      if (!sendDataCache[currency][range.name])
+        sendDataCache[currency][range.name] = {raw:[]};
       
 
       data.shift(); //remove the first;
 
-      sendDataCache[c.currency][range.name]['raw'].push({
+      sendDataCache[currency][range.name]['raw'].push({
         address : c.issuer,
         name    : currencyDropdown.getName(c.issuer),
         results : data.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]})
       });
             
-      prepareStackedData(c.currency, range); 
-      prepareLegend(c.currency, range);
+      prepareStackedData(currency, range); 
+      prepareLegend(currency, range);
       
       if (self.dataType=="Transaction Volume" &&
-        self.currency==c.currency &&
+        self.currency==currency &&
         self.range==range.name) {
       
-        if (sendDataCache[c.currency][range.name]['raw'].length == count) isLoading = false;
+        if (sendDataCache[currency][range.name]['raw'].length == count) isLoading = false;
         drawData(); //may have been changed after loading started
         drawLegend();
       }
@@ -253,12 +258,17 @@ function CapChart(options) {
 
     var issuers = currencyDropdown.getIssuers(self.currency);    
     for (var i=0; i<issuers.length; i++) {
-      loadTradeHelper(range, {currency:self.currency, issuer:issuers[i]}, issuers.length);
+      loadTradeHelper(range, issuers[i], issuers.length);
     }    
   }
   
   function loadTradeHelper (range, base, count) {
-    var end = moment.utc();
+    
+    //save a scope version of the current currency,
+    //as it may change before its loaded.  Also it
+    //could be different that c.currency for demmurage
+    var currency = self.currency; 
+    var end      = moment.utc();
     
     apiHandler.offersExercised({
       startTime     : range.offset(end),
@@ -269,26 +279,26 @@ function CapChart(options) {
       counter       : {currency:"XRP"}
       
     }, function(data){  
-      if (!tradeDataCache[base.currency]) 
-        tradeDataCache[base.currency] = {};
-      if (!tradeDataCache[base.currency][range.name])
-        tradeDataCache[base.currency][range.name] = {raw:[]};
+      if (!tradeDataCache[currency]) 
+        tradeDataCache[currency] = {};
+      if (!tradeDataCache[currency][range.name])
+        tradeDataCache[currency][range.name] = {raw:[]};
       
         
-      tradeDataCache[base.currency][range.name]['raw'].push({
+      tradeDataCache[currency][range.name]['raw'].push({
         address : base.issuer,
         name    : currencyDropdown.getName(base.issuer),
         results : data.map(function(d){return[d.startTime.unix()*1000,d.baseVolume]})
       });
       
-      prepareStackedData(base.currency, range); 
-      prepareLegend(base.currency, range);
+      prepareStackedData(currency, range); 
+      prepareLegend(currency, range);
       
       if ((self.dataType=="Trade Volume" || self.dataType=="# of Trades") &&
-        self.currency==base.currency &&
+        self.currency==currency &&
         self.range==range.name) {
       
-        if (tradeDataCache[base.currency][range.name]['raw'].length == count) isLoading = false;
+        if (tradeDataCache[currency][range.name]['raw'].length == count) isLoading = false;
         drawData(); //may have been changed after loading started
         drawLegend();
       }
@@ -313,12 +323,6 @@ function CapChart(options) {
     
     var end        = moment.utc();
     var issuers    = currencyDropdown.getIssuers(currency);    
-    var currencies = issuers.map(function(d){
-      return {
-        currency : currency,
-        issuer   : d
-      }
-    });
 
 /* 
 //code below is used for gatewayCapitalization, wont be necessary
@@ -336,7 +340,7 @@ function CapChart(options) {
       //currencies : currencies,
       //gateways   : gateways,
       timeIncrement : range.interval,
-      currencies    : currencies,
+      currencies    : issuers,
       startTime     : range.offset(end),
       endTime       : end
       

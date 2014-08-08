@@ -168,7 +168,17 @@
       if (!accounts || !accounts.length) return issuers;
       
       issuers = accounts.map(function(d){
-        return d.address;
+        var c = currency;
+        
+        //switch code for demmurage currencies
+        for (i=0; i<d.currencies.length; i++) {
+          if (typeof d.currencies[i] !== 'string' &&
+            d.currencies[i].label === currency) {
+              c = d.currencies[i].code;
+              break;
+          }
+        }        
+        return {currency:c, issuer:d.address};
       });
       
       return issuers;

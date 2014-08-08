@@ -90,7 +90,7 @@ var TradeFeed = function (options) {
     if (trade.price>high) high = trade.price;
     if (trade.price<low)  low  = trade.price;
     close   = trade.price;
-    volume += trade.amount;
+    volume += data.value[0]; //should be adjusted for demmurage
     
     updateDailyStats(); 
     updateTrades();
@@ -162,6 +162,7 @@ var TradeFeed = function (options) {
 
 //display 24 hour stats from the known values
   function updateDailyStats () {
+    console.log(volume);
     var base    = ripple.Currency.from_json(self.base.currency).to_human();
     var counter = ripple.Currency.from_json(self.counter.currency).to_human();
     daily.select(".high").html("<small>H:</small> "+valueFilter(high, self.counter.currency));
