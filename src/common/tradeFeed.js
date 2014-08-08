@@ -106,7 +106,7 @@ var TradeFeed = function (options) {
       .data(transactions);
       
     var rowEnter = rows.enter().append("tr");
-    
+    var baseCurrency = ripple.Currency.from_json(self.base.currency).to_human();
     rowEnter.append("td").attr("class","type");
     rowEnter.append("td").attr("class","amount");
     rowEnter.append("td").attr("class","time");
@@ -114,7 +114,7 @@ var TradeFeed = function (options) {
     rows.exit().remove();
     
     rows.select(".type").attr('class', function(d){return "type "+d.type}); 
-    rows.select(".amount").html(function(d){return d.amount+" <small>"+self.base.currency+"</small>"});
+    rows.select(".amount").html(function(d){return d.amount+" <small>"+baseCurrency+"</small>"});
     rows.select(".time").html(function(d){return d.time.local().format('h:mm:ss a')});
     rows.select(".price").html(function(d){return d.price}); 
   }
@@ -162,11 +162,13 @@ var TradeFeed = function (options) {
 
 //display 24 hour stats from the known values
   function updateDailyStats () {
-      daily.select(".high").html("<small>H:</small> "+valueFilter(high, self.counter.currency));
-      daily.select(".low").html("<small>L:</small> "+valueFilter(low, self.counter.currency));
-      daily.select(".volume").html("<small>VOL:</small> "+valueFilter(volume, self.base.currency)+"<small>"+self.base.currency+"</small>");
-      price.select(".amount").html(valueFilter(close, self.counter.currency));
-      price.select(".pair").html(self.base.currency+"/"+self.counter.currency);
+    var base    = ripple.Currency.from_json(self.base.currency).to_human();
+    var counter = ripple.Currency.from_json(self.counter.currency).to_human();
+    daily.select(".high").html("<small>H:</small> "+valueFilter(high, self.counter.currency));
+    daily.select(".low").html("<small>L:</small> "+valueFilter(low, self.counter.currency));
+    daily.select(".volume").html("<small>VOL:</small> "+valueFilter(volume, self.base.currency)+"<small>"+base+"</small>");
+    price.select(".amount").html(valueFilter(close, self.counter.currency));
+    price.select(".pair").html(base+"/"+counter);
   }
 
 

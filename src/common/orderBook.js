@@ -8,7 +8,8 @@ var OrderBook = function (options) {
     xAxis, leftAxis, rightAxis,
     xTitle, leftTitle, rightTitle,
     hover, focus, centerline, path, midpoint,
-    status, details, loader;
+    status, details, loader,
+    baseCurrency, counterCurrency;
     
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(chart.style('width'), 10) - options.margin.left - options.margin.right;
@@ -71,11 +72,13 @@ var OrderBook = function (options) {
 
 //subscribe to market data for trading pair
   this.getMarket = function (base, trade) {
-    options.base  = base;
-    options.trade = trade;
-    lineData      = [];
-    self.offers   = {};
-
+    options.base    = base;
+    options.trade   = trade;
+    lineData        = [];
+    self.offers     = {};
+    baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
+    counterCurrency = ripple.Currency.from_json(trade.currency).to_human();
+    
     bookTables.transition().style("opacity", 0.5);
     fadeChart();
     isLoading = true;
@@ -285,9 +288,9 @@ var OrderBook = function (options) {
     leftAxis.attr("transform", "translate(" + xScale.range()[0] + ",0)").call(d3.svg.axis().scale(yScale).orient("left").tickFormat(d3.format("s")));
     rightAxis.attr("transform", "translate(" + xScale.range()[1] + ",0)").call(d3.svg.axis().scale(yScale).orient("right").tickFormat(d3.format("s")));
     
-    xTitle.text("Price ("+options.trade.currency+")");
-    leftTitle.text(options.base.currency);
-    rightTitle.text(options.base.currency);
+    xTitle.text("Price ("+counterCurrency+")");
+    leftTitle.text(baseCurrency);
+    rightTitle.text(baseCurrency);
     
     centerline.transition().attr("transform", "translate("+center+",0)").style("opacity",1);
     path.style("opacity",1);
@@ -311,8 +314,8 @@ var OrderBook = function (options) {
       hover.attr("transform", "translate(" + xScale(d.showPrice) + ")").style("opacity",1);
       focus.attr("transform", "translate(" + xScale(d.showPrice) + "," + yScale(d.showSum) + ")").style("opacity",1); 
       details.html("<span>Quantity:<b> " + quantity + 
-        "</b></span><span>Total:<b> " +d.showSum + " " + options.base.currency + "</b></span>" + 
-        "<span> @ <b>" + d.showPrice + " " + options.trade.currency + "</b></span>")
+        "</b></span><span>Total:<b> " +d.showSum + " " + baseCurrency + "</b></span>" + 
+        "<span> @ <b>" + d.showPrice + " " + counterCurrency + "</b></span>")
         .style("opacity",1);
     }
   }
@@ -340,13 +343,13 @@ var OrderBook = function (options) {
       return value;        
     }
     
-    bidsHead.select(".headerRow th:nth-child(1) span").html(options.base.currency);
-    bidsHead.select(".headerRow th:nth-child(2) span").html(options.base.currency);
-    bidsHead.select(".headerRow th:nth-child(3) span").html(options.trade.currency);
+    bidsHead.select(".headerRow th:nth-child(1) span").html(baseCurrency);
+    bidsHead.select(".headerRow th:nth-child(2) span").html(baseCurrency);
+    bidsHead.select(".headerRow th:nth-child(3) span").html(counterCurrency);
     
-    asksHead.select(".headerRow th:nth-child(1) span").html(options.trade.currency);
-    asksHead.select(".headerRow th:nth-child(2) span").html(options.base.currency);
-    asksHead.select(".headerRow th:nth-child(3) span").html(options.base.currency);
+    asksHead.select(".headerRow th:nth-child(1) span").html(counterCurrency);
+    asksHead.select(".headerRow th:nth-child(2) span").html(baseCurrency);
+    asksHead.select(".headerRow th:nth-child(3) span").html(baseCurrency);
     
     var length   = 20; 
     var row      = bidsBody.selectAll("tr").data(pad(self.offers.bids.slice(0,length),length));

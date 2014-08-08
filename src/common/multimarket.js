@@ -21,6 +21,9 @@ var MiniChart = function(base, counter, markets) {
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
   var height = width/2>150 ? width/2 : 150;
   
+  var baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
+  var counterCurrency = ripple.Currency.from_json(counter.currency).to_human();
+  
   if (markets.options.fixed) {
     header = self.div.append("div").attr("class","chartHeader");
   } else {
@@ -63,7 +66,7 @@ var MiniChart = function(base, counter, markets) {
   if (markets.options.fixed) {
     dropdowns.style("display","none");
     header.html("<small>"+self.div.select(".base .gateway").node().value+
-      "</small>"+self.base.currency+"/"+self.counter.currency+"<small>"+
+      "</small>"+baseCurrency+"/"+counterCurrency+"<small>"+
       self.div.select(".counter .gateway").node().value+"</small>");
   } 
   
@@ -99,6 +102,8 @@ var MiniChart = function(base, counter, markets) {
   
 //load the chart data from the API       
   function load (update) {
+    baseCurrency   = ripple.Currency.from_json(self.base.currency).to_human();
+    counterCounter = ripple.Currency.from_json(self.counter.currency).to_human();
     markets.updateListHandler();
     if (!self.base || !self.counter ||
       (self.base.currency == self.counter.currency &&
@@ -332,7 +337,7 @@ var MiniChart = function(base, counter, markets) {
     showHigh.html("<label>H:</label> "+amountToHuman(high, self.counter.currency));
     showLow.html("<label>L:</label> "+amountToHuman(low, self.counter.currency));
     change.html((pct>0 ? "+":"")+amountToHuman(pct)+"%").style(changeStyle);
-    volume.html("<label>V:</label> "+vol+"<small>"+self.base.currency+"</small>");  
+    volume.html("<label>V:</label> "+vol+"<small>"+baseCurrency+"</small>");  
     
     //show the chart and details
     details.selectAll("td").style("opacity",1);

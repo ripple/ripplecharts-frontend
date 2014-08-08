@@ -375,8 +375,11 @@ PriceChart = function (options) {
     var candleWidth = options.width/(num*1.3);
     if (candleWidth<3) candleWidth = 3; 
 
-    gEnter.select(".axis.price").select("text").text("Price ("+counter.currency+")");
-    gEnter.select(".axis.volume").select("text").text("Volume ("+base.currency+")");
+    var baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
+    var counterCurrency = ripple.Currency.from_json(counter.currency).to_human();
+    
+    gEnter.select(".axis.price").select("text").text("Price ("+counterCurrency+")");
+    gEnter.select(".axis.volume").select("text").text("Volume ("+baseCurrency+")");
         
     svg.datum(lineData, function(d){return d.startTime;})
       .on("mousemove", showDetails)
@@ -548,6 +551,7 @@ PriceChart = function (options) {
         v = d.baseVolume.toFixed(2);
       }
 
+      var baseCurrency = ripple.Currency.from_json(base.currency).to_human();    
       var details = div.select('.chartDetails');
       details.html("<span class='date'>"+ parseDate(d.startTime.local(), chartInterval) + 
         "</span><span><small>O:</small><b>" + o  + "</b></span>" +
@@ -555,7 +559,7 @@ PriceChart = function (options) {
         "<span class='low'><small>L:</small><b>" + l + "</b></span>" +
         "<span><small>C:</small><b>" + c  + "</b></span>" +
         "<span class='vwap'><small>VWAP:</small><b>" + a + "</b></span>" +
-        "<span class='volume'><small>Vol:</small><b>" + v + " " + base.currency + "</b></span>")
+        "<span class='volume'><small>Vol:</small><b>" + v + " " + baseCurrency + "</b></span>")
         .style("opacity",1);
 
       hover.transition().duration(50).attr("transform", "translate(" + xScale(d.startTime) + ")");

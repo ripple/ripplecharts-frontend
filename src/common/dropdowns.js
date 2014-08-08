@@ -21,12 +21,13 @@
       	accounts.forEach(function(account) {
           gatewayByAddress[account.address] = account.gateway = gateway;
         	account.currencies.forEach(function(currency) {
-            (accountsByCurrency.hasOwnProperty(currency) ? accountsByCurrency[currency] : accountsByCurrency[currency] = []).push(account);
+        	  var c = typeof currency === 'string' ? currency : currency.label;
+            (accountsByCurrency.hasOwnProperty(c) ? accountsByCurrency[c] : accountsByCurrency[c] = []).push(account);
           	currencies.push(currency);
         	});
         });
     	});
-    		
+    	
     	for (var i = 0; i < queue.length; ++i) queue[i]();
     	queue = null;
     }
@@ -39,16 +40,29 @@
 
 //  this function is called to display currency then issuer    
     function loadDropdowns(selection) {
-      var currencies     = currencyList || ["XRP"].concat(d3.keys(accountsByCurrency).sort());
-      var currencySelect = selection.append("select").attr("class","currency").on("change", changeCurrency);
-      var gateway        = selected && gatewayByAddress[selected.issuer];
+      var currencies       = currencyList || ["XRP"].concat(d3.keys(accountsByCurrency).sort());
+      var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
+      var gateway          = selected && gatewayByAddress[selected.issuer];
+      var selectedCurrency = selected ? selected.currency : null;
+      
       if (!currencyList) var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
-
+      
+      //convert intrest currency code back to label
+      if (selectedCurrency && gateway) {   
+        for (i=0; i<gateway.currencies.length; i++) {
+          if (typeof gateway.currencies[i] !== 'string' &&
+            gateway.currencies[i].code === selectedCurrency) {
+              selectedCurrency = gateway.currencies[i].label;
+              break;
+          }
+        }        
+      }
+      
       var option = currencySelect.selectAll("option")
         .data(currencies)
         .enter().append("option")
         .attr("class", function(d){return d})
-        .property("selected", function(d) { return selected && d === selected.currency; })
+        .property("selected", function(d) { return selectedCurrency && d === selectedCurrency; })
         .text(function(d){return d});   
        
         
@@ -84,7 +98,19 @@
         var gateway = gatewaySelect.node().value,
           currency  = currencySelect.node().value,
           accounts  = accountsByCurrency[currency];
-          issuer    = accounts && accounts.filter(function(d) { return d.gateway.name === gateway; })[0].address;
+          account   = accounts && accounts.filter(function(d) { return d.gateway.name === gateway; })[0];
+          issuer    = account ? account.address : null;
+          
+          //check account currencies for interest currencies
+          if (account) {
+            for (i=0; i<account.currencies.length; i++) {
+              if (typeof account.currencies[i] !== 'string' &&
+                account.currencies[i].label === currency) {
+                  currency = account.currencies[i].code;
+                  break;
+              }
+            }
+          }
           
           event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});  
       }    
