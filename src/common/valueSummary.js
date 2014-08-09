@@ -47,18 +47,18 @@ var ValueSummary = function (options) {
       'XRP'     : '#346aa9',
       'USD'     : [50,180,80],
       'BTC'     : [220,130,70],
-      'EUR'     : [250,230,50],
-      'CNY'     : [200,40,50],
+      'EUR'     : [220,210,50],
+      'CNY'     : [190,30,40],
       'JPY'     : [140,70,110],
       'CAD'     : [130,100,190],
-      'other'   : [60,60,160]
+      'other'   : [110,100,160]
     };
     var c = colors[currency] || colors.other;
     var rank = d.data.rank - 1;
     if (typeof c !== 'string') {
-      c[0] = parseInt(c[0] * (1+rank*0.35), 10);
-      c[1] = parseInt(c[1] * (1+rank*0.35), 10);
-      c[2] = parseInt(c[2] * (1+rank*0.35), 10);
+      c[0] = parseInt(c[0] * (1+rank*0.25), 10);
+      c[1] = parseInt(c[1] * (1+rank*0.25), 10);
+      c[2] = parseInt(c[2] * (1+rank*0.25), 10);
   
        c = 'rgb('+c[0]+','+c[1]+','+c[2]+')';      
     }
@@ -110,14 +110,6 @@ var ValueSummary = function (options) {
       if (d.currency=='XRP') XRPObj = d;   
       
       d.percent = total ? d.convertedAmount/total*100 : 0.00;
-      
-      //rank based on order of apperance. we could
-      //do by percent, but then the colors would
-      //change between metrics.
-      var c = d.currency || d.base.currency;
-      if (currencies[c]) currencies[c]++;
-      else currencies[c] = 1;
-      d.rank = currencies[c];
     });
     
     //XRP wont be present for trade volume, so add it at 0
@@ -141,10 +133,20 @@ var ValueSummary = function (options) {
     
     //sort by issuer, reversed
     data.sort(function(a, b){
-      var i1 = a.base ? a.base.currency+a.base.issuer : a.currency || "Z"; //make XRP first
-      var i2 = b.base ? b.base.currency+b.base.issuer : b.currency || "Z"; //make XRP first
+      var i1 = a.base ? a.base.currency+a.base.issuer : a.currency+a.issuer || "Z"; //make XRP first
+      var i2 = b.base ? b.base.currency+b.base.issuer : b.currency+b.issuer || "Z"; //make XRP first
       return i2 ? i2.localeCompare(i1) : 0;
     });
+    
+    //rank based on order of apperance. we could
+    //do by percent, but then the colors would
+    //change between metrics.    
+    data.forEach(function(d) {
+      var c = d.currency || d.base.currency;
+      if (currencies[c]) currencies[c]++;
+      else currencies[c] = 1;
+      d.rank = currencies[c];
+    });    
     
     var pie = d3.layout.pie()
         .sort(null)
