@@ -191,14 +191,14 @@ function CapChart(options) {
       return;  
     } 
 
-    var issuers = self.currency=="XRP" ? [""] : currencyDropdown.getIssuers(self.currency);    
+    var issuers = self.currency=="XRP" ? [{currency:"XRP"}] : currencyDropdown.getIssuers(self.currency);    
     for (var i=0; i<issuers.length; i++) {
       loadSendDataHelper(range, issuers[i], issuers.length);
     }       
   }
   
   function loadSendDataHelper(range, c, count) {
-    
+
     //save a scope version of the current currency,
     //as it may change before its loaded.  Also it
     //could be different that c.currency for demmurage
