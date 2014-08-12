@@ -91,7 +91,7 @@ module.exports = {
       'deps/offersExercisedListener.js',
       'deps/onResize.js',
       //'deps/networkGraph/metaqueue.js', // Is this bad because they're not always used?
-      'deps/networkGraph/ledgerqueue.js', //TODO: Choose one queue or the other
+      'deps/networkGraph/ledgerQueue.js', //TODO: Choose one queue or the other
       'deps/networkGraph/semver.js', 
       'deps/networkGraph/socket.io.max.js',
       'deps/networkGraph/topojson.v0.min.js',
