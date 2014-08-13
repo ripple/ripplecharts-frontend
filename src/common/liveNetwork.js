@@ -394,7 +394,7 @@ socket.on('ledger_closed', function(x){
   if (!x.type) {
     x.type = "ledgerClosed";
   }
-  x.timestamp = new Date() / 1000;
+  x.timestamp || (x.timestamp = new Date() / 1000);
   ledgerQueue.enqueueLedger(x);
 });
 socket.on('peer_ledger', function(x){
