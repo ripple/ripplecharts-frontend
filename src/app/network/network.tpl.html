@@ -1,0 +1,151 @@
+<div class="helpWrap" style="margin-left: auto; margin-right: auto; width: 80%">
+  <div class="helpbox" ng-class="{showHelp : showHelp}" style="padding-bottom: 10px">
+    <h5>Live Ripple Network</h5>
+    <p>
+      Each point on the map represents a rippled server connected to the network. Hovering over 
+      a point will show more information about the server. The color of each point indicates 
+      which ledger the server currently matches. These colors correspond to the color of the 
+      ledger numbers scrolling underneath the map. The distance between each ledger is 
+      proportional to the close time of the specific ledger.
+    </p>
+    <p>
+      The lines linking the points on the map represent consensus (i.e. agreement between two 
+      servers about the current ledger).
+    </p>
+    <p>
+      Each circle within the scrolling ledgers represents a new transaction. The circle size
+      corresponds to the transaction size. The types of transactions shown include:
+      <ul>
+        <li><b>Payment</b>: A payment is a transaction in which value is sent from one ripple
+          account to another.</li>
+        <li><b>OfferCreate</b>: An offer to buy or sell one currency for another is created.
+          Effectively a limit order.</li>
+        <li><b>OfferCancel</b>: An offer to buy or sell one currency for another is cancelled.</li>
+        <li><b>TrustSet</b>: A trust line from one account to another is created or deleted.</li>
+        <li><b>other</b>: This is includes all other modifications to the ledger.</li>
+      </ul>
+    </p>
+  </div>    
+</div>
+
+<style>
+@media all and (min-width: 1280px) {
+  #worldandriver {
+    width: calc(100% - 260px);
+  }
+}
+</style>
+
+<div id="main" style="width: calc(100% - 20px);">
+  <div id="worldandriver">
+    <div id="world">
+      <div id="locationdetails">
+        <span class="ipaddress"></span><br/>
+        <span class="rippledversion"></span><br/>
+        ISP: <span class="company"></span><br/>
+        <span class="city"></span>
+      </div>
+      <div id="footnote">Only a portion of rippled servers are shown.</div>
+    </div>
+    <!-- <div style="clear:both;"></div> -->
+    <div id="activity">
+      <div style="width:140px; float:left; line-height:30px; padding-left:10px">
+        <div class="heading">Ledger Activity</div>
+        <div id="riverkey"></div>
+      </div>
+      <div style="width:calc(100% - 150px); float:right; position:relative" id="riverContainer">
+        <svg width=100% height=195 id="river"></svg>
+        <img class="loader" src="assets/images/rippleThrobber.png" style="position:absolute; top:0; left:50%" />
+      </div>
+      <div style="clear:both;"></div>
+    </div>
+  </div>
+	<div id="information">
+		<div class="quarter">
+			<div class="heading">Ledger</div>
+			<div class="datum" title="The time in seconds for the Ripple validators to reach consensus for the most recent ledger.">
+				Last close interval<br/>
+				<span class="number">
+          <span id="lastcloseinterval">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
+			</div>
+			<div class="datum" title="The average time in seconds for the Ripple validators to reach consensus over the last 24 hours">
+				Avg. close interval (24 hours)<br/>
+				<span class="number">
+          <span id="averagecloseinterval">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
+			</div>
+			<div id="barchart" title="The bar chart shows how the most recent ledger close intervals varied from the average close interval. A red bar indicates it took more time for a ledger to close, and a green bar indicates less time."></div>
+		</div>
+		<div class="quarter">
+			<div class="heading">Pathfinding</div>
+			<div class="datum" title="The average time needed to find an efficient path for an exchange between two currencies or asset types on Ripple Trade. Average calculated for the last 24 hours.">
+				Avg. pathfinding time (24 hours)<br/>
+				<span class="number">
+          <span id="pathfindingspeed">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
+			</div>
+      <div class="datum" title="The maximum time needed to find an efficient path for an exchange between two currencies or asset types on Ripple Trade. Maximum calculated for the last 24 hours.">
+				Max. pathfinding time (24 hours)<br/>
+				<span class="number">
+          <span id="pathfindingmax">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
+			</div>
+			<div class="datum" title="The fraction of time the protocol was successfully able to find a path to exchange between two assets when accessed through Ripple Trade. The pie chart to the right visually represents this success rate.">
+				<div style="width:60%; float:left;">
+					% successful<br/>
+					<span class="number">
+            <span id="successfulpathfindpercent">&nbsp;</span><span class="unit">%</span>
+          </span>
+				</div>
+				<div style="width:35%; float:left;">
+					<svg width=50 height=50 id="successpie"></svg>
+				</div>
+				<div style="clear:both"></div>
+			</div>
+		</div>
+    
+    <div id="halfway"></div>
+    
+		<div class="quarter">
+			<div class="heading">Transactions</div>
+			<div class="datum" title="The total number of transactions that closed in the past 24 hours. Transactions include payments, alteration of offers or trust lines, or any other modifications of the ledger.">
+				# of transactions (24 hours)<br/>
+				<span class="number" id="lastdaytransactions"></span>
+			</div>
+			<div class="datum" title="The average time over the past 24 hours that it took to complete a transaction on Ripple Trade.">
+				Avg. transaction time (24 hours)<br/>
+				<span class="number">
+          <span id="transactiontime">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
+			</div>
+			<div class="datum" title="The maximum time over the past 24 hours that it took to complete a transaction on Ripple Trade.">
+				Max. transaction time (24 hours)<br/>
+				<span class="number">
+          <span id="transactionmax">&nbsp;</span>
+          <span class="unit">sec</span>
+        </span>
+			</div>
+		</div>
+		<div class="quarter">
+			<div class="heading">Network</div>
+			<div class="datum" title="Most recent version of rippled connected.">
+				Latest rippled version<br/>
+				<span class="number" id="latestrippledversion">&nbsp;</span>
+			</div>
+			<div class="datum" title="Total number of servers connected.">
+				# of peers connected<br/>
+				<span class="number" id="numberofpeers">&nbsp;</span>
+			</div>
+		</div>
+		<div style="clear:both;"></div>
+	</div>
+  <div style="clear:both;"></div>
+</div>
+<div id="zooming" style="display:none"></div>
+<div style="clear:both;"></div>
