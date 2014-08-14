@@ -119,6 +119,28 @@
         "hotwallets": [
         ],
         "domain": "goldbullioninternational.com"
+    }, {
+        "name": "Lake BTC",
+        "accounts": [{
+            "address": "rpDMez6pm6dBve2TJsmDpv7Yae6V5Pyvy2",
+            "currencies": ["USD"]
+            }],
+        "hotwallets": [
+          "rP9gFJKqKGWdR4n6XjdsUPqmJfXkg4kSgZ"
+        ],
+        "domain": "lakebtc.com"
+    }, {
+        "name": "Ripple Fox",
+        "accounts": [{
+            "address": "rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y",
+            "currencies": ["CNY","STR"]
+            }],
+        "hotwallets": [
+          "rLSnkKvMfPD9abLoQFxQJMYyZqJcsqkL3o",
+          "rPcQaiyDxMwLr7Q9eFmn5VnVx2RN57MUmN",
+          "r3ipidkRUZWq8JYVjnSnNMf3v7o69vgLEW"
+        ],
+        "domain": "ripplefox.com"
     }
     
 ]
