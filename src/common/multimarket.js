@@ -21,8 +21,8 @@ var MiniChart = function(base, counter, markets) {
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
   var height = width/2>150 ? width/2 : 150;
   
-  var baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
-  var counterCurrency = ripple.Currency.from_json(counter.currency).to_human();
+  var baseCurrency    = base    ? ripple.Currency.from_json(base.currency).to_human()    : "XRP";
+  var counterCurrency = counter ? ripple.Currency.from_json(counter.currency).to_human() : "XRP";
   
   if (markets.options.fixed) {
     header = self.div.append("div").attr("class","chartHeader");
