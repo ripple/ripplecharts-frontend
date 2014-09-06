@@ -3,7 +3,7 @@
         "name": "Bitstamp",
         "accounts": [{
             "address": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
-            "currencies": ["AUD", "BTC", "CHF", "EUR", "GBP", "JPY", "USD"],
+            "currencies": ["BTC", "USD"],
             "hotwallets": ["rrpNnNLKrartuEqfJGpqyDwPj1AFPg9vn1"]
             }]
     }, {
@@ -59,7 +59,7 @@
         "name": "Justcoin",
         "accounts": [{
             "address": "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
-            "currencies": ["LTC", "BTC"],
+            "currencies": ["LTC", "BTC", "STR"],
             "hotwallets": []
             }]
     }, {
@@ -141,6 +141,14 @@
           "r3ipidkRUZWq8JYVjnSnNMf3v7o69vgLEW"
         ],
         "domain": "ripplefox.com"
+    }, {
+        "name": "TokyoJPY",
+        "accounts": [{
+            "address": "r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN",
+            "currencies": ["JPY"]
+            }],
+        "hotwallets": [],
+        "domain": "tokyojpy.com"
     }
     
 ]
