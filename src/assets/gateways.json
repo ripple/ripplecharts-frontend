@@ -59,7 +59,7 @@
         "name": "Justcoin",
         "accounts": [{
             "address": "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
-            "currencies": ["LTC", "BTC", "STR"],
+            "currencies": ["LTC", "BTC","STR","EUR","NOK"],
             "hotwallets": []
             }]
     }, {
@@ -149,6 +149,14 @@
             }],
         "hotwallets": [],
         "domain": "tokyojpy.com"
+    }, {
+        "name": "Rippex",
+        "accounts": [{
+            "address": "rfNZPxoZ5Uaamdp339U9dCLWz2T73nZJZH",
+            "currencies": ["BRL"]
+            }],
+        "hotwallets": ["r37FUji17jCgCZvAUc8m5YqXquwHpgwa9q"],
+        "domain": "rippex.net"
     }
     
 ]
