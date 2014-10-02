@@ -18,7 +18,8 @@
     "d3": "~3.3.13",
     "modernizr": "~2.7.1",
     "jquery": "~2.0.3",
-    "jscrollpane": "~2.0.14"
+    "jscrollpane": "~2.0.14",
+    "chartjs": "~0.2.0"
   },
   "resolutions": {
     "angular": "1.2.15"

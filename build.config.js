@@ -85,6 +85,7 @@ module.exports = {
       'vendor/jquery/jquery.js',
       'vendor/jscrollpane/script/jquery.mousewheel.js',
       'vendor/jscrollpane/script/jquery.jscrollpane.js',
+      'vendor/chartjs/Chart.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
       'deps/ripple-0.7.37.js',
