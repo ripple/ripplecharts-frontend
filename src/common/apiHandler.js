@@ -116,7 +116,7 @@ ApiHandler = function (url) {
 		return request;
 	}
 
-	this.historicalMetrics = function(start, end, inc, callback){
+	this.historicalMetrics = function(metric, start, end, inc, callback){
 		var request = apiRequest("historicalMetrics");
 		start = start || new Date();
 		
@@ -124,7 +124,10 @@ ApiHandler = function (url) {
 			startTime     : start,  
 			endTime       : end,
 			timeIncrement : inc,
-			metric : "topMarkets"
+			metric: metric,
+			//metric : "topMarkets",
+			//metric : "totalValueSent",
+			exchange: {currency: "USD", issuer: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
 			
 		})).on('load', function(xhr){   
 			data  = JSON.parse(xhr.response);
@@ -195,3 +198,4 @@ ApiHandler = function (url) {
 		return request;    
 	}
 }
+

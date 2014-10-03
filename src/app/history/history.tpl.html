@@ -1,5 +1,16 @@
 <div class="history">
-  <canvas id="canvas" height="585" width="1170" style="width: 1170px; height: 585px;"></canvas>
+  <div class="interval">
+    <label class = "range"> Range: </label>
+    <input type="text" class="submit" value="15">
+    <div class = "months"> Months </div>
+    <div class = "days"> Days </div>
+    <button class = "go"> Go </button>
+  </div>
+ <div class="chart_wrapepr">
+    <canvas id="canvas"></canvas>
+    <div class="col-md-12 loader_wrapper hidden-xs">Loading  <img class="throbber loader" src="https://54.183.161.14/wp-content/themes/ripple-beta/assets/img/rippleThrobber.png">  Charts...</div>
+    <div id="lineLegend"></div>
+  </div>
 </div>
 <style>
   footer .footerInner {
