@@ -10,6 +10,10 @@ var TotalHistory = function (options) {
 	var metric = "topMarkets";
 	//var metric = "totalValueSent";
 
+	//Initial draw
+	getData(draw);
+
+	//Hard coded colors
 	var colors = [
 		"rgba(86,152,196,0.8)",
 		"rgba(226,121,163,0.8)",
@@ -34,7 +38,7 @@ var TotalHistory = function (options) {
 		"rgba(81,87,74,0.8)"
 	];
 
-	//chart data
+	//Get chart data
 	function getData(callback) {
 		combos = {};
 
@@ -48,51 +52,61 @@ var TotalHistory = function (options) {
 			datasets : []
 		};
 
+		//Define start and end dates
 		var end = moment().subtract(n, inc).format('YYYY-MM-DD');
 		var start = moment().format("YYYY-MM-DD");
 
 		combos.total = Array.apply(null, new Array(n)).map(Number.prototype.valueOf,0);
 
+		//Api call for data
 		basisRequest = apiHandler.historicalMetrics(metric, start, end, inc ,function(err, data) {
+			//Err
 			if (err) {console.log(err);}
 			else{
-				var resultsArray = data;
-					
-				//console.log(resultsArray);
-
-				jQuery.each(resultsArray, function(i, value) {
 				
-						var startTime = value.startTime.split('T');
-						var startTimeSplit = startTime[0];
-						dateData1.push(startTimeSplit);	
-					
-						var key;
+				var resultsArray = data;
+				
+				//Loop through each increment
+				jQuery.each(resultsArray, function(i, value) {
+	
+					var key;
+					var startTime = value.startTime.split('T');
+					var startTimeSplit = startTime[0];
+					dateData1.push(startTimeSplit);
 
+					//Loop through each component in each increment
 					jQuery.each (value.components, function(j, component) {
 
+						//Depending on which data, parse accordingly
 						if (metric === "totalValueSent"){
 							key = component.currency + '-' + component.issuer;
 						}
 						else if (metric === "topMarkets"){
 							key = component.base.currency + '-' + component.base.issuer;
 						} 
-					
+						
+						//Check if currency-issuer combo exists
+						//If it does add converted ammount to 'i'th entry
 						if(combos.hasOwnProperty(key)){
 							combos[key][i] += component.convertedAmount;
 						}
+						//If it doesnt, initialize array of size n and initial values of 0
+						//Add converted ammount to 'i'th array
 						else{
 							combos[key] = Array.apply(null, new Array(n)).map(Number.prototype.valueOf,0);
+							combos[key][i] += component.convertedAmount;
 						}
-
+						//Add converted amount to total
 						combos.total[i] += component.convertedAmount;
 					
 					});
 			
 				});
+
 				console.log(combos);
 				var cc = 0;
+				//Create an object to be passed ot chart.js
 				jQuery.each(combos, function( key, value ) {
-
 					entry = {};
 					entry.label = key;
 					entry.fillColor = colors[cc];
@@ -110,17 +124,17 @@ var TotalHistory = function (options) {
 				callback(lineChartData);
 			}
 		});
-		console.log("done:", lineChartData);
 	}
 
 
-	//chart settings
+	//Set chart settings
 	function draw(chartData) {
 		var ctx = document.getElementById("canvas").getContext("2d");
+		//Set size of canvas. FIX.
 		ctx.canvas.width  = window.innerWidth - 200;
 	  	ctx.canvas.height = window.innerHeight -200;
 		
-		window.myLine = new Chart(ctx).Line(chartData, {
+		var myLine = new Chart(ctx).Line(chartData, {
 				responsive: true,
 				scaleShowGridLines : false,
 				bezierCurveTension : 0.2,
@@ -146,37 +160,48 @@ var TotalHistory = function (options) {
 						  +'</ul>'		
 		});
 
+		console.log(myLine);
+
 		//add a legend
 		//var legend = myLine.generateLegend();
 		//$('#lineLegend').html(legend);
 
-		console.log(myLine);
-
 	}
-	
-	getData(draw);
 
+	//Restrict to integers
+	jQuery('.submit').keyup(function () { 
+    	this.value = this.value.replace(/[^0-9\.]/g,'');
+	});
+
+	//Switch interval to days
 	$('.interval').on('click', '.days',  function(e) {
 		e.preventDefault();
 		if (inc === 'month'){
 			jQuery('.days').css("fontWeight", "bold");
+			jQuery('.days').css("border-bottom", "3px solid");
+			jQuery('.days').css("color", "#3369a8");
 			jQuery('.months').css("fontWeight", "normal");
+			jQuery('.months').css("border-bottom", "0px solid");
+			jQuery('.months').css("color", "black");
 			inc = 'day';
-			console.log(inc);
 		}
 	});
 
+	//Switch interval to months
 	$('.interval').on('click', '.months',  function(e) {
 		e.preventDefault();
 		if (inc === 'day'){
 			jQuery('.days').css("fontWeight", "normal");
+			jQuery('.days').css("border-bottom", "0px solid");
+			jQuery('.days').css("color", "black");
 			jQuery('.months').css("fontWeight", "bold");
+			jQuery('.months').css("border-bottom", "3px solid");
+			jQuery('.months').css("color", "#3369a8");
 			inc = 'month';
-			console.log(inc);
 		}
 	});
 
-
+	//Reload days
 	$('.interval').on('click', '.go',  function(e) {
 		e.preventDefault();
 		val = jQuery('.submit').val()
