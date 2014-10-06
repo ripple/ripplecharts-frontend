@@ -5,13 +5,13 @@ var TotalHistory = function (options) {
 	var request, basisRequest;
 
 	//Initial parameters
-	var n = 15;
+	var interval = 15;
 	var inc = 'day';
 	var metric = "topMarkets";
 	//var metric = "totalValueSent";
 
 	//Initial draw
-	getData(draw);
+	getData(draw, inc, interval, metric, 5);
 
 	//Hard coded colors
 	var colors = [
@@ -39,7 +39,7 @@ var TotalHistory = function (options) {
 	];
 
 	//Get chart data
-	function getData(callback) {
+	function getData(callback, inc, interval, metric) {
 		combos = {};
 
 		//data points
@@ -53,10 +53,10 @@ var TotalHistory = function (options) {
 		};
 
 		//Define start and end dates
-		var end = moment().subtract(n, inc).format('YYYY-MM-DD');
+		var end = moment().subtract(interval, inc).format('YYYY-MM-DD');
 		var start = moment().format("YYYY-MM-DD");
 
-		combos.total = Array.apply(null, new Array(n)).map(Number.prototype.valueOf,0);
+		combos.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
 
 		//Api call for data
 		basisRequest = apiHandler.historicalMetrics(metric, start, end, inc ,function(err, data) {
@@ -84,7 +84,6 @@ var TotalHistory = function (options) {
 						else if (metric === "topMarkets"){
 							key = component.base.currency + '-' + component.base.issuer;
 						} 
-						
 						//Check if currency-issuer combo exists
 						//If it does add converted ammount to 'i'th entry
 						if(combos.hasOwnProperty(key)){
@@ -93,7 +92,7 @@ var TotalHistory = function (options) {
 						//If it doesnt, initialize array of size n and initial values of 0
 						//Add converted ammount to 'i'th array
 						else{
-							combos[key] = Array.apply(null, new Array(n)).map(Number.prototype.valueOf,0);
+							combos[key] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
 							combos[key][i] += component.convertedAmount;
 						}
 						//Add converted amount to total
@@ -129,38 +128,28 @@ var TotalHistory = function (options) {
 
 	//Set chart settings
 	function draw(chartData) {
-		var ctx = document.getElementById("canvas").getContext("2d");
+		var ctx = jQuery("#canvas").get(0).getContext("2d");
 		//Set size of canvas. FIX.
 		ctx.canvas.width  = window.innerWidth - 200;
 	  	ctx.canvas.height = window.innerHeight -200;
 		
-		var myLine = new Chart(ctx).Line(chartData, {
-				responsive: true,
-				scaleShowGridLines : false,
-				bezierCurveTension : 0.2,
-				pointDotRadius : 1,
-				animationSteps: 100,
-				multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>",
-				tooltipFillColor: "rgba(0,0,0,1.0)",
-				tooltipFontSize: 18,
-				tooltipYPadding: 20,
-				scaleOverride: true,
-				scaleSteps: 10,
-				scaleStepWidth: 70000,
-				scaleStartValue: 0,
-				tooltipXPadding: 20,
-				showTooltips: false,
-				legendTemplate : '<ul class="legend">'
-							  +'<% for (var i=0; i<datasets.length; i++) { %>'
-								+'<a href="#"><li class="<%= datasets[i].label %>">'
-								+'<span style=\"background-color:<%=datasets[i].fillColor%>\">'
-								+'<% if (datasets[i].label) { %><%= datasets[i].label %><% } %></span>'
-							  +'</li></a>'
-							+'<% } %>'
-						  +'</ul>'		
-		});
+		var options = {
+			responsive: true,
+			scaleShowGridLines : false,
+			pointDotRadius : 1,
+			animationSteps: 100,
+			multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>",
+			tooltipFillColor: "rgba(0,0,0,1.0)",
+			tooltipFontSize: 18,
+			tooltipYPadding: 20,
+			tooltipXPadding: 20,
+			showTooltips: false	
+		}; 
+
+		var myLine = new Chart(ctx).Line(chartData, options);
 
 		console.log(myLine);
+		myLine.update();
 
 		//add a legend
 		//var legend = myLine.generateLegend();
@@ -201,12 +190,12 @@ var TotalHistory = function (options) {
 		}
 	});
 
-	//Reload days
+	//Reload
 	$('.interval').on('click', '.go',  function(e) {
 		e.preventDefault();
 		val = jQuery('.submit').val()
-		n = parseInt(val, 10);
-		getData(draw);
+		interval = parseInt(val, 10);
+		getData(draw, inc, interval, metric);
 	});
 
 	
