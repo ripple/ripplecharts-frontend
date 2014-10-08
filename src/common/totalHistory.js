@@ -11,7 +11,7 @@ var TotalHistory = function (options) {
 	//var metric = "totalValueSent";
 
 	//Initial draw
-	getData(draw, inc, interval, metric, 5);
+	getData(draw, inc, interval, metric);
 
 	//Hard coded colors
 	var colors = [
@@ -40,7 +40,7 @@ var TotalHistory = function (options) {
 
 	//Get chart data
 	function getData(callback, inc, interval, metric) {
-		combos = {};
+		pairs = {};
 
 		//data points
 		var dataSet1 = []; //first graph y-axis line points
@@ -56,16 +56,14 @@ var TotalHistory = function (options) {
 		var end = moment().subtract(interval, inc).format('YYYY-MM-DD');
 		var start = moment().format("YYYY-MM-DD");
 
-		combos.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
+		pairs.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
 
 		//Api call for data
 		basisRequest = apiHandler.historicalMetrics(metric, start, end, inc ,function(err, data) {
 			//Err
 			if (err) {console.log(err);}
 			else{
-				
 				var resultsArray = data;
-				
 				//Loop through each increment
 				jQuery.each(resultsArray, function(i, value) {
 	
@@ -86,40 +84,38 @@ var TotalHistory = function (options) {
 						} 
 						//Check if currency-issuer combo exists
 						//If it does add converted ammount to 'i'th entry
-						if(combos.hasOwnProperty(key)){
-							combos[key][i] += component.convertedAmount;
+						if(pairs.hasOwnProperty(key)){
+							pairs[key][i] += component.convertedAmount;
 						}
 						//If it doesnt, initialize array of size n and initial values of 0
 						//Add converted ammount to 'i'th array
 						else{
-							combos[key] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
-							combos[key][i] += component.convertedAmount;
+							pairs[key] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
+							pairs[key][i] += component.convertedAmount;
 						}
 						//Add converted amount to total
-						combos.total[i] += component.convertedAmount;
+						pairs.total[i] += component.convertedAmount;
 					
 					});
 			
 				});
-
-				console.log(combos);
 				var cc = 0;
 				//Create an object to be passed ot chart.js
-				jQuery.each(combos, function( key, value ) {
-					entry = {};
-					entry.label = key;
-					entry.fillColor = colors[cc];
-					entry.strokeColor = "rgba(220,220,220,.5)";
-					entry.pointColor = "rgba(220,220,220,1)";
-					entry.pointStrokeColor = "#fff";
-					entry.pointHighlightFill = "#fff";
-					entry.pointHighlightStroke = "#fff";
-					entry.data = value;
+				jQuery.each(pairs, function( key, value ) {
+					entry = {
+						label : key,
+						fillColor : colors[cc],
+						strokeColor : "rgba(220,220,220,.5)",
+						pointColor : "rgba(220,220,220,1)",
+						pointStrokeColor : "#fff",
+						pointHighlightFill : "#fff",
+						pointHighlightStroke : "#fff",
+						data : value
+					};
 					lineChartData.datasets.push(entry);
 					cc += 1;
 					jQuery('.loader_wrapper').remove();
 				});
-
 				callback(lineChartData);
 			}
 		});
@@ -129,32 +125,13 @@ var TotalHistory = function (options) {
 	//Set chart settings
 	function draw(chartData) {
 		var ctx = jQuery("#canvas").get(0).getContext("2d");
-		//Set size of canvas. FIX.
-		ctx.canvas.width  = window.innerWidth - 200;
-	  	ctx.canvas.height = window.innerHeight -200;
-		
 		var options = {
 			responsive: true,
 			scaleShowGridLines : false,
 			pointDotRadius : 1,
-			animationSteps: 100,
-			multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>",
-			tooltipFillColor: "rgba(0,0,0,1.0)",
-			tooltipFontSize: 18,
-			tooltipYPadding: 20,
-			tooltipXPadding: 20,
-			showTooltips: false	
+			animationSteps: 1
 		}; 
-
-		var myLine = new Chart(ctx).Line(chartData, options);
-
-		console.log(myLine);
-		myLine.update();
-
-		//add a legend
-		//var legend = myLine.generateLegend();
-		//$('#lineLegend').html(legend);
-
+		window.myLine = new Chart(ctx).Line(chartData, options);
 	}
 
 	//Restrict to integers
@@ -165,6 +142,7 @@ var TotalHistory = function (options) {
 	//Switch interval to days
 	$('.interval').on('click', '.days',  function(e) {
 		e.preventDefault();
+		myLine.destroy();
 		if (inc === 'month'){
 			jQuery('.days').css("fontWeight", "bold");
 			jQuery('.days').css("border-bottom", "3px solid");
@@ -174,11 +152,15 @@ var TotalHistory = function (options) {
 			jQuery('.months').css("color", "black");
 			inc = 'day';
 		}
+		val = jQuery('.submit').val()
+		interval = parseInt(val, 10);
+		getData(draw, inc, interval, metric);
 	});
 
 	//Switch interval to months
 	$('.interval').on('click', '.months',  function(e) {
 		e.preventDefault();
+		myLine.destroy();
 		if (inc === 'day'){
 			jQuery('.days').css("fontWeight", "normal");
 			jQuery('.days').css("border-bottom", "0px solid");
@@ -188,15 +170,9 @@ var TotalHistory = function (options) {
 			jQuery('.months').css("color", "#3369a8");
 			inc = 'month';
 		}
-	});
-
-	//Reload
-	$('.interval').on('click', '.go',  function(e) {
-		e.preventDefault();
 		val = jQuery('.submit').val()
 		interval = parseInt(val, 10);
 		getData(draw, inc, interval, metric);
 	});
-
 	
 }

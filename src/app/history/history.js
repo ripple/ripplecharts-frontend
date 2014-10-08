@@ -20,7 +20,7 @@ angular.module( 'ripplecharts.history', [
 
   var history = new TotalHistory({
     url    : API,
-    id     : 'totalAccounts',
+    id     : 'totalHistory',
     resize : true
   });
   
