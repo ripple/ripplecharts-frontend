@@ -5,13 +5,16 @@ var TotalHistory = function (options) {
 	var request, basisRequest;
 
 	//Initial parameters
-	var interval = 15;
 	var inc = 'day';
 	var metric = "topMarkets";
 	//var metric = "totalValueSent";
+	//Define start and end dates
+	var end = moment().subtract(15, inc).format('YYYY-MM-DD');
+	var start = moment().format("YYYY-MM-DD");
+
 
 	//Initial draw
-	getData(draw, inc, interval, metric);
+	getData(draw, inc, start, end, metric);
 
 	//Hard coded colors
 	var colors = [
@@ -39,8 +42,11 @@ var TotalHistory = function (options) {
 	];
 
 	//Get chart data
-	function getData(callback, inc, interval, metric) {
+	function getData(callback, inc, start, end, metric) {
 		pairs = {};
+
+		interval = diff(inc, start, end);
+		console.log(interval);
 
 		//data points
 		var dataSet1 = []; //first graph y-axis line points
@@ -52,10 +58,6 @@ var TotalHistory = function (options) {
 			datasets : []
 		};
 
-		//Define start and end dates
-		var end = moment().subtract(interval, inc).format('YYYY-MM-DD');
-		var start = moment().format("YYYY-MM-DD");
-
 		pairs.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
 
 		//Api call for data
@@ -65,7 +67,7 @@ var TotalHistory = function (options) {
 			else{
 				var resultsArray = data;
 				//Loop through each increment
-				jQuery.each(resultsArray, function(i, value) {
+				$.each(resultsArray, function(i, value) {
 	
 					var key;
 					var startTime = value.startTime.split('T');
@@ -73,7 +75,7 @@ var TotalHistory = function (options) {
 					dateData1.push(startTimeSplit);
 
 					//Loop through each component in each increment
-					jQuery.each (value.components, function(j, component) {
+					$.each (value.components, function(j, component) {
 
 						//Depending on which data, parse accordingly
 						if (metric === "totalValueSent"){
@@ -101,7 +103,7 @@ var TotalHistory = function (options) {
 				});
 				var cc = 0;
 				//Create an object to be passed ot chart.js
-				jQuery.each(pairs, function( key, value ) {
+				$.each(pairs, function( key, value ) {
 					entry = {
 						label : key,
 						fillColor : colors[cc],
@@ -114,7 +116,7 @@ var TotalHistory = function (options) {
 					};
 					lineChartData.datasets.push(entry);
 					cc += 1;
-					jQuery('.loader_wrapper').remove();
+					$('.loader_wrapper').remove();
 				});
 				callback(lineChartData);
 			}
@@ -124,55 +126,134 @@ var TotalHistory = function (options) {
 
 	//Set chart settings
 	function draw(chartData) {
-		var ctx = jQuery("#canvas").get(0).getContext("2d");
+		var ctx = $("#canvas").get(0).getContext("2d");
 		var options = {
 			responsive: true,
 			scaleShowGridLines : false,
 			pointDotRadius : 1,
-			animationSteps: 1
-		}; 
+			animationSteps: 1,
+			legendTemplate : '<ul class="legend">'
+							  +'<% for (var i=0; i<datasets.length; i++) { %>'
+								+'<span class="label" id="<%= datasets[i].label %>" style=\"background-color:<%=datasets[i].fillColor%>\">'
+								+'<% if (datasets[i].label) { %><%= datasets[i].label.substring(0, 3) %><% } %></span>'
+							  +'</li></a>'
+							+'<% } %>'
+						  +'</ul>'	
+		};
+		//add a legen
 		window.myLine = new Chart(ctx).Line(chartData, options);
+		var legend = myLine.generateLegend();
+		$('#lineLegend').html(legend); 
 	}
 
-	//Restrict to integers
-	jQuery('.submit').keyup(function () { 
-    	this.value = this.value.replace(/[^0-9\.]/g,'');
+	$('#lineLegend').on('click', '.label',  function(e) {
+		e.preventDefault();
+		var id = $(this).attr('id');
+		$.each( myLine.datasets, function( index, value ){
+			value.fillColor = colors[index];
+			if (value.label !== id){
+				value.fillColor = "rgba(0,0,0,0)";
+			}
+		});
+		myLine.update();
 	});
 
 	//Switch interval to days
 	$('.interval').on('click', '.days',  function(e) {
 		e.preventDefault();
-		myLine.destroy();
 		if (inc === 'month'){
-			jQuery('.days').css("fontWeight", "bold");
-			jQuery('.days').css("border-bottom", "3px solid");
-			jQuery('.days').css("color", "#3369a8");
-			jQuery('.months').css("fontWeight", "normal");
-			jQuery('.months').css("border-bottom", "0px solid");
-			jQuery('.months').css("color", "black");
+			$('.days').css("fontWeight", "bold");
+			$('.days').css("border-bottom", "3px solid");
+			$('.days').css("color", "#3369a8");
+			$('.months').css("fontWeight", "normal");
+			$('.months').css("border-bottom", "0px solid");
+			$('.months').css("color", "black");
 			inc = 'day';
+			myLine.destroy();
+			getData(draw, inc, start, end, metric);
 		}
-		val = jQuery('.submit').val()
-		interval = parseInt(val, 10);
-		getData(draw, inc, interval, metric);
 	});
 
 	//Switch interval to months
 	$('.interval').on('click', '.months',  function(e) {
 		e.preventDefault();
-		myLine.destroy();
 		if (inc === 'day'){
-			jQuery('.days').css("fontWeight", "normal");
-			jQuery('.days').css("border-bottom", "0px solid");
-			jQuery('.days').css("color", "black");
-			jQuery('.months').css("fontWeight", "bold");
-			jQuery('.months').css("border-bottom", "3px solid");
-			jQuery('.months').css("color", "#3369a8");
+			$('.days').css("fontWeight", "normal");
+			$('.days').css("border-bottom", "0px solid");
+			$('.days').css("color", "black");
+			$('.months').css("fontWeight", "bold");
+			$('.months').css("border-bottom", "3px solid");
+			$('.months').css("color", "#3369a8");
 			inc = 'month';
+			myLine.destroy();
+			getData(draw, inc, start, end, metric);
 		}
-		val = jQuery('.submit').val()
-		interval = parseInt(val, 10);
-		getData(draw, inc, interval, metric);
 	});
-	
+
+	$('.options').on("change", "#chart_type", function(e){
+		e.preventDefault();
+		myLine.destroy();
+		type = $('#chart_type').val();
+		metric = type;
+		getData(draw, inc, start, end, metric);
+	});
+
+	$( "#datepicker_to" ).datepicker({
+		maxDate: "+0d",
+		setDate: "1/1/2012",
+		onSelect: function(dateText) {
+			var limit;
+			start = moment(dateText).format("YYYY-MM-DD");
+			if (inc === "month"){
+				limit = moment(dateText);
+				limit.subtract(2, 'months');
+			}
+			else if (inc === "day"){
+				limit = moment(dateText);
+				limit.add(1, 'd');
+			}
+			f_limit = moment(limit).format("MM/DD/YYYY");
+			console.log('limit', f_limit);
+			$( "#datepicker_from" ).datepicker( "option", "maxDate", f_limit );
+			myLine.destroy();
+			console.log(start);
+			getData(draw, inc, start, end, metric);
+		}
+	});
+
+	$( "#datepicker_from" ).datepicker({
+		maxDate: "+0d",
+		setDate: "1/1/2012",
+		onSelect: function(dateText) {
+			var limit;
+			end = moment(dateText).format("YYYY-MM-DD");
+			if (inc === "month"){
+				limit = moment(dateText);
+				limit.add(2, 'months');
+			}
+			else if (inc === "day"){
+				limit = moment(dateText);
+				limit.add(1, 'd');
+			}
+			f_limit = moment(limit).format("MM/DD/YYYY");
+			console.log('limit', f_limit);
+			$( "#datepicker_to" ).datepicker( "option", "minDate", f_limit );
+			myLine.destroy();
+			console.log(end);
+			getData(draw, inc, start, end, metric);
+		}
+	});
+
+	function diff(inc, start, end){
+		var date1 = moment(start);
+		var date2 = moment(end);
+		if (inc === "day"){
+			unit = "days";
+		}
+		else if (inc === "month"){
+			unit = "months";
+		}
+		difference = date1.diff(date2, unit);
+		return difference;
+	}
 }

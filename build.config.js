@@ -83,6 +83,7 @@ module.exports = {
       'vendor/modernizr/modernizr.js',
       'vendor/d3/d3.js',
       'vendor/jquery/jquery.js',
+      'vendor/jquery-ui/jquery-ui.js',
       'vendor/jscrollpane/script/jquery.mousewheel.js',
       'vendor/jscrollpane/script/jquery.jscrollpane.js',
       'vendor/chartjs/Chart.js',

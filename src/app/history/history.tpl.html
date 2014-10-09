@@ -1,10 +1,23 @@
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
 <div class="history">
-	<div class="interval">
-		<label class = "range"> Range: </label>
-		<input type="text" class="submit" value="15">
-		<div class = "months"> Months </div>
-		<div class = "days"> Days </div>
+
+	<div class="control">
+		<div class="interval">
+			<input type="text" id="datepicker_from" value="From">
+			<input type="text" id="datepicker_to" value="To">
+			<div class = "months"> Months </div>
+			<div class = "days"> Days </div>
+		</div>
+		<div class="options">
+			<select id="chart_type">
+				<option value="topMarkets">Top Markets</option>
+				<option value="totalValueSent">Total Value Sent</option>
+			</select>
+		</div>
 	</div>
+
+
+
  <div class="chart_wrapper">
  		<div class="col-md-12 loader_wrapper hidden-xs">Loading  <img class="throbber loader" src="https://54.183.161.14/wp-content/themes/ripple-beta/assets/img/rippleThrobber.png">  Charts...</div>
 		<canvas id="canvas"></canvas>

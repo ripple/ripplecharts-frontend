@@ -9,7 +9,7 @@
     "angular-bootstrap": "~0.11.0",
     "angular-ui-utils": "0.0.3",
     "angular-ui-router": "~0.0.1",
-    "moment": "",
+    "moment": "2.8",
     "underscore": "",
     "store": "",
     "angular-touch": "~1.2.6",
