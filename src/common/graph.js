@@ -264,9 +264,12 @@ function handleLines(err, obj) {
 }
 
 function handleTransaction(obj) {
-  $("#transactionFeedTable").prepend(renderTransaction(obj.transaction));
+  var tx  = obj.transaction;
+  tx.meta = obj.meta;
+  
+  $("#transactxtionFeedTable").prepend(renderTransaction(tx));
   if (obj.transaction.TransactionType == "Payment") {
-    animateTransaction(obj.transaction);
+    animateTransaction(tx);
   }
 }
 
@@ -412,7 +415,7 @@ function enterTransactionMode(tx) {
     txx = tx;
     $("#transactionInformation").html(txDescription(tx));
     var currency;
-    var amount = tx.Amount ? tx.Amount : tx.LimitAmount;
+    var amount = tx.meta.DeliveredAmount || tx.Amount || tx.LimitAmount;
     if (amount.currency) {
       currency = amount.currency;
     } else {
@@ -529,7 +532,7 @@ function renderTransaction(tx) {
   var secondAmount = null;
   var secondCurrency = null;
   if (tx.TransactionType == "Payment") {
-    amount = tx.Amount ? tx.Amount : tx.LimitAmount;
+    amount = tx.meta.DeliveredAmount || tx.Amount || tx.LimitAmount;
     transactionType = "send";
     to = tx.Destination;
   } else if (tx.TransactionType == "TrustSet") {
@@ -620,18 +623,18 @@ function txDescription(result) {
     }
   }
   
-  var div = $('<div/>');
-  
-  if (result.Amount) {
+  var div    = $('<div/>');
+  var amount = result.meta.DeliveredAmount || result.Amount;
+  if (amount) {
     var span = $("<span class='amount'/>");
-    span.html(result.Amount.currency ? commas(result.Amount.value)+" "+result.Amount.currency : commas(result.Amount/1000000)+" XRP");
+    span.html(amount.currency ? commas(amount.value)+" "+amount.currency : commas(amount/1000000)+" XRP");
 
     div.append("<b>Amount:</b>")
       .append(span)
       .append("<br/>");
       
-    if (result.Amount.issuer) div.append("<b>Issuer:</b>")
-      .append(clickableAccountSpan(result.Amount.issuer))
+    if (amount.issuer) div.append("<b>Issuer:</b>")
+      .append(clickableAccountSpan(amount.issuer))
       .append("<br/>");
   }
   
@@ -678,44 +681,7 @@ function txDescription(result) {
     "<b>Signing key:</b> <tt>"+result.SigningPubKey+
     "</tt><br/><b>Signature:</b><br/><div class='bigString' style='width:"+result.TxnSignature.length*4+"px;'>"+result.TxnSignature+"</div>");  
    
-  return div;
-  
-/*    
-  var output = (result.Amount?"<b>Amount:</b> <span class='amount'>"+
-    (result.Amount.currency ? commas(result.Amount.value)+" "+result.Amount.currency : commas(result.Amount/1000000)+" XRP")+"</span><br/>"+
-    (result.Amount.issuer ? "<b>Issuer:</b> "+clickableAccountSpan(result.Amount.issuer)+"<br/>" : ""):"")+
-    "<b>Path:</b><ul>"+
-    (function(){
-      var output = "";
-      if (result.Paths) {
-        for (var i=0; i<result.Paths.length; i++) {
-          var listItem = "<li>"+clickableAccountSpan(result.Account) + " &rarr; ";
-          for (var j=0; j<result.Paths[i].length; j++) {
-            if (result.Paths[i][j].account) {
-              listItem += clickableAccountSpan(result.Paths[i][j].account) + " &rarr; ";
-            }
-          }
-          listItem += (clickableAccountSpan(result.Destination) + "</li>");
-          output += listItem;
-        }
-      } else {
-        output += ("<li>"+clickableAccountSpan(result.Account)+ " &rarr; "+clickableAccountSpan(result.Destination)+"</li>");
-      }
-      return output;
-    })()+
-    "</ul>"+
-    (result.meta ? "<b>Result:</b> "+(result.meta.TransactionResult=="tesSUCCESS"?"<span>":"<span style='color:#900;'>")+result.meta.TransactionResult+"</span><br/>" : "")+
-    (xrpExpense||xrpExpense===0 ? "<b>XRP change:</b> "+commas(xrpExpense.before) + " XRP &rarr; "+commas(xrpExpense.after)+" XRP ("+(xrpExpense.after>=xrpExpense.before?"+":"&ndash;")+commas(Math.round(1000000*Math.abs(xrpExpense.before-xrpExpense.after))/1000000)+" XRP)<br/>" : "")+
-    (result.date ? "<b>Date:</b> "+absoluteDateOnly(result.date)+" "+absoluteTimeOnly(result.date)+"<br/>" : "")+
-    (result.InvoiceID ? "<b>Invoice ID:</b> <tt>"+result.InvoiceID+"</tt><br/>" : "")+
-    (result.DestinationTag ? "<b>Destination tag:</b> "+result.DestinationTag+"<br/>" : "")+
-    "<b>Hash:</b> <tt>"+result.hash+"</tt><br/>"+
-    (result.inLedger ? "<b>Ledger:</b> "+result.inLedger+"<br/>" : "")+
-    "<b>Signing key:</b> <tt>"+result.SigningPubKey+
-    "</tt><br/><b>Signature:</b><br/><div class='bigString' style='width:"+result.TxnSignature.length*4+"px;'>"+result.TxnSignature+"</div>";
-    
-  return output;
-*/  
+  return div;  
 }
 
 
@@ -1238,7 +1204,7 @@ function animateLink(onOrOff, speed, from, to, cur, callback) {
 
 function animateTransaction(tx) {
   var initialCur, finalCur, pathList;
-  var amount = tx.Amount ? tx.Amount : tx.LimitAmount;
+  var amount = tx.meta.DeliveredAmount || tx.Amount;
 
   if (tx.SendMax && tx.SendMax.currency) {
     initialCur = tx.SendMax.currency;
@@ -1637,7 +1603,7 @@ function updateTransactions(address, appending) {
       var secondAissuer = null;
 
       if (tx.TransactionType == "Payment") {
-        amount = tx.Amount;
+        amount = meta.DeliveredAmount || tx.Amount;
         if (tx.Account == address) {
           transactionType = "send";
           counterparty = tx.Destination;
@@ -1796,21 +1762,6 @@ function updateTransactions(address, appending) {
         
       tr.append(td);  
       $('#transactionTable').append(tr);
-/*      
-      $('#transactionTable').append(
-        '<tr hash="'+tx.hash+'">'+
-          '<td style="width:10%;"><div '+(transactionType=='send'||transactionType=='receive'||transactionType=='intermediate'?'oncontextmenu="animateInPlaceWithHash(\''+tx.hash+'\');return false;" onclick="showTransactionWithHash(\''+tx.hash+'\');"':'style="cursor:default;"')+' class="'+transactionType+success+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div></td>'+
-          '<td style="width:90%"'+(counterparty==""?' colspan="1"':'')+'><span style="float:left"><span '+(aissuer&&!(transactionType=='trustin'||transactionType=='trustout')?'title="'+aissuer+'"':'')+'>'+(amount?('<span class="bold amount small" >'+commas(amount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+currency+'</span></span>'+
-          (secondAmount?' <i class="light small darkgray" style="margin-right:5px">for</i> <span '+(secondAissuer&&!(transactionType=='trustin'||transactionType=='trustout')?'title="'+secondAissuer+'"':'')+'><span class="bold amount small">'+commas(secondAmount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+secondCurrency+'</span></span>':'')):'')+
-          agoDate(tx.date)+'</span>'+
-          (counterparty!=""?'<span style="display:block; margin-top:3px; overflow:hidden; text-overflow:ellipsis;" class="light address right"><span style="cursor:pointer;" '+
-              'onmouseover="lightenAddress(\''+counterparty+'\');"'+
-              'onmouseout="darkenAddress(\''+counterparty+'\');"'+
-              'onclick="expandNode(\''+counterparty+'\');">'+//"HASH:"+tx.hash+
-              counterparty+'</span></span></td>' : '')+
-          //'<td class="marginalcell"/>'+
-        '</tr>');
-*/
     }
     
     if (!nodes[nodeMap[address]].transactionsFinished) { //Are there more?
