@@ -659,7 +659,8 @@ module.exports = function ( grunt ) {
    * before watching for changes.
    */
   grunt.renameTask( 'watch', 'delta' );
-  grunt.registerTask( 'watch', [ 'build', 'karma:unit:start', 'delta' ] );
+  grunt.registerTask( 'watch', [ 'build', 'delta' ] );
+  //grunt.registerTask( 'watch', [ 'build', 'karma:unit:start', 'delta' ] );
 
   /**
    * The default task is to build and compile.
@@ -674,7 +675,7 @@ module.exports = function ( grunt ) {
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets', 'copy:build_vendor_fonts',
     'copy:build_appjs', 'copy:build_vendorjs',   'copy:build_maintenance', 
     'index:build',      'embed:build_css',       'embed:build',           
-    'karmaconfig',      'karma:continuous' 
+    'karmaconfig'//, 'karma:continuous'
   ]);
 
   /**
