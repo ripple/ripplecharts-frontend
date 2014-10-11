@@ -45,20 +45,20 @@ var ValueSummary = function (options) {
     
     var colors = {
       'XRP'     : '#346aa9',
-      'USD'     : [50,180,80],
-      'BTC'     : [220,130,70],
+      'USD'     : [20,150,30],
+      'BTC'     : [240,150,50],
       'EUR'     : [220,210,50],
-      'CNY'     : [190,30,40],
-      'JPY'     : [140,70,110],
+      'CNY'     : [180,30,35],
+      'JPY'     : [140,80,170],
       'CAD'     : [130,100,190],
       'other'   : [110,100,160]
     };
     var c = colors[currency] || colors.other;
     var rank = d.data.rank - 1;
     if (typeof c !== 'string') {
-      c[0] = parseInt(c[0] * (1+rank*0.25), 10);
-      c[1] = parseInt(c[1] * (1+rank*0.25), 10);
-      c[2] = parseInt(c[2] * (1+rank*0.25), 10);
+      c[0] -= Math.floor(c[0] * (rank%3*0.1));
+      c[1] -= Math.floor(c[1] * (rank%3*0.15));
+      c[2] -= Math.floor(c[2] * (rank%3*0.2));
   
        c = 'rgb('+c[0]+','+c[1]+','+c[2]+')';      
     }
@@ -167,6 +167,8 @@ var ValueSummary = function (options) {
     
     var pathUpdate = chart.selectAll("path")
       .style("fill", function(d, i) { return color(d); })
+      .style("stroke", function(d, i) { return color(d); })
+      .style("stroke-width", ".35px")
       .transition().duration(750).attrTween("d", arcTween)
       .attr("id", function(d, i){return "arc_"+i})
       .each("end", function(){transitioning = false});
