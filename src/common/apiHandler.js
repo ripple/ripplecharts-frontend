@@ -125,8 +125,6 @@ ApiHandler = function (url) {
 			endTime       : end,
 			timeIncrement : inc,
 			metric: metric,
-			//metric : "topMarkets",
-			//metric : "totalValueSent",
 			exchange: {currency: "USD", issuer: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
 			
 		})).on('load', function(xhr){   

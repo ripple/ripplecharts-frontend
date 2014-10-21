@@ -1,28 +1,25 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
 <div class="history">
-
 	<div class="control">
-		<div class="interval">
-			<input type="text" id="datepicker_from" value="From">
-			<input type="text" id="datepicker_to" value="To">
-			<div class = "months"> Months </div>
-			<div class = "days"> Days </div>
+		<div id="breadcrumb">
+			<ul class="crumbs">
+				<li class="crumb" id="totals">Totals</li>
+			</ul>
 		</div>
-		<div class="options">
-			<select id="chart_type">
-				<option value="topMarkets">Top Markets</option>
-				<option value="totalValueSent">Total Value Sent</option>
-			</select>
+		<div class="interval">
+			<input type="text" id="datepicker_from">
+			<input type="text" id="datepicker_to">
+			<div id = "month" class="int"> Months </div>
+			<div id = "week" class="int"> Weeks </div>
+			<div id = "day" class="int clicked"> Days </div>
 		</div>
 	</div>
 
-
-
- <div class="chart_wrapper">
- 		<div class="col-md-12 loader_wrapper hidden-xs">Loading  <img class="throbber loader" src="https://54.183.161.14/wp-content/themes/ripple-beta/assets/img/rippleThrobber.png">  Charts...</div>
+	 <div class="chart_wrapper">
 		<canvas id="canvas"></canvas>
 		<div id="lineLegend"></div>
 	</div>
+
 </div>
 <style>
 	footer .footerInner {
