@@ -9,7 +9,6 @@ angular.element(document).ready(function() {
     'ripplecharts.activeAccounts',
     'ripplecharts.graph',
     'ripplecharts.accounts',
-    'ripplecharts.history',
     'ripplecharts.value',
     'ui.state',
     'ui.route',

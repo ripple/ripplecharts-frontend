@@ -9,7 +9,7 @@
     "angular-bootstrap": "~0.11.0",
     "angular-ui-utils": "0.0.3",
     "angular-ui-router": "~0.0.1",
-    "moment": "2.8",
+    "moment": "",
     "underscore": "",
     "store": "",
     "angular-touch": "~1.2.6",
@@ -18,8 +18,7 @@
     "d3": "~3.3.13",
     "modernizr": "~2.7.1",
     "jquery": "~2.0.3",
-    "jscrollpane": "~2.0.14",
-    "chartjs": "1.0"
+    "jscrollpane": "~2.0.14"
   },
   "resolutions": {
     "angular": "1.2.15"
