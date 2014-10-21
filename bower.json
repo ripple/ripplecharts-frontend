@@ -19,7 +19,8 @@
     "modernizr": "~2.7.1",
     "jquery": "~2.0.3",
     "jscrollpane": "~2.0.14",
-    "chartjs": "1.0"
+    "chartjs": "1.0",
+    "jquery-ui": "~1.11.2"
   },
   "resolutions": {
     "angular": "1.2.15"
