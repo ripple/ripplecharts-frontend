@@ -2,20 +2,43 @@ var TotalHistory = function (options) {
 	var self        = this;
 	var apiHandler  = new ApiHandler(options.url);
 	var request, basisRequest, ts, cp, filter;
+	var c = ripple.currencyDropdown();
 
 	var ctx = $("#canvas").get(0).getContext("2d");
 	var chart_options = {
 		responsive: true,
 		scaleShowGridLines : false,
 		pointDotRadius : 1,
-		animationSteps: 1,
+		animationSteps: 20,
 		bezierCurve : true,
+		bezierCurveTension : 0.15,
+		scaleLabel: '<% if (value>=1000000) {%>'
+									+'<%=value/1000000%>m'
+								+'<% } else if (value>=1000){%>' 
+									+'<%=value/1000%>k'
+								+'<% } else if(value == 0){%>'
+									+''
+								+'<% } else {%>'
+									+ '<%=value%>'
+								+'<%}%>',
+		//tooltipTemplate: "<%if (label){%><%=label%>: <%}%>Hey<%= value %>",
+		//multiTooltipTemplate: "Hello <%= value %>",
 		legendTemplate :'<div class="legend">'
 							+'<% for (var i=0; i<datasets.length; i++) { %>'
 								+'<div class="label" id="<%= datasets[i].label %>" style="color:<%=datasets[i].fillColor%>">'
 									+'<div class="gateway">'
-										+'<%= datasets[i].label.split("-")[0] %>'
-										+ '<% if (datasets[i].label.split("-")[2]) { %> - <%= datasets[i].label.split("-")[2] %><% } %>'
+										+ '<% if (datasets[i].label.split("-").length == 1) { %>'
+											+ '<%= datasets[i].label.split("-")[0] %> '
+										+ '<% } else if (datasets[i].label.split("-")[3]){ %>'
+											+'<div class="gw">'
+												+'<%= datasets[i].label.split("-")[3]%> '
+											+'</div>'
+											+'<div class="pair">'
+												+ '<%= datasets[i].label.split("-")[0] %> - <%= datasets[i].label.split("-")[2] %>'
+											+'</div>'
+										+ '<% } else { %>'
+										+ '<%= datasets[i].label.split("-")[2]%> <%= datasets[i].label.split("-")[0] %>'
+										+ '<% } %>'
 									+'</div>'
 									+'<div class="issuer">'
 										+ '<% if (datasets[i].label.split("-")[1]) { %><%= datasets[i].label.split("-")[1] %><% } %>'
@@ -48,19 +71,30 @@ var TotalHistory = function (options) {
 		"rgba(154,191,136,0.8)",
 		"rgba(81,87,74,0.8)"
 	];
+	var issuers = {};
+
+	var currencies = {
+		"USD":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+		"BTC":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+		"CNY":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA",
+		"EUR":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+		"JPY":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6",
+		"XRP":""
+	};
 
 	//Initial parameters
 	var inc = 'day';
 	var end = moment().subtract(16, inc).format('YYYY-MM-DD');
 	var min = moment().subtract(14, inc).format("MM/DD/YYYY");
 	var start = moment().format("YYYY-MM-DD");
+	var curr = "USD";
 	$('#datepicker_to').val(moment(start).format("MM/DD/YYYY"));
 	$('#datepicker_from').val(moment(end).format("MM/DD/YYYY"));
 
 	//Initial draw
-	getData(inc, start, end);
+	getData(inc, start, end, curr);
 
-	function getData(inc, start, end) {
+	function getData(inc, start, end, currency) {
 		//preprocessed data
 		var pp_data = {};
 		pp_data.traded = {};
@@ -73,13 +107,14 @@ var TotalHistory = function (options) {
 		pp_data.sent.pairs = {};
 
 		interval = diff(inc, start, end);
+		issuer = currencies[currency];
 
 		//Totals
 		pp_data.traded.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
 		pp_data.sent.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
 
 		//Api call for data
-		basisRequest = apiHandler.historicalMetrics('topMarkets', start, end, inc ,function(err, data) {
+		basisRequest = apiHandler.historicalMetrics('topMarkets', currency, issuer, start, end, inc ,function(err, data) {
 			//Err
 			if (err) {console.log("Error:", err);}
 			else{
@@ -88,7 +123,7 @@ var TotalHistory = function (options) {
 			}
 		});
 
-		basisRequest = apiHandler.historicalMetrics('totalValueSent', start, end, inc ,function(err, data) {
+		basisRequest = apiHandler.historicalMetrics('totalValueSent', currency, issuer, start, end, inc ,function(err, data) {
 			//Err
 			if (err) {console.log("Error:", err);}
 			else{
@@ -99,17 +134,24 @@ var TotalHistory = function (options) {
 	}
 
 	function process_data(metric, object, data){
+		console.log("preprocessing...");
 		object.done = false;
-		console.log(">", interval);
 		//data points
 		object.dateData = []; //first graph x-axis line points
 		var resultsArray = data;
+		var splitDate, last_year;
 
 		$.each(resultsArray, function(i, value) {
 			var startTime = value.startTime.split('T')[0];
-			object.dateData.push(startTime);
+			splitDate = startTime.split("-");
+			if (splitDate[0] !== last_year){
+				object.dateData.push(startTime);
+				last_year = splitDate[0];
+			}
+			else{
+				object.dateData.push(splitDate[1]+"-"+splitDate[2]);
+			}
 			object.total[i] += value.total;
-			console.log(value);
 
 			//Loop through each component in each increment
 			$.each (value.components, function(j, component) {
@@ -136,6 +178,15 @@ var TotalHistory = function (options) {
 					}
 					object.currencies[counter_curr][i] += component.convertedAmount;
 				}
+
+				///
+				if (!(issuers.hasOwnProperty(issuer))){
+					var user;
+					user = c.getName(issuer);
+					issuers[issuer] = user;
+				}
+				key = key + '-' + issuers[issuer];
+				///
 
 				if(!(object.currencies.hasOwnProperty(base_curr))){
 					object.currencies[base_curr] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
@@ -199,6 +250,7 @@ var TotalHistory = function (options) {
 				e.preventDefault();
 				var id = $(this).attr('id');
 				var filter = "";
+				var text = id.split("-");
 				if (id === "sent" || id === "traded"){
 					ts = id;
 					cp = 'currencies';
@@ -209,8 +261,21 @@ var TotalHistory = function (options) {
 					filter = id;
 					new_lcd = chartify(data[ts].pairs, labels, filter);
 				}
+				if (text[3]){
+					text = text[3];
+				}
+				else if(text[2]){
+					text = text[2]
+				}
+				else{
+					text = text[0]
+				}
+				//Capitalize Send and Trade differently <<<<<<
+				text = text.charAt(0).toUpperCase() + text.substring(1);
 				//Add breadcrumb with data needed to reach that point again
-				$('.crumbs').append('<li class="crumb" id="'+id+'">'+id+'</li>');
+				console.log(id);
+				$('.crumbs').append('<li> > </li>');
+				$('.crumbs').append('<li class="crumb" id="'+id+'">'+text+'</li>');
 				$('#'+id).data({ts: ts, cp: cp, filter: filter});
 				update_chart(myLine, new_lcd);
 			}
@@ -324,7 +389,7 @@ var TotalHistory = function (options) {
 			difference = diff('day', start, end)
 			inc = pick_increment(difference);
 			myLine.destroy();
-			getData(inc, start, end);
+			getData(inc, start, end, curr);
 		}
 	});
 
@@ -339,7 +404,7 @@ var TotalHistory = function (options) {
 			difference = diff('day', start, end)
 			inc = pick_increment(difference);
 			myLine.destroy();
-			getData(inc, start, end);
+			getData(inc, start, end, curr);
 		}
 	});
 	
@@ -353,7 +418,28 @@ var TotalHistory = function (options) {
 			$('#'+id).addClass('clicked');
 			inc = id;
 			myLine.destroy();
-			getData(inc, start, end);
+			getData(inc, start, end, curr);
 		}
 	});
+
+	$('select').on('change', function() {
+		curr = $(this).val();
+		myLine.destroy();
+		getData(inc, start, end, curr);
+	});
+
+	function get_user(issuer, user){
+		console.log('making call');
+		var url = "https://id.ripple.com/v1/user/"+issuer;
+		$.ajax({
+			url: url,
+			dataType: 'json',
+			async: false,
+			data: user,
+			success: function(data) {
+				user = data.username;
+			}
+		});
+		return user;
+	}
 }
