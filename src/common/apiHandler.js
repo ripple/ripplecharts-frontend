@@ -116,18 +116,19 @@ ApiHandler = function (url) {
 		return request;
 	}
 
-	this.historicalMetrics = function(metric, start, end, inc, callback){
+	this.historicalMetrics = function(metric, currency, issuer, start, end, inc, callback){
 		var request = apiRequest("historicalMetrics");
 		start = start || new Date();
-		
-		request.post(JSON.stringify({
+		json = {
 			startTime     : start,  
 			endTime       : end,
 			timeIncrement : inc,
-			metric: metric,
-			exchange: {currency: "USD", issuer: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
-			
-		})).on('load', function(xhr){   
+			metric: metric
+		};
+		if (currency !== "XRP"){
+			json.exchange = {currency: currency, issuer: issuer}
+		}
+		request.post(JSON.stringify(json)).on('load', function(xhr){   
 			data  = JSON.parse(xhr.response);
 			callback (null, data);
 			
