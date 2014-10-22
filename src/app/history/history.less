@@ -35,25 +35,26 @@
 	float: left;
 }
 
+.history #currency {
+	font-size:14px;
+	float: left;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
 .history .crumbs li{
 	margin-right: 5px;
 	display: inline;
 	float: left;
+	cursor: pointer;
 }
 
-.legend li{
-	display: inline;
+.history .crumbs .crumb:hover{
+	text-decoration: underline;
 }
 
 .history .legend {
 	margin-top: 20px;
-}
-
-ul span{
-	padding: 10px;
-	margin-left: 5px;
-	margin-right: 5px;
-	user-select: none;
 }
 
 .history #day {
@@ -128,12 +129,21 @@ ul span{
 }
 
 .history .gateway{
-	font-size: 18px;
 	font-weight: 600;
+	font-size: 18px;
+}
+
+.history .gateway .gw{
+	float: left;
+}
+
+.history .gateway .pair{
+	font-size: 11px;
+	float: right;
 }
 
 .history .issuer{
-	font-size: 11px;
+	font-size: 10px;
 }
 
 /*
