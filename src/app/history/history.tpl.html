@@ -1,8 +1,10 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/themes/dark-hive/jquery-ui.min.css">
+
 <div class="history">
 	<div class="control">
 		<div id="currency">
-			<select>
+			<select class="currency">
 				<option value="USD">USD</option>
 				<option value="XRP">XRP</option>
 				<option value="BTC">BTC</option>
@@ -17,8 +19,11 @@
 			</ul>
 		</div>
 		<div class="interval">
-			<input type="text" id="datepicker_from">
-			<input type="text" id="datepicker_to">
+			<a id="csv">
+				<img src="http://www.ripplecharts.com/assets/images/download.svg">
+			</a>
+			<input type="text" class="ui-datepicker" id="datepicker_from">
+			<input type="text" class="ui-datepicker" id="datepicker_to">
 			<div id = "month" class="int"> Months </div>
 			<div id = "week" class="int"> Weeks </div>
 			<div id = "day" class="int clicked"> Days </div>
@@ -26,10 +31,16 @@
 	</div>
 
 	 <div class="chart_wrapper">
+		<img class="throbber loader loading" src="https://54.183.161.14/wp-content/themes/ripple-beta/assets/img/rippleThrobber.png">
 		<canvas id="canvas"></canvas>
-		<div id="lineLegend"></div>
 	</div>
-
+	<div id="lineLegend"></div>
+	<div id="tooltip">
+		<div class="title"></div>
+		<div class="iss"></div>
+		<div class="date"></div>
+		<div class="value"></div>
+	</div>
 </div>
 <style>
 	footer .footerInner {

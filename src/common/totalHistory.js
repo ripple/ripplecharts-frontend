@@ -1,26 +1,57 @@
 var TotalHistory = function (options) {
 	var self        = this;
 	var apiHandler  = new ApiHandler(options.url);
-	var request, basisRequest, ts, cp, filter;
+	var request, basisRequest, ts, cp, filter, last;
 	var c = ripple.currencyDropdown();
-
+	var to_export = {};
 	var ctx = $("#canvas").get(0).getContext("2d");
+
+	var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2");
+	var line = svgContainer.append("line")
+										.attr("stroke-width", 1)
+										.attr("stroke", "rgba(200,200,200,0.7)");
+	var line2 = svgContainer.append("line")
+										.attr("stroke-width", 1)
+										.attr("stroke", "rgba(200,200,200,0.7)");
+
+	var circle = svgContainer.append("circle")
+											.attr("r", 4)
+											.attr("fill", "rgba(200,200,200,0.7)");
+
+	var xborder = svgContainer.append("line")
+											.attr("x1",0)
+											.attr("y1",9)
+											.attr("x2", "100%")
+											.attr("y2",9)
+											.attr("stroke-width", 1)
+											.attr("stroke", "rgba(177,177,177,0.3)");
+
+	var yborder = svgContainer.append("line")
+											.attr("x1","100%")
+											.attr("y1",9)
+											.attr("x2", "100%")
+											.attr("y2","100%")
+											.attr("stroke-width", 1)
+											.attr("stroke", "rgba(177,177,177,0.3)");
+
 	var chart_options = {
 		responsive: true,
+		scaleLineColor: "rgba(177,177,177,0.3)",
 		scaleShowGridLines : false,
-		pointDotRadius : 1,
+		pointDot : false,
 		animationSteps: 20,
 		bezierCurve : true,
-		bezierCurveTension : 0.15,
+		bezierCurveTension : 0.1,
+		showTooltips: false,
 		scaleLabel: '<% if (value>=1000000) {%>'
-									+'<%=value/1000000%>m'
-								+'<% } else if (value>=1000){%>' 
-									+'<%=value/1000%>k'
-								+'<% } else if(value == 0){%>'
-									+''
-								+'<% } else {%>'
-									+ '<%=value%>'
-								+'<%}%>',
+							+'<%=value/1000000%>m'
+						+'<% } else if (value>=1000){%>' 
+							+'<%=value/1000%>k'
+						+'<% } else if(value == 0){%>'
+							+''
+						+'<% } else {%>'
+							+ '<%=value%>'
+					+'<%}%>',
 		//tooltipTemplate: "<%if (label){%><%=label%>: <%}%>Hey<%= value %>",
 		//multiTooltipTemplate: "Hello <%= value %>",
 		legendTemplate :'<div class="legend">'
@@ -49,14 +80,15 @@ var TotalHistory = function (options) {
 	};
 
 	var colors = [
-		"rgba(226,121,163,0.8)",
-		"rgba(86,152,196,0.8)",
-		"rgba(68,124,105,0.8)",
-		"rgba(116,196,147,0.8)",
-		"rgba(142,140,109,0.8)",
-		"rgba(228,191,128,0.8)",
-		"rgba(233,215,142,0.8)",
-		"rgba(226,151,93,0.8)",
+		"rgba(31, 119, 180,0.8)",
+		"rgba(255, 127, 14,0.8)",
+		"rgba(174, 199, 232,0.8)",
+		"rgba(255, 187, 120,0.8)",
+		"rgba(214, 39, 40,0.8)",
+		//"rgba(152, 223, 138,0.8)",
+		//"rgba(255, 152, 150,0.8)",
+		"rgba(44, 160, 44,0.8)",
+
 		"rgba(241,150,112,0.8)",
 		"rgba(225,101,82,0.8)",
 		"rgba(201,74,83,0.8)",
@@ -95,30 +127,33 @@ var TotalHistory = function (options) {
 	getData(inc, start, end, curr);
 
 	function getData(inc, start, end, currency) {
+		$(".loading").show();
+		$("#tooltip").hide();
 		//preprocessed data
 		var pp_data = {};
-		pp_data.traded = {};
-		pp_data.sent = {};
+		pp_data.Traded = {};
+		pp_data.Sent = {};
 
 		//Currencies and pairs objects
-		pp_data.traded.currencies = {};
-		pp_data.traded.pairs = {};
-		pp_data.sent.currencies = {};
-		pp_data.sent.pairs = {};
+		pp_data.Traded.currencies = {};
+		pp_data.Traded.pairs = {};
+		pp_data.Sent.currencies = {};
+		pp_data.Sent.pairs = {};
 
 		interval = diff(inc, start, end);
 		issuer = currencies[currency];
 
 		//Totals
-		pp_data.traded.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
-		pp_data.sent.total = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
+		pp_data.Traded.total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
+		pp_data.Sent.total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
 
 		//Api call for data
 		basisRequest = apiHandler.historicalMetrics('topMarkets', currency, issuer, start, end, inc ,function(err, data) {
 			//Err
 			if (err) {console.log("Error:", err);}
 			else{
-				pp_data.traded = process_data('topMarkets', pp_data.traded, data);
+				console.log(data);
+				pp_data.Traded = process_data('topMarkets', pp_data.Traded, data);
 				draw(pp_data);
 			}
 		});
@@ -127,7 +162,8 @@ var TotalHistory = function (options) {
 			//Err
 			if (err) {console.log("Error:", err);}
 			else{
-				pp_data.sent = process_data('totalValueSent', pp_data.sent, data);
+				console.log(data);
+				pp_data.Sent = process_data('totalValueSent', pp_data.Sent, data);
 				draw(pp_data);
 			}
 		});
@@ -142,16 +178,15 @@ var TotalHistory = function (options) {
 		var splitDate, last_year;
 
 		$.each(resultsArray, function(i, value) {
+		
 			var startTime = value.startTime.split('T')[0];
 			splitDate = startTime.split("-");
-			if (splitDate[0] !== last_year){
-				object.dateData.push(startTime);
-				last_year = splitDate[0];
-			}
-			else{
-				object.dateData.push(splitDate[1]+"-"+splitDate[2]);
-			}
+			year = splitDate[0].slice(-2)
+			object.dateData.push(splitDate[1]+"-"+splitDate[2]+"-"+year);
+
 			object.total[i] += value.total;
+			/// BUFFER
+			//object.total[interval] = object.total[interval-1]
 
 			//Loop through each component in each increment
 			$.each (value.components, function(j, component) {
@@ -174,28 +209,32 @@ var TotalHistory = function (options) {
 					key = base_curr + '-' + issuer + '-' + counter_curr;
 
 					if(!(object.currencies.hasOwnProperty(counter_curr))){
-						object.currencies[counter_curr] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
+						object.currencies[counter_curr] = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
 					}
 					object.currencies[counter_curr][i] += component.convertedAmount;
+					//// BUFFER
+					//object.currencies[counter_curr][interval] = object.currencies[counter_curr][interval-1];
 				}
 
-				///
 				if (!(issuers.hasOwnProperty(issuer))){
 					var user;
 					user = c.getName(issuer);
 					issuers[issuer] = user;
 				}
 				key = key + '-' + issuers[issuer];
-				///
 
 				if(!(object.currencies.hasOwnProperty(base_curr))){
-					object.currencies[base_curr] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
+					object.currencies[base_curr] = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
 				}
 				if(!(object.pairs.hasOwnProperty(key))){
-					object.pairs[key] = Array.apply(null, new Array(interval)).map(Number.prototype.valueOf,0);
+					object.pairs[key] = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
 				}
 				object.currencies[base_curr][i] += component.convertedAmount;
 				object.pairs[key][i] += component.convertedAmount;
+
+				//// BUFFER
+				//object.pairs[key][interval] = object.pairs[key][interval-1];
+				//object.currencies[base_curr][interval] = object.currencies[base_curr][interval-1];
 			});
 	
 		});
@@ -225,58 +264,62 @@ var TotalHistory = function (options) {
 
 	function draw(data){
 		//Initial draw
-		//Only draw if both traded and sent data is present
-		if (data.sent.done === true && data.traded.done === true){
+		//Only draw if both Traded and Sent data is preSent
+		if (data.Sent.done === true && data.Traded.done === true){
 			console.log("Data:", data);
-			labels = data.sent.dateData;
+			labels = data.Sent.dateData;
+			if (labels.length < 1){
+				labels = data.Traded.dateData;
+			}
 			data.totals = {};
-			data.totals.traded = data.traded.total;
-			data.totals.sent = data.sent.total;
-			delete data.sent.total;
-			delete data.traded.total;
-			var lcd = chartify(data.totals, labels, "");
+			data.totals.Traded = data.Traded.total;
+			data.totals.Sent = data.Sent.total;
+			delete data.Sent.total;
+			delete data.Traded.total;
+			var lcd = chartify(data.totals, labels, "", "");
+			to_export = lcd;
 			window.myLine = new Chart(ctx).Line(lcd, chart_options);
+
+			var xorigin = myLine.scale.xScalePaddingLeft;
+			var yorigin = myLine.scale.height - 23.68773530263539;
+			yborder.attr("y2", yorigin);
+			xborder.attr("x1", xorigin);
+
 			var legend = myLine.generateLegend();
 			$('#lineLegend').html(legend);
 			var last = $('.crumb').last()[0];
 			if ($(last).attr('id') !== "total"){
 				go_to(last, data, labels);
 			}
+			$(".loading").hide();
 		}
 
 		//On click of label, go one level down and make breadcrumb
 		$('#lineLegend').off('click', '.label').on('click', '.label',  function(e) {
 			if ($(".legend > div").length > 1){
 				e.preventDefault();
+				var label_color = $(this).css('color');
 				var id = $(this).attr('id');
 				var filter = "";
 				var text = id.split("-");
-				if (id === "sent" || id === "traded"){
+				if (id === "Sent" || id === "Traded"){
 					ts = id;
 					cp = 'currencies';
-					new_lcd = chartify(data[id].currencies, labels, filter);
+					new_lcd = chartify(data[id].currencies, labels, filter, "");
 				}
 				else{
 					cp = 'pairs';
 					filter = id;
-					new_lcd = chartify(data[ts].pairs, labels, filter);
+					new_lcd = chartify(data[ts].pairs, labels, filter, label_color);
 				}
-				if (text[3]){
-					text = text[3];
-				}
-				else if(text[2]){
-					text = text[2]
-				}
-				else{
-					text = text[0]
-				}
-				//Capitalize Send and Trade differently <<<<<<
-				text = text.charAt(0).toUpperCase() + text.substring(1);
+				if (text[3]) text = text[3];
+				else if(text[2]) text = text[2]
+				else text = text[0]
 				//Add breadcrumb with data needed to reach that point again
 				console.log(id);
 				$('.crumbs').append('<li> > </li>');
 				$('.crumbs').append('<li class="crumb" id="'+id+'">'+text+'</li>');
-				$('#'+id).data({ts: ts, cp: cp, filter: filter});
+				$('#'+id).data({ts: ts, cp: cp, filter: filter, color: label_color});
 				update_chart(myLine, new_lcd);
 			}
 		});
@@ -284,8 +327,11 @@ var TotalHistory = function (options) {
 		//Get back to point indicated by breadcrumb
 		$('#breadcrumb').off('click', '.crumb').on('click', '.crumb', function(e){
 			e.preventDefault();
-			go_to(this, data, labels);
+			if (!$(this).is(".crumb:last")){
+				go_to(this, data, labels);
+			}
 		});
+
 	}
 
 	function go_to(breadcrumb, data, lables){
@@ -293,19 +339,20 @@ var TotalHistory = function (options) {
 		var new_lcd;
 		$(breadcrumb).nextAll('li').remove();
 		if ( id === 'totals'){
-			new_lcd = chartify(data.totals, labels, "");
+			new_lcd = chartify(data.totals, labels, "", "");
 		}
 		else{
 			var bc_data = $(breadcrumb).data();
 			ts = bc_data.ts;
 			cp = bc_data.cp;
 			filter = bc_data.filter;
-			new_lcd = chartify(data[ts][cp], labels, filter);
+			color = bc_data.color;
+			new_lcd = chartify(data[ts][cp], labels, filter, color);
 		}
 		update_chart(myLine, new_lcd);
 	}
 
-	function chartify(data, labels, filter){
+	function chartify(data, labels, filter, color){
 		var cc = 0;
 		var lineChartData = {
 			labels : labels,
@@ -328,6 +375,10 @@ var TotalHistory = function (options) {
 				cc += 1;
 			}
 		});
+		//If last level, keep color the same.
+		if (lineChartData.datasets.length == 1){
+			lineChartData.datasets[0].fillColor = color;
+		}
 		lineChartData.datasets.sort(compare); 
 		return lineChartData;
 	}
@@ -355,9 +406,13 @@ var TotalHistory = function (options) {
 
 	function update_chart(chart, lcd){
 		chart.destroy();
+		$(".loading").show();
+		$("#tooltip").hide();
+		to_export = lcd;
 		window.myLine = new Chart(ctx).Line(lcd, chart_options);
 		var legend = myLine.generateLegend();
 		$('#lineLegend').html(legend);
+		$(".loading").hide();
 	}	
 
 	//Compare sum of arrays
@@ -442,4 +497,109 @@ var TotalHistory = function (options) {
 		});
 		return user;
 	}
+
+	function toCSV(labels, data){
+		var str ='';
+		var line = '';
+		for (var i=0; i<labels.length; i++){
+			line += ',';
+			line += labels[i];
+		}
+		str += line + '\r\n';
+		
+		for (var key in data){
+			line = data[key].label;
+			for (var j=0; j<labels.length; j++){
+				if (line !== '') line += ',';
+				line += Math.ceil(data[key].data[j]);
+			}
+			str += line + '\r\n';
+		}
+		return str;
+	}
+
+	document.getElementById('csv').onclick = function(){
+		labels = to_export.labels;
+		data = to_export.datasets;
+		var csv = toCSV(labels, data);
+		if (!!Modernizr.prefixed('requestFileSystem', window)) {
+				var blob  = new Blob([csv], {'type':'application/octet-stream'});
+				this.href = window.URL.createObjectURL(blob);     
+		} else {
+			this.href = "data:text/csv;charset=utf-8," + escape(csv);
+		}
+		this.download = $('.crumbs li:last-child').text()+"_"+inc+"_historical.csv";  
+		this.target   = "_blank";
+		return true;
+	};
+
+	$('#canvas').mousemove(function(evt){
+		console.log(myLine);
+		var scroll = $(window).scrollTop();
+		var rect = this.getBoundingClientRect();
+		var activeBars = myLine.getPointsAtEvent(evt),
+				c_point = {},
+				text = "";
+		c_point = {
+				x: evt.clientX - rect.left,
+				y: evt.clientY - rect.top
+		}
+		closest = closest_point(activeBars, c_point);
+		if(activeBars.length !== 0){
+			var xorigin = myLine.scale.xScalePaddingLeft;
+			var yorigin = myLine.scale.height - 23.68773530263539;
+			line.transition().duration(20).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
+			line2.transition().duration(20).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
+			circle.transition().duration(20).attr("cx", closest.x).attr("cy", closest.y);
+			$('#tooltip .iss').text("");
+			var title;
+			label_color = $('#lineLegend [id="'+closest.label+'"]').css('color');
+			csplit = closest.label.split("-")
+			if (csplit[3]){ 
+				title = csplit[3]+" "+csplit[0]+"-"+csplit[2];
+				$('#tooltip .iss').text(csplit[1]).css('color',label_color);
+			}
+			else if (csplit[2]){
+				title = csplit[2]+" "+csplit[0];
+				$('#tooltip .iss').text(csplit[1]).css('color',label_color);
+			}
+			else title=csplit[0];
+			$('#tooltip').show();
+			$('#tooltip').css({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110});
+			$('#tooltip .title').text(title).css('color',label_color);
+			$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)").format("MMM D YYYY hh:mm a (UTC)"));
+			$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);
+		}
+	});
+	
+
+	function closest_point(point_array, c_point){
+		var closest = {};
+		closest.d = 100000;
+		for (var i=0; i<point_array.length; i++){
+			point = point_array[i];
+			candidate = {
+				x: point.x,
+				y: point.y
+			}
+			d = distance(candidate, c_point);
+			if (d < closest.d){
+				closest.d = d;
+				closest.label = point.datasetLabel;
+				closest.x = candidate.x;
+				closest.y = candidate.y;
+				closest.value = point.value;
+				closest.date = point.label;
+				closest.color = point.fillColor;
+			}
+		}
+		return closest;
+	}
+
+	function distance( point1, point2 ){
+		var ys = 0;
+		ys = point2.y - point1.y;
+		return Math.abs(ys);
+	}
+
 }
