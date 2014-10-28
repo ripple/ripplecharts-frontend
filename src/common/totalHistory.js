@@ -7,13 +7,13 @@ var TotalHistory = function (options) {
 	var ctx = $("#canvas").get(0).getContext("2d");
 
 	var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2"),
-		line = svgContainer.append("line").attr("stroke-width", 0).attr("stroke", "rgba(200,200,200,0.7)"),
-		line2 = svgContainer.append("line").attr("stroke-width", 0).attr("stroke", "rgba(200,200,200,0.7)"),
-		circle = svgContainer.append("circle").attr("r", 0).attr("fill", "rgba(200,200,200,0.7)"),
+		line = svgContainer.append("line").attr("stroke-width", 0).attr("class", "line"),
+		line2 = svgContainer.append("line").attr("stroke-width", 0).attr("class", "line"),
+		circle = svgContainer.append("circle").attr("r", 0).attr("class", "circle"),
 		xborder = svgContainer.append("line").attr("x1",0).attr("y1",9).attr("x2", "100%").attr("y2",9)
-											.attr("stroke-width", 0).attr("stroke", "rgba(177,177,177,0.3)"),
+											.attr("stroke-width", 0).attr("class", "border"),
 		yborder = svgContainer.append("line").attr("x1","100%").attr("y1",9).attr("x2", "100%")
-											.attr("y2","100%").attr("stroke-width", 0).attr("stroke", "rgba(177,177,177,0.3)");
+											.attr("y2","100%").attr("stroke-width", 0).attr("class", "border");
 
 	var chart_options = {
 		responsive: true,
@@ -455,7 +455,7 @@ var TotalHistory = function (options) {
 		e.preventDefault();
 		var id = $(this).attr('id');
 		difference = diff(id, start, end);
-		if (difference>2 && difference<60){
+		if (difference>4 && difference<60){
 			borders_off();
 			$('.int').removeClass('clicked');
 			$('#'+id).addClass('clicked');
@@ -521,43 +521,45 @@ var TotalHistory = function (options) {
 	};
 
 	$('#canvas').mousemove(function(evt){
-		var scroll = $(window).scrollTop();
-		var rect = this.getBoundingClientRect();
-		var activeBars = myLine.getPointsAtEvent(evt),
-				c_point = {},
-				text = "";
-		c_point = {
-				x: evt.clientX - rect.left,
-				y: evt.clientY - rect.top
-		}
-		closest = closest_point(activeBars, c_point);
-		if(activeBars.length !== 0){
-			line.attr("stroke-width", 1);
-			line2.attr("stroke-width", 1);
-			circle.attr("r", 4);
-			var xorigin = myLine.scale.xScalePaddingLeft;
-			var yorigin = myLine.scale.height - 23.68773530263539;
-			line.transition().duration(20).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
-			line2.transition().duration(20).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
-			circle.transition().duration(20).attr("cx", closest.x).attr("cy", closest.y);
-			$('#tooltip .iss').text("");
-			var title;
-			label_color = $('#lineLegend [id="'+closest.label+'"]').css('color');
-			csplit = closest.label.split("-")
-			if (csplit[3]){ 
-				title = csplit[3]+" "+csplit[0]+"-"+csplit[2];
-				$('#tooltip .iss').text(csplit[1]).css('color',label_color);
+		if($('#loading').css('display') === 'none'){
+			var scroll = $(window).scrollTop();
+			var rect = this.getBoundingClientRect();
+			var activeBars = myLine.getPointsAtEvent(evt),
+					c_point = {},
+					text = "";
+			c_point = {
+					x: evt.clientX - rect.left,
+					y: evt.clientY - rect.top
 			}
-			else if (csplit[2]){
-				title = csplit[2]+" "+csplit[0];
-				$('#tooltip .iss').text(csplit[1]).css('color',label_color);
+			closest = closest_point(activeBars, c_point);
+			if(activeBars.length !== 0){
+				line.attr("stroke-width", 1);
+				line2.attr("stroke-width", 1);
+				circle.attr("r", 4);
+				var xorigin = myLine.scale.xScalePaddingLeft;
+				var yorigin = myLine.scale.height - 23.68773530263539;
+				line.transition().duration(20).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
+				line2.transition().duration(20).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
+				circle.transition().duration(20).attr("cx", closest.x).attr("cy", closest.y);
+				$('#tooltip .iss').text("");
+				var title;
+				label_color = $('#lineLegend [id="'+closest.label+'"]').css('color');
+				csplit = closest.label.split("-")
+				if (csplit[3]){ 
+					title = csplit[3]+" "+csplit[0]+"-"+csplit[2];
+					$('#tooltip .iss').text(csplit[1]).css('color',label_color);
+				}
+				else if (csplit[2]){
+					title = csplit[2]+" "+csplit[0];
+					$('#tooltip .iss').text(csplit[1]).css('color',label_color);
+				}
+				else title=csplit[0];
+				$('#tooltip').show();
+				$('#tooltip').css({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110});
+				$('#tooltip .title').text(title).css('color',label_color);
+				$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)").format("MMM D YYYY hh:mm a (UTC)"));
+				$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);
 			}
-			else title=csplit[0];
-			$('#tooltip').show();
-			$('#tooltip').css({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110});
-			$('#tooltip .title').text(title).css('color',label_color);
-			$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)").format("MMM D YYYY hh:mm a (UTC)"));
-			$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);
 		}
 	});
 	
