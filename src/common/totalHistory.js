@@ -17,6 +17,7 @@ var TotalHistory = function (options) {
 
 	var chart_options = {
 		responsive: true,
+		scaleFontFamily: "Open Sans Light",
 		scaleLineColor: "rgba(177,177,177,0.3)",
 		scaleShowGridLines : false,
 		pointDot : false,
@@ -61,28 +62,28 @@ var TotalHistory = function (options) {
 	};
 
 	var colors = [
-		"rgba(31, 119, 180,0.8)",
-		"rgba(255, 127, 14,0.8)",
-		"rgba(174, 199, 232,0.8)",
-		"rgba(255, 187, 120,0.8)",
-		"rgba(214, 39, 40,0.8)",
-		//"rgba(152, 223, 138,0.8)",
-		//"rgba(255, 152, 150,0.8)",
-		"rgba(44, 160, 44,0.8)",
+		"rgba(31, 119, 180,0.7)",
+		"rgba(255, 127, 14,0.7)",
+		"rgba(174, 199, 232,0.7)",
+		"rgba(255, 187, 120,0.7)",
+		"rgba(214, 39, 40,0.7)",
+		//"rgba(152, 223, 138,0.7)",
+		//"rgba(255, 152, 150,0.7)",
+		"rgba(44, 160, 44,0.7)",
 
-		"rgba(241,150,112,0.8)",
-		"rgba(225,101,82,0.8)",
-		"rgba(201,74,83,0.8)",
-		"rgba(190,81,104,0.8)",
-		"rgba(163,73,116,0.8)",
-		"rgba(153,55,103,0.8)",
-		"rgba(101,56,125,0.8)",
-		"rgba(78,36,114,0.8)",
-		"rgba(145,99,182,0.8)",
-		"rgba(224,89,139,0.8)",
-		"rgba(124,159,176,0.8)",
-		"rgba(154,191,136,0.8)",
-		"rgba(81,87,74,0.8)"
+		"rgba(241,150,112,0.7)",
+		"rgba(225,101,82,0.7)",
+		"rgba(201,74,83,0.7)",
+		"rgba(190,81,104,0.7)",
+		"rgba(163,73,116,0.7)",
+		"rgba(153,55,103,0.7)",
+		"rgba(101,56,125,0.7)",
+		"rgba(78,36,114,0.7)",
+		"rgba(145,99,182,0.7)",
+		"rgba(224,89,139,0.7)",
+		"rgba(124,159,176,0.7)",
+		"rgba(154,191,136,0.7)",
+		"rgba(81,87,74,0.7)"
 	];
 	var issuers = {};
 
@@ -276,6 +277,9 @@ var TotalHistory = function (options) {
 				yborder.attr("stroke-width", 1);
 			}
 			$(".loading").hide();
+			console.log(myLine);
+			myLine.scale.xLabelst = [];
+			myLine.scale.xLabels[0] = "test";
 		}
 
 		//On click of label, go one level down and make breadcrumb
@@ -533,14 +537,15 @@ var TotalHistory = function (options) {
 			}
 			closest = closest_point(activeBars, c_point);
 			if(activeBars.length !== 0){
+				console.log(activeBars);
 				line.attr("stroke-width", 1);
 				line2.attr("stroke-width", 1);
 				circle.attr("r", 4);
 				var xorigin = myLine.scale.xScalePaddingLeft;
-				var yorigin = myLine.scale.height - 23.68773530263539;
-				line.transition().duration(20).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
-				line2.transition().duration(20).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
-				circle.transition().duration(20).attr("cx", closest.x).attr("cy", closest.y);
+				var yorigin = myLine.scale.endPoint;
+				line.transition().duration(50).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
+				line2.transition().duration(50).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
+				circle.transition().duration(50).attr("cx", closest.x).attr("cy", closest.y);
 				$('#tooltip .iss').text("");
 				var title;
 				label_color = $('#lineLegend [id="'+closest.label+'"]').css('color');
@@ -555,7 +560,7 @@ var TotalHistory = function (options) {
 				}
 				else title=csplit[0];
 				$('#tooltip').show();
-				$('#tooltip').css({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110});
+				$('#tooltip').animate({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110},10);
 				$('#tooltip .title').text(title).css('color',label_color);
 				$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)").format("MMM D YYYY hh:mm a (UTC)"));
 				$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);
