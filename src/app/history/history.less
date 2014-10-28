@@ -11,14 +11,46 @@
 	width: 100%;
 }
 
+.history #canvas2 {
+	width: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	pointer-events:none;
+}
+
 .history .chart_wrapper {
 	display:inline-block;
 	width:90%;
+	position: relative;
 }
 
 .history .interval {
 	font-size:14px;
 	float: right;
+}
+
+.dark .history .line {
+	stroke: rgba(200,200,200,0.7);
+}
+
+.history .line {
+	stroke: rgba(50,50,50,0.5);
+	vector-effect: non-scaling-stroke;
+}
+
+.history .circle {
+	fill: rgba(50,50,50,0.5);
+}
+
+.dark .history .circle {
+	fill: rgba(200,200,200,0.7);
+}
+
+.history .border{
+	stroke: rgba(177,177,177,0.3);
+	vector-effect: non-scaling-stroke;
 }
 
 .history .control {
@@ -31,14 +63,20 @@
 }
 
 .history #breadcrumb {
+	margin-top: 4px;
 	font-size:14px;
 	float: left;
+}
+
+.history #lineLegend{
+	display:inline-block;
+	width:90%;
 }
 
 .history #currency {
 	font-size:14px;
 	float: left;
-	margin-left: 10px;
+	margin-left: 0.5%;
 	margin-right: 10px;
 }
 
@@ -53,6 +91,11 @@
 	text-decoration: underline;
 }
 
+.history .crumbs .crumb:last-child{
+	color: #3369a8;
+	font-weight:600;
+}
+
 .history .legend {
 	margin-top: 20px;
 }
@@ -61,18 +104,21 @@
 	float: left;
 	margin-left: 10px;
 	cursor: default;
+	margin-top: 3px;
 }
 
 .history #month {
 	float: left;
 	margin-left: 10px;
-	cursor: default; 
+	cursor: default;
+	margin-top: 3px; 
 }
 
 .history #week {
 	float: left;
 	margin-left: 10px;
 	cursor: default; 
+	margin-top: 3px;
 }
 
 .history .clicked{
@@ -89,16 +135,32 @@
 
 .history #datepicker_from {
 	float: left;
-	width: 80px;
+	width: 85px;
 	margin-left: 5px;
 	margin-right: 5px;
+
+	margin: 2px;
+	font-weight: bold;
+	line-height: 1.2em;
+	color: #3369a8;
+	background: 0;
+	border: 1.5px solid #3369a8;
+	display: block;
 }
 
 .history #datepicker_to {
 	float: left;
-	width: 80px;
+	width: 85px;
 	margin-left: 5px;
 	margin-right: 5px;
+
+	margin: 2px;
+	font-weight: bold;
+	line-height: 1.2em;
+	color: #3369a8;
+	background: 0;
+	border: 1.5px solid #3369a8;
+	display: block;
 }
 
 .history .submit {
@@ -130,7 +192,7 @@
 
 .history .gateway{
 	font-weight: 600;
-	font-size: 18px;
+	font-size: 17px;
 }
 
 .history .gateway .gw{
@@ -144,6 +206,89 @@
 
 .history .issuer{
 	font-size: 10px;
+}
+
+
+#tooltip {
+	position:absolute;
+	width:220px;
+	text-align: center;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	z-index: 1000;
+	display: none;
+	background: rgba(255,255,255,0.9);
+	pointer-events:none;
+}
+
+.dark #tooltip {
+	background: rgba(40,40,40,0.9);
+	border: 1px solid #444;
+}
+
+.history #tooltip .title{
+	font-size:14px;
+	font-weight: bold;
+	display:block;
+	text-align: center;
+	margin-top: 5px;
+}
+
+.history #tooltip .date{
+	color: #aaa;
+	padding-top: 3px;
+	display:block;
+	font-size:14px;
+	text-align: center;
+}
+
+.history #tooltip .value{
+	padding: 2px;
+	font-size: 18px;
+	display: block;
+	color: #777;
+	text-align: center;
+	margin-bottom: 2px;
+}
+
+.history #tooltip .iss{
+	font-size: 10px;
+	display: block;
+	text-align: center;
+}
+
+.history .loading {
+    position:fixed;
+    top: 50%;
+   	left: 50%;
+    text-align: center;
+    display: none;
+}
+
+.history .currency{
+	padding: 2px 20px 2px 4px;
+	margin: 2px;
+	font-weight: bold;
+	line-height: 1.2em;
+	color: #3369a8;
+	background: 0;
+	border: 1.5px solid #3369a8;
+	height: 25px;
+}
+
+.history .currency option{
+	font-weight: normal;
+	display: block;
+	padding: 0px 2px 1px;
+	white-space: pre;
+	min-height: 1.2em;
+}
+
+.history #csv{
+	float: left;
+	margin-right: 10px;
+	margin-top: 5px;
+	cursor: pointer;
 }
 
 /*
