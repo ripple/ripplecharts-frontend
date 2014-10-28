@@ -6,33 +6,14 @@ var TotalHistory = function (options) {
 	var to_export = {};
 	var ctx = $("#canvas").get(0).getContext("2d");
 
-	var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2");
-	var line = svgContainer.append("line")
-										.attr("stroke-width", 0)
-										.attr("stroke", "rgba(200,200,200,0.7)");
-	var line2 = svgContainer.append("line")
-										.attr("stroke-width", 0)
-										.attr("stroke", "rgba(200,200,200,0.7)");
-
-	var circle = svgContainer.append("circle")
-											.attr("r", 0)
-											.attr("fill", "rgba(200,200,200,0.7)");
-
-	var xborder = svgContainer.append("line")
-											.attr("x1",0)
-											.attr("y1",9)
-											.attr("x2", "100%")
-											.attr("y2",9)
-											.attr("stroke-width", 0)
-											.attr("stroke", "rgba(177,177,177,0.3)");
-
-	var yborder = svgContainer.append("line")
-											.attr("x1","100%")
-											.attr("y1",9)
-											.attr("x2", "100%")
-											.attr("y2","100%")
-											.attr("stroke-width", 0)
-											.attr("stroke", "rgba(177,177,177,0.3)");
+	var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2"),
+		line = svgContainer.append("line").attr("stroke-width", 0).attr("stroke", "rgba(200,200,200,0.7)"),
+		line2 = svgContainer.append("line").attr("stroke-width", 0).attr("stroke", "rgba(200,200,200,0.7)"),
+		circle = svgContainer.append("circle").attr("r", 0).attr("fill", "rgba(200,200,200,0.7)"),
+		xborder = svgContainer.append("line").attr("x1",0).attr("y1",9).attr("x2", "100%").attr("y2",9)
+											.attr("stroke-width", 0).attr("stroke", "rgba(177,177,177,0.3)"),
+		yborder = svgContainer.append("line").attr("x1","100%").attr("y1",9).attr("x2", "100%")
+											.attr("y2","100%").attr("stroke-width", 0).attr("stroke", "rgba(177,177,177,0.3)");
 
 	var chart_options = {
 		responsive: true,
@@ -256,7 +237,6 @@ var TotalHistory = function (options) {
 			date2 = moment(date2).format("MM/DD/YYYY");
 			if(sow1 !== date1 && sow2 !== date2){
 				difference += 1;
-				console.log("adding");
 			}
 		}
 		return Math.ceil(difference);
@@ -320,7 +300,6 @@ var TotalHistory = function (options) {
 				else if(text[2]) text = text[2]
 				else text = text[0]
 				//Add breadcrumb with data needed to reach that point again
-				console.log(id);
 				$('.crumbs').append('<li> > </li>');
 				$('.crumbs').append('<li class="crumb" id="'+id+'">'+text+'</li>');
 				$('#'+id).data({ts: ts, cp: cp, filter: filter, color: label_color});
@@ -409,11 +388,7 @@ var TotalHistory = function (options) {
 	}
 
 	function update_chart(chart, lcd){
-		xborder.attr("stroke-width", 0);
-		yborder.attr("stroke-width", 0);
-		line.attr("stroke-width", 0);
-		line2.attr("stroke-width", 0);
-		circle.attr("r", 0);
+		borders_off();
 		chart.destroy();
 		$(".loading").show();
 		$("#tooltip").hide();
@@ -447,11 +422,7 @@ var TotalHistory = function (options) {
 		maxDate: "+0d",
 		minDate: min,
 		onSelect: function(dateText) {
-			xborder.attr("stroke-width", 0);
-			yborder.attr("stroke-width", 0);
-			line.attr("stroke-width", 0);
-			line2.attr("stroke-width", 0);
-			circle.attr("r", 0);
+			borders_off();
 			var limit;
 			limit = moment(dateText).subtract(2, 'd');
 			f_limit = moment(limit).format("MM/DD/YYYY");
@@ -467,11 +438,7 @@ var TotalHistory = function (options) {
 	$( "#datepicker_from" ).datepicker({
 		maxDate: "-2d",
 		onSelect: function(dateText) {
-			xborder.attr("stroke-width", 0);
-			yborder.attr("stroke-width", 0);
-			line.attr("stroke-width", 0);
-			line2.attr("stroke-width", 0);
-			circle.attr("r", 0);
+			borders_off();
 			var limit;
 			limit = moment(dateText).add(2, 'd');
 			f_limit = moment(limit).format("MM/DD/YYYY");
@@ -488,13 +455,8 @@ var TotalHistory = function (options) {
 		e.preventDefault();
 		var id = $(this).attr('id');
 		difference = diff(id, start, end);
-		console.log(id, difference);
 		if (difference>2 && difference<60){
-			xborder.attr("stroke-width", 0);
-			yborder.attr("stroke-width", 0);
-			line.attr("stroke-width", 0);
-			line2.attr("stroke-width", 0);
-			circle.attr("r", 0);
+			borders_off();
 			$('.int').removeClass('clicked');
 			$('#'+id).addClass('clicked');
 			inc = id;
@@ -510,7 +472,6 @@ var TotalHistory = function (options) {
 	});
 
 	function get_user(issuer, user){
-		console.log('making call');
 		var url = "https://id.ripple.com/v1/user/"+issuer;
 		$.ajax({
 			url: url,
@@ -560,7 +521,6 @@ var TotalHistory = function (options) {
 	};
 
 	$('#canvas').mousemove(function(evt){
-		console.log(myLine);
 		var scroll = $(window).scrollTop();
 		var rect = this.getBoundingClientRect();
 		var activeBars = myLine.getPointsAtEvent(evt),
@@ -629,6 +589,14 @@ var TotalHistory = function (options) {
 		var ys = 0;
 		ys = point2.y - point1.y;
 		return Math.abs(ys);
+	}
+
+	function borders_off(){
+		xborder.attr("stroke-width", 0);
+		yborder.attr("stroke-width", 0);
+		line.attr("stroke-width", 0);
+		line2.attr("stroke-width", 0);
+		circle.attr("r", 0);
 	}
 
 }
