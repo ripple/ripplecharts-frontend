@@ -8,14 +8,14 @@ var TotalHistory = function (options) {
 
 	var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2");
 	var line = svgContainer.append("line")
-										.attr("stroke-width", 1)
+										.attr("stroke-width", 0)
 										.attr("stroke", "rgba(200,200,200,0.7)");
 	var line2 = svgContainer.append("line")
-										.attr("stroke-width", 1)
+										.attr("stroke-width", 0)
 										.attr("stroke", "rgba(200,200,200,0.7)");
 
 	var circle = svgContainer.append("circle")
-											.attr("r", 4)
+											.attr("r", 0)
 											.attr("fill", "rgba(200,200,200,0.7)");
 
 	var xborder = svgContainer.append("line")
@@ -23,7 +23,7 @@ var TotalHistory = function (options) {
 											.attr("y1",9)
 											.attr("x2", "100%")
 											.attr("y2",9)
-											.attr("stroke-width", 1)
+											.attr("stroke-width", 0)
 											.attr("stroke", "rgba(177,177,177,0.3)");
 
 	var yborder = svgContainer.append("line")
@@ -31,7 +31,7 @@ var TotalHistory = function (options) {
 											.attr("y1",9)
 											.attr("x2", "100%")
 											.attr("y2","100%")
-											.attr("stroke-width", 1)
+											.attr("stroke-width", 0)
 											.attr("stroke", "rgba(177,177,177,0.3)");
 
 	var chart_options = {
@@ -291,6 +291,10 @@ var TotalHistory = function (options) {
 			if ($(last).attr('id') !== "total"){
 				go_to(last, data, labels);
 			}
+			else{
+				xborder.attr("stroke-width", 1);
+				yborder.attr("stroke-width", 1);
+			}
 			$(".loading").hide();
 		}
 
@@ -405,6 +409,11 @@ var TotalHistory = function (options) {
 	}
 
 	function update_chart(chart, lcd){
+		xborder.attr("stroke-width", 0);
+		yborder.attr("stroke-width", 0);
+		line.attr("stroke-width", 0);
+		line2.attr("stroke-width", 0);
+		circle.attr("r", 0);
 		chart.destroy();
 		$(".loading").show();
 		$("#tooltip").hide();
@@ -413,6 +422,8 @@ var TotalHistory = function (options) {
 		var legend = myLine.generateLegend();
 		$('#lineLegend').html(legend);
 		$(".loading").hide();
+		xborder.attr("stroke-width", 1);
+		yborder.attr("stroke-width", 1);
 	}	
 
 	//Compare sum of arrays
@@ -436,6 +447,11 @@ var TotalHistory = function (options) {
 		maxDate: "+0d",
 		minDate: min,
 		onSelect: function(dateText) {
+			xborder.attr("stroke-width", 0);
+			yborder.attr("stroke-width", 0);
+			line.attr("stroke-width", 0);
+			line2.attr("stroke-width", 0);
+			circle.attr("r", 0);
 			var limit;
 			limit = moment(dateText).subtract(2, 'd');
 			f_limit = moment(limit).format("MM/DD/YYYY");
@@ -451,6 +467,11 @@ var TotalHistory = function (options) {
 	$( "#datepicker_from" ).datepicker({
 		maxDate: "-2d",
 		onSelect: function(dateText) {
+			xborder.attr("stroke-width", 0);
+			yborder.attr("stroke-width", 0);
+			line.attr("stroke-width", 0);
+			line2.attr("stroke-width", 0);
+			circle.attr("r", 0);
 			var limit;
 			limit = moment(dateText).add(2, 'd');
 			f_limit = moment(limit).format("MM/DD/YYYY");
@@ -469,6 +490,11 @@ var TotalHistory = function (options) {
 		difference = diff(id, start, end);
 		console.log(id, difference);
 		if (difference>2 && difference<60){
+			xborder.attr("stroke-width", 0);
+			yborder.attr("stroke-width", 0);
+			line.attr("stroke-width", 0);
+			line2.attr("stroke-width", 0);
+			circle.attr("r", 0);
 			$('.int').removeClass('clicked');
 			$('#'+id).addClass('clicked');
 			inc = id;
@@ -546,6 +572,9 @@ var TotalHistory = function (options) {
 		}
 		closest = closest_point(activeBars, c_point);
 		if(activeBars.length !== 0){
+			line.attr("stroke-width", 1);
+			line2.attr("stroke-width", 1);
+			circle.attr("r", 4);
 			var xorigin = myLine.scale.xScalePaddingLeft;
 			var yorigin = myLine.scale.height - 23.68773530263539;
 			line.transition().duration(20).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
