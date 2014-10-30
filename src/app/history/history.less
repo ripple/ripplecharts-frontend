@@ -29,6 +29,14 @@
 .history .interval {
 	font-size:14px;
 	float: right;
+	margin-top: 5px;
+	height: 21px;
+}
+
+.history .table .cell {
+  display: table-cell;
+  width: 33%;
+  padding: 20px;
 }
 
 .dark .history .line {
@@ -56,16 +64,15 @@
 .history .control {
 	text-align: center;
 	display: inline-block;
-	width: 95%;
+	width: 90%;
 	height: 30px;
-	margin-top: 10px;
-	margin-bottom: 5px;
 }
 
 .history #breadcrumb {
-	margin-top: 4px;
-	font-size:14px;
+	margin-top: 5px;
+	font-size:12px;
 	float: left;
+	height: 21px;
 }
 
 .history #lineLegend{
@@ -74,8 +81,10 @@
 }
 
 .history #currency {
-	font-size:14px;
+	font-size:12px;
 	float: left;
+	width: auto;
+	height: auto;
 	margin-left: 0.5%;
 	margin-right: 10px;
 }
@@ -85,6 +94,8 @@
 	display: inline;
 	float: left;
 	cursor: pointer;
+	margin-top: 3px;
+	line-height: 13px;
 }
 
 .history .crumbs .crumb:hover{
@@ -100,68 +111,98 @@
 	margin-top: 20px;
 }
 
-.history #day {
+.history .int{
 	float: left;
 	margin-left: 10px;
-	cursor: default;
+	cursor: pointer; 
 	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #666;
 }
 
-.history #month {
-	float: left;
+.history .tag{
+	float:left;
 	margin-left: 10px;
-	cursor: default;
-	margin-top: 3px; 
+	font-size: 12px;
+	font-weight: bold;
+	color: #999;
+	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #999;
 }
 
-.history #week {
+.dark .history .tag{
+	color: #444;
+}
+
+.history .range{
 	float: left;
 	margin-left: 10px;
-	cursor: default; 
+	cursor: pointer; 
 	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #666;
+}
+
+.history #custom{
+	float: left;
+	margin-left: 10px;
+	cursor: pointer;
+	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #666;
+}
+
+.history #custom:hover:not(.clicked){
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: rgba(200,200,200,0.7);
+}
+
+.history .int:hover:not(.noclick):not(.clicked){
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: rgba(200,200,200,0.7);
+}
+
+.history .noclick{
+	color: #353535;
+	cursor: default;
+}
+
+.light .history .noclick{
+	color: rgba(200,200,200,0.7);
+}
+
+.history .range:hover:not(.clicked){
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: rgba(200,200,200,0.7);
 }
 
 .history .clicked{
 	font-weight: bold;
-	border-bottom: 3px solid;
+	border-bottom: 2px solid;
 	color: #3369a8;
 }
 
-.history .range {
-	float: left;
-	margin-left: 5px;
-	margin-right: 5px;
-}
-
-.history #datepicker_from {
+.history .calendar {
 	float: left;
 	width: 85px;
-	margin-left: 5px;
-	margin-right: 5px;
-
-	margin: 2px;
+	margin-left: 10px;
 	font-weight: bold;
-	line-height: 1.2em;
+	font-size: 12px;
+	line-height: 13px;
 	color: #3369a8;
 	background: 0;
 	border: 1.5px solid #3369a8;
-	display: block;
+	display: none;
 }
 
-.history #datepicker_to {
-	float: left;
-	width: 85px;
-	margin-left: 5px;
-	margin-right: 5px;
-
-	margin: 2px;
-	font-weight: bold;
-	line-height: 1.2em;
-	color: #3369a8;
-	background: 0;
-	border: 1.5px solid #3369a8;
-	display: block;
-}
 
 .history .submit {
 	float: left;
@@ -286,8 +327,6 @@
 
 .history #csv{
 	float: left;
-	margin-right: 10px;
-	margin-top: 5px;
 	cursor: pointer;
 }
 
