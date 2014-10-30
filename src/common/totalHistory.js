@@ -1,7 +1,7 @@
 var TotalHistory = function (options) {
 	var self        = this;
 	var apiHandler  = new ApiHandler(options.url);
-	var request, basisRequest, ts, cp, filter, last;
+	var request, basisRequest, ts, cp, filter, last, interval;
 	var c = ripple.currencyDropdown();
 	var to_export = {};
 	var ctx = $("#canvas").get(0).getContext("2d");
@@ -17,6 +17,8 @@ var TotalHistory = function (options) {
 
 	var chart_options = {
 		responsive: true,
+		pointHitDetectionRadius : 1,
+		scaleFontFamily: "Open Sans Light",
 		scaleLineColor: "rgba(177,177,177,0.3)",
 		scaleShowGridLines : false,
 		pointDot : false,
@@ -24,22 +26,28 @@ var TotalHistory = function (options) {
 		bezierCurve : true,
 		bezierCurveTension : 0.1,
 		showTooltips: false,
+		labelsFilter: function (value, index) {
+			var jump = Math.ceil(interval/20);
+			return (index) % jump !== 0;
+		},
 		scaleLabel: '<% if (value>=1000000) {%>'
-							+'<%=value/1000000%>m'
+							+'<%=" "+value/1000000%>m'
 						+'<% } else if (value>=1000){%>' 
-							+'<%=value/1000%>k'
+							+'<%=" "+value/1000%>k'
 						+'<% } else if(value == 0){%>'
 							+''
 						+'<% } else {%>'
-							+ '<%=value%>'
-					+'<%}%>',
-		//tooltipTemplate: "<%if (label){%><%=label%>: <%}%>Hey<%= value %>",
-		//multiTooltipTemplate: "Hello <%= value %>",
+							+ '<%=" "+value%>'
+					+'<%}%>', 
 		legendTemplate :'<div class="legend">'
 							+'<% for (var i=0; i<datasets.length; i++) { %>'
 								+'<div class="label" id="<%= datasets[i].label %>" style="color:<%=datasets[i].fillColor%>">'
 									+'<div class="gateway">'
-										+ '<% if (datasets[i].label.split("-").length == 1) { %>'
+										+ '<% if (datasets[i].label === "Sent") { %>'
+											+ '<%= "Transaction Volume" %> '
+										+ '<% } else if (datasets[i].label === "Traded") { %>'
+											+ '<%= "Trade Volume" %> '
+										+ '<% } else if (datasets[i].label.split("-").length == 1) { %>'
 											+ '<%= datasets[i].label.split("-")[0] %> '
 										+ '<% } else if (datasets[i].label.split("-")[3]){ %>'
 											+'<div class="gw">'
@@ -61,28 +69,28 @@ var TotalHistory = function (options) {
 	};
 
 	var colors = [
-		"rgba(31, 119, 180,0.8)",
-		"rgba(255, 127, 14,0.8)",
-		"rgba(174, 199, 232,0.8)",
-		"rgba(255, 187, 120,0.8)",
-		"rgba(214, 39, 40,0.8)",
-		//"rgba(152, 223, 138,0.8)",
-		//"rgba(255, 152, 150,0.8)",
-		"rgba(44, 160, 44,0.8)",
+		"rgba(31, 119, 180,0.7)",
+		"rgba(255, 127, 14,0.7)",
+		"rgba(174, 199, 232,0.7)",
+		"rgba(255, 187, 120,0.7)",
+		"rgba(214, 39, 40,0.7)",
+		//"rgba(152, 223, 138,0.7)",
+		//"rgba(255, 152, 150,0.7)",
+		"rgba(44, 160, 44,0.7)",
 
-		"rgba(241,150,112,0.8)",
-		"rgba(225,101,82,0.8)",
-		"rgba(201,74,83,0.8)",
-		"rgba(190,81,104,0.8)",
-		"rgba(163,73,116,0.8)",
-		"rgba(153,55,103,0.8)",
-		"rgba(101,56,125,0.8)",
-		"rgba(78,36,114,0.8)",
-		"rgba(145,99,182,0.8)",
-		"rgba(224,89,139,0.8)",
-		"rgba(124,159,176,0.8)",
-		"rgba(154,191,136,0.8)",
-		"rgba(81,87,74,0.8)"
+		"rgba(241,150,112,0.7)",
+		"rgba(225,101,82,0.7)",
+		"rgba(201,74,83,0.7)",
+		"rgba(190,81,104,0.7)",
+		"rgba(163,73,116,0.7)",
+		"rgba(153,55,103,0.7)",
+		"rgba(101,56,125,0.7)",
+		"rgba(78,36,114,0.7)",
+		"rgba(145,99,182,0.7)",
+		"rgba(224,89,139,0.7)",
+		"rgba(124,159,176,0.7)",
+		"rgba(154,191,136,0.7)",
+		"rgba(81,87,74,0.7)"
 	];
 	var issuers = {};
 
@@ -97,12 +105,14 @@ var TotalHistory = function (options) {
 
 	//Initial parameters
 	var inc = 'day';
-	var end = moment().subtract(16, inc).format('YYYY-MM-DD');
-	var min = moment().subtract(14, inc).format("MM/DD/YYYY");
+	var end = moment().subtract(1, 'month').subtract(1, 'day').format('YYYY-MM-DD');
+	var min = moment().subtract(1, 'month').format("MM/DD/YYYY");
 	var start = moment().format("YYYY-MM-DD");
 	var curr = "USD";
 	$('#datepicker_to').val(moment(start).format("MM/DD/YYYY"));
 	$('#datepicker_from').val(moment(end).format("MM/DD/YYYY"));
+	check_increments('month');
+	check_increments('week');
 
 	//Initial draw
 	getData(inc, start, end, curr);
@@ -261,7 +271,7 @@ var TotalHistory = function (options) {
 			window.myLine = new Chart(ctx).Line(lcd, chart_options);
 
 			var xorigin = myLine.scale.xScalePaddingLeft;
-			var yorigin = myLine.scale.height - 23.68773530263539;
+			var yorigin = myLine.scale.endPoint;
 			yborder.attr("y2", yorigin);
 			xborder.attr("x1", xorigin);
 
@@ -314,7 +324,6 @@ var TotalHistory = function (options) {
 				go_to(this, data, labels);
 			}
 		});
-
 	}
 
 	function go_to(breadcrumb, data, lables){
@@ -367,7 +376,6 @@ var TotalHistory = function (options) {
 	}
 	
 	function pick_increment(diff){
-		var inc;
 		switch (true){
 			case diff > 0 && diff <= 40:
 				inc = 'day';
@@ -384,7 +392,33 @@ var TotalHistory = function (options) {
 		}
 		$('.int').removeClass('clicked');
 		$('#'+inc).addClass('clicked');
-		return inc;
+	}
+
+	function pick_range(id){
+		start = moment().format("YYYY-MM-DD");
+		switch (true){
+			case id === "1m":
+				end = moment().subtract(1, 'month').format('YYYY-MM-DD');
+				break;
+			case id === "3m":
+				end = moment().subtract(3, 'month').format('YYYY-MM-DD');
+				break;
+			case id === "6m":
+				end = moment().subtract(6, 'month').format('YYYY-MM-DD');
+				break;
+			case id === "1y":
+				end = moment().subtract(1, 'year').format('YYYY-MM-DD');
+				break;
+			case id === "max":
+				//ADD full date
+				end = moment().subtract(2, 'year').format('YYYY-MM-DD');
+				break
+			default:
+				break;
+		}
+		//ADD set datepicker
+		$('#datepicker_to').val(moment(start).format("MM/DD/YYYY"));
+		$('#datepicker_from').val(moment(end).format("MM/DD/YYYY"));
 	}
 
 	function update_chart(chart, lcd){
@@ -429,9 +463,11 @@ var TotalHistory = function (options) {
 			start = moment(dateText).format("YYYY-MM-DD");
 			$( "#datepicker_from" ).datepicker( "option", "maxDate", f_limit );
 			difference = diff('day', start, end)
-			inc = pick_increment(difference);
+			pick_increment(difference);
 			myLine.destroy();
 			getData(inc, start, end, curr);
+			check_increments('month');
+			check_increments('week');
 		}
 	});
 
@@ -445,29 +481,77 @@ var TotalHistory = function (options) {
 			end = moment(dateText).format("YYYY-MM-DD");
 			$( "#datepicker_to" ).datepicker( "option", "minDate", f_limit );
 			difference = diff('day', start, end)
-			inc = pick_increment(difference);
+			pick_increment(difference);
 			myLine.destroy();
 			getData(inc, start, end, curr);
+			check_increments('month');
+			check_increments('week');
 		}
 	});
 	
 	$('.interval').on('click', '.int',  function(e) {
 		e.preventDefault();
-		var id = $(this).attr('id');
-		difference = diff(id, start, end);
-		if (difference>4 && difference<60){
+		if(!$(this).hasClass('clicked')){
+			var id = $(this).attr('id');
+			difference = diff(id, start, end);
+			if (difference>4){
+				borders_off();
+				$('.int').removeClass('clicked');
+				$(this).addClass('clicked');
+				inc = id;
+				myLine.destroy();
+				getData(inc, start, end, curr);
+				check_increments('month');
+				check_increments('week');
+			}
+		}
+	});
+
+	function check_increments(inc){
+		difference = diff(inc, start, end);
+		if (difference<5){
+			$("#"+inc).addClass('noclick');
+		}
+		else{
+			$("#"+inc).removeClass('noclick');
+		}
+	}
+
+	$('.interval').on('click', '.range', function(e){
+		e.preventDefault();
+		if(!$(this).hasClass('clicked')){
+			var id = $(this).attr('id');
+			$('.range').removeClass('clicked');
+			$(this).addClass('clicked');
+			//ADD class to datepicker
+			$("#custom").removeClass('clicked');
+			$("#datepicker_from").hide();
+			$("#datepicker_to").hide();
+			pick_range(id);
+			difference = diff('day', start, end);
+			pick_increment(difference);
 			borders_off();
-			$('.int').removeClass('clicked');
-			$('#'+id).addClass('clicked');
-			inc = id;
 			myLine.destroy();
 			getData(inc, start, end, curr);
+			check_increments('month');
+			check_increments('week');
+		}
+	});
+
+	$('.interval').on('click', '#custom', function(e){
+		e.preventDefault();
+		if(!$(this).hasClass('clicked')){
+			$('.range').removeClass('clicked');
+			$(this).addClass('clicked');
+			$("#datepicker_from").show();
+			$("#datepicker_to").show();
 		}
 	});
 
 	$('select').on('change', function() {
 		curr = $(this).val();
 		myLine.destroy();
+		borders_off();
 		getData(inc, start, end, curr);
 	});
 
@@ -533,14 +617,15 @@ var TotalHistory = function (options) {
 			}
 			closest = closest_point(activeBars, c_point);
 			if(activeBars.length !== 0){
+				console.log(activeBars);
 				line.attr("stroke-width", 1);
 				line2.attr("stroke-width", 1);
 				circle.attr("r", 4);
 				var xorigin = myLine.scale.xScalePaddingLeft;
-				var yorigin = myLine.scale.height - 23.68773530263539;
-				line.transition().duration(20).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
-				line2.transition().duration(20).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
-				circle.transition().duration(20).attr("cx", closest.x).attr("cy", closest.y);
+				var yorigin = myLine.scale.endPoint;
+				line.transition().duration(100).attr("x1", xorigin).attr("y1", closest.y).attr("x2", closest.x).attr("y2", closest.y);
+				line2.transition().duration(100).attr("x1", closest.x).attr("y1", 9).attr("x2", closest.x).attr("y2", yorigin);
+				circle.transition().duration(100).attr("cx", closest.x).attr("cy", closest.y);
 				$('#tooltip .iss').text("");
 				var title;
 				label_color = $('#lineLegend [id="'+closest.label+'"]').css('color');
@@ -555,7 +640,7 @@ var TotalHistory = function (options) {
 				}
 				else title=csplit[0];
 				$('#tooltip').show();
-				$('#tooltip').css({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110});
+				$('#tooltip').animate({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110},25);
 				$('#tooltip .title').text(title).css('color',label_color);
 				$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)").format("MMM D YYYY hh:mm a (UTC)"));
 				$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);
