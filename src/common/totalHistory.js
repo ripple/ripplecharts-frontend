@@ -19,7 +19,7 @@ var TotalHistory = function (options) {
 		responsive: true,
 		pointHitDetectionRadius : 1,
 		scaleFontFamily: "Open Sans Light",
-		scaleLineColor: "rgba(177,177,177,0.3)",
+		scaleLineColor: "#404040;",
 		scaleShowGridLines : false,
 		pointDot : false,
 		animationSteps: 20,
@@ -411,7 +411,7 @@ var TotalHistory = function (options) {
 				break;
 			case id === "max":
 				//ADD full date
-				end = moment().subtract(2, 'year').format('YYYY-MM-DD');
+				end = moment('2013/2/1').format('YYYY-MM-DD');
 				break
 			default:
 				break;
@@ -433,6 +433,11 @@ var TotalHistory = function (options) {
 		$(".loading").hide();
 		xborder.attr("stroke-width", 1);
 		yborder.attr("stroke-width", 1);
+
+		xorigin = myLine.scale.xScalePaddingLeft;
+		yorigin = myLine.scale.endPoint;
+		yborder.attr("y2", yorigin);
+		xborder.attr("x1", xorigin);
 	}	
 
 	//Compare sum of arrays
