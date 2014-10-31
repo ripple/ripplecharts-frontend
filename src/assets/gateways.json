@@ -165,6 +165,23 @@
             }],
         "hotwallets": [],
         "domain": "ripple-market.jp"
+    }, {
+        "name": "Pax Moneta",
+        "accounts": [{
+            "address": "rUkMKjQitpgAM5WTGk79xpjT38DEJY283d",
+            "currencies": ["KRW"]
+            }],
+        "hotwallets": [],
+        "domain": "paxmoneta.com"
+    }, {
+        "name": "Ripplex",
+        "accounts": [{
+            "address": "r9ZFPSb1TFdnJwbTMYHvVwFK1bQPUCVNfJ",
+            "currencies": ["JPY"]
+            }],
+        "hotwallets": [],
+        "domain": "ripplex.co.jp"
     }
+    
     
 ]
