@@ -6,6 +6,16 @@ var TotalHistory = function (options) {
 	ctx = $("#canvas").get(0).getContext("2d"),
 	apiHandler  = new ApiHandler(options.url);
 
+	$('.interval .range').each(function(){
+			$(this).width($(this).width() + 4);
+	});
+	$('.interval .int').each(function(){
+			$(this).width($(this).width() + 4);
+	});
+	$('.interval #custom').each(function(){
+			$(this).width($(this).width() + 4);
+	});
+
 	//Defining SVG elements on overlayed canvas.
 	var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2"),
 			line = svgContainer.append("line").attr("stroke-width", 0).attr("class", "line"),
@@ -549,12 +559,12 @@ var TotalHistory = function (options) {
 			var scroll = $(window).scrollTop();
 			var rect = this.getBoundingClientRect();
 			var activeBars = myLine.getPointsAtEvent(evt),
-					c_point = {},
-					text = "";
-			c_point = {
+				text = "",
+				c_point = {
 					x: evt.clientX - rect.left,
 					y: evt.clientY - rect.top
-			}
+				};
+			if (activeBars === undefined) console.log("yo");
 			closest = closest_point(activeBars, c_point);
 			if(activeBars.length !== 0){
 				line.attr("stroke-width", 1);
@@ -579,7 +589,7 @@ var TotalHistory = function (options) {
 				}
 				else title=csplit[0];
 				$('#tooltip').show();
-				$('#tooltip').animate({'top':closest.y+rect.top+scroll-100,'left':closest.x+rect.left-110},25);
+				$('#tooltip').animate({'top':closest.y+rect.top+scroll-($('#tooltip').height()/2),'left':closest.x+rect.left-($('#tooltip').width()/2)},25);
 				$('#tooltip .title').text(title).css('color',label_color);
 				$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)", "MM/DD/YYYY").format("MMM D YYYY hh:mm a (UTC)"));
 				$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);

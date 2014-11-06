@@ -30,7 +30,16 @@
 	font-size:14px;
 	float: right;
 	margin-top: 5px;
-	height: 21px;
+	height: auto;
+}
+
+#main #ranges{
+	height: auto;
+	float: left;
+}
+#main #intervals{
+	height: auto;
+	float: left;
 }
 
 #main .table .cell {
@@ -65,14 +74,15 @@
 	text-align: center;
 	display: inline-block;
 	width: 90%;
-	height: 30px;
+	height: auto;
+	margin-bottom: 5px;
 }
 
 #main #breadcrumb {
 	margin-top: 5px;
 	font-size:12px;
 	float: left;
-	height: 21px;
+	height: auto;
 }
 
 #main #lineLegend{
@@ -435,5 +445,43 @@
 	#totalHistory {
 		zoom: .75;
 		width:100%;
+	}
+}
+
+@media only screen 
+and (max-width : 480px) {
+	
+	#main #tooltip {
+		position:absolute;
+		width:100px;
+		text-align: center;
+		border: 1px solid #ccc;
+		border-radius: 2px;
+		z-index: 1000;
+		display: none;
+		background: rgba(255,255,255,0.9);
+		pointer-events:none;
+	}
+
+	#main #tooltip .title{
+		font-size:7px;
+		margin-top: 2px;
+	}
+
+	#main #tooltip .date{
+		padding-top: 2px;
+		font-size:7px;
+	}
+
+	#main #tooltip .value{
+		padding: 2px;
+		font-size: 9px;
+		margin-bottom: 2px;
+	}
+
+	#main #csv {
+		margin-left: 5px;
+		text-align: left;
+		width: 100%;
 	}
 }
