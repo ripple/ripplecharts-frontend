@@ -1,0 +1,90 @@
+<div class="history" id="main">
+
+	<div class="helpbox" ng-class="{showHelp : showHelp}">
+		<h4>Historical Metrics</h4>
+		<p>
+			This chart shows trends for various currencies available on the Ripple Network. Each metric can be broken down into further detail by clicking on its entry in the legend below the graph. Once a currency has been chosen for an in depth view, the legend shows the name of the gateway, its issuing address and the counter currency if applicable. Gateways are grouped by currency for comparison. The time range and increment can be chosen from the top right.
+		</p>
+		
+		<div class="table">
+			<div class="cell">
+			<h5>Total Volume</h5>
+			<p>
+				The initial Total Voluem chart shows the aggregate volume of both total transaction and trade volume. The legend at the bottom allows a deeper view into each of those metrics.
+			</p>        
+			</div>
+			<div class="cell">
+			<h5>Transaction Volume</h5>
+			<p>
+				The transaction volume chart shows the amounts sent through payments and offers 
+				exercised for each currency. The legend at the bottom allows a deeper view into how that volume breaks down into different gateways.
+			</p>        
+			</div>
+			<div class="cell">
+			<h5>Trade Volume</h5>
+			<p>
+				The trade volume chart shows the aggregate volume of trade between each currency 
+				and XRP. The legend at the bottom allows a deeper view into how that volume breaks down into different gateways.
+			</p>  
+			</div>
+		</div>
+		
+	</div>
+
+	<div class="control">
+        <div id="currency">
+            <select class="currency">
+                <option value="USD">USD</option>
+                <option value="XRP">XRP</option>
+                <option value="BTC">BTC</option>
+                <option value="EUR">EUR</option>
+                <option value="CNY">CNY</option>
+                <option value="JPY">JPY</option>
+            </select>
+        </div>
+        <div id="breadcrumb">
+            <ul class="crumbs">
+                <li class="crumb" id="totals">Totals</li>
+            </ul>
+        </div>
+		<div class="interval">
+            <div id="intervals">
+				<div class="tag">Interval:</div>
+				<div id = "month" class="int"> months </div>
+				<div id = "week" class="int"> weeks </div>
+				<div id = "day" class="int clicked"> days </div>
+			</div>
+			<div id="ranges">
+				<div class="tag">Range:</div>
+				<input type="text" class="ui-datepicker calendar" id="datepicker_from">
+				<input type="text" class="ui-datepicker calendar" id="datepicker_to">
+				<div id = "1m" class="range clicked">1M</div>
+				<div id = "3m" class="range">3m</div>
+				<div id = "6m" class="range">6m</div>
+				<div id = "1y" class="range">1y</div>
+				<div id = "max" class="range">max</div>
+				<div id = "custom">custom</div>
+			</div>
+            <a id="csv">
+              <img src="http://www.ripplecharts.com/assets/images/download.svg">
+            </a>
+		</div>
+	</div>
+
+	 <div class="chart_wrapper">
+		<img class="throbber loader loading" id="loading" src="assets/images/rippleThrobber.png">
+		<canvas id="canvas"></canvas>
+	</div>
+	<div id="lineLegend"></div>
+	<div id="tooltip">
+		<div class="title"></div>
+		<div class="iss"></div>
+		<div class="date"></div>
+		<div class="value"></div>
+	</div>
+</div>
+<style>
+	footer .footerInner {
+		width:90% !important;
+	}
+</style>

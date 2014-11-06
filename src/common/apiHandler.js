@@ -142,35 +142,84 @@ ApiHandler = function (url) {
     }, callback); 
   }
   
+  this.historicalMetrics = function(metric, currency, issuer, start, end, inc, callback){
+      var request = apiRequest("historicalMetrics");
+      start = start || new Date();
+      json = {
+          startTime     : start,  
+          endTime       : end,
+          timeIncrement : inc,
+          metric: metric
+      };
+      if (currency !== "XRP"){
+          json.exchange = {currency: currency, issuer: issuer}
+      }
+      request.post(JSON.stringify(json)).on('load', function(xhr){   
+          data  = JSON.parse(xhr.response);
+          callback (null, data);
+
+      }).on('error', function(xhr){
+          callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      }); 
+
+      return request;
+  }
+
+
+  this.accountsCreated = function (params, callback) {
+      var request = apiRequest("accountsCreated");
+      return handleRequest(request, params, callback); 
+  }
+
+
+  this.getTopMarkets = function (ex, callback) {
+      var request = apiRequest("topMarkets");
+      return handleRequest(request, { exchange : ex }, callback);     
+  }
+
+  this.getVolume24Hours = function (ex, callback) {
+      var request = apiRequest("totalValueSent");
+      return handleRequest(request, { exchange : ex }, callback);      
+  }
+
+  this.getVolume30Days = function (ex, callback) {
+      var request = apiRequest("totalValueSent");
+      return handleRequest(request, {
+          endTime   : moment.utc(),
+          startTime : moment.utc().subtract(30, "days"),
+          exchange  : ex
+      }, callback); 
+  }
+
 
   this.getNetworkValue = function (ex, callback) {
-    var request = apiRequest("totalNetworkValue");
-    return handleRequest(request, { exchange : ex }, callback); 
+      var request = apiRequest("totalNetworkValue");
+      return handleRequest(request, { exchange : ex }, callback); 
   }
-  
-  
-  this.exchangeRates = function (params, callback) {
-    var request = apiRequest("exchangeRates");
-    return handleRequest(request, params, callback);    
-  }
-  
-  this.marketTraders = function (params, callback) {
-    var request = apiRequest("marketTraders");
-    return handleRequest(request, params, callback);    
-  }
-  
-  function handleRequest(request, params, callback) {
-    
-    request.post(JSON.stringify(params))
-    .on('load', function(xhr){   
-      var response = JSON.parse(xhr.response);
-      callback (null, response);
-      
-    }).on('error', function(xhr){
 
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-    });
-    
-    return request;    
+
+  this.exchangeRates = function (params, callback) {
+      var request = apiRequest("exchangeRates");
+      return handleRequest(request, params, callback);    
+  }
+
+  this.marketTraders = function (params, callback) {
+      var request = apiRequest("marketTraders");
+      return handleRequest(request, params, callback);    
+  }
+
+  function handleRequest(request, params, callback) {
+
+      request.post(JSON.stringify(params))
+      .on('load', function(xhr){   
+          var response = JSON.parse(xhr.response);
+          callback (null, response);
+
+      }).on('error', function(xhr){
+
+          callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
+      });
+
+      return request;    
   }
 }

@@ -10,6 +10,7 @@ angular.element(document).ready(function() {
     'ripplecharts.graph',
     'ripplecharts.accounts',
     'ripplecharts.value',
+    'ripplecharts.history',
     'ui.state',
     'ui.route',
     'snap'
