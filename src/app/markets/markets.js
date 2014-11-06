@@ -186,7 +186,7 @@ angular.module( 'ripplecharts.markets', [
   book = new OrderBook ({
     chartID : "bookChart",
     tableID : "bookTables",
-    remote  : orderBookRemote,
+    remote  : remote,
     resize  : true,
     emit    : emitHandler
   });
@@ -226,8 +226,7 @@ angular.module( 'ripplecharts.markets', [
   $scope.$on("$destroy", function(){
     priceChart.suspend();
     book.suspend();
-    tradeFeed.suspend();
-    orderBookRemote.disconnect();  
+    tradeFeed.suspend(); 
   });
   
 
@@ -235,15 +234,13 @@ angular.module( 'ripplecharts.markets', [
   $scope.$watch('online', function(online) { 
     if (online) {
       remote.connect();  
-      orderBookRemote.connect();
       setTimeout(function(){ //put this in to prevent getting "unable to load data"
         loadPair(); 
       }, 100);
          
     
     } else {
-      remote.disconnect();  
-      orderBookRemote.disconnect();      
+      remote.disconnect();       
     }
   });
 });

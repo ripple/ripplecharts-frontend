@@ -86,22 +86,19 @@ var OrderBook = function (options) {
     
     if (asks) {
       asks.removeListener('model', handleAskModel);
-      r.request_unsubscribe()
-        .books([asks.to_json()])
-        .request();
     }
     if (bids) {
-      bids.removeListener('model', handleBidModel); 
-      r.request_unsubscribe()
-        .books([bids.to_json()])
-        .request();
-      }  
+      asks.removeListener('model', handleAskModel);
+    }  
      
     r._books = {};
     r._events.prepare_subscribe = [];
     
     asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
-    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
+    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer); 
+    
+    asks.offersSync();
+    bids.offersSync();
     
     function handleAskModel (offers) {
       self.offers.asks = handleBook(offers,'asks');
@@ -122,17 +119,31 @@ var OrderBook = function (options) {
 
 //handle data returned from ripple-lib
   function handleBook (data,action) {
-    var max_rows = options.max_rows || 100,
-      rowCount   = 0,
-      offers     = [];
+    var max_rows = options.max_rows || 100;
+    var rowCount = 0;
+    var offers   = [];
+    var newData  = jQuery.extend(true, [], data);
     
-    for (var i=0; i<data.length; i++) {
-      var d = data[i];
- 
-      // prefer taker_pays_funded & taker_gets_funded
-      if (d.hasOwnProperty('taker_gets_funded')) {
-        d.TakerGets = d.taker_gets_funded;
-        d.TakerPays = d.taker_pays_funded;
+    
+    newData.forEach(function(d) {
+      if (rowCount++ > max_rows) return;  
+
+      // rippled has a bug where it shows some unfunded offers
+      // We're ignoring them
+      if (d.taker_gets_funded === "0" || d.taker_pays_funded === "0") {
+        return;
+      }
+      
+      if (d.TakerGets.value) {
+        d.TakerGets.value = d.taker_gets_funded;
+      } else {
+        d.TakerGets = parseInt(Number(d.taker_gets_funded), 10);
+      }
+
+      if (d.TakerPays.value) {
+        d.TakerPays.value = d.taker_pays_funded;
+      } else {
+        d.TakerPays = parseInt(Number(d.taker_pays_funded), 10);
       }
 
       d.TakerGets = Amount.from_json(d.TakerGets);
@@ -154,11 +165,9 @@ var OrderBook = function (options) {
           reference_date: new Date()
         });
       }
-          
-      if (rowCount++ > max_rows) break;
-
-      offers.push(d);              
-    }
+      
+      offers.push(d);           
+    });
     
     var type = action === "asks" ? "TakerGets" : "TakerPays";
     var sum;
@@ -166,7 +175,6 @@ var OrderBook = function (options) {
     offers.forEach(function(offer,index) {
       if (sum) sum = offer.sum = sum.add(offer[type]);
       else sum = offer.sum = offer[type];
-
       offer.showSum   = valueFilter(offer.sum);
       offer.showPrice = valueFilter(offer.price);
 
@@ -332,8 +340,8 @@ var OrderBook = function (options) {
     function filter (d) {
       if (!d) return "&nbsp";
       value = d.to_human({
-          precision      : 5,
-          min_precision  : 5,
+          precision      : 6,
+          min_precision  : 4,
           max_sig_digits : 7
       }); 
       

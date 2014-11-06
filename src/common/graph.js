@@ -177,7 +177,7 @@ function serverGetLines(address) {
   if ($.isEmptyObject(nodes[nodeMap[address]].trustLines)) {
     //Get trust lines for address         ?  ??current?
     var rral = (function() {return function() {
-      var x = remote.request_account_lines(address, 0, 0, handleLines);
+      var x = remote.requestAccountLines(address, null, handleLines);
       return x.message.id;
     }})();
     var reqID = rral();
@@ -246,9 +246,12 @@ function getNextTransactionPage() {
 //Handlers
 
 function handleLines(err, obj) {
+  console.log(arguments);
   delete pendingRequests[this.message.id];
   if (err && err.remote && (err.remote.error === "actNotFound" || err.remote.error === "actMalformed") ) {
     $("#loading").text("Account not found!").css("color","#a00");
+  } else if (err) {
+    console.log(err);
   } else {
     /*if () {
       //serverGetLines(address);
