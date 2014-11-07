@@ -338,17 +338,37 @@ var OrderBook = function (options) {
 
     
     function filter (d) {
-      if (!d) return "&nbsp";
-      value = d.to_human({
-          precision      : 6,
+      var opts = {
+          precision      : 8,
           min_precision  : 4,
-          max_sig_digits : 7
-      }); 
+          max_sig_digits : 8
+      };
+      var parts;
+      var decimalPart;
+      var length;
       
-      var parts = value.split(".");
-      var decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+      if (!d) return "&nbsp";
+      
+      value = d.to_human(opts); 
+      
+      parts = value.split(".");
+      if (parts[1] && parts[0] === "0") {
+        parts[1] = formatDecimal(parts[1], 4);
+      }
+      decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
       value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
-      return value;        
+      return value;  
+      
+      
+      function formatDecimal (num, digits) {
+        var sig = parseInt(num, 10).toString().length;
+        if (sig < digits) {
+          while (digits > sig++) num += '0';
+          return num;
+        } 
+        
+        return num.slice(0, num.length - sig + digits);
+      }
     }
     
     bidsHead.select(".headerRow th:nth-child(1) span").html(baseCurrency);
