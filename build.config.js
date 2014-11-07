@@ -69,7 +69,7 @@ module.exports = {
    */
   vendor_files: {
     js: [
-      'vendor/ripple/ripple.js',
+      'vendor/ripple/ripple-min.js',
       'vendor/snapjs/snap.js',
       'vendor/angular/angular.js',
       'vendor/angular-touch/angular-touch.js',
