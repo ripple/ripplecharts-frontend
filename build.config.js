@@ -89,7 +89,7 @@ module.exports = {
       'vendor/chartjs/Chart.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
-      'deps/ripple-0.7.37.js',
+      'deps/ripple-0.7.39-debug.js',
       'deps/offersExercisedListener.js',
       'deps/onResize.js'
     ],
