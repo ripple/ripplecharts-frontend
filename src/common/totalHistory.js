@@ -589,7 +589,9 @@ var TotalHistory = function (options) {
 				}
 				else title=csplit[0];
 				$('#tooltip').show();
-				$('#tooltip').animate({'top':closest.y+rect.top+scroll-($('#tooltip').height()/2),'left':closest.x+rect.left-($('#tooltip').width()/2)},25);
+				var tooltip_y = closest.y+rect.top+scroll-($('#tooltip').height()/2)-75;
+				var tooltip_x = closest.x+rect.left-($('#tooltip').width()/2);
+				$('#tooltip').animate({'top': tooltip_y,'left': tooltip_x},25);
 				$('#tooltip .title').text(title).css('color',label_color);
 				$('#tooltip .date').text(moment(closest.date + " 12:00 am (UTC)", "MM/DD/YYYY").format("MMM D YYYY hh:mm a (UTC)"));
 				$('#tooltip .value').text(parseFloat((closest.value).toFixed(2)).toLocaleString("en")+" "+curr);
