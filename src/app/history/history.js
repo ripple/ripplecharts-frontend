@@ -23,8 +23,4 @@ angular.module( 'ripplecharts.history', [
 		id     : 'totalHistory',
 		resize : true
 	});
-	
-	$scope.$on("$destroy", function(){
-		history.suspend();  //remove the resize listener
-	});
 });
