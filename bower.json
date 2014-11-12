@@ -21,7 +21,7 @@
     "jscrollpane": "~2.0.14",
     "jquery-ui": "~1.11.2",
     "chartjs": "https://github.com/leighquince/Chart.js.git#587fa9296cb8817063da8edd4f023d03bde3a264",
-    "ripple": "~0.9.1"
+    "ripple": "0.9.2"
   },
   "resolutions": {
     "angular": "1.2.15"

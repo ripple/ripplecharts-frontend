@@ -157,6 +157,7 @@ var OrderBook = function (options) {
           reference_date: new Date()
         });
       } else {
+
         d.price = Amount.from_quality(d.BookDirectory,
                                       d.TakerGets.currency(),
                                       d.TakerGets.issuer(), {
@@ -340,7 +341,7 @@ var OrderBook = function (options) {
     function filter (d) {
       var opts = {
           precision      : 8,
-          min_precision  : 4,
+          min_precision  : 2,
           max_sig_digits : 8
       };
       var parts;
@@ -354,7 +355,10 @@ var OrderBook = function (options) {
       parts = value.split(".");
       if (parts[1] && parts[0] === "0") {
         parts[1] = formatDecimal(parts[1], 4);
+      } else if (parts[1]) {
+        parts[1] = parts[1].slice(0, 4);
       }
+      
       decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
       value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
       return value;  
