@@ -86,9 +86,11 @@ var OrderBook = function (options) {
     
     if (asks) {
       asks.removeListener('model', handleAskModel);
+      asks.unsubscribe();
     }
     if (bids) {
-      asks.removeListener('model', handleAskModel);
+      bids.removeListener('model', handleBidModel);
+      bids.unsubscribe();
     }  
      
     r._books = {};
@@ -100,22 +102,21 @@ var OrderBook = function (options) {
     asks.offersSync();
     bids.offersSync();
     
-    function handleAskModel (offers) {
-      self.offers.asks = handleBook(offers,'asks');
-      drawData(); 
-      redrawBook();     
-    }
-    
-    function handleBidModel (offers) {
-      self.offers.bids = handleBook(offers,'bids');
-      drawData(); 
-      redrawBook();      
-    }
-    
     asks.on('model', handleAskModel);   
     bids.on('model', handleBidModel); 
   }
+  
+  function handleAskModel (offers) {
+    self.offers.asks = handleBook(offers,'asks');
+    drawData(); 
+    redrawBook();     
+  }
 
+  function handleBidModel (offers) {
+    self.offers.bids = handleBook(offers,'bids');
+    drawData(); 
+    redrawBook();      
+  }
 
 //handle data returned from ripple-lib
   function handleBook (data,action) {
@@ -416,8 +417,18 @@ var OrderBook = function (options) {
 
 //suspend the resize listener, if the orderbook is resizable  
   this.suspend = function () {
+    if (asks) {
+      asks.removeListener('model', handleAskModel);
+      asks.unsubscribe();
+    } 
+    
+    if (bids) {
+      bids.removeListener('model', handleBidModel);
+      bids.unsubscribe();
+    }
+    
     if (options.resize && typeof removeResizeListener === 'function')
-    removeResizeListener(window, resizeChart);   
+      removeResizeListener(window, resizeChart);   
   }
 
 
