@@ -654,7 +654,9 @@ networkGraph = function () {
     if (result.meta) {
       for (var i=0; i<result.meta.AffectedNodes.length; i++) {
         var an = result.meta.AffectedNodes[i];
-        if (an.ModifiedNode && an.ModifiedNode.LedgerEntryType==="AccountRoot" && an.ModifiedNode.FinalFields.Account===result.Account) {
+        if (an.ModifiedNode && an.ModifiedNode.LedgerEntryType==="AccountRoot" &&
+            an.ModifiedNode.FinalFields &&
+            an.ModifiedNode.FinalFields.Account===result.Account) {
           xrpExpense = {before:an.ModifiedNode.PreviousFields.Balance/1000000 , after:an.ModifiedNode.FinalFields.Balance/1000000};
           break;
         }
