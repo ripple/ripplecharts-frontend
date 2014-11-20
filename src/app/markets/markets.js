@@ -43,7 +43,7 @@ angular.module( 'ripplecharts.markets', [
     $location.path("/markets").replace(); //to remove the data from the URL
     return;
   }
-  
+
 //load settings from session, local storage, options, or defaults  
   $scope.base  = store.session.get('base') || store.get('base') || 
     Options.base || {currency:"XRP", issuer:""};
@@ -55,7 +55,10 @@ angular.module( 'ripplecharts.markets', [
     Options.chartType || "line";
   
   $scope.interval  = store.session.get('interval') || store.get('interval') || 
-    Options.interval  || "1h";
+    Options.interval  || "15m";
+
+  $scope.range  = store.session.get('range') || store.get('range') || 
+    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd'), end: moment.utc()};
 
 //set up the currency pair dropdowns
   var loaded  = false, 
@@ -91,33 +94,81 @@ angular.module( 'ripplecharts.markets', [
   });
   
   
-//set up the interval selector  
-  var list = d3.select("#interval").attr("class","selectList")
-  list.append("label").html("Interval:");
-  var interval = list.selectAll("a")
+  //set up the range selector  
+  var ranges = d3.select("#range").attr("class","selectList")
+  ranges.append("label").html("Range:");
+  var range = ranges.selectAll("a")
     .data([
-      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//testing purposes only
-      {name: "1m",  interval:"minute", multiple:1,  offset: function(d) { return d3.time.hour.offset(d, -2); }},
-      {name: "5m",  interval:"minute", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -12); }},
-      {name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
-      {name: "1h",  interval:"hour",   multiple:1,  offset: function(d) { return d3.time.day.offset(d, -5); }},
-      {name: "4h",  interval:"hour",   multiple:4,  offset: function(d) { return d3.time.day.offset(d, -20); }},
-      {name: "1d",  interval:"day",    multiple:1,  offset: function(d) { return d3.time.day.offset(d, -120); }},
-      {name: "3d",  interval:"day",    multiple:3,  offset: function(d) { return d3.time.year.offset(d, -1); }}
+      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
+      {name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
+      {name: "3d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -3); }},
+      {name: "7d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -7); }},
+      {name: "1m",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.month.offset(d, -1); }},
+      {name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
+      {name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
+      {name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }}
       //{name: "1w",  interval:"week",   multiple:1,  offset: function(d) { return d3.time.year.offset(d, -3); }}
       ])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { return d.name === $scope.interval })
+    .classed("selected", function(d) { return d.name === $scope.range.name })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
       d3.event.preventDefault();
-      var that = this;
-      store.set("interval", d.name);
-      store.session.set("interval", d.name);
-      
-      interval.classed("selected", function() { return this === that; });
+      var that   = this,
+          now    = moment.utc(),
+          offset = d.offset(now);
+      store.set("range", {name: d.name, start: offset, end: now});
+      store.session.set("range", {name: d.name, start: offset, end: now});      
+      range.classed("selected", function() { return this === that; });
+      intervals.selectAll("a")
+        .classed("selected", function(s) { 
+          if (s.multiple === d.multiple && s.interval === d.interval){
+            store.set("interval", s.name);
+            store.session.set("interval", s.name);
+            return true;
+          }
+          else return false; 
+        })
+        .classed("disabled", function(d){
+          return selectIntervals(offset, now, d);
+        });
       priceChart.load($scope.base, $scope.trade, d);
+    });
+
+    //set up the interval selector  
+  var intervals = d3.select("#interval").attr("class","selectList")
+  intervals.append("label").html("Interval:");
+  var interval = intervals.selectAll("a")
+    .data([
+      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
+      {name: "5m",  interval:"minute",  multiple:5 },
+      {name: "15m", interval:"minute",  multiple:15 },
+      {name: "1h",  interval:"hour",    multiple:1 },
+      {name: "3h",  interval:"hour",    multiple:3 },
+      {name: "6h",  interval:"hour",    multiple:6 },
+      {name: "1d",  interval:"day",     multiple:1 },
+      {name: "3d",  interval:"day",     multiple:3 },
+      {name: "1M",  interval:"month",   multiple:1 }
+      ])
+    .enter().append("a")
+    .attr("href", "#")
+    .classed("selected", function(d) { return d.name === $scope.interval })
+    .classed("disabled", function(d) { return selectIntervals(store.get('range').start, store.get('range').end, d)})
+    .text(function(d) { return d.name; })
+    .on("click", function(d) {
+      d3.event.preventDefault();
+      if (!this.classList.contains("disabled")) {
+        var that = this,
+            name = store.session.get('range').name;
+        d.start = store.session.get('range').start;
+        d.end = store.session.get('range').end;
+        store.set("interval", d.name);
+        store.session.set("interval", d.name);
+        interval.classed("selected", function() { return this === that; });
+        priceChart.load($scope.base, $scope.trade, d);
+      }
+
     });
     
 //set up the chart type selector    
@@ -175,7 +226,46 @@ angular.module( 'ripplecharts.markets', [
   }
   
   loaded = true;
-       
+
+  function selectIntervals(start, end, d){
+    diff = Math.abs(moment(start).diff(end))/100000;
+    switch (d.name){
+      case "5m":
+        if(diff < 2592) return false;
+        else return true;
+        break;
+      case "15m":
+        if(diff < 6048) return false;
+        else return true;
+        break;
+      case "1h":
+        if(diff < 26820) return false;
+        else return true;
+        break;
+      case "3h":
+        if(diff >= 2592 && diff < 79524) return false;
+        else return true;
+        break;
+      case "6h":
+        if(diff >= 6048 && diff < 159012) return false;
+        else return true;
+        break;
+      case "1d":
+        if(diff >= 26820 && diff <= 315360) return false;
+        else return true;
+        break;
+      case "3d":
+        if(diff >= 79524 && diff <= 315360) return false;
+        else return true;
+        break;
+      case "1M":
+        if(diff >= 159012 && diff <= 315360) return false;
+        else return true;
+        break;
+      default:
+        return true;
+    }
+  }       
 //set up the order book      
   function emitHandler (type, data) {
     if (type=='spread') {
@@ -202,14 +292,14 @@ angular.module( 'ripplecharts.markets', [
 //single function to reload all feeds when something changes
   function loadPair() {
  
-    var interval = d3.select("#interval .selected").datum();
+    var interval = d3.select("#range .selected").datum();
     
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
     
     store.session.set('base',  $scope.base);
     store.session.set('trade', $scope.trade);
-        
+
     priceChart.load($scope.base, $scope.trade, interval);
     book.getMarket($scope.base, $scope.trade); 
     tradeFeed.loadPair ($scope.base, $scope.trade);   
