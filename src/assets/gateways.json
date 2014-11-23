@@ -172,7 +172,7 @@
             "address": "rUkMKjQitpgAM5WTGk79xpjT38DEJY283d",
             "currencies": ["KRW"]
             }],
-        "hotwallets": [],
+        "hotwallets": ["rhLSigWL4J9JBBW1JFMBvaduDkVghG7cc2"],
         "domain": "paxmoneta.com"
     }, {
         "name": "Ripplex",
@@ -182,7 +182,13 @@
             }],
         "hotwallets": [],
         "domain": "ripplex.co.jp"
+    }, {
+        "name": "Ripula",
+        "accounts": [{
+            "address": "rBycsjqxD8RVZP5zrrndiVtJwht7Z457A8",
+            "currencies": ["GBP"]
+            }],
+        "hotwallets": ["rUR5QVHqFxRa8TSQawc1M6jKj7BvKzbHek"],
+        "domain": "ripula.co.uk"
     }
-    
-    
 ]
