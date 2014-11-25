@@ -32,25 +32,28 @@
 	</div>
 
 	<div class="control">
-		<div id="currency">
-			<select class="currency">
-				<option value="USD">USD</option>
-				<option value="XRP">XRP</option>
-				<option value="BTC">BTC</option>
-				<option value="EUR">EUR</option>
-				<option value="CNY">CNY</option>
-				<option value="JPY">JPY</option>
-			</select>
-		</div>
-		<div id="breadcrumb">
-			<ul class="crumbs">
-				<li class="crumb" id="totals">Totals</li>
-			</ul>
-		</div>
+        <div id="currency">
+            <select class="currency">
+                <option value="USD">USD</option>
+                <option value="XRP">XRP</option>
+                <option value="BTC">BTC</option>
+                <option value="EUR">EUR</option>
+                <option value="CNY">CNY</option>
+                <option value="JPY">JPY</option>
+            </select>
+        </div>
+        <div id="breadcrumb">
+            <ul class="crumbs">
+                <li class="crumb" id="totals">Totals</li>
+            </ul>
+        </div>
 		<div class="interval">
-			<a id="csv">
-				<img src="http://www.ripplecharts.com/assets/images/download.svg">
-			</a>
+            <div id="intervals">
+				<div class="tag">Interval:</div>
+				<div id = "month" class="int"> months </div>
+				<div id = "week" class="int"> weeks </div>
+				<div id = "day" class="int clicked"> days </div>
+			</div>
 			<div id="ranges">
 				<div class="tag">Range:</div>
 				<input type="text" class="ui-datepicker calendar" id="datepicker_from">
@@ -62,12 +65,9 @@
 				<div id = "max" class="range">max</div>
 				<div id = "custom">custom</div>
 			</div>
-			<div id="intervals">
-				<div class="tag">Interval:</div>
-				<div id = "month" class="int"> months </div>
-				<div id = "week" class="int"> weeks </div>
-				<div id = "day" class="int clicked"> days </div>
-			</div>
+            <a id="csv">
+              <img src="http://www.ripplecharts.com/assets/images/download.svg">
+            </a>
 		</div>
 	</div>
 

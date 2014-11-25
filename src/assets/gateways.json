@@ -3,7 +3,7 @@
         "name": "Bitstamp",
         "accounts": [{
             "address": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
-            "currencies": ["BTC", "USD"],
+            "currencies": ["BTC", "USD", "EUR"],
             "hotwallets": ["rrpNnNLKrartuEqfJGpqyDwPj1AFPg9vn1"]
             }]
     }, {
@@ -94,8 +94,9 @@
         "name": "Coinex",
         "accounts": [{
             "address": "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc",
-            "currencies": ["NZD","BTC","USD","AUD"],
-            "hotwallets": ["rGAmy1w1ENyTJ9BCAEicYyRM2Yk1iWZ7Z5"]
+            "currencies": ["NZD","BTC","USD","AUD", "STR"],
+            "hotwallets": ["rGAmy1w1ENyTJ9BCAEicYyRM2Yk1iWZ7Z5"],
+            "domain": "coinexgateway.com"
             }]
     }, {
         "name": "Ripple LatAm",
@@ -157,6 +158,37 @@
             }],
         "hotwallets": ["r37FUji17jCgCZvAUc8m5YqXquwHpgwa9q"],
         "domain": "rippex.net"
+    }, {
+        "name": "Ripple Market Japan",
+        "accounts": [{
+            "address": "rJRi8WW24gt9X85PHAxfWNPCizMMhqUQwg",
+            "currencies": ["JPY"]
+            }],
+        "hotwallets": [],
+        "domain": "ripple-market.jp"
+    }, {
+        "name": "Pax Moneta",
+        "accounts": [{
+            "address": "rUkMKjQitpgAM5WTGk79xpjT38DEJY283d",
+            "currencies": ["KRW"]
+            }],
+        "hotwallets": ["rhLSigWL4J9JBBW1JFMBvaduDkVghG7cc2"],
+        "domain": "paxmoneta.com"
+    }, {
+        "name": "Ripplex",
+        "accounts": [{
+            "address": "r9ZFPSb1TFdnJwbTMYHvVwFK1bQPUCVNfJ",
+            "currencies": ["JPY"]
+            }],
+        "hotwallets": [],
+        "domain": "ripplex.co.jp"
+    }, {
+        "name": "Ripula",
+        "accounts": [{
+            "address": "rBycsjqxD8RVZP5zrrndiVtJwht7Z457A8",
+            "currencies": ["GBP"]
+            }],
+        "hotwallets": ["rUR5QVHqFxRa8TSQawc1M6jKj7BvKzbHek"],
+        "domain": "ripula.co.uk"
     }
-    
 ]

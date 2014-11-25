@@ -86,53 +86,65 @@ var OrderBook = function (options) {
     
     if (asks) {
       asks.removeListener('model', handleAskModel);
-      r.request_unsubscribe()
-        .books([asks.to_json()])
-        .request();
+      asks.unsubscribe();
     }
     if (bids) {
-      bids.removeListener('model', handleBidModel); 
-      r.request_unsubscribe()
-        .books([bids.to_json()])
-        .request();
-      }  
+      bids.removeListener('model', handleBidModel);
+      bids.unsubscribe();
+    }  
      
     r._books = {};
     r._events.prepare_subscribe = [];
     
     asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
-    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);         
+    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer); 
     
-    function handleAskModel (offers) {
-      self.offers.asks = handleBook(offers,'asks');
-      drawData(); 
-      redrawBook();     
-    }
-    
-    function handleBidModel (offers) {
-      self.offers.bids = handleBook(offers,'bids');
-      drawData(); 
-      redrawBook();      
-    }
+    asks.offersSync();
+    bids.offersSync();
     
     asks.on('model', handleAskModel);   
     bids.on('model', handleBidModel); 
   }
+  
+  function handleAskModel (offers) {
+    self.offers.asks = handleBook(offers,'asks');
+    drawData(); 
+    redrawBook();     
+  }
 
+  function handleBidModel (offers) {
+    self.offers.bids = handleBook(offers,'bids');
+    drawData(); 
+    redrawBook();      
+  }
 
 //handle data returned from ripple-lib
   function handleBook (data,action) {
-    var max_rows = options.max_rows || 100,
-      rowCount   = 0,
-      offers     = [];
+    var max_rows = options.max_rows || 100;
+    var rowCount = 0;
+    var offers   = [];
+    var newData  = jQuery.extend(true, [], data);
     
-    for (var i=0; i<data.length; i++) {
-      var d = data[i];
- 
-      // prefer taker_pays_funded & taker_gets_funded
-      if (d.hasOwnProperty('taker_gets_funded')) {
-        d.TakerGets = d.taker_gets_funded;
-        d.TakerPays = d.taker_pays_funded;
+    
+    newData.forEach(function(d) {
+      if (rowCount++ > max_rows) return;  
+
+      // rippled has a bug where it shows some unfunded offers
+      // We're ignoring them
+      if (d.taker_gets_funded === "0" || d.taker_pays_funded === "0") {
+        return;
+      }
+      
+      if (d.TakerGets.value) {
+        d.TakerGets.value = d.taker_gets_funded;
+      } else {
+        d.TakerGets = parseInt(Number(d.taker_gets_funded), 10);
+      }
+
+      if (d.TakerPays.value) {
+        d.TakerPays.value = d.taker_pays_funded;
+      } else {
+        d.TakerPays = parseInt(Number(d.taker_pays_funded), 10);
       }
 
       d.TakerGets = Amount.from_json(d.TakerGets);
@@ -146,6 +158,7 @@ var OrderBook = function (options) {
           reference_date: new Date()
         });
       } else {
+
         d.price = Amount.from_quality(d.BookDirectory,
                                       d.TakerGets.currency(),
                                       d.TakerGets.issuer(), {
@@ -154,11 +167,9 @@ var OrderBook = function (options) {
           reference_date: new Date()
         });
       }
-          
-      if (rowCount++ > max_rows) break;
-
-      offers.push(d);              
-    }
+      
+      offers.push(d);           
+    });
     
     var type = action === "asks" ? "TakerGets" : "TakerPays";
     var sum;
@@ -166,7 +177,6 @@ var OrderBook = function (options) {
     offers.forEach(function(offer,index) {
       if (sum) sum = offer.sum = sum.add(offer[type]);
       else sum = offer.sum = offer[type];
-
       offer.showSum   = valueFilter(offer.sum);
       offer.showPrice = valueFilter(offer.price);
 
@@ -330,17 +340,40 @@ var OrderBook = function (options) {
 
     
     function filter (d) {
-      if (!d) return "&nbsp";
-      value = d.to_human({
-          precision      : 5,
-          min_precision  : 5,
-          max_sig_digits : 7
-      }); 
+      var opts = {
+          precision      : 8,
+          min_precision  : 2,
+          max_sig_digits : 8
+      };
+      var parts;
+      var decimalPart;
+      var length;
       
-      var parts = value.split(".");
-      var decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+      if (!d) return "&nbsp";
+      
+      value = d.to_human(opts); 
+      
+      parts = value.split(".");
+      if (parts[1] && parts[0] === "0") {
+        parts[1] = formatDecimal(parts[1], 4);
+      } else if (parts[1]) {
+        parts[1] = parts[1].slice(0, 4);
+      }
+      
+      decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
       value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
-      return value;        
+      return value;  
+      
+      
+      function formatDecimal (num, digits) {
+        var sig = parseInt(num, 10).toString().length;
+        if (sig < digits) {
+          while (digits > sig++) num += '0';
+          return num;
+        } 
+        
+        return num.slice(0, num.length - sig + digits);
+      }
     }
     
     bidsHead.select(".headerRow th:nth-child(1) span").html(baseCurrency);
@@ -384,8 +417,18 @@ var OrderBook = function (options) {
 
 //suspend the resize listener, if the orderbook is resizable  
   this.suspend = function () {
+    if (asks) {
+      asks.removeListener('model', handleAskModel);
+      asks.unsubscribe();
+    } 
+    
+    if (bids) {
+      bids.removeListener('model', handleBidModel);
+      bids.unsubscribe();
+    }
+    
     if (options.resize && typeof removeResizeListener === 'function')
-    removeResizeListener(window, resizeChart);   
+      removeResizeListener(window, resizeChart);   
   }
 
 

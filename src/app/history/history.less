@@ -35,11 +35,12 @@
 
 #main #ranges{
 	height: auto;
-	float: left;
+	float: right;
+    margin-right:20px;
 }
 #main #intervals{
 	height: auto;
-	float: left;
+	float: right;
 }
 
 #main .table .cell {
@@ -75,11 +76,10 @@
 	display: inline-block;
 	width: 90%;
 	height: auto;
-	margin-bottom: 5px;
 }
 
 #main #breadcrumb {
-	margin-top: 5px;
+	margin: 5px 0;
 	font-size:12px;
 	float: left;
 	height: auto;
@@ -339,7 +339,7 @@
 }
 
 #main #csv{
-	float: left;
+	float: right;
 	cursor: pointer;
 }
 
@@ -439,6 +439,26 @@
  * Dark theme
  */
 
+//tablet
+@media (max-width: 767px) {
+  #main .interval {
+      float: none;
+      width: 100%;
+      overflow:hidden;
+  }
+  
+ #main #ranges {
+    float: left;
+    clear: left;
+  }
+}
+
+@media (max-width: 600px) {
+  #main #intervals, #main #ranges {
+      float: left;
+      clear: left;
+  }
+}
 
 //mobile
 @media (max-width: 480px) {
@@ -477,11 +497,5 @@ and (max-width : 480px) {
 		padding: 2px;
 		font-size: 9px;
 		margin-bottom: 2px;
-	}
-
-	#main #csv {
-		margin-left: 5px;
-		text-align: left;
-		width: 100%;
 	}
 }

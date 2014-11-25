@@ -356,21 +356,20 @@ console.log($scope.interval, $scope.range);
 		else return true;
 	}       
 //set up the order book      
-	function emitHandler (type, data) {
-		if (type=='spread') {
-			document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    
-		}     
-	}
-	
-	book = new OrderBook ({
-		chartID : "bookChart",
-		tableID : "bookTables",
-		remote  : orderBookRemote,
-		resize  : true,
-		emit    : emitHandler
-	});
-	
-	book.getMarket($scope.base, $scope.trade); 
+
+  function emitHandler (type, data) {
+    if (type=='spread') {
+      document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    
+    }     
+  }
+  
+  book = new OrderBook ({
+    chartID : "bookChart",
+    tableID : "bookTables",
+    remote  : remote,
+    resize  : true,
+    emit    : emitHandler
+  });
 
 //set up trades feed  
 	tradeFeed = new TradeFeed({
@@ -404,27 +403,24 @@ console.log($scope.interval, $scope.range);
 
 
 //stop the listeners when leaving page  
-	$scope.$on("$destroy", function(){
-		priceChart.suspend();
-		book.suspend();
-		tradeFeed.suspend();
-		orderBookRemote.disconnect();  
-	});
-	
+  $scope.$on("$destroy", function(){
+    priceChart.suspend();
+    book.suspend();
+    tradeFeed.suspend(); 
+  });
+  
 
 //reload data when coming back online  
-	$scope.$watch('online', function(online) { 
-		if (online) {
-			remote.connect();  
-			orderBookRemote.connect();
-			setTimeout(function(){ //put this in to prevent getting "unable to load data"
-				loadPair(); 
-			}, 100);
-				 
-		
-		} else {
-			remote.disconnect();  
-			orderBookRemote.disconnect();      
-		}
-	});
+  $scope.$watch('online', function(online) { 
+    if (online) {
+      remote.connect();  
+      setTimeout(function(){ //put this in to prevent getting "unable to load data"
+        loadPair(); 
+      }, 100);
+         
+    
+    } else {
+      remote.disconnect();       
+    }
+  });
 });
