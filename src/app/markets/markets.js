@@ -102,14 +102,15 @@ console.log($scope.interval, $scope.range);
 	var range = ranges.selectAll("a")
 		.data([
 			//{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
+			{name: "8h",  interval:"minute",  multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -8); }},
 			{name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
-			{name: "3d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -3); }},
-			{name: "7d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -7); }},
-			{name: "1m",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.month.offset(d, -1); }},
+			{name: "3d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -3); }},
+			{name: "2w",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.day.offset(d, -14); }},
+			{name: "1m",  interval:"hour",    multiple:6,   offset: function(d) { return d3.time.month.offset(d, -1); }},
 			{name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
 			{name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
-			{name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }}
-			//{name: "1w",  interval:"week",   multiple:1,  offset: function(d) { return d3.time.year.offset(d, -3); }}
+			{name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }},
+			{name: "2y", interval:"day",      multiple:3,   offset: function(d) { return d3.time.year.offset(d, -2); }}
 			])
 		.enter().append("a")
 		.attr("href", "#")
@@ -117,14 +118,20 @@ console.log($scope.interval, $scope.range);
 		.text(function(d) { return d.name; })
 		.on("click", function(d) {
 			d3.event.preventDefault();
-			var that   = this,
-					now    = moment.utc(),
-					offset = d.offset(now);
+			var that    = this,
+					now     = moment.utc(),
+					offset  = d.offset(now);
 			store.set("range", {name: d.name, start: offset, end: now});
 			store.session.set("range", {name: d.name, start: offset, end: now});      
 			range.classed("selected", function() { return this === that; });
-			$("#start").datepicker('setDate', new Date(offset)).hide();
-			$("#end").datepicker('setDate', new Date(now)).hide();
+			$("#start")
+				.datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
+				.datepicker('setDate', new Date(offset))
+				.hide();
+			$("#end")
+				.datepicker('option', 'minDate', new Date(moment(offset)))
+				.datepicker('setDate', new Date(now))
+				.hide();
 			$("#custom").removeClass('selected');
 			intervals.selectAll("a")
 				.classed("selected", function(s) { 
@@ -138,41 +145,56 @@ console.log($scope.interval, $scope.range);
 				.classed("disabled", function(d){
 					return selectIntervals(offset, now, d);
 				});
+			console.log(d);
 			priceChart.load($scope.base, $scope.trade, d);
 		});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	ranges.append("a").html("Custom").attr('href', '#').attr('id', 'custom')
-		.classed("selected", function(d) { return 'custom' === $scope.range.name })
-		.on('click', function(){
-			d3.event.preventDefault();
-			$("#range a").removeClass('selected');
+	ranges.append("a").html("custom").attr('href', '#').attr('id', 'custom')
+		.data([{name: 'custom'}])
+		.classed("selected", function(d) {
+			return d.name === $scope.range.name 
+		})
+		.on('click', function(d){
 			$(this).addClass('selected');
-			var range = store.session.get('range');
-			range.name = 'custom';
-			store.session.set('range', range);
-			store.set('range', range);
-			$('#start').show();
-			$('#end').show();
+			var that = this;
+			range.classed("selected", function() { return this === that; });
+			d3.event.preventDefault();
+			var stored_range = store.session.get('range');
+			stored_range.name = 'custom';
+			store.session.set('range', stored_range);
+			store.set('range', stored_range);
+			$("#start").show();
+			$("#end").show();
 		})
 	
 	ranges.append("input").attr('type', 'text').attr('id', 'start').attr('class', 'datepicker');
 	ranges.append("input").attr('type', 'text').attr('id', 'end').attr('class', 'datepicker');
+	if(!$("#custom").hasClass("selected")){
+		$("#start").hide();
+		$("#end").hide();
+	}
 
 	$("#end" ).datepicker({
+		maxDate: new Date(store.get('range').end),
+		minDate: new Date(store.get('range').start),
 		defaultDate: $scope.range.end,
 		onSelect: function(dateText) {
-			var start = store.session.get('range').start,
-				end   = new Date(dateText);
+			var start = store.get('range').start,
+					end   = new Date(dateText);
+			$("#start").datepicker('option', 'maxDate', end);
 			dateChange(start, end);
 		}
 	}).datepicker('setDate', new Date($scope.range.end));
 
 	$("#start" ).datepicker({
+		minDate: new Date("1/1/2013"),
+		maxDate: new Date(store.get('range').end),
 		defaultDate: $scope.range.start,
 		onSelect: function(dateText) {
 			var start = new Date(dateText),
 					end   = store.session.get('range').end;
+			$("#end").datepicker('option', 'minDate', start);
 			dateChange(start, end);
 		}
 	}).datepicker('setDate', new Date($scope.range.start));
@@ -212,6 +234,7 @@ console.log($scope.interval, $scope.range);
 			{name: "6h",  interval:"hour",    multiple:6 },
 			{name: "1d",  interval:"day",     multiple:1 },
 			{name: "3d",  interval:"day",     multiple:3 },
+			{name: "7d",  interval:"day",     multiple:7 },
 			{name: "1M",  interval:"month",   multiple:1 }
 			])
 		.enter().append("a")
@@ -292,44 +315,45 @@ console.log($scope.interval, $scope.range);
 	loaded = true;
 
 	function selectIntervals(start, end, d){
-		diff = Math.abs(moment(start).diff(end))/100000;
+		var diff = Math.abs(moment(start).diff(end))/1000,
+				num;
 		console.log(diff);
 		switch (d.name){
 			case "5m":
-				if(diff < 2592) return false;
-				else return true;
+				num = diff/(300);
 				break;
 			case "15m":
-				if(diff < 6048) return false;
-				else return true;
+				num = diff/(900);
 				break;
 			case "1h":
-				if(diff < 26820) return false;
-				else return true;
+				num = diff/(3600);
 				break;
 			case "3h":
-				if(diff >= 2592 && diff < 79524) return false;
-				else return true;
+				num = diff/(10800);
 				break;
 			case "6h":
-				if(diff >= 6048 && diff < 159012) return false;
-				else return true;
+				num = diff/(21600);
 				break;
 			case "1d":
-				if(diff >= 26820 && diff <= 315360) return false;
-				else return true;
+				num = diff/(86400);
 				break;
 			case "3d":
-				if(diff >= 79524 && diff <= 315360) return false;
-				else return true;
+				num = diff/(259200);
+				break;
+			case "7d":
+				num = diff/(604800);
 				break;
 			case "1M":
-				if(diff >= 159012 && diff <= 315360) return false;
-				else return true;
+				if (diff >= 31500000){
+					num = 100;
+				}
+				else num = 0;
 				break;
 			default:
 				return true;
 		}
+		if(num <= 366 && num >= 25) return false;
+		else return true;
 	}       
 //set up the order book      
 	function emitHandler (type, data) {
