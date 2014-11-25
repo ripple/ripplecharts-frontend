@@ -110,7 +110,7 @@ console.log($scope.interval, $scope.range);
 			{name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
 			{name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
 			{name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }},
-			{name: "2y", interval:"day",      multiple:3,   offset: function(d) { return d3.time.year.offset(d, -2); }}
+			{name: "max",  interval:"day",     multiple:3,   offset: function(d) { return moment.utc('1/1/2013'); }}
 			])
 		.enter().append("a")
 		.attr("href", "#")
@@ -145,7 +145,7 @@ console.log($scope.interval, $scope.range);
 				.classed("disabled", function(d){
 					return selectIntervals(offset, now, d);
 				});
-			console.log(d);
+			console.log(d, store.get('range'));
 			priceChart.load($scope.base, $scope.trade, d);
 		});
 
@@ -179,6 +179,7 @@ console.log($scope.interval, $scope.range);
 		maxDate: new Date(store.get('range').end),
 		minDate: new Date(store.get('range').start),
 		defaultDate: $scope.range.end,
+		dateFormat: 'dd/mm/y',
 		onSelect: function(dateText) {
 			var start = store.get('range').start,
 					end   = new Date(dateText);
@@ -191,6 +192,7 @@ console.log($scope.interval, $scope.range);
 		minDate: new Date("1/1/2013"),
 		maxDate: new Date(store.get('range').end),
 		defaultDate: $scope.range.start,
+		dateFormat: 'dd/mm/y',
 		onSelect: function(dateText) {
 			var start = new Date(dateText),
 					end   = store.session.get('range').end;
