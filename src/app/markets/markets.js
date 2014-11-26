@@ -374,11 +374,15 @@ angular.module( 'ripplecharts.markets', [
   
 //single function to reload all feeds when something changes
   function loadPair() {
- 
+    
+    var range;
     var interval = d3.select("#interval .selected").datum();
 
-    interval.start = $scope.range.start;
-    interval.end = $scope.range.end;
+    if (store.get('range')) range = store.get('range')
+    else range = $scope.range;
+  
+    interval.start = range.start;
+    interval.end = range.end;
 
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
