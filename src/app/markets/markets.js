@@ -58,7 +58,7 @@ angular.module( 'ripplecharts.markets', [
     Options.interval  || "15m";
 
   $scope.range  = store.session.get('range') || store.get('range') || 
-    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd'), end: moment.utc()};
+    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
 //set up the currency pair dropdowns
   var loaded  = false, 
@@ -152,12 +152,15 @@ angular.module( 'ripplecharts.markets', [
       return d.name === $scope.range.name; 
     })
     .on('click', function(d){
+      var stored_range;
       $(this).addClass('selected');
       var that = this;
       range.classed("selected", function() { return this === that; });
       d3.event.preventDefault();
-      var stored_range = store.session.get('range');
+      if (store.get('range')) stored_range = store.get('range');
+      else stored_range = $scope.range;
       stored_range.name = d.name;
+      store.set('range', stored_range);
       store.session.set('range', stored_range);
       store.set('range', stored_range);
       $("#start").show();
@@ -172,8 +175,8 @@ angular.module( 'ripplecharts.markets', [
   }
 
   $("#end" ).datepicker({
-    maxDate: new Date(store.get('range').end),
-    minDate: new Date(store.get('range').start),
+    maxDate: new Date($scope.range.end),
+    minDate: new Date($scope.range.start),
     defaultDate: $scope.range.end,
     dateFormat: 'dd/mm/y',
     onSelect: function(dateText) {
@@ -186,7 +189,7 @@ angular.module( 'ripplecharts.markets', [
 
   $("#start" ).datepicker({
     minDate: new Date("1/1/2013"),
-    maxDate: new Date(store.get('range').end),
+    maxDate: new Date($scope.range.end),
     defaultDate: $scope.range.start,
     dateFormat: 'dd/mm/y',
     onSelect: function(dateText) {
@@ -199,8 +202,8 @@ angular.module( 'ripplecharts.markets', [
 
   function dateChange(start, end){
     var selected = false;
-    store.session.set('range', {name: 'custom', start: start, end: end});
     store.set('range', {name: 'custom', start: start, end: end});
+    store.session.set('range', {name: 'custom', start: start, end: end});
     intervals.selectAll("a")
       .classed("disabled", function(d){ return selectIntervals(start, end, d); })
       .classed("selected", function(d){
@@ -235,7 +238,7 @@ angular.module( 'ripplecharts.markets', [
     .enter().append("a")
     .attr("href", "#")
     .classed("selected", function(d) { return d.name === $scope.interval; })
-    .classed("disabled", function(d) { return selectIntervals(store.get('range').start, store.get('range').end, d); })
+    .classed("disabled", function(d) { return selectIntervals($scope.range.start, $scope.range.end, d); })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
       d3.event.preventDefault();
@@ -373,8 +376,9 @@ angular.module( 'ripplecharts.markets', [
   function loadPair() {
  
     var interval = d3.select("#interval .selected").datum();
-    interval.start = store.get('range').start;
-    interval.end = store.get('range').end;
+
+    interval.start = $scope.range.start;
+    interval.end = $scope.range.end;
 
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
