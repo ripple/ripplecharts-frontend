@@ -100,7 +100,7 @@ angular.module( 'ripplecharts.markets', [
   var range = ranges.selectAll("a")
     .data([
       //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
-      {name: "8h",  interval:"minute",  multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -8); }},
+      {name: "12h",  interval:"minute",  multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -12); }},
       {name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
       {name: "3d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -3); }},
       {name: "2w",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.day.offset(d, -14); }},
