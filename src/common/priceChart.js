@@ -373,7 +373,7 @@ PriceChart = function (options) {
     //aiming for around 100-200 here    
     var num         = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
     var candleWidth = options.width/(num*1.5);
-    if (candleWidth<1) candleWidth = 1; 
+    if (candleWidth<3) candleWidth = 1; 
 
     var baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
     var counterCurrency = ripple.Currency.from_json(counter.currency).to_human();

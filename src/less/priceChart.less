@@ -86,28 +86,37 @@
 }
 
 .candlesticks rect {
-    fill: #c33;
-    stroke: #622;
+    fill: #fff;
+    stroke: #a22;
     stroke-width: 1;
 }
 
 .candlesticks line {
-    stroke: #777;    
+    stroke: #a22;    
 }
 
-.candlesticks .filled rect{    
+.candlesticks .filled rect {  
+  fill: #a22;
 }
 
 .candlesticks .up rect {
-    fill: #3c5;
-    stroke: #262;
+  stroke: #3a3;
 }
 
-.candlesticks .up.filled rect{ 
+.candlesticks .up line {
+  stroke: #3a3; 
+}
+
+.candlesticks .up.filled rect { 
+  fill: #3a3;
 }
 
 .candlesticks line {
-    stroke-width : 2;	
+    stroke-width : 1;	
+}
+
+.candlesticks line.extent {
+  stroke-width : 1;	
 }
 
 .priceChart .volumeBars rect {
