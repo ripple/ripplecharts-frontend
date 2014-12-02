@@ -5,5 +5,4 @@
 deployment.environments.json
 bin/
 node_modules/
-vendor/
 src/config.js
