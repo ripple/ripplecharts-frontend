@@ -111,13 +111,14 @@ angular.module( 'ripplecharts.markets', [
       {name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
       {name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",  interval:"day",    multiple:3,   offset: function(d) { return moment.utc('1/1/2013'); }}
+      {name: "max",  interval:"day",    multiple:3,   offset: function(d) { return getStartdate($scope.base, $scope.trade) }}
       ])
     .enter().append("a")
     .attr("href", "#")
     .classed("selected", function(d) { return d.name === $scope.range.name; })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
+      getStartdate($scope.base, $scope.trade);
       d3.event.preventDefault();
       var that    = this,
           now     = moment.utc(),
@@ -163,12 +164,14 @@ angular.module( 'ripplecharts.markets', [
       stored_range.name = d.name;
       store.set('range', stored_range);
       store.session.set('range', stored_range);
-      $("#start").show();
-      $("#end").show();
+      $("#start").toggle();
+      $("#end").toggle();
     });
   
-  ranges.append("input").attr('type', 'text').attr('id', 'start').attr('class', 'datepicker');
-  ranges.append("input").attr('type', 'text').attr('id', 'end').attr('class', 'datepicker');
+
+  ranges.append("div").attr('id', 'dates');
+  d3.select('#dates').append("input").attr('type', 'text').attr('id', 'start').attr('class', 'datepicker');
+  d3.select('#dates').append("input").attr('type', 'text').attr('id', 'end').attr('class', 'datepicker');
   if(!$("#custom").hasClass("selected")){
     $("#start").hide();
     $("#end").hide();
@@ -350,8 +353,19 @@ angular.module( 'ripplecharts.markets', [
     if(num <= 366 && num >= 25) return false;
     else return true;
   }       
-//set up the order book      
 
+  function getStartdate(base, counter){
+    var issuer;
+    if (base.currency == "XRP") issuer = counter.issuer;
+    else issuer = base.issuer;
+    console.log(issuer);
+    for (var key in gateways){
+      if (gateways[key].accounts[0].address == issuer) return gateways[key].startDate
+    }
+    return "2013-1-1";
+  }
+
+  //set up the order book      
   function emitHandler (type, data) {
     if (type=='spread') {
       document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    

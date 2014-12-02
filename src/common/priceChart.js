@@ -184,8 +184,6 @@ PriceChart = function (options) {
 //load historical from API  	  	      			
   this.load = function (b, c, d) {
 
-    console.log(d);
-
     if (!b) return setStatus("Base currency is required.");
     if (!c) return setStatus("Counter currency is required.");
     if (!d || !d.interval) return setStatus("Interval is required.");
@@ -213,7 +211,9 @@ PriceChart = function (options) {
     lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
     endTime          = moment.utc(lastCandle).add('seconds', intervalSeconds);
     startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
-     
+    
+    console.log(startTime, endTime);
+
     if (liveFeed) liveFeed.stopListener();
     if (options.live) setLiveFeed();
     
@@ -673,8 +673,7 @@ PriceChart = function (options) {
     return tzAbbr;
   }
 
-  this.test = function(base, counter, callback){
-    console.log("at least this", base, counter);
+  this.test = function(base, counter){
     self.request = apiHandler.offersExercised({
       endTime       : new Date(),
       startTime     : new Date("1/1/2013"),
@@ -684,10 +683,9 @@ PriceChart = function (options) {
       base          : base,
       counter       : counter
     }, function(data){
-      console.log('gotdata', data[0].time);
-      callback(null, data[0].time);
+      console.log('Start Date:', base.currency, counter.currency, data[0].time._i);
     }, function (error){
-      callback(error);
+      console.log(error);
     });    
   }
 }
