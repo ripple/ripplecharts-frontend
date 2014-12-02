@@ -60,6 +60,9 @@ angular.module( 'ripplecharts.markets', [
   $scope.range  = store.session.get('range') || store.get('range') || 
     Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
+  store.set('range', $scope.range);
+  store.session.set('range', $scope.range);
+
 //set up the currency pair dropdowns
   var loaded  = false, 
     dropdownB = ripple.currencyDropdown().selected($scope.trade)
@@ -100,7 +103,7 @@ angular.module( 'ripplecharts.markets', [
   var range = ranges.selectAll("a")
     .data([
       //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
-      {name: "12h",  interval:"minute",  multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -12); }},
+      {name: "12h",  interval:"minute", multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -12); }},
       {name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
       {name: "3d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -3); }},
       {name: "2w",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.day.offset(d, -14); }},
@@ -108,7 +111,7 @@ angular.module( 'ripplecharts.markets', [
       {name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
       {name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",  interval:"day",     multiple:3,   offset: function(d) { return moment.utc('1/1/2013'); }}
+      {name: "max",  interval:"day",    multiple:3,   offset: function(d) { return moment.utc('1/1/2013'); }}
       ])
     .enter().append("a")
     .attr("href", "#")
@@ -152,17 +155,14 @@ angular.module( 'ripplecharts.markets', [
       return d.name === $scope.range.name; 
     })
     .on('click', function(d){
-      var stored_range;
       $(this).addClass('selected');
       var that = this;
       range.classed("selected", function() { return this === that; });
       d3.event.preventDefault();
-      if (store.get('range')) stored_range = store.get('range');
-      else stored_range = $scope.range;
+      var stored_range = store.get('range');
       stored_range.name = d.name;
       store.set('range', stored_range);
       store.session.set('range', stored_range);
-      store.set('range', stored_range);
       $("#start").show();
       $("#end").show();
     });
@@ -178,7 +178,7 @@ angular.module( 'ripplecharts.markets', [
     maxDate: new Date($scope.range.end),
     minDate: new Date($scope.range.start),
     defaultDate: $scope.range.end,
-    dateFormat: 'dd/mm/y',
+    dateFormat: 'mm/dd/y',
     onSelect: function(dateText) {
       var start = store.get('range').start,
           end   = new Date(dateText);
@@ -191,7 +191,7 @@ angular.module( 'ripplecharts.markets', [
     minDate: new Date("1/1/2013"),
     maxDate: new Date($scope.range.end),
     defaultDate: $scope.range.start,
-    dateFormat: 'dd/mm/y',
+    dateFormat: 'mm/dd/y',
     onSelect: function(dateText) {
       var start = new Date(dateText),
           end   = store.session.get('range').end;
@@ -316,7 +316,7 @@ angular.module( 'ripplecharts.markets', [
     switch (d.name){
       case "5m":
         num = diff/(300);
-        break;
+        break; 
       case "15m":
         num = diff/(900);
         break;
@@ -374,13 +374,10 @@ angular.module( 'ripplecharts.markets', [
   
 //single function to reload all feeds when something changes
   function loadPair() {
-    
-    var range;
+
     var interval = d3.select("#interval .selected").datum();
 
-    if (store.get('range')) range = store.get('range')
-    else range = $scope.range;
-  
+    var range = store.get('range');
     interval.start = range.start;
     interval.end = range.end;
 

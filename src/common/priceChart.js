@@ -184,6 +184,8 @@ PriceChart = function (options) {
 //load historical from API  	  	      			
   this.load = function (b, c, d) {
 
+    console.log(d);
+
     if (!b) return setStatus("Base currency is required.");
     if (!c) return setStatus("Counter currency is required.");
     if (!d || !d.interval) return setStatus("Interval is required.");
@@ -669,5 +671,23 @@ PriceChart = function (options) {
     }
    
     return tzAbbr;
+  }
+
+  this.test = function(base, counter, callback){
+    console.log("at least this", base, counter);
+    self.request = apiHandler.offersExercised({
+      endTime       : new Date(),
+      startTime     : new Date("1/1/2013"),
+      limit         : 1,
+      reduce        : false,
+      descending    : false,
+      base          : base,
+      counter       : counter
+    }, function(data){
+      console.log('gotdata', data[0].time);
+      callback(null, data[0].time);
+    }, function (error){
+      callback(error);
+    });    
   }
 }
