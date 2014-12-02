@@ -1,0 +1,17 @@
+{
+  "name": "angular-snap",
+  "version": "1.2.0",
+  "main": [
+    "angular-snap.js",
+    "angular-snap.min.js",
+    "angular-snap.css",
+    "angular-snap.min.css"
+  ],
+  "ignore": [
+    "README.md"
+  ],
+  "dependencies": {
+    "angular": "~1.2.4",
+    "snapjs": "latest"
+  }
+}
