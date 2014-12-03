@@ -519,7 +519,7 @@ var TotalHistory = function (options) {
   //Data to CSV format
   function toCSV(labels, data){
     var str ='';
-    var line = '';
+    var line = 'Date';
 
     for (var key in data){
       line += ",";
