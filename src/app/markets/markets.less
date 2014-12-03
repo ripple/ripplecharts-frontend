@@ -69,9 +69,11 @@
   display:inline-block;
   cursor:pointer; 
   margin:2px 5px;
+  padding:0 5px;
   color:#ccc;
   text-decoration:none;
   opacity:0.3;
+  width:30px;
   text-align:center;
 }
 
@@ -309,8 +311,9 @@
 @media (max-width: 600px) {
   
   #interval label {display:none}
+  #range label {display:none}
   #range {margin-left:0px; float: center}
-  #interval {margin-left:60px; float: left}
+  #interval {margin-left:0px; float: center}
   #dates {
     width: auto;
     height: auto;
@@ -326,7 +329,6 @@
   .markets .col-md-3 {
     display:block;
     border-color:#ccc;
-    padding:0 !important;
   }
   
   .markets .col-md-3 .helpbox {
@@ -361,10 +363,6 @@
     width:400px;
     margin-bottom:20px;
   }
-  
-  #toCSV {
-    width:40px;
-  }
 }
 
 
@@ -388,9 +386,13 @@
   
   .dark #currencyPair select {
     border-width:3px;
-  }  
+  } 
+  
+  .rippleStatus {
+    zoom: 1.5;
+  } 
 
-  #interval {margin-left:20px; zoom:1.25}
+  #interval {margin-left:0px; zoom:1.25}
   #range {margin-left:0px; zoom:1.25}
   #chartType {margin-right:20px; zoom:1.25}
   #flip {
@@ -399,6 +401,7 @@
   }
   
   #toCSV {
+    width:40px;
     padding:0;
     margin-right:-5px;
   }
