@@ -9,7 +9,7 @@
   width:220px;
   height:40px;
   background-image:url('images/logoLight.png');
-  margin:4px 0;
+  margin:8px 0;
 
 // Pixel ratio: 2
   @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
@@ -56,7 +56,9 @@
 
 .dark .header .wrapper {
   background:#000;
-  border-color:#222;
+  border-bottom: none; 
+  max-width: 1140px;
+  margin: auto;
 }
 
 .dark .logo img {opacity:.4; border-radius:2px}
@@ -143,6 +145,13 @@
 
 .dark footer .links a:hover {
   color:#999;
+}
+
+.dark .main_menu .subnav {
+	background: #000;
+	border-left: 1px solid #444;
+	border-right: 1px solid #444;
+	border-bottom: 1px solid #444;
 }
 
 

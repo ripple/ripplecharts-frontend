@@ -43,14 +43,15 @@ body {
   padding:0 !important;
   line-height:inherit;
   width:100%;
-  height:auto;
-  overflow-y:auto;
-  overflow-x:hidden;
+  height:100%;
+  //overflow-y:visible;
+ // overflow-x:hidden;
   background-color:#000;
 }
 
 html {
   overflow:auto;
+  overflow-y: scroll;
 }
 
 ul {
@@ -87,6 +88,7 @@ h1, h2, h3, h4 {
 }
 
 .header {
+	
   position:relative;
   z-index:3;
   padding-bottom:1px;
@@ -95,9 +97,10 @@ h1, h2, h3, h4 {
 }
 
 .header .wrapper {
-  overflow:hidden;
+  //overflow:hidden;
   background:#000;
-  border-bottom:5px solid #222;
+  //border-bottom:5px solid #222;
+  height: 59px;
 }
 
 .headerPad {
@@ -171,7 +174,7 @@ h1, h2, h3, h4 {
 .nav li a {
   font-size:15px;
   border-radius:1px;  
-  padding:8px 12px;
+  padding:8px 20px;
   color:#999;
   display:block;
   text-decoration:none;
@@ -238,17 +241,17 @@ h1, h2, h3, h4 {
 }
 
 .theme {
-  padding:15px 5px;
+  padding:19px 5px;
   color:#ccc;
-  float:right;
+  float:left;
   font-size:12px;
 }
 
 #helpButton {
-  float: right;
+  float: left;
   width: 24px;
   height: 24px;
-  margin: 13px 13px 13px 5px;
+  margin: 6px 0 0 20px;
   font-size: 12px;
   font-weight: bold;
   text-align: center;
@@ -604,5 +607,106 @@ footer .links a:first-child {
   footer .footerInner {
     width:90%
   }
+  
 }
 
+/*
+ * New header
+ */
+ 
+ 	.main {
+ 		padding-top: 20px;
+ 	}
+ 
+ 	.mobile_only {
+  	display: none;
+  }
+  
+  .main_menu {
+  
+  	li.color_picker {
+			margin-top: 7px !important;
+		}
+  
+  	li.category:hover > .sub_wrapper > ul.subnav { 
+  		display: block;
+  	}
+  	
+  	.sub_wrapper {
+			padding-top: 8px;
+			height: auto;
+			width: auto;
+			position: relative;
+			right: 20px;
+		}
+  	
+  	.subnav {
+			display: none;
+			position: absolute;
+			background: #fff;
+			border-left: 1px solid #346aa9;
+			border-right: 1px solid #346aa9;
+			border-bottom: 1px solid #346aa9;
+			padding: 12px 0 12px 18px;
+			min-width: 180px;
+			z-index: 9999;
+				-o-transition:.5s;
+  			-ms-transition:.5s;
+  			-moz-transition:5s;
+  			-webkit-transition:.5s;
+  			transition:.5s;
+
+			& li {
+				list-style-type: none;
+				
+				& :hover {
+				color: #346aa9 !important;
+				}
+			}
+		}
+
+  	li.category {
+			display: inline-block;
+		}
+  
+		.nav {
+			float: right;
+			border-bottom: none;		
+		
+		& .top, .category {
+				background: transparent; 
+				border-right: none;
+				border-bottom: none;
+				border-top: none;
+			}
+		
+		}
+		
+		.fa-info-circle {
+			margin: 5px 15px;
+			font-size: 26px;
+			color: #999;
+		}
+  
+  }
+  
+ @media (max-width: 768px) {
+ 
+ 		.main_menu .nav {
+ 			display: none;
+ 		}
+ 
+		.mobile_only {
+			display: block !important;
+
+		}
+		
+  }
+
+
+//firefox specific hack
+@-moz-document url-prefix() { 
+  .main_menu .sub_wrapper {
+			padding-top: 6px;
+	}
+}
