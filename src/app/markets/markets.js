@@ -43,7 +43,7 @@ angular.module( 'ripplecharts.markets', [
     $location.path("/markets").replace(); //to remove the data from the URL
     return;
   }
-
+  
 //load settings from session, local storage, options, or defaults  
   $scope.base  = store.session.get('base') || store.get('base') || 
     Options.base || {currency:"XRP", issuer:""};
@@ -55,13 +55,7 @@ angular.module( 'ripplecharts.markets', [
     Options.chartType || "line";
   
   $scope.interval  = store.session.get('interval') || store.get('interval') || 
-    Options.interval  || "15m";
-
-  $scope.range  = store.session.get('range') || store.get('range') || 
-    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
-
-  store.set('range', $scope.range);
-  store.session.set('range', $scope.range);
+    Options.interval  || "1h";
 
 //set up the currency pair dropdowns
   var loaded  = false, 
@@ -69,14 +63,12 @@ angular.module( 'ripplecharts.markets', [
       .on("change", function(d) {
         if (loaded) {
           $scope.trade = d;
-          updateMaxrange();
           loadPair();
         }}),
     dropdownA = ripple.currencyDropdown().selected($scope.base)
       .on("change", function(d) {
         if (loaded) {
           $scope.base = d;
-          updateMaxrange();
           loadPair();
         }});
 
@@ -99,172 +91,42 @@ angular.module( 'ripplecharts.markets', [
   });
   
   
-  //set up the range selector  
-  var ranges = d3.select("#range").attr("class","selectList");
-  ranges.append("label").html("Range:");
-  var range = ranges.selectAll("a")
+//set up the interval selector  
+  var list = d3.select("#interval").attr("class","selectList")
+  list.append("label").html("Interval:");
+  var interval = list.selectAll("a")
     .data([
-      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
-      {name: "12h",  interval:"minute", multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -12); }},
-      {name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
-      {name: "3d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -3); }},
-      {name: "2w",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.day.offset(d, -14); }},
-      {name: "1m",  interval:"hour",    multiple:6,   offset: function(d) { return d3.time.month.offset(d, -1); }},
-      {name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
-      {name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
-      {name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",  interval:"day",    multiple:3,   offset: function(d) { return getStartdate($scope.base, $scope.trade) }}
+      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//testing purposes only
+      {name: "1m",  interval:"minute", multiple:1,  offset: function(d) { return d3.time.hour.offset(d, -2); }},
+      {name: "5m",  interval:"minute", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -12); }},
+      {name: "15m", interval:"minute", multiple:15, offset: function(d) { return d3.time.day.offset(d, -2); }},
+      {name: "1h",  interval:"hour",   multiple:1,  offset: function(d) { return d3.time.day.offset(d, -5); }},
+      {name: "4h",  interval:"hour",   multiple:4,  offset: function(d) { return d3.time.day.offset(d, -20); }},
+      {name: "1d",  interval:"day",    multiple:1,  offset: function(d) { return d3.time.day.offset(d, -120); }},
+      {name: "3d",  interval:"day",    multiple:3,  offset: function(d) { return d3.time.year.offset(d, -1); }}
+      //{name: "1w",  interval:"week",   multiple:1,  offset: function(d) { return d3.time.year.offset(d, -3); }}
       ])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { return d.name === $scope.range.name; })
+    .classed("selected", function(d) { return d.name === $scope.interval })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
       d3.event.preventDefault();
-      var that    = this,
-          now     = moment.utc(),
-          offset  = d.offset(now);
-      store.set("range", {name: d.name, start: offset, end: now});
-      store.session.set("range", {name: d.name, start: offset, end: now});      
-      range.classed("selected", function() { return this === that; });
-      $("#start")
-        .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
-        .datepicker('setDate', new Date(offset))
-        .hide();
-      $("#end")
-        .datepicker('option', 'minDate', new Date(moment(offset)))
-        .datepicker('setDate', new Date(now))
-        .hide();
-      $("#custom").removeClass('selected');
-      intervals.selectAll("a")
-        .classed("selected", function(s) { 
-          if (s.multiple === d.multiple && s.interval === d.interval){
-            store.set("interval", s.name);
-            store.session.set("interval", s.name);
-            return true;
-          }
-          else return false; 
-        })
-        .classed("disabled", function(d){
-          return selectIntervals(offset, now, d);
-        });
+      var that = this;
+      store.set("interval", d.name);
+      store.session.set("interval", d.name);
+      
+      interval.classed("selected", function() { return this === that; });
       priceChart.load($scope.base, $scope.trade, d);
     });
-
-  ranges.append("a").html("custom").attr('href', '#').attr('id', 'custom')
-    .data([{name: 'custom'}])
-    .classed("selected", function(d) {
-      return d.name === $scope.range.name; 
-    })
-    .on('click', function(d){
-      $(this).addClass('selected');
-      var that = this;
-      range.classed("selected", function() { return this === that; });
-      d3.event.preventDefault();
-      var stored_range = store.get('range');
-      stored_range.name = d.name;
-      store.set('range', stored_range);
-      store.session.set('range', stored_range);
-      $("#start").toggle();
-      $("#end").toggle();
-    });
-  
-
-  ranges.append("div").attr('id', 'dates');
-  d3.select('#dates').append("input").attr('type', 'text').attr('id', 'start').attr('class', 'datepicker');
-  d3.select('#dates').append("input").attr('type', 'text').attr('id', 'end').attr('class', 'datepicker');
-  if(!$("#custom").hasClass("selected")){
-    $("#start").hide();
-    $("#end").hide();
-  }
-
-  $("#end" ).datepicker({
-    maxDate: new Date($scope.range.end),
-    minDate: new Date($scope.range.start),
-    defaultDate: $scope.range.end,
-    dateFormat: 'mm/dd/y',
-    onSelect: function(dateText) {
-      var start = store.get('range').start,
-          end   = new Date(dateText);
-      $("#start").datepicker('option', 'maxDate', end);
-      dateChange(start, end);
-    }
-  }).datepicker('setDate', new Date($scope.range.end));
-
-  $("#start" ).datepicker({
-    minDate: new Date("1/1/2013"),
-    maxDate: new Date($scope.range.end),
-    defaultDate: $scope.range.start,
-    dateFormat: 'mm/dd/y',
-    onSelect: function(dateText) {
-      var start = new Date(dateText),
-          end   = store.session.get('range').end;
-      $("#end").datepicker('option', 'minDate', start);
-      dateChange(start, end);
-    }
-  }).datepicker('setDate', new Date($scope.range.start));
-
-  function dateChange(start, end){
-    var selected = false;
-    store.set('range', {name: 'custom', start: start, end: end});
-    store.session.set('range', {name: 'custom', start: start, end: end});
-    intervals.selectAll("a")
-      .classed("disabled", function(d){ return selectIntervals(start, end, d); })
-      .classed("selected", function(d){
-        if( selected === false && !selectIntervals(start, end, d)){
-          selected = true;
-          store.set("interval", d.name);
-          store.session.set("interval", d.name);
-          d.start = moment.utc(start);
-          d.end = moment.utc(end);
-          priceChart.load($scope.base, $scope.trade, d);
-          return true;
-        } 
-      });
-  }
-
-  //set up the interval selector  
-  var intervals = d3.select("#interval").attr("class","selectList");
-  intervals.append("label").html("Interval:");
-  var interval = intervals.selectAll("a")
-    .data([
-      //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
-      {name: "5m",  interval:"minute",  multiple:5 },
-      {name: "15m", interval:"minute",  multiple:15 },
-      {name: "1h",  interval:"hour",    multiple:1 },
-      {name: "3h",  interval:"hour",    multiple:3 },
-      {name: "6h",  interval:"hour",    multiple:6 },
-      {name: "1d",  interval:"day",     multiple:1 },
-      {name: "3d",  interval:"day",     multiple:3 },
-      {name: "7d",  interval:"day",     multiple:7 },
-      {name: "1M",  interval:"month",   multiple:1 }
-      ])
-    .enter().append("a")
-    .attr("href", "#")
-    .classed("selected", function(d) { return d.name === $scope.interval; })
-    .classed("disabled", function(d) { return selectIntervals($scope.range.start, $scope.range.end, d); })
-    .text(function(d) { return d.name; })
-    .on("click", function(d) {
-      d3.event.preventDefault();
-      if (!this.classList.contains("disabled")) {
-        var that = this;
-        d.start = store.session.get('range').start;
-        d.end = store.session.get('range').end;
-        store.set("interval", d.name);
-        store.session.set("interval", d.name);
-        interval.classed("selected", function() { return this === that; });
-        priceChart.load($scope.base, $scope.trade, d);
-      }
-
-    });
-
-  //set up the chart type selector    
+    
+//set up the chart type selector    
   var chartType = d3.select("#chartType").attr("class","selectList").selectAll("a")
     .data(["line", "candlestick"])
     .enter().append("a")
     .attr("href", "#")
     .classed("selected", function(d) { return d === $scope.chartType; })
-    .text(function(d) { return d; })   
+    .text(function(d) { return d })   
     .on("click", function(d) {
       d3.event.preventDefault();
       var that = this;
@@ -310,71 +172,11 @@ angular.module( 'ripplecharts.markets', [
   priceChart.onStateChange = function(state) {
     if (state=='loaded') toCSV.style("opacity",1).attr("disabled",null);
     else toCSV.style("opacity",0.3).attr("disabled",true);
-  };
+  }
   
   loaded = true;
-
-  function selectIntervals(start, end, d){
-    var diff = Math.abs(moment(start).diff(end))/1000,
-        num;
-    switch (d.name){
-      case "5m":
-        num = diff/(300);
-        break; 
-      case "15m":
-        num = diff/(900);
-        break;
-      case "1h":
-        num = diff/(3600);
-        break;
-      case "3h":
-        num = diff/(10800);
-        break;
-      case "6h":
-        num = diff/(21600);
-        break;
-      case "1d":
-        num = diff/(86400);
-        break;
-      case "3d":
-        num = diff/(259200);
-        break;
-      case "7d":
-        num = diff/(604800);
-        break;
-      case "1M":
-        if (diff >= 31500000){
-          num = 100;
-        }
-        else num = 0;
-        break;
-      default:
-        return true;
-    }
-    if(num <= 366 && num >= 25) return false;
-    else return true;
-  }       
-
-  function getStartdate(base, counter){
-    var issuer;
-    if (base.currency == "XRP") issuer = counter.issuer;
-    else issuer = base.issuer;
-    for (var key in gateways){
-      if (gateways[key].accounts[0].address == issuer) return gateways[key].startDate
-    }
-    return "2013-1-1";
-  }
-
-  function updateMaxrange(){
-    var current_range = store.get('range');
-    if (current_range.name === "max"){
-      current_range.start = getStartdate($scope.base, $scope.trade);
-      store.set('range', current_range);
-      store.session.set('range', current_range);
-    }
-  }
-
-  //set up the order book      
+       
+//set up the order book      
   function emitHandler (type, data) {
     if (type=='spread') {
       document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    
@@ -397,19 +199,15 @@ angular.module( 'ripplecharts.markets', [
   
 //single function to reload all feeds when something changes
   function loadPair() {
-
+ 
     var interval = d3.select("#interval .selected").datum();
-
-    var range = store.get('range');
-    interval.start = range.start;
-    interval.end = range.end;
-
+    
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
     
     store.session.set('base',  $scope.base);
     store.session.set('trade', $scope.trade);
-
+        
     priceChart.load($scope.base, $scope.trade, interval);
     book.getMarket($scope.base, $scope.trade); 
     tradeFeed.loadPair ($scope.base, $scope.trade);   

@@ -211,7 +211,7 @@ PriceChart = function (options) {
     lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
     endTime          = moment.utc(lastCandle).add('seconds', intervalSeconds);
     startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
-
+     
     if (liveFeed) liveFeed.stopListener();
     if (options.live) setLiveFeed();
     
@@ -372,9 +372,8 @@ PriceChart = function (options) {
 
     //aiming for around 100-200 here    
     var num         = (moment(endTime).unix() - moment(startTime).unix())/intervalSeconds;
-    var candleWidth = options.width/(num*1.5);
-    if      (candleWidth<3) candleWidth = 1; 
-    else if (candleWidth<4) candleWidth = 2;
+    var candleWidth = options.width/(num*1.3);
+    if (candleWidth<3) candleWidth = 3; 
 
     var baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
     var counterCurrency = ripple.Currency.from_json(counter.currency).to_human();

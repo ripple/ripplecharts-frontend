@@ -24,18 +24,70 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <script>  
-      <%= maintenance ? "window.location = '"+maintenance+"';" : "" %>
-      MIXPANEL   = "<%= mixpanel %>";
-      API        = "<%= api %>";
-      GA_ACCOUNT = "<%= ga_account %>";
-      GA_ID      = "<%= ga_id %>";
+      
+      MIXPANEL   = "REPLACEME";
+      API        = "http://api.ripplecharts.com/api";
+      GA_ACCOUNT = "";
+      GA_ID      = "";
     </script>
     
-    <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
-    <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+    <!-- compiled CSS -->
+    <link rel="stylesheet" type="text/css" href="assets/ripplecharts-0.0.1.css" />
+     
+    <!-- Font Awesome -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 
-    <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
-    <script type="text/javascript" src="<%= file %>"></script><% }); %>
+    <!-- compiled JavaScript -->
+    <script type="text/javascript" src="vendor/ripple/ripple-min.js"></script>
+    <script type="text/javascript" src="vendor/snapjs/snap.js"></script>
+    <script type="text/javascript" src="vendor/angular/angular.js"></script>
+    <script type="text/javascript" src="vendor/angular-touch/angular-touch.js"></script>
+    <script type="text/javascript" src="vendor/angular-snap/angular-snap.js"></script>
+    <script type="text/javascript" src="vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script type="text/javascript" src="vendor/angular-ui-router/release/angular-ui-router.js"></script>
+    <script type="text/javascript" src="vendor/angular-ui-utils/modules/route/route.js"></script>
+    <script type="text/javascript" src="vendor/underscore/underscore.js"></script>
+    <script type="text/javascript" src="vendor/moment/moment.js"></script>
+    <script type="text/javascript" src="vendor/store/dist/store2.js"></script>
+    <script type="text/javascript" src="vendor/modernizr/modernizr.js"></script>
+    <script type="text/javascript" src="vendor/d3/d3.js"></script>
+    <script type="text/javascript" src="vendor/jquery/jquery.js"></script>
+    <script type="text/javascript" src="vendor/jquery-ui/jquery-ui.js"></script>
+    <script type="text/javascript" src="vendor/jscrollpane/script/jquery.mousewheel.js"></script>
+    <script type="text/javascript" src="vendor/jscrollpane/script/jquery.jscrollpane.js"></script>
+    <script type="text/javascript" src="vendor/chartjs/Chart.js"></script>
+    <script type="text/javascript" src="deps/jquery.selectbox.min.js"></script>
+    <script type="text/javascript" src="deps/jquery.inview.js"></script>
+    <script type="text/javascript" src="deps/offersExercisedListener.js"></script>
+    <script type="text/javascript" src="deps/onResize.js"></script>
+    <script type="text/javascript" src="src/app/accounts/accounts.js"></script>
+    <script type="text/javascript" src="src/app/active/active.js"></script>
+    <script type="text/javascript" src="src/app/app.js"></script>
+    <script type="text/javascript" src="src/app/graph/graph.js"></script>
+    <script type="text/javascript" src="src/app/history/history.js"></script>
+    <script type="text/javascript" src="src/app/history/history_templates.js"></script>
+    <script type="text/javascript" src="src/app/landing/landing.js"></script>
+    <script type="text/javascript" src="src/app/markets/markets.js"></script>
+    <script type="text/javascript" src="src/app/multimarkets/multimarkets.js"></script>
+    <script type="text/javascript" src="src/app/value/value.js"></script>
+    <script type="text/javascript" src="src/common/activeAccounts.js"></script>
+    <script type="text/javascript" src="src/common/apiHandler.js"></script>
+    <script type="text/javascript" src="src/common/capChart.js"></script>
+    <script type="text/javascript" src="src/common/dropdowns.js"></script>
+    <script type="text/javascript" src="src/common/graph.js"></script>
+    <script type="text/javascript" src="src/common/jsonToCSV.js"></script>
+    <script type="text/javascript" src="src/common/lineChart.js"></script>
+    <script type="text/javascript" src="src/common/multimarket.js"></script>
+    <script type="text/javascript" src="src/common/orderBook.js"></script>
+    <script type="text/javascript" src="src/common/priceChart.js"></script>
+    <script type="text/javascript" src="src/common/totalAccounts.js"></script>
+    <script type="text/javascript" src="src/common/totalHistory.js"></script>
+    <script type="text/javascript" src="src/common/tradeFeed.js"></script>
+    <script type="text/javascript" src="src/common/transactionFeed.js"></script>
+    <script type="text/javascript" src="src/common/valueSummary.js"></script>
+    <script type="text/javascript" src="src/config.js"></script>
+    <script type="text/javascript" src="templates-common.js"></script>
+    <script type="text/javascript" src="templates-app.js"></script>
 
   <!-- start Mixpanel --><script type="text/javascript">(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src=("https:"===e.location.protocol?"https:":"http:")+'//cdn.mxpnl.com/libs/mixpanel-2.2.min.js';f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f);b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==
 typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");for(g=0;g<i.length;g++)f(c,i[g]);
@@ -46,17 +98,71 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
   <body ng-class="theme">
     <div class="header">
       <div class="wrapper">
-        <i class="nav-toggle" snap-toggle>
+        <i class="nav-toggle mobile_only" snap-toggle>
           <img src="assets/images/menu.svg"/>
         </i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
-        <div id="helpButton" ng-click="showHelp = !showHelp"><span>?</span></div>
-        <div class="theme selectList">
-          <a ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</a>
-          <a ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</a>
-        </div>  
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="main_menu container">
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav"> 
+            <li class="category">
+							<a href="#/markets" snap-close>Markets<span class="caret"></span></a>
+								<div class="sub_wrapper">
+									<ul class="subnav">
+										<li ui-route="/markets(/.+)?" ng-class="{active:$uiRoute !== false}">
+											<a href="#/markets" snap-close>Live Chart</a>
+										</li>
+										<li ui-route="/multimarkets" ng-class="{active:$uiRoute !== false}">
+											<a href="#/multimarkets" snap-close>Multi Markets</a>
+										</li>
+										<li ui-route="/active_accounts" ng-class="{active:$uiRoute !== false}">
+											<a href="#/active_accounts" snap-close>Active Accounts</a>
+										</li>
+									</ul>
+							</div>	
+						</li> 
+            <li class="category">
+							<a href="#/value" snap-close>Value<span class="caret"></span></a>
+							<div class="sub_wrapper">
+							<ul class="subnav">
+								<li ui-route="/value" ng-class="{active:$uiRoute !== false}">
+									<a href="#/value" snap-close>Value Trends</a>
+								</li>
+								<li ui-route="/history" ng-class="{active:$uiRoute !== false}">
+									<a href="#/history" snap-close>Historical Metrics</a>
+								</li>
+							</ul>
+						</div>
+						</li> 
+						<li class="category">
+							<a href="#/graph" snap-close></i>Accounts<span class="caret"></span></a>
+							<div class="sub_wrapper">
+							<ul class="subnav">
+								<li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
+									<a href="#/graph" snap-close>Account Explorer</a>
+								</li>
+								<li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
+									<a href="#/accounts" snap-close>Accounts Created</a>
+								</li>
+							</ul>
+						</div>
+						</li> 
+						<li class="category color_picker">
+							<a><i ng-click="toggleTheme()" class="fa fa-lightbulb-o fa-2x"></i></a>
+						</li>
+						<li class="category"><div id="helpButton_new" ng-click="showHelp = !showHelp"><span><i class="fa fa-info-circle"></i></span></div>
+ 						</li>
+  
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+     
+    </nav>
+      
       </div>
     </div>   
+     
              
     <div snap-drawer>
       <ul class="nav">
@@ -145,7 +251,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             <a href="https://ripplelabs.atlassian.net/browse/RC" target="_blank">Bug Reports</a>              
           </div>  
           
-          <small><a style="display:none" href="">v<%= version %></a></small>
+          <small><a style="display:none" href="">v0.0.1</a></small>
         </div>
       </footer>
     </div>    
@@ -164,4 +270,3 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
   
   </script>
 </html>
-

@@ -51,7 +51,7 @@ var ValueSummary = function (options) {
       'CNY'     : [180,30,35],
       'JPY'     : [140,80,170],
       'CAD'     : [130,100,190],
-      'other'   : [100, 150, 200]
+      'other'   : [110,100,160]
     };
     var c = colors[currency] || colors.other;
     var rank = d.data.rank - 1;
