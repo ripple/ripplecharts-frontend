@@ -211,7 +211,7 @@ PriceChart = function (options) {
     lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
     endTime          = moment.utc(lastCandle).add('seconds', intervalSeconds);
     startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
-     
+
     if (liveFeed) liveFeed.stopListener();
     if (options.live) setLiveFeed();
     
