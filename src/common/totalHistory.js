@@ -520,17 +520,17 @@ var TotalHistory = function (options) {
   function toCSV(labels, data){
     var str ='';
     var line = '';
-    for (var i=0; i<labels.length; i++){
-      line += ',';
-      line += labels[i];
+
+    for (var key in data){
+      line += ",";
+      line += data[key].label;
     }
     str += line + '\r\n';
-    
-    for (var key in data){
-      line = data[key].label;
-      for (var j=0; j<labels.length; j++){
-        if (line !== '') line += ',';
-        line += Math.ceil(data[key].data[j]);
+    for (var i=0; i<labels.length; i++){
+      line = labels[i];
+      for (key in data){
+        line += ",";
+        line += Math.ceil(data[key].data[i]);
       }
       str += line + '\r\n';
     }
@@ -541,6 +541,7 @@ var TotalHistory = function (options) {
   document.getElementById('csv').onclick = function(){
     labels = to_export.labels;
     data = to_export.datasets;
+    console.log("csv!", data);
     var csv = toCSV(labels, data);
     if (!!Modernizr.prefixed('requestFileSystem', window)) {
         var blob  = new Blob([csv], {'type':'application/octet-stream'});

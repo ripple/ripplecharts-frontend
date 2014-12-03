@@ -359,7 +359,6 @@ angular.module( 'ripplecharts.markets', [
     var issuer;
     if (base.currency == "XRP") issuer = counter.issuer;
     else issuer = base.issuer;
-    console.log(issuer);
     for (var key in gateways){
       if (gateways[key].accounts[0].address == issuer) return gateways[key].startDate
     }
