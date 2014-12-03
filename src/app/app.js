@@ -40,6 +40,11 @@ angular.element(document).ready(function() {
     $scope.theme = store.get('theme') || Options.theme || 'dark';
     $scope.$watch('theme', function(){store.set('theme', $scope.theme)});
     
+    $scope.toggleTheme = function(){
+      if ($scope.theme == 'dark') $scope.theme = 'light';
+      else $scope.theme = 'dark';
+    };
+    
     $scope.snapOptions = {
       disable: 'right',
       maxPosition: 267
