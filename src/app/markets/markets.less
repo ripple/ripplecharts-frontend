@@ -139,58 +139,6 @@
 
 #interval {margin-left:60px; float:left; clear:both}
 
-#range {
-  margin-left:60px; 
-  float:left; 
-  clear:both;
-  width: auto;
-}
-
-#dates {
-  width: auto;
-  height: auto;
-  display: inline-block
-}
-
-.datepicker {
-  width: auto;
-  height: auto;
-  width: 70px;
-  color: #3369a8;
-  background: 0;
-  border-radius: 4px;
-  border: 1.5px solid #3369a8;
-  padding: 0 2px;
-  margin-left: 5px;
-  font-size: 12px;
-  line-height: 13px;
-  text-align: center;
-}
-
-.dark .datepicker{
-  border: 2px solid #137;
-}
-
-.disabled {
-  color: #D3D3D3 !important;
-}
-
-.disabled:hover{
-  color: #D3D3D3 !important;
-  border-style: none !important;
-  cursor: default !important;
-}
-
-.dark .disabled {
-  color: rgb(50, 50, 50) !important;
-}
-
-.dark .disabled:hover{
-  color: rgb(50, 50, 50) !important;
-  border-style: none !important;
-  cursor: default !important;
-}
-
 #chartType {
   float:right;
   margin-right:60px;
@@ -309,22 +257,6 @@
 }
 
 @media (max-width: 600px) {
-  
-  #interval label {display:none}
-  #range label {display:none}
-  #range {margin-left:0px; float: center}
-  #interval {margin-left:0px; float: center}
-  #dates {
-    width: auto;
-    height: auto;
-    float: center;
-    margin: 3px 0px;
-    display: inherit;
-  }
-  .datepicker {
-    width: 70px;
-    font-size: 14px;
-  }
 
   .markets .col-md-3 {
     display:block;
@@ -390,10 +322,10 @@
   
   .rippleStatus {
     zoom: 1.5;
-  } 
-
-  #interval {margin-left:0px; zoom:1.25}
-  #range {margin-left:0px; zoom:1.25}
+  }
+  
+  #interval {margin-left:20px; zoom:1.25}
+  #interval label {display:none}
   #chartType {margin-right:20px; zoom:1.25}
   #flip {
     font-size:16px;

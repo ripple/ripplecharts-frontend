@@ -1,7 +1,6 @@
 [
     {
         "name": "Bitstamp",
-        "startDate": "2013-02-22",
         "accounts": [{
             "address": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
             "currencies": ["BTC", "USD", "EUR"],
@@ -9,7 +8,6 @@
             }]
     }, {
         "name": "RippleChina",
-        "startDate": "2013-05-21",
         "accounts": [{
             "address": "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA",
             "currencies": ["CNY"],
@@ -17,7 +15,6 @@
             }]
     }, {
         "name": "rippleCN",
-        "startDate": "2013-05-05",
         "accounts": [{
             "address": "rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK",
             "currencies": ["BTC", "CNY"],
@@ -25,7 +22,6 @@
             }]
     }, {
         "name": "Payroutes",
-        "startDate": "2013-04-24",
         "accounts": [{
             "address": "rNPRNzBB92BVpAhhZr4iXDTveCgV5Pofm9",
             "currencies": ["BTC", "ILS"],
@@ -33,7 +29,6 @@
             }]
     }, {
         "name": "SnapSwap",
-        "startDate": "2013-06-18",
         "accounts": [{
             "address": "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
             "currencies": ["USD","BTC","EUR","GBP"],
@@ -41,7 +36,6 @@
             }]
     }, {
         "name": "The Rock Trading",
-        "startDate": "2013-05-19",
         "accounts": [{
             "address": "rLEsXccBGNR3UPuPu2hUXPjziKC3qKSBun",
             "currencies": ["BTC", "EUR", "USD"],
@@ -49,7 +43,6 @@
             }]
     }, {
         "name": "WisePass",
-        "startDate": "2013-04-28",
         "accounts": [{
             "address": "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
             "currencies": ["BTC", "LTC", "USD"],
@@ -57,7 +50,6 @@
             }]
     }, {
         "name": "RippleUnion",
-        "startDate": "2013-03-22",
         "accounts": [{
             "address": "r3ADD8kXSUKHd6zTCKfnKT3zV9EZHjzp1S",
             "currencies": ["CAD"],
@@ -65,7 +57,6 @@
             }]
     },{
         "name": "Justcoin",
-        "startDate": "2013-07-29",
         "accounts": [{
             "address": "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
             "currencies": ["LTC", "BTC","STR","EUR","NOK"],
@@ -73,7 +64,6 @@
             }]
     }, {
         "name": "XRPChina",
-        "startDate": "2013-06-02",
         "accounts": [{
             "address": "rM8199qFwspxiWNZRChZdZbGN5WrCepVP1",
             "currencies": ["CNY"],
@@ -81,7 +71,6 @@
             }]
     }, {
         "name": "Ripple Singapore",
-        "startDate": "2014-01-25",
         "accounts": [{
             "address": "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
             "currencies": ["XAU","XAG", "USD"],
@@ -89,7 +78,6 @@
             }]
     }, {
         "name": "Ripple Trade Japan",
-        "startDate": "2014-02-21",
         "accounts": [{
             "address": "rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6",
             "currencies": ["JPY"],
@@ -97,7 +85,6 @@
             }]
     }, {
         "name": "Bitso",
-        "startDate": "2014-05-22",
         "accounts": [{
             "address": "rG6FZ31hDHN1K5Dkbma3PSB5uVCuVVRzfn",
             "currencies": ["MXN","BTC"],
@@ -105,7 +92,6 @@
             }]
     }, {
         "name": "Coinex",
-        "startDate": "2014-04-01",
         "accounts": [{
             "address": "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc",
             "currencies": ["NZD","BTC","USD","AUD", "STR"],
@@ -114,7 +100,6 @@
             }]
     }, {
         "name": "Ripple LatAm",
-        "startDate": "2014-05-01", 
         "accounts": [{
             "address": "rP5ShE8dGBH6hHtNvRESdMceen36XFBQmh",
             "currencies": ["BRL","UYU","PEN","MXN","BTC","LTC","USD","CLP","ARS"],
@@ -123,7 +108,6 @@
             }]
     }, {
         "name": "GBI",
-        "startDate": "2014-07-28",
         "accounts": [{
             "address": "rrh7rf1gV2pXAoqA8oYbpHd8TKv5ZQeo67",
             "currencies": [
@@ -138,7 +122,6 @@
         "domain": "goldbullioninternational.com"
     }, {
         "name": "Lake BTC",
-        "startDate": "2014-05-19",
         "accounts": [{
             "address": "rpDMez6pm6dBve2TJsmDpv7Yae6V5Pyvy2",
             "currencies": ["USD"]
@@ -149,7 +132,6 @@
         "domain": "lakebtc.com"
     }, {
         "name": "Ripple Fox",
-        "startDate": "2014-04-19",
         "accounts": [{
             "address": "rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y",
             "currencies": ["CNY","STR"]
@@ -162,7 +144,6 @@
         "domain": "ripplefox.com"
     }, {
         "name": "TokyoJPY",
-        "startDate": "2014-08-18",
         "accounts": [{
             "address": "r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN",
             "currencies": ["JPY"]
@@ -171,7 +152,6 @@
         "domain": "tokyojpy.com"
     }, {
         "name": "Rippex",
-        "startDate": "2014-09-13",
         "accounts": [{
             "address": "rfNZPxoZ5Uaamdp339U9dCLWz2T73nZJZH",
             "currencies": ["BRL"]
@@ -180,7 +160,6 @@
         "domain": "rippex.net"
     }, {
         "name": "Ripple Market Japan",
-        "startDate": "2014-08-12",
         "accounts": [{
             "address": "rJRi8WW24gt9X85PHAxfWNPCizMMhqUQwg",
             "currencies": ["JPY"]
@@ -189,7 +168,6 @@
         "domain": "ripple-market.jp"
     }, {
         "name": "Pax Moneta",
-        "startDate": "2014-09-06",
         "accounts": [{
             "address": "rUkMKjQitpgAM5WTGk79xpjT38DEJY283d",
             "currencies": ["KRW"]
@@ -198,7 +176,6 @@
         "domain": "paxmoneta.com"
     }, {
         "name": "Ripplex",
-        "startDate": "2014-09-25",
         "accounts": [{
             "address": "r9ZFPSb1TFdnJwbTMYHvVwFK1bQPUCVNfJ",
             "currencies": ["JPY"]
@@ -207,7 +184,6 @@
         "domain": "ripplex.co.jp"
     }, {
         "name": "Ripula",
-        "startDate": "2014-10-16",
         "accounts": [{
             "address": "rBycsjqxD8RVZP5zrrndiVtJwht7Z457A8",
             "currencies": ["GBP"]
