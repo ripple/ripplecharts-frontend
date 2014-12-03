@@ -1,0 +1,14 @@
+{
+  "name": "store2",
+  "version": "2.1.6",
+  "main": "dist/store2.js",
+  "ignore": [
+    "**/.*",
+    "Gruntfile.js",
+    "libs",
+    "node_modules",
+    "bower_components",
+    "components",
+    "test"
+  ]
+}
