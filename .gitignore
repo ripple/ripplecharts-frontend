@@ -4,5 +4,7 @@
 *.credentials.json
 deployment.environments.json
 bin/
-node_modules/
+node_modules
+build/
+vendor/
 src/config.js
