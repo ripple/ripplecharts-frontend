@@ -211,8 +211,6 @@ PriceChart = function (options) {
     lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
     endTime          = moment.utc(lastCandle).add('seconds', intervalSeconds);
     startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
-    
-    console.log(startTime, endTime);
 
     if (liveFeed) liveFeed.stopListener();
     if (options.live) setLiveFeed();
@@ -671,21 +669,5 @@ PriceChart = function (options) {
     }
    
     return tzAbbr;
-  }
-
-  this.test = function(base, counter){
-    self.request = apiHandler.offersExercised({
-      endTime       : new Date(),
-      startTime     : new Date("1/1/2013"),
-      limit         : 1,
-      reduce        : false,
-      descending    : false,
-      base          : base,
-      counter       : counter
-    }, function(data){
-      console.log('Start Date:', base.currency, counter.currency, data[0].time._i);
-    }, function (error){
-      console.log(error);
-    });    
   }
 }

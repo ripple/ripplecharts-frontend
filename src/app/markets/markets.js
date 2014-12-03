@@ -69,12 +69,14 @@ angular.module( 'ripplecharts.markets', [
       .on("change", function(d) {
         if (loaded) {
           $scope.trade = d;
+          updateMaxrange();
           loadPair();
         }}),
     dropdownA = ripple.currencyDropdown().selected($scope.base)
       .on("change", function(d) {
         if (loaded) {
           $scope.base = d;
+          updateMaxrange();
           loadPair();
         }});
 
@@ -118,7 +120,6 @@ angular.module( 'ripplecharts.markets', [
     .classed("selected", function(d) { return d.name === $scope.range.name; })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
-      getStartdate($scope.base, $scope.trade);
       d3.event.preventDefault();
       var that    = this,
           now     = moment.utc(),
@@ -363,6 +364,15 @@ angular.module( 'ripplecharts.markets', [
       if (gateways[key].accounts[0].address == issuer) return gateways[key].startDate
     }
     return "2013-1-1";
+  }
+
+  function updateMaxrange(){
+    var current_range = store.get('range');
+    if (current_range.name === "max"){
+      current_range.start = getStartdate($scope.base, $scope.trade);
+      store.set('range', current_range);
+      store.session.set('range', current_range);
+    }
   }
 
   //set up the order book      
