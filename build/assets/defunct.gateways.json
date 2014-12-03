@@ -1,0 +1,30 @@
+[
+    {
+        "name": "WeExchange",
+        "accounts": [{
+            "address": "r47RkFi1Ew3LvCNKT6ufw3ZCyj5AJiLHi9",
+            "currencies": ["CAD"],
+            "hotwallets": []
+            }, {
+            "address": "rBcYpuDT1aXNo4jnqczWJTytKGdBGufsre",
+            "currencies": ["AUD"],
+            "hotwallets": []
+            }, {
+            "address": "rpvfJ4mR6QQAeogpXEKnuyGBx8mYCSnYZi",
+            "currencies": ["BTC"],
+            "hotwallets": []
+            }, {
+            "address": "r9vbV3EHvXWjSkeQ6CAcYVPGeq7TuiXY2X",
+            "currencies": ["USD"],
+            "hotwallets": []
+            }]
+    }, {
+        "name": "chriswen",
+        "accounts": [{
+            "address": "rDihBcUrrfDwUBZWBcuP2z5n47KVLQFNQH",
+            "currencies": ["LTC"],
+            "hotwallets": []
+            }]
+    }
+
+]
