@@ -35,7 +35,6 @@ PriceChart = function (options) {
   div  = wrap.append("div").attr("class","priceChart");     
   wrap.classed("priceChartWrap");
 
-  console.log(w, h, options.height);
   if (!options.margin)  options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)   options.width  = w - options.margin.left - options.margin.right;
   if (options.height)   options.height - options.margin.top - options.margin.bottom;
@@ -333,7 +332,6 @@ PriceChart = function (options) {
   
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
-    
     var first   = lineData.length ? lineData[0] : null;
     var last    = lineData.length ? lineData[lineData.length-1] : null;
     var candle  = data;
