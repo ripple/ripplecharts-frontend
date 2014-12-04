@@ -163,7 +163,9 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
   listener.stopListener();
   listener.viewOpts = parseViewOpts(newOpts);
-
+  
+  console.log(listener.viewOpts);
+  
   // If timeIncrement is set, setup an interval to call the displayFn,
   // otherwise, pass the displayFn directly to createTransactionProcessor()
   if (!listener.viewOpts.timeIncrement) {

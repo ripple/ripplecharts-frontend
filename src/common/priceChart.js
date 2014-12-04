@@ -35,12 +35,14 @@ PriceChart = function (options) {
   div  = wrap.append("div").attr("class","priceChart");     
   wrap.classed("priceChartWrap");
 
-  
+  console.log(w, h, options.height);
   if (!options.margin)  options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)   options.width  = w - options.margin.left - options.margin.right;
-  if (options.height)   staticHeight   = options.height - options.margin.top - options.margin.bottom;
-  else if (h)           staticHeight   = options.height = h - options.margin.top - options.margin.bottom;
-  else                  options.height = options.width/2>400 ? options.width/2 : 400;
+  if (options.height)   options.height - options.margin.top - options.margin.bottom;
+  else if (h)           options.height = h - options.margin.top - options.margin.bottom;
+  else                  options.height = window.innerHeight - options.margin.top  - options.margin.bottom;
+  
+  if (options.height < 150) options.height = 150;
   
   if (options.width<0) options.width  = 0; //if the div is less than the margin, we will get errors
 
@@ -143,16 +145,27 @@ PriceChart = function (options) {
   }
   
 //function called whenever the window is resized (if resizable)    
-  function resizeChart () {
-    old = options.width;
-    w = parseInt(div.style('width'), 10);
-    options.width  = w-options.margin.left - options.margin.right;
-    if (!staticHeight) options.height = options.width/2>400 ? options.width/2 : 400;
+  this.resizeChart = function () {
+    var oldWidth  = options.width;
+    var oldHeight = options.height;
     
-    if (old != options.width) {
+    var w = parseInt(wrap.style('width'), 10);
+    var h = parseInt(wrap.style('height'), 10);
+
+    options.width  = w-options.margin.left - options.margin.right;
+    options.height = h-options.margin.top - options.margin.bottom;
+    //if (!staticHeight) options.height = options.width/2>400 ? options.width/2 : 400;
+    if (options.height < 150) options.height = 150;
+    
+    if (oldWidth  != options.width ||
+        oldHeight != options.height) {
       drawChart(); 
       drawData();  
     } 
+  }
+  
+  function resizeChart () {
+    self.resizeChart();
   }
   
     
@@ -505,17 +518,21 @@ PriceChart = function (options) {
     bars.exit().remove();
 
     // Update the x-axis.
-    gEnter.select(".x.axis").transition()
-      .call(xAxis)
-      .attr("transform", "translate(0," + priceScale.range()[0] + ")");
+    gEnter.select(".x.axis")
+      .attr("transform", "translate(0," + priceScale.range()[0] + ")")
+      //.transition()
+      .call(xAxis);
 
     // Update the y-axis.
-    gEnter.select(".price.axis").transition()
-      .call(priceAxis)
-      .attr("transform", "translate(" + xScale.range()[1] + ", 0)");
+    gEnter.select(".price.axis")
+      .attr("transform", "translate(" + xScale.range()[1] + ", 0)")
+      //.transition()
+      .call(priceAxis);
       
     // Update the left axis.
-    gEnter.select(".volume.axis").transition().call(volumeAxis);
+    gEnter.select(".volume.axis")
+      //.transition()
+      .call(volumeAxis);
 
     //hide the loader, show the chart
     if (!isLoading) {
@@ -605,11 +622,23 @@ PriceChart = function (options) {
       });   
              
     } else if (chartInterval=='da') {
+      var days;
+      var diff;
+
+      if (multiple === 1) {
+        days = 0;
+
+      } else { 
+        diff = time.diff(moment.utc([2013,0,1]), 'hours')/24;
+        if (diff<0) days = multiple - (0 - Math.floor(diff))%multiple;
+        else days = Math.floor(diff)%multiple;
+      }
+      
       aligned = time.subtract({
         seconds : time.seconds(), 
         minutes : time.minutes(),
         hours   : time.hours(),
-        days    : time.dayOfYear()%multiple
+        days    : days
       }); 
 
     } else if (chartInterval=='we') {
