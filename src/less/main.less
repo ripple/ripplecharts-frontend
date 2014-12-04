@@ -88,10 +88,9 @@ h1, h2, h3, h4 {
 }
 
 .header {
-	
-  position:relative;
+  position: fixed;
+  width: 100%;
   z-index:3;
-  padding-bottom:1px;
   border-bottom:1px solid #444;
   background:#151515;
 }
@@ -154,7 +153,7 @@ h1, h2, h3, h4 {
   height:18px;
   width:18px; 
   margin:1px 5px; 
-  float:left; 
+  //float:left; 
 }
 
 .nav .page {
@@ -174,8 +173,8 @@ h1, h2, h3, h4 {
 .nav li a {
   font-size:15px;
   border-radius:1px;  
-  padding:8px 20px;
-  color:#999;
+  padding:11px 20px;
+  color:#666;
   display:block;
   text-decoration:none;
 }
@@ -231,7 +230,7 @@ h1, h2, h3, h4 {
   width:220px;
   height:40px;
   background-image:url('images/logoLight.png');
-  margin:4px 0;
+  margin: 8px 0 8px 15px !important;
 
 // Pixel ratio: 2
   @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
@@ -624,16 +623,23 @@ footer .links a:first-child {
   
   .main_menu {
   
+  	font-family: 'Open Sans';
+  
   	li.color_picker {
 			margin-top: 7px !important;
+			cursor: pointer;
 		}
   
   	li.category:hover > .sub_wrapper > ul.subnav { 
   		display: block;
   	}
   	
+  	li.category a:hover,  li.category a:active {
+  		color: #346aa9;
+  	}
+  	
   	.sub_wrapper {
-			padding-top: 8px;
+			padding-top: 11px;
 			height: auto;
 			width: auto;
 			position: relative;
@@ -683,9 +689,12 @@ footer .links a:first-child {
 		}
 		
 		.fa-info-circle {
-			margin: 5px 15px;
-			font-size: 26px;
+			margin: 15px;
+			font-size: 20px;
 			color: #999;
+			position: relative;
+			top: 3px;
+			cursor: pointer;
 		}
   
   }
@@ -701,12 +710,13 @@ footer .links a:first-child {
 
 		}
 		
+		.nav .category img {
+  		float:left; 
+		}
+		
+		#helpButton_new {
+			margin: 10px 27px;
+			color: #666;
+		}
+		
   }
-
-
-//firefox specific hack
-@-moz-document url-prefix() { 
-  .main_menu .sub_wrapper {
-			padding-top: 6px;
-	}
-}

@@ -53,11 +53,11 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
         </i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
         <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="main_menu container">
+      <div class="main_menu">
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav"> 
             <li class="category">
-							<a href="#/markets" snap-close>Markets<span class="caret"></span></a>
+							<a href="#/markets" snap-close>Markets  <span class="caret"></span></a>
 								<div class="sub_wrapper">
 									<ul class="subnav">
 										<li ui-route="/markets(/.+)?" ng-class="{active:$uiRoute !== false}">
@@ -73,7 +73,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
 							</div>	
 						</li> 
             <li class="category">
-							<a href="#/value" snap-close>Value<span class="caret"></span></a>
+							<a href="#/value" snap-close>Value  <span class="caret"></span></a>
 							<div class="sub_wrapper">
 							<ul class="subnav">
 								<li ui-route="/value" ng-class="{active:$uiRoute !== false}">
@@ -86,7 +86,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
 						</div>
 						</li> 
 						<li class="category">
-							<a href="#/graph" snap-close></i>Accounts<span class="caret"></span></a>
+							<a href="#/graph" snap-close></i>Accounts  <span class="caret"></span></a>
 							<div class="sub_wrapper">
 							<ul class="subnav">
 								<li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
@@ -99,9 +99,9 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
 						</div>
 						</li> 
 						<li class="category color_picker">
-							<a><i ng-click="toggleTheme()" class="fa fa-lightbulb-o fa-2x"></i></a>
+							<a><img title="Toggle Light/Dark themes" class="toggle_theme" ng-click="toggleTheme()" src="assets/icons/icn_brightness.svg"></a>
 						</li>
-						<li class="category"><div id="helpButton_new" ng-click="showHelp = !showHelp"><span><i class="fa fa-info-circle"></i></span></div>
+						<li class="category"><div id="helpButton_new" ng-click="showHelp = !showHelp"><span><i title="More info" class="fa fa-info-circle"></i></span></div>
  						</li>
   
           </ul>
@@ -167,6 +167,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             </li>
           </ul>
         </li> 
+        <li class="category color_picker">
+					<a><img class="toggle_theme" ng-click="toggleTheme()" src="assets/icons/icn_brightness.svg">Light / Dark</a> 
+				</li>
+				<li class="category"><div id="helpButton_new" ng-click="showHelp = !showHelp"><span><i class="fa fa-info-circle"></i></span> Info</div></li>
       </ul>
     </div snap-drawer>
     
