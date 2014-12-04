@@ -13,7 +13,9 @@ var OrderBook = function (options) {
     
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(chart.style('width'), 10) - options.margin.left - options.margin.right;
-  if (!options.height) options.height = options.width/4;
+  if (!options.height) options.height = parseInt(chart.style('height'), 10) - options.margin.top - options.margin.bottom;
+  
+  console.log(options.height);
       
   var xScale = d3.scale.linear(),
     yScale   = d3.scale.linear(),
@@ -434,12 +436,16 @@ var OrderBook = function (options) {
 
 //resize the chart when   
   function resizeChart() {
-    old = options.width;
-    w = parseInt(chart.style('width'), 10);
-    options.width  = w-options.margin.left - options.margin.right;
-    options.height = options.width/4;
+    var oldWidth  = options.width;
+    var oldHeight = options.height;
+    var w = parseInt(chart.style('width'), 10);
+    var h = parseInt(chart.style('height'), 10);
     
-    if (old != options.width) {
+    options.width  = w - options.margin.left - options.margin.right;
+    options.height = h - options.margin.top - options.margin.bottom;
+    
+    if (oldWidth  != options.width ||
+        oldHeight != options.height) {
       drawChart(); 
       drawData();
     }

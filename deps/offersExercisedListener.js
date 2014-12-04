@@ -163,7 +163,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
   listener.stopListener();
   listener.viewOpts = parseViewOpts(newOpts);
-
+  
   // If timeIncrement is set, setup an interval to call the displayFn,
   // otherwise, pass the displayFn directly to createTransactionProcessor()
   if (!listener.viewOpts.timeIncrement) {
@@ -191,11 +191,15 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
       .add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple);
     var remainder = endTime.diff(moment.utc());
 
+    //if its more than 24 days, it will overflow
+    //the set timeout function. just assume no one
+    //will keep the browser open that long
+    if (remainder > 2073600000) return;
 
     // If there is time left in the first timeIncrement, wait until that 
     // is finished to start the interval
     if (remainder > 0) {
-
+      
       listener.timeout = setTimeout(function(){
         listener.finishedInterval();
         setNext(listener);

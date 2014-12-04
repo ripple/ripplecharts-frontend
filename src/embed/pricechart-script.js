@@ -56,7 +56,8 @@ var PriceChartWidget = function (options) {
     id     : options.id,
     margin : options.margin,
     width  : options.width,
-    height : options.height
+    height : options.height,
+    resize : options.resize || false
   }); 
   
   
@@ -182,6 +183,9 @@ var PriceChartWidget = function (options) {
       return params;   
     }    
   }
+  
+  //expose this function if the user wants to force a resize
+  this.resize = priceChart.resizeChart;
   
   return this;
 }
