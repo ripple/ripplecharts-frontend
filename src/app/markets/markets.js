@@ -60,6 +60,8 @@ angular.module( 'ripplecharts.markets', [
   $scope.range  = store.session.get('range') || store.get('range') || 
     Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
+  //update local storage
+  if ($scope.range.name !== 'custom') $scope.range.end = moment.utc()._d;
   store.set('range', $scope.range);
   store.session.set('range', $scope.range);
 
@@ -150,7 +152,8 @@ angular.module( 'ripplecharts.markets', [
         });
       priceChart.load($scope.base, $scope.trade, d);
     });
-
+  
+  //set up date selector
   ranges.append("a").html("custom").attr('href', '#').attr('id', 'custom')
     .data([{name: 'custom'}])
     .classed("selected", function(d) {
@@ -169,7 +172,6 @@ angular.module( 'ripplecharts.markets', [
       $("#end").toggle();
     });
   
-
   ranges.append("div").attr('id', 'dates');
   d3.select('#dates').append("input").attr('type', 'text').attr('id', 'start').attr('class', 'datepicker');
   d3.select('#dates').append("input").attr('type', 'text').attr('id', 'end').attr('class', 'datepicker');
@@ -247,15 +249,20 @@ angular.module( 'ripplecharts.markets', [
     .on("click", function(d) {
       d3.event.preventDefault();
       if (!this.classList.contains("disabled")) {
-        var that = this;
-        d.start = store.session.get('range').start;
-        d.end = store.session.get('range').end;
+        var that  = this,
+            range = store.session.get('range');
+        d.start = range.start;
+        if (range.name !== 'custom') {
+          range.end = new Date();
+          store.set('range', range);
+          store.session.set('range', range);
+        }
+        d.end = range.end;
         store.set("interval", d.name);
         store.session.set("interval", d.name);
         interval.classed("selected", function() { return this === that; });
         priceChart.load($scope.base, $scope.trade, d);
       }
-
     });
 
   //set up the chart type selector    
@@ -311,8 +318,6 @@ angular.module( 'ripplecharts.markets', [
     if (state=='loaded') toCSV.style("opacity",1).attr("disabled",null);
     else toCSV.style("opacity",0.3).attr("disabled",true);
   };
-  
-  loaded = true;
 
   function selectIntervals(start, end, d){
     var diff = Math.abs(moment(start).diff(end))/1000,
@@ -374,6 +379,8 @@ angular.module( 'ripplecharts.markets', [
     }
   }
 
+  loaded = true;
+  
   //set up the order book      
   function emitHandler (type, data) {
     if (type=='spread') {
