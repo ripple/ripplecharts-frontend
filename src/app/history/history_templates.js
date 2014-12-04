@@ -1,4 +1,4 @@
-var scale_template = 
+var scale_template =
 '<% if (value>=1000000) {%>'
 	+'<%=" "+value/1000000%>m'
 +'<% } else if (value>=1000){%>' 
