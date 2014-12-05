@@ -110,8 +110,8 @@ angular.module( 'ripplecharts.markets', [
       {name: "12h",  interval:"minute", multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -12); }},
       {name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
       {name: "3d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -3); }},
-      {name: "2w",  interval:"hour",    multiple:3,   offset: function(d) { return d3.time.day.offset(d, -14); }},
-      {name: "1m",  interval:"hour",    multiple:6,   offset: function(d) { return d3.time.month.offset(d, -1); }},
+      {name: "2w",  interval:"hour",    multiple:2,   offset: function(d) { return d3.time.day.offset(d, -14); }},
+      {name: "1m",  interval:"hour",    multiple:4,   offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "6m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -6); }},
       {name: "1y",  interval:"day",     multiple:3,   offset: function(d) { return d3.time.year.offset(d, -1); }},
@@ -332,11 +332,11 @@ angular.module( 'ripplecharts.markets', [
       case "1h":
         num = diff/(3600);
         break;
-      case "3h":
-        num = diff/(10800);
+      case "2h":
+        num = diff/(7200);
         break;
-      case "6h":
-        num = diff/(21600);
+      case "4h":
+        num = diff/(14400);
         break;
       case "1d":
         num = diff/(86400);
@@ -356,6 +356,7 @@ angular.module( 'ripplecharts.markets', [
       default:
         return true;
     }
+    console.log(d.name, diff, num);
     if(num <= 366 && num >= 25) return false;
     else return true;
   }       
