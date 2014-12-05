@@ -356,7 +356,6 @@ angular.module( 'ripplecharts.markets', [
       default:
         return true;
     }
-    console.log(d.name, diff, num);
     if(num <= 366 && num >= 25) return false;
     else return true;
   }       
