@@ -530,7 +530,7 @@ var TotalHistory = function (options) {
       line = labels[i];
       for (key in data){
         line += ",";
-        line += Math.ceil(data[key].data[i]);
+        line += parseFloat((data[key].data[i]).toFixed(2));
       }
       str += line + '\r\n';
     }
@@ -541,7 +541,6 @@ var TotalHistory = function (options) {
   document.getElementById('csv').onclick = function(){
     labels = to_export.labels;
     data = to_export.datasets;
-    console.log("csv!", data);
     var csv = toCSV(labels, data);
     if (!!Modernizr.prefixed('requestFileSystem', window)) {
         var blob  = new Blob([csv], {'type':'application/octet-stream'});
