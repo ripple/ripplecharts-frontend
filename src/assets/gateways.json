@@ -197,14 +197,14 @@
         "hotwallets": ["rhLSigWL4J9JBBW1JFMBvaduDkVghG7cc2"],
         "domain": "paxmoneta.com"
     }, {
-        "name": "Ripplex",
+        "name": "Ripple Exchange Tokyo",
         "startDate": "2014-09-25",
         "accounts": [{
             "address": "r9ZFPSb1TFdnJwbTMYHvVwFK1bQPUCVNfJ",
             "currencies": ["JPY"]
             }],
         "hotwallets": [],
-        "domain": "ripplex.co.jp"
+        "domain": "ripple-exchange.tokyo"
     }, {
         "name": "Ripula",
         "startDate": "2014-10-16",
