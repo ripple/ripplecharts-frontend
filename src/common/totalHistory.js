@@ -530,7 +530,7 @@ var TotalHistory = function (options) {
       line = labels[i];
       for (key in data){
         line += ",";
-        line += Math.ceil(data[key].data[i]);
+        line += Math.round(data[key].data[i] * 100) / 100;
       }
       str += line + '\r\n';
     }
