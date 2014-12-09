@@ -4,7 +4,7 @@ var MiniChart = function(base, counter, markets) {
     wrap, svg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
-    dropdownA, dropdownB, dropdowns, loaded;
+    dropdownA, dropdownB, dropdowns, loaded, liveFeed;
   
   self.lineData = [];
   self.div      = markets.el.insert("div",".add").attr("class","chart");
@@ -135,6 +135,7 @@ var MiniChart = function(base, counter, markets) {
 
     }, function(data){
       
+      setLiveFeed();
       self.lineData = data;
       isLoading     = false;
       drawData(true);
@@ -147,6 +148,71 @@ var MiniChart = function(base, counter, markets) {
     });  
   }  
  
+ //////////////////////////////////////////////////////////////////////////////////
+
+  //enable the live feed via ripple-lib
+  function setLiveFeed () {
+    var candle = {
+        startTime     : new Date(),
+        baseVolume    : 0.0,
+        counterVolume : 0.0, 
+        count         : 0,
+        open          : 0.0,
+        high          : 0.0,
+        low           : 0.0,
+        close         : 0.0,
+        vwap          : 0.0,
+        openTime      : null,
+        closeTime     : null
+      };
+    
+    var viewOptions = {
+      base    : self.base,
+      counter : self.counter,
+      timeIncrement    : "minute",
+      timeMultiple     : 15,
+      incompleteApiRow : candle
+    }
+    
+    liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
+  }
+
+
+//suspend the live feed  
+  this.suspend = function () {
+    if (liveFeed) liveFeed.stopListener();
+    if (options.resize && typeof removeResizeListener === 'function')
+      removeResizeListener(window, resizeChart);   
+  }
+  
+  
+//add new data from the live feed to the chart  
+  function liveUpdate (data) {
+    console.log("Got some data!", data);
+    var lineData = self.lineData;
+    var first   = lineData.length ? lineData[0] : null;
+    var last    = lineData.length ? lineData[lineData.length-1] : null;
+    var candle  = data;
+    
+    candle.startTime = moment.utc(candle.startTime);
+    candle.live      = true;
+    
+    if (last && last.startTime.unix()===candle.startTime.unix()) {  
+      lineData[lineData.length-1] = candle;
+    } else {
+      //new candle, only add it if something happened
+      if (candle.baseVolume) {
+        lineData.push(candle); //append the candle    
+      }
+      //remove the first candle if it is before the start range
+      //if (first && first.startTime.unix()<startTime.unix()) lineData.shift();
+      lineData.shift();
+    } 
+    //redraw the chart
+    if (lineData.length) drawData();
+  }
+
+//////////////////////////////////////////////////////////////////////////////////
   
 //draw the chart, not including data     
   function drawChart() {            
@@ -412,8 +478,9 @@ var MultiMarket = function (options) {
     height += 88; //add height of details, dropdowns, borders
     add.style({height: height+"px", "line-height":height+"px"});
   }
-  
-  if (options.updateInterval && 
+
+//update chart
+/*  if (options.updateInterval && 
       typeof options.updateInterval === 'number') {
     
     interval = setInterval(function(){
@@ -421,7 +488,7 @@ var MultiMarket = function (options) {
         self.charts[i].load(true);
       }      
     }, options.updateInterval*1000);      
-  }
+  }*/
       
 //new chart from list initialization or add chart button click         
   this.addChart = function (base, counter) {
