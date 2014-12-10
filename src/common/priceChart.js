@@ -332,7 +332,6 @@ PriceChart = function (options) {
   
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
-    console.log("Got some data!", data);
     var first   = lineData.length ? lineData[0] : null;
     var last    = lineData.length ? lineData[lineData.length-1] : null;
     var candle  = data;
