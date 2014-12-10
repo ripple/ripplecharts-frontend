@@ -32,6 +32,7 @@ var MiniChart = function(base, counter, markets) {
       .html("x")
       .on("click", function(){
         d3.event.stopPropagation();
+        if (liveFeed) liveFeed.stopListener();
         self.remove(true);
     });
   }
@@ -134,7 +135,7 @@ var MiniChart = function(base, counter, markets) {
       counter       : self.counter
 
     }, function(data){
-      
+      if (liveFeed) liveFeed.stopListener();
       setLiveFeed();
       self.lineData = data;
       isLoading     = false;
@@ -152,7 +153,7 @@ var MiniChart = function(base, counter, markets) {
 
   //enable the live feed via ripple-lib
   function setLiveFeed () {
-    var candle = {
+    var point = {
         startTime     : new Date(),
         baseVolume    : 0.0,
         counterVolume : 0.0, 
@@ -171,7 +172,7 @@ var MiniChart = function(base, counter, markets) {
       counter : self.counter,
       timeIncrement    : "minute",
       timeMultiple     : 15,
-      incompleteApiRow : candle
+      incompleteApiRow : point
     }
     
     liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
@@ -180,35 +181,41 @@ var MiniChart = function(base, counter, markets) {
 
 //suspend the live feed  
   this.suspend = function () {
+    console.log("suspending");
     if (liveFeed) liveFeed.stopListener();
-    if (options.resize && typeof removeResizeListener === 'function')
-      removeResizeListener(window, resizeChart);   
+    if (typeof removeResizeListener === 'function')
+      removeResizeListener(window, resizeChart);
   }
   
   
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
-    console.log("Got some data!", data);
+    console.log("Got some data!", self.base.currency, self.counter.currency, data.close, data.baseVolume);
     var lineData = self.lineData;
     var first   = lineData.length ? lineData[0] : null;
     var last    = lineData.length ? lineData[lineData.length-1] : null;
-    var candle  = data;
-    
-    candle.startTime = moment.utc(candle.startTime);
-    candle.live      = true;
-    
-    if (last && last.startTime.unix()===candle.startTime.unix()) {  
-      lineData[lineData.length-1] = candle;
+    var point  = data;
+
+    point.startTime = moment.utc(point.startTime);
+    point.live      = true;
+    var bottom = moment(d3.time.day.offset(point.startTime, -1)).unix();
+    if (last && last.startTime.unix()===point.startTime.unix()) {
+      console.log("filling incomplete");  
+      lineData[lineData.length-1] = point;
     } else {
-      //new candle, only add it if something happened
-      if (candle.baseVolume) {
-        lineData.push(candle); //append the candle    
+      console.log("new point");
+
+      //new point, only add it if something happened
+      if (point.baseVolume) {
+        lineData.push(point); //append the point
       }
-      //remove the first candle if it is before the start range
-      //if (first && first.startTime.unix()<startTime.unix()) lineData.shift();
-      lineData.shift();
+      //remove the first point if it is before the start range
+      if (bottom > first.startTime.unix()){
+        lineData.shift();
+      }
     } 
     //redraw the chart
+    console.log(lineData.length);
     if (lineData.length) drawData();
   }
 
@@ -531,10 +538,11 @@ var MultiMarket = function (options) {
 //or remove them all with an empty array  
   this.list = function (charts) {
     for (var i=0; i<self.charts.length; i++) {
+      self.charts[i].suspend();
       self.charts[i].remove(false);
     }
     
-    if (!charts.length && !options.fixed) 
+    if (!charts.length && !options.fixed)
       removeResizeListener(window, resizeButton);
     
     if (!charts.length && interval)
