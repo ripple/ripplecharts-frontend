@@ -144,7 +144,7 @@ PriceChart = function (options) {
   }
   
 //function called whenever the window is resized (if resizable)    
-  this.resizeChart = function () {
+   function resizeChart () {
     var oldWidth  = options.width;
     var oldHeight = options.height;
     
@@ -163,8 +163,8 @@ PriceChart = function (options) {
     } 
   }
   
-  function resizeChart () {
-    self.resizeChart();
+  this.resizeChart = function () {
+    resizeChart();
   }
   
     
