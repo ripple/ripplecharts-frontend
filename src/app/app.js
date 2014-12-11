@@ -56,6 +56,7 @@ angular.element(document).ready(function() {
         
     $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
       mixpanel.track("Page", {"Page Name":toState.name, "Theme":$scope.theme});
+      if (ga) ga('send', 'pageview', toState.name);
       
       if ( angular.isDefined( toState.data.pageTitle ) ) 
            $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
