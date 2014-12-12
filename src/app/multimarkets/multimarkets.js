@@ -56,7 +56,6 @@ angular.module( 'ripplecharts.multimarkets', [
   });
     
   $scope.$on("$destroy", function(){
-    console.log("destory1");
     markets.list([]);
   });
   
