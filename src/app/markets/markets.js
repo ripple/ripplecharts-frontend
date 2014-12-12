@@ -218,7 +218,6 @@ angular.module( 'ripplecharts.markets', [
           selected = true;
           store.set("interval", d.name);
           store.session.set("interval", d.name);
-          d.name = "custom";
           d.start = moment.utc(start);
           d.end = moment.utc(end);
           d.live = false;
