@@ -20,10 +20,8 @@ This is the frontend for ripplecharts.com data visualization using angular.js an
         $ npm install
         $ bower install
         
-4. Copy 'aws.credentials.json.example' into 'aws.credentials.json'
-5. Copy 'deployment.environments.json.example' into 'deployment.environments.json'
+4. Copy 'deployment.environments.json.example' into 'deployment.environments.json'
 5. Copy 'src/example.config.js' into 'src/config.js' and fill in the options as desired. A URL for the api is required.
-6. Change back to the ripplecharts-frontend directory
 
 ## Build
 

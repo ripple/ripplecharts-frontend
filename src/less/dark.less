@@ -6,15 +6,15 @@
 .dark .logo {
   float:left;
   display:inline-block;
-  width:220px;
-  height:40px;
-  background-image:url('images/logoLight.png');
-  margin:4px 0;
+  width:165px;
+  height:30px;
+  background-image:url('images/logoLight_new.png');
+  margin:8px 0;
 
 // Pixel ratio: 2
   @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
-    background-image: url('images/logoLightLarge.png');
-    background-size: 220px 40px;
+    background-image: url('images/logoLightLarge_new.png');
+    background-size: 165px 30px;
   }
 }
 
@@ -51,12 +51,14 @@
 
 .dark .header {
   border-color:#444;
-  background:#151515;
+  background:#000;
 }
 
 .dark .header .wrapper {
   background:#000;
-  border-color:#222;
+  border-bottom: none; 
+  //max-width: 1140px;
+  //margin: auto;
 }
 
 .dark .logo img {opacity:.4; border-radius:2px}
@@ -80,7 +82,6 @@
 
 .dark .nav .top {
   background-color:#333;
-  height:54px;
 }
 
 .dark .nav .category, .dark .nav .top {
@@ -145,9 +146,13 @@
   color:#999;
 }
 
+.dark .main_menu .subnav {
+	background: #000;
+	border-left: 1px solid #444;
+	border-right: 1px solid #444;
+	border-bottom: 1px solid #444;
+}
+
 
 @media (max-width: 480px) {
-  .dark .nav .top {
-    height:35.5px;  //header height *.75 - 2px;
-  }
 }

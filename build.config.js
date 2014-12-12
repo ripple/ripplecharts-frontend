@@ -69,6 +69,7 @@ module.exports = {
    */
   vendor_files: {
     js: [
+      'vendor/ripple/ripple-min.js',
       'vendor/snapjs/snap.js',
       'vendor/angular/angular.js',
       'vendor/angular-touch/angular-touch.js',
@@ -83,11 +84,12 @@ module.exports = {
       'vendor/modernizr/modernizr.js',
       'vendor/d3/d3.js',
       'vendor/jquery/jquery.js',
+      'vendor/jquery-ui/jquery-ui.js',
       'vendor/jscrollpane/script/jquery.mousewheel.js',
       'vendor/jscrollpane/script/jquery.jscrollpane.js',
+      'vendor/chartjs/Chart.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
-      'deps/ripple-0.7.37.js',
       'deps/offersExercisedListener.js',
       'deps/onResize.js'
     ],

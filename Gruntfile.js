@@ -24,44 +24,16 @@ module.exports = function ( grunt ) {
   /**
    * Load in our build configuration file.
    */
-  var userConfig = require( './build.config.js' );
-
-  var deploymentEnvironment = process.env.NODE_ENV || "development";
-
-  var deploymentConfig = require( './deployment.config.js' )(deploymentEnvironment);
-
-  var maintenance = deploymentConfig.maintenance ? "maintenance.html" : null;
+  var userConfig       = require( './build.config.js' );
+  var env              = process.env.NODE_ENV || "development";
+  var deploymentConfig = require('./deployment.environments.json')[env];
+  var maintenance      = deploymentConfig.maintenance ? "maintenance.html" : null;
+  
   /**
    * This is the configuration object Grunt uses to give each plugin its 
    * instructions.
    */
   var taskConfig = {
-
-    aws:{
-      accessKeyId: deploymentConfig.aws.accessKeyId,
-      secretAccessKey: deploymentConfig.aws.secretAccessKey
-    },
-    s3: {
-      options: {
-        accessKeyId: deploymentConfig.aws.accessKeyId,
-        secretAccessKey: deploymentConfig.aws.secretAccessKey,
-        bucket: deploymentConfig.s3.bucket,
-        enableWeb: deploymentConfig.s3.enableWeb
-      },
-      build: {
-        cwd: "bin/",
-        src: "**"
-      }
-    },
-    cloudflare: {
-      options: {
-        /* purge the cache */
-        a: 'fpurge_ts',
-        tkn: deploymentConfig.cloudflare.api_key,
-        email: deploymentConfig.cloudflare.email,
-        z: deploymentConfig.cloudflare.domain
-      }
-    },
 
     /**
      * We read in our `package.json` file so we can access the package name and
@@ -550,7 +522,8 @@ module.exports = function ( grunt ) {
        */
       jssrc: {
         files: [ 
-          '<%= app_files.js %>'
+          '<%= app_files.js %>',
+          'deps/*.js'
         ],
         tasks: [ 'jshint:src', 'karma:unit:run', 'copy:build_appjs', 'embed:build' ]
       },
@@ -659,6 +632,7 @@ module.exports = function ( grunt ) {
    * before watching for changes.
    */
   grunt.renameTask( 'watch', 'delta' );
+  grunt.registerTask( 'watch', [ 'build', 'delta' ] );
   grunt.registerTask( 'watch', [ 'build', 'karma:unit:start', 'delta' ] );
 
   /**
@@ -674,7 +648,7 @@ module.exports = function ( grunt ) {
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets', 'copy:build_vendor_fonts',
     'copy:build_appjs', 'copy:build_vendorjs',   'copy:build_maintenance', 
     'index:build',      'embed:build_css',       'embed:build',           
-    'karmaconfig',      'karma:continuous' 
+    'karmaconfig'//, 'karma:continuous'
   ]);
 
   /**

@@ -163,7 +163,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
   listener.stopListener();
   listener.viewOpts = parseViewOpts(newOpts);
-
+  
   // If timeIncrement is set, setup an interval to call the displayFn,
   // otherwise, pass the displayFn directly to createTransactionProcessor()
   if (!listener.viewOpts.timeIncrement) {
@@ -191,11 +191,15 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
       .add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple);
     var remainder = endTime.diff(moment.utc());
 
+    //if its more than 24 days, it will overflow
+    //the set timeout function. just assume no one
+    //will keep the browser open that long
+    if (remainder > 2073600000) return;
 
     // If there is time left in the first timeIncrement, wait until that 
     // is finished to start the interval
     if (remainder > 0) {
-
+      
       listener.timeout = setTimeout(function(){
         listener.finishedInterval();
         setNext(listener);
@@ -395,7 +399,6 @@ function offersExercisedReduce(values, rereduce) {
       high  : firstPrice,
       low   : firstPrice,
 
-      curr1VwavNumerator : 0,
       curr1Volume : 0,
       curr2Volume : 0,
       numTrades   : 0
@@ -419,23 +422,32 @@ function offersExercisedReduce(values, rereduce) {
       if (price>stats.high) stats.high = price;
       if (price<stats.low)  stats.low  = price;
       
-      stats.curr1VwavNumerator += price * trade[0]; //pay amount
       stats.curr1Volume += trade[0];
       stats.curr2Volume += trade[1];
       stats.numTrades++;
     });
 
-    stats.volumeWeightedAvg = stats.curr1VwavNumerator / stats.curr1Volume;
+    stats.volumeWeightedAvg = stats.curr2Volume / stats.curr1Volume;
     return stats;
 
   } else {
 
     stats = values[0];
-
+    if (typeof stats.openTime === 'string') 
+      stats.openTime  = moment.utc(stats.openTime).unix();
+    if (typeof stats.closeTime === 'string') 
+      stats.closeTime = moment.utc(stats.closeTime).unix();
+    
     values.forEach( function( segment, index ) {
       
       // skip values[0]
       if (index === 0) return;
+      
+      if (typeof segment.openTime === 'string') 
+        segment.openTime  = moment.utc(segment.openTime).unix();
+      if (typeof segment.closeTime === 'string') 
+        segment.closeTime = moment.utc(segment.closeTime).unix();
+      
 
       if (!stats.open || segment.openTime<stats.openTime) {
         stats.openTime = segment.openTime;
@@ -449,15 +461,12 @@ function offersExercisedReduce(values, rereduce) {
       if (!stats.high || segment.high>stats.high) stats.high = segment.high;
       if (!stats.low  || segment.low<stats.low)   stats.low  = segment.low;
 
-      stats.curr1VwavNumerator += segment.curr1VwavNumerator;
       stats.curr1Volume += segment.curr1Volume;
       stats.curr2Volume += segment.curr2Volume;
-      stats.numTrades   += segment.numTrades;
-           
-    } );
+      stats.numTrades   += segment.numTrades;      
+    });
 
-    stats.volumeWeightedAvg = stats.curr1VwavNumerator / stats.curr1Volume;
-  
+    stats.volumeWeightedAvg = stats.curr2Volume / stats.curr1Volume;
     return stats;
   }
 }

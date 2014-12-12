@@ -1,0 +1,506 @@
+#main {
+	text-align:center;
+}
+
+#main .helpbox {
+	width:80%;
+	display:inline-block;
+}
+
+#main #canvas {
+	width: 100%;
+}
+
+#main #canvas2 {
+	width: 100%;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	pointer-events:none;
+}
+
+#main .chart_wrapper {
+	display:inline-block;
+	width:90%;
+	position: relative;
+}
+
+#main .interval {
+	font-size:14px;
+	float: right;
+	margin-top: 5px;
+	height: auto;
+}
+
+#main #ranges{
+	height: auto;
+	float: right;
+    margin-right:20px;
+}
+#main #intervals{
+	height: auto;
+	float: right;
+}
+
+#main .table .cell {
+  display: table-cell;
+  width: 33%;
+  padding: 20px;
+}
+
+.dark #main .line {
+	stroke: rgba(200,200,200,0.7);
+}
+
+#main .line {
+	stroke: rgba(50,50,50,0.5);
+	vector-effect: non-scaling-stroke;
+}
+
+#main .circle {
+	fill: rgba(50,50,50,0.5);
+}
+
+.dark #main .circle {
+	fill: rgba(200,200,200,0.7);
+}
+
+#main .border{
+	stroke: #404040;
+	vector-effect: non-scaling-stroke;
+}
+
+#main .control {
+	text-align: center;
+	display: inline-block;
+	width: 90%;
+	height: auto;
+}
+
+#main #breadcrumb {
+	margin: 5px 0;
+	font-size:12px;
+	float: left;
+	height: auto;
+}
+
+#main #lineLegend{
+	display:inline-block;
+	width:90%;
+}
+
+#main #currency {
+	font-size:12px;
+	float: left;
+	width: auto;
+	height: auto;
+	margin-left: 0.5%;
+	margin-right: 10px;
+}
+
+#main .crumbs li{
+	margin-right: 5px;
+	display: inline;
+	float: left;
+	cursor: pointer;
+	margin-top: 3px;
+	line-height: 13px;
+}
+
+#main .crumbs .crumb:hover{
+	text-decoration: underline;
+}
+
+#main .crumbs .crumb:last-child{
+	color: #3369a8;
+	font-weight:600;
+}
+
+#main .legend {
+	margin-top: 20px;
+}
+
+#main .int{
+	float: left;
+	margin-left: 10px;
+	cursor: pointer; 
+	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #666;
+}
+
+#main .tag{
+	float:left;
+	margin-left: 10px;
+	font-size: 12px;
+	font-weight: bold;
+	color: #999;
+	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #999;
+}
+
+.dark #main .tag{
+	color: #444;
+}
+
+#main .range{
+	float: left;
+	margin-left: 10px;
+	cursor: pointer; 
+	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #666;
+}
+
+#main #custom{
+	float: left;
+	margin-left: 10px;
+	cursor: pointer;
+	margin-top: 3px;
+	font-size: 12px;
+	line-height: 13px;
+	color: #666;
+}
+
+#main #custom:hover:not(.clicked){
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: rgba(200,200,200,0.7);
+}
+
+#main .int:hover:not(.noclick):not(.clicked){
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: rgba(200,200,200,0.7);
+}
+
+#main .noclick{
+	color: #353535;
+	cursor: default;
+}
+
+.light #main .noclick{
+	color: rgba(200,200,200,0.7);
+}
+
+#main .range:hover:not(.clicked){
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: rgba(200,200,200,0.7);
+}
+
+#main .clicked{
+	font-weight: bold;
+	border-bottom: 2px solid;
+	color: #3369a8;
+}
+
+#main .calendar {
+	float: left;
+	width: 85px;
+	margin-left: 10px;
+	font-weight: bold;
+	font-size: 12px;
+	line-height: 13px;
+	color: #3369a8;
+	background: 0;
+	border: 1.5px solid #3369a8;
+	display: none;
+}
+
+#main input{
+	text-align: center;
+}
+
+#main .submit {
+	float: left;
+	margin-left: 10px;
+	width: 25px;
+}
+
+#main .go {
+	float: left;
+	margin-left: 10px;
+}
+
+#main .label{
+	display:inline-block;
+	border: 1px solid rgba(200,200,200,0.15);
+	width: 240px;
+	padding: 5px 10px;
+	margin: 5px;
+	text-align: left;
+	cursor: pointer;
+	border-radius: 2px;
+	background: rgba(200,200,200,0.1);
+}
+
+#main .label:hover {
+	border: 1px solid rgba(200,200,200,0.5);
+}
+
+#main .gateway{
+	font-weight: 600;
+	font-size: 17px;
+}
+
+#main .gateway .gw{
+	float: left;
+}
+
+#main .gateway .pair{
+	font-size: 11px;
+	float: right;
+}
+
+#main .issuer{
+	font-size: 10px;
+}
+
+
+#main #tooltip {
+	position:absolute;
+	width:220px;
+	text-align: center;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	z-index: 1000;
+	display: none;
+	background: rgba(255,255,255,0.9);
+	pointer-events:none;
+}
+
+.dark #main #tooltip {
+	background: rgba(40,40,40,0.9);
+	border: 1px solid #444;
+}
+
+#main #tooltip .title{
+	font-size:14px;
+	font-weight: bold;
+	display:block;
+	text-align: center;
+	margin-top: 5px;
+}
+
+#main #tooltip .date{
+	color: #aaa;
+	padding-top: 3px;
+	display:block;
+	font-size:14px;
+	text-align: center;
+}
+
+#main #tooltip .value{
+	padding: 2px;
+	font-size: 18px;
+	display: block;
+	color: #777;
+	text-align: center;
+	margin-bottom: 2px;
+}
+
+#main #tooltip .iss{
+	font-size: 10px;
+	display: block;
+	text-align: center;
+}
+
+#main .loading {
+    position:absolute;
+    top: 40%;
+   	left: 50%;
+    text-align: center;
+    display: none;
+}
+
+#main .currency{
+	padding: 2px 20px 2px 4px;
+	margin: 2px;
+	font-weight: bold;
+	line-height: 1.2em;
+	color: #3369a8;
+	background: 0;
+	border: 1.5px solid #3369a8;
+	height: 25px;
+}
+
+#main .currency option{
+	font-weight: normal;
+	display: block;
+	padding: 0px 2px 1px;
+	white-space: pre;
+	min-height: 1.2em;
+}
+
+#main #csv{
+	float: right;
+	cursor: pointer;
+}
+
+.ui-datepicker-header { 
+	color: #3369a8;  
+    font-weight: bold;   
+    line-height: 30px; 
+}
+
+.ui-datepicker-title {  
+    text-align: center;  
+}
+
+.ui-datepicker td span, .ui-datepicker td a {  
+    display: inline-block;   
+    text-align: center;  
+    width: 25px;  
+    height: 25px;  
+    line-height: 30px;  
+    color: #808080;    
+}
+
+.dark .ui-datepicker td span, .ui-datepicker td a {
+	color: #666;
+}
+
+.dark .ui-datepicker-unselectable .ui-state-default {  
+    color: #3A3A3A;  
+}
+
+.light .ui-datepicker-unselectable .ui-state-default {  
+    color: #D3D3D3;  
+}
+
+.ui-datepicker-calendar{
+	margin: 0px 6px 6px 6px;
+}
+
+.ui-datepicker-calendar thead{
+	display: none;
+}
+
+.ui-datepicker-calendar .ui-state-hover {  
+    color: #999; 
+    text-decoration: none;
+    border-bottom: 3px solid #999; 
+}
+
+.ui-datepicker-calendar .ui-state-active {   
+    color: #3369a8;
+	font-weight: bold;
+	border-bottom: 2px solid;    
+}
+
+.light #ui-datepicker-div {
+	background: #FFFFFF;
+	border: solid 1.5px #3369a8;
+}
+
+#ui-datepicker-div {
+	margin-top: 10px;
+	background: #282828;
+	border: solid 2px #137;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	z-index: 10000;
+}
+
+.ui-datepicker-prev, .ui-datepicker-next {  
+    display: inline-block;  
+    width: 30px;  
+    height: 30px;  
+    text-align: center;  
+    cursor: pointer;  
+    background-image: url("http://www.ripplecharts-staging.com/assets/images/dropdownBlue.png");  
+    background-repeat: no-repeat;  
+    line-height: 600%;  
+    overflow: hidden;  
+} 
+
+.ui-datepicker-prev {  
+    float: left;  
+    background-position: center 0px;
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);  
+}  
+.ui-datepicker-next {  
+    float: right;  
+    background-position: center 0px;
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);   
+} 
+
+/*
+ * Dark theme
+ */
+
+//tablet
+@media (max-width: 767px) {
+  #main .interval {
+      float: none;
+      width: 100%;
+      overflow:hidden;
+  }
+  
+ #main #ranges {
+    float: left;
+    clear: left;
+  }
+}
+
+@media (max-width: 600px) {
+  #main #intervals, #main #ranges {
+      float: left;
+      clear: left;
+  }
+}
+
+//mobile
+@media (max-width: 480px) {
+	#totalHistory {
+		zoom: .75;
+		width:100%;
+	}
+}
+
+@media only screen 
+and (max-width : 480px) {
+	
+	#main #tooltip {
+		position:absolute;
+		width:100px;
+		text-align: center;
+		border: 1px solid #ccc;
+		border-radius: 2px;
+		z-index: 1000;
+		display: none;
+		background: rgba(255,255,255,0.9);
+		pointer-events:none;
+	}
+
+	#main #tooltip .title{
+		font-size:7px;
+		margin-top: 2px;
+	}
+
+	#main #tooltip .date{
+		padding-top: 2px;
+		font-size:7px;
+	}
+
+	#main #tooltip .value{
+		padding: 2px;
+		font-size: 9px;
+		margin-bottom: 2px;
+	}
+}

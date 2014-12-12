@@ -33,7 +33,7 @@
     
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
-
+    
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
 
@@ -46,17 +46,71 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
   <body ng-class="theme">
     <div class="header">
       <div class="wrapper">
-        <i class="nav-toggle" snap-toggle>
+        <i class="nav-toggle mobile_only" snap-toggle>
           <img src="assets/images/menu.svg"/>
         </i>
         <a href="#/" ui-route="/" class="logo" snap-close></a>
-        <div id="helpButton" ng-click="showHelp = !showHelp"><span>?</span></div>
-        <div class="theme selectList">
-          <a ng-click="theme = 'light'" ng-class="{selected : theme == 'light'}">Light</a>
-          <a ng-click="theme = 'dark'"  ng-class="{selected : theme == 'dark'}">Dark</a>
-        </div>  
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="main_menu">
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav"> 
+            <li class="category">
+							<a href="#/markets" snap-close>Markets  <span class="caret"></span></a>
+								<div class="sub_wrapper">
+									<ul class="subnav">
+										<li ui-route="/markets(/.+)?" ng-class="{active:$uiRoute !== false}">
+											<a href="#/markets" snap-close>Live Chart</a>
+										</li>
+										<li ui-route="/multimarkets" ng-class="{active:$uiRoute !== false}">
+											<a href="#/multimarkets" snap-close>Multi Markets</a>
+										</li>
+										<li ui-route="/active_accounts" ng-class="{active:$uiRoute !== false}">
+											<a href="#/active_accounts" snap-close>Active Accounts</a>
+										</li>
+									</ul>
+							</div>	
+						</li> 
+            <li class="category">
+							<a href="#/value" snap-close>Value  <span class="caret"></span></a>
+							<div class="sub_wrapper">
+							<ul class="subnav">
+								<li ui-route="/value" ng-class="{active:$uiRoute !== false}">
+									<a href="#/value" snap-close>Value Trends</a>
+								</li>
+								<li ui-route="/history" ng-class="{active:$uiRoute !== false}">
+									<a href="#/history" snap-close>Historical Metrics</a>
+								</li>
+							</ul>
+						</div>
+						</li> 
+						<li class="category">
+							<a href="#/graph" snap-close></i>Accounts  <span class="caret"></span></a>
+							<div class="sub_wrapper">
+							<ul class="subnav">
+								<li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
+									<a href="#/graph" snap-close>Account Explorer</a>
+								</li>
+								<li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
+									<a href="#/accounts" snap-close>Accounts Created</a>
+								</li>
+							</ul>
+						</div>
+						</li> 
+						<li class="category color_picker">
+							<a><img title="Toggle Light/Dark themes" class="toggle_theme" ng-click="toggleTheme()" src="assets/icons/icn_brightness.svg"></a>
+						</li>
+						<li class="category"><div id="helpButton_new" ng-click="showHelp = !showHelp"><span><img class="more_info" src="assets/icons/icn_info.svg" title="More info"></span></div>
+ 						</li>
+  
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+     
+    </nav>
+      
       </div>
     </div>   
+     
              
     <div snap-drawer>
       <ul class="nav">
@@ -93,6 +147,9 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             <li ui-route="/value" ng-class="{active:$uiRoute !== false}">
               <a href="#/value" snap-close>Value Trends</a>
             </li>
+            <li ui-route="/history" ng-class="{active:$uiRoute !== false}">
+              <a href="#/history" snap-close>Historical Metrics</a>
+            </li>
           </ul>
         </li> 
         <li class="category">
@@ -108,6 +165,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             </li>
           </ul>
         </li> 
+        <li class="category color_picker">
+					<a class="toggle_theme_mobile" ng-click="toggleTheme()"><img src="assets/icons/icn_brightness.svg">Light / Dark</a> 
+				</li>
+				<li class="category"><div id="helpButton_new_mobile" ng-click="showHelp = !showHelp"><span><img src="assets/icons/icn_info.svg" title="More info"></span> Info</div></li>
       </ul>
     </div snap-drawer>
     
@@ -156,8 +217,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
     
       ga('create', GA_ACCOUNT, GA_ID);
       ga('require', 'displayfeatures');
-      ga('send',   'pageview');
-   }
+   
+    } else {
+      ga = function(){};
+    }
   
   </script>
 </html>

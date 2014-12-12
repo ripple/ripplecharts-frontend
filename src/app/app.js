@@ -10,6 +10,7 @@ angular.element(document).ready(function() {
     'ripplecharts.graph',
     'ripplecharts.accounts',
     'ripplecharts.value',
+    'ripplecharts.history',
     'ui.state',
     'ui.route',
     'snap'
@@ -39,6 +40,11 @@ angular.element(document).ready(function() {
     $scope.theme = store.get('theme') || Options.theme || 'dark';
     $scope.$watch('theme', function(){store.set('theme', $scope.theme)});
     
+    $scope.toggleTheme = function(){
+      if ($scope.theme == 'dark') $scope.theme = 'light';
+      else $scope.theme = 'dark';
+    };
+    
     $scope.snapOptions = {
       disable: 'right',
       maxPosition: 267
@@ -50,6 +56,7 @@ angular.element(document).ready(function() {
         
     $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
       mixpanel.track("Page", {"Page Name":toState.name, "Theme":$scope.theme});
+      if (ga) ga('send', 'pageview', toState.name);
       
       if ( angular.isDefined( toState.data.pageTitle ) ) 
            $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
@@ -104,12 +111,6 @@ angular.element(document).ready(function() {
   //load gateways file before starting the app
   d3.json("assets/gateways.json", function(error, data) {
     gateways = data;
-
-    //2nd connection needed for now because of a bug in ripple-lib 
-    //when unsubscribing from an orderbook.
-    orderBookRemote = new ripple.Remote(Options.ripple);
-    orderBookRemote.connect();
-        
     angular.bootstrap(document, ['ripplecharts']);
 
 /*

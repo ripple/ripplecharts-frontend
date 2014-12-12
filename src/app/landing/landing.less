@@ -285,7 +285,7 @@
 
 @media (max-width: 767px) {
   #topMarkets {
-    width: 90%;
+    width: 100%;
     display:inline-block;
   }
   
@@ -295,8 +295,7 @@
   }
   
   .landing .helpbox {
-    width:84%;
-    display:inline-block;
+    margin:0 1%;
   }
 
   .landing span6 {
@@ -307,13 +306,12 @@
     margin: 3px 0;  
   }
   
+  .landing #metricDetail {
+    padding:10px 0;
+  }
   
-  .landing .stats ul, .landing h5, .landing #metricDetail {
-    width:87%;
-  } 
-  
-   
 }
+
 @media (max-width: 650px) {
   #metricDetail .inner {
     margin-left:-25%;
@@ -322,7 +320,26 @@
 }
 
 @media (max-width: 480px) {
-  .landing .stats ul, .landing h5, .landing #metricDetail, .landing .helpbox {
+  .container.landing {
+    padding-left : 5px;
+    padding-right : 5px;
+  }
+  
+  .landing .row {
+    margin-right: -5px;
+    margin-left: -5px;
+  }
+  
+  .landing .col-md-6 {
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+  
+  .landing #metricDetail {
+    zoom :.85;
+  }
+  
+  .landing .stats ul, .landing h5, .landing .helpbox {
     zoom: .75;
   }
 }
