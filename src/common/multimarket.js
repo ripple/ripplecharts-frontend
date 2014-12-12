@@ -238,7 +238,6 @@ var MiniChart = function(base, counter, markets) {
       }
     } 
     //redraw the chart
-    console.log(lineData.length);
     if (lineData.length) drawData();
   }
 
