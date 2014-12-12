@@ -217,7 +217,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
     
       ga('create', GA_ACCOUNT, GA_ID);
       ga('require', 'displayfeatures');
-   }
+   
+    } else {
+      ga = function(){};
+    }
   
   </script>
 </html>
