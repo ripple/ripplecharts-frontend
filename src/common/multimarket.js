@@ -4,7 +4,7 @@ var MiniChart = function(base, counter, markets) {
     wrap, svg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
-    dropdownA, dropdownB, dropdowns, loaded;
+    dropdownA, dropdownB, dropdowns, loaded, liveFeed;
   
   self.lineData = [];
   self.div      = markets.el.insert("div",".add").attr("class","chart");
@@ -32,6 +32,7 @@ var MiniChart = function(base, counter, markets) {
       .html("x")
       .on("click", function(){
         d3.event.stopPropagation();
+        if (liveFeed) liveFeed.stopListener();
         self.remove(true);
     });
   }
@@ -134,7 +135,8 @@ var MiniChart = function(base, counter, markets) {
       counter       : self.counter
 
     }, function(data){
-      
+      if (liveFeed) liveFeed.stopListener();
+      setLiveFeed();
       self.lineData = data;
       isLoading     = false;
       drawData(true);
@@ -147,6 +149,85 @@ var MiniChart = function(base, counter, markets) {
     });  
   }  
  
+  function getAlignedCandle() {
+    var aligned,
+        time = moment().utc();
+
+    time.subtract(time.milliseconds(), "milliseconds");
+          
+    aligned = time.subtract({
+      seconds : time.seconds(), 
+      minutes : time.minutes()%15
+    }); 
+
+    return aligned;  
+  }
+
+  //enable the live feed via ripple-lib
+  function setLiveFeed () {
+    var point = {
+        startTime     : getAlignedCandle(),
+        baseVolume    : 0.0,
+        counterVolume : 0.0, 
+        count         : 0,
+        open          : 0.0,
+        high          : 0.0,
+        low           : 0.0,
+        close         : 0.0,
+        vwap          : 0.0,
+        openTime      : null,
+        closeTime     : null
+      };
+    
+    var viewOptions = {
+      base    : self.base,
+      counter : self.counter,
+      timeIncrement    : "minute",
+      timeMultiple     : 15,
+      incompleteApiRow : point
+    }
+    
+    liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);
+  }
+
+
+//suspend the live feed  
+  this.suspend = function () {
+    if (liveFeed) liveFeed.stopListener();
+    if (typeof removeResizeListener === 'function')
+      removeResizeListener(window, resizeChart);
+  }
+  
+  
+//add new data from the live feed to the chart  
+  function liveUpdate (data) {
+
+    var lineData = self.lineData;
+    var first   = lineData.length ? lineData[0] : null;
+    var last    = lineData.length ? lineData[lineData.length-1] : null;
+    var point  = data;
+
+    if (point.low === 0) return;
+
+    point.startTime = moment.utc(point.startTime);
+    point.live      = true;
+    var bottom = moment(d3.time.day.offset(point.startTime, -1)).unix();
+
+    if (last && last.startTime.unix() === point.startTime.unix()) {
+      lineData[lineData.length-1] = point;
+    } else {
+      //new point, only add it if something happened
+      if (point.baseVolume) {
+        lineData.push(point); //append the point
+      }
+      //remove the first point if it is before the start range
+      if (bottom > first.startTime.unix()){
+        lineData.shift();
+      }
+    } 
+    //redraw the chart
+    if (lineData.length) drawData();
+  }
   
 //draw the chart, not including data     
   function drawChart() {            
@@ -412,16 +493,6 @@ var MultiMarket = function (options) {
     height += 88; //add height of details, dropdowns, borders
     add.style({height: height+"px", "line-height":height+"px"});
   }
-  
-  if (options.updateInterval && 
-      typeof options.updateInterval === 'number') {
-    
-    interval = setInterval(function(){
-      for (var i=0; i<self.charts.length; i++) {
-        self.charts[i].load(true);
-      }      
-    }, options.updateInterval*1000);      
-  }
       
 //new chart from list initialization or add chart button click         
   this.addChart = function (base, counter) {
@@ -464,10 +535,11 @@ var MultiMarket = function (options) {
 //or remove them all with an empty array  
   this.list = function (charts) {
     for (var i=0; i<self.charts.length; i++) {
+      self.charts[i].suspend();
       self.charts[i].remove(false);
     }
     
-    if (!charts.length && !options.fixed) 
+    if (!charts.length && !options.fixed)
       removeResizeListener(window, resizeButton);
     
     if (!charts.length && interval)
