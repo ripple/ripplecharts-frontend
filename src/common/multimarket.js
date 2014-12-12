@@ -493,17 +493,6 @@ var MultiMarket = function (options) {
     height += 88; //add height of details, dropdowns, borders
     add.style({height: height+"px", "line-height":height+"px"});
   }
-
-//update chart
-/*  if (options.updateInterval && 
-      typeof options.updateInterval === 'number') {
-    
-    interval = setInterval(function(){
-      for (var i=0; i<self.charts.length; i++) {
-        self.charts[i].load(true);
-      }      
-    }, options.updateInterval*1000);      
-  }*/
       
 //new chart from list initialization or add chart button click         
   this.addChart = function (base, counter) {
