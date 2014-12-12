@@ -149,7 +149,6 @@ var MiniChart = function(base, counter, markets) {
     });  
   }  
  
- //////////////////////////////////////////////////////////////////////////////////
   function getAlignedCandle() {
     var aligned,
         time = moment().utc();
@@ -161,11 +160,8 @@ var MiniChart = function(base, counter, markets) {
       minutes : time.minutes()%15
     }); 
 
-    console.log("aligned");
     return aligned;  
   }
-
-  console.log(getAlignedCandle());
 
   //enable the live feed via ripple-lib
   function setLiveFeed () {
@@ -197,7 +193,6 @@ var MiniChart = function(base, counter, markets) {
 
 //suspend the live feed  
   this.suspend = function () {
-    console.log("suspending");
     if (liveFeed) liveFeed.stopListener();
     if (typeof removeResizeListener === 'function')
       removeResizeListener(window, resizeChart);
@@ -207,27 +202,20 @@ var MiniChart = function(base, counter, markets) {
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
 
-    console.log("Got some data!", data.close, data.startTime);
     var lineData = self.lineData;
     var first   = lineData.length ? lineData[0] : null;
     var last    = lineData.length ? lineData[lineData.length-1] : null;
     var point  = data;
 
-    if (point.low === 0) {
-      console.log("EMPTY POINT", self.base, self.counter);
-      return;
-    }
+    if (point.low === 0) return;
 
     point.startTime = moment.utc(point.startTime);
     point.live      = true;
     var bottom = moment(d3.time.day.offset(point.startTime, -1)).unix();
 
-    if (last && last.startTime.unix()===point.startTime.unix()) {
-      console.log("filling incomplete");  
+    if (last && last.startTime.unix() === point.startTime.unix()) {
       lineData[lineData.length-1] = point;
     } else {
-      console.log("new point");
-
       //new point, only add it if something happened
       if (point.baseVolume) {
         lineData.push(point); //append the point
@@ -240,8 +228,6 @@ var MiniChart = function(base, counter, markets) {
     //redraw the chart
     if (lineData.length) drawData();
   }
-
-//////////////////////////////////////////////////////////////////////////////////
   
 //draw the chart, not including data     
   function drawChart() {            
