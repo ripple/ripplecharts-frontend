@@ -150,11 +150,27 @@ var MiniChart = function(base, counter, markets) {
   }  
  
  //////////////////////////////////////////////////////////////////////////////////
+  function getAlignedCandle() {
+    var aligned,
+        time = moment().utc();
+
+    time.subtract(time.milliseconds(), "milliseconds");
+          
+    aligned = time.subtract({
+      seconds : time.seconds(), 
+      minutes : time.minutes()%15
+    }); 
+
+    console.log("aligned");
+    return aligned;  
+  }
+
+  console.log(getAlignedCandle());
 
   //enable the live feed via ripple-lib
   function setLiveFeed () {
     var point = {
-        startTime     : new Date(),
+        startTime     : getAlignedCandle(),
         baseVolume    : 0.0,
         counterVolume : 0.0, 
         count         : 0,
@@ -175,7 +191,7 @@ var MiniChart = function(base, counter, markets) {
       incompleteApiRow : point
     }
     
-    liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);    
+    liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);
   }
 
 
@@ -190,15 +206,22 @@ var MiniChart = function(base, counter, markets) {
   
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
-    console.log("Got some data!", self.base.currency, self.counter.currency, data.close, data.baseVolume);
+
+    console.log("Got some data!", data.close, data.startTime);
     var lineData = self.lineData;
     var first   = lineData.length ? lineData[0] : null;
     var last    = lineData.length ? lineData[lineData.length-1] : null;
     var point  = data;
 
+    if (point.low === 0) {
+      console.log("EMPTY POINT", self.base, self.counter);
+      return;
+    }
+
     point.startTime = moment.utc(point.startTime);
     point.live      = true;
     var bottom = moment(d3.time.day.offset(point.startTime, -1)).unix();
+
     if (last && last.startTime.unix()===point.startTime.unix()) {
       console.log("filling incomplete");  
       lineData[lineData.length-1] = point;
@@ -215,7 +238,6 @@ var MiniChart = function(base, counter, markets) {
       }
     } 
     //redraw the chart
-    console.log(lineData.length);
     if (lineData.length) drawData();
   }
 
