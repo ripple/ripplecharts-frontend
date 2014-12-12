@@ -14,8 +14,6 @@ var OrderBook = function (options) {
   if (!options.margin) options.margin = {top: 2, right: 60, bottom: 20, left: 60};
   if (!options.width)  options.width  = parseInt(chart.style('width'), 10) - options.margin.left - options.margin.right;
   if (!options.height) options.height = parseInt(chart.style('height'), 10) - options.margin.top - options.margin.bottom;
-  
-  console.log(options.height);
       
   var xScale = d3.scale.linear(),
     yScale   = d3.scale.linear(),
