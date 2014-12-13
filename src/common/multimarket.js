@@ -226,7 +226,7 @@ var MiniChart = function(base, counter, markets) {
       }
     } 
     //redraw the chart
-    if (lineData.length) drawData();
+    if (lineData.length) drawData(true);
   }
   
 //draw the chart, not including data     
