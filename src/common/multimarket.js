@@ -1,7 +1,7 @@
 var MiniChart = function(base, counter, markets) {
-  var self      = this,
+  var self = this,
     header, details, range, showHigh, showLow, change, volume,
-    wrap, svg, svgEnter, pointer, gEnter, 
+    wrap, svg, bg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
     dropdownA, dropdownB, dropdowns, loaded, liveFeed;
@@ -244,6 +244,11 @@ var MiniChart = function(base, counter, markets) {
     showLow  = details.select(".range").append('span').attr("class","low");
     volume   = details.append('div').attr("class","volume"); 
 
+    bg = svg.append('rect')
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .style({opacity:0}); 
+    
     pointer = svg.append("path")
       .attr("class","pointer")
       .attr("d", "M 0 0 L 7 -7 L 40 -7 L 40 7 L 7 7 L 0 0")
@@ -404,14 +409,28 @@ var MiniChart = function(base, counter, markets) {
     if (lastY<20) lastY += 20; //reposition last price below line if its too high on the graph.
     
     var showLast = amountToHuman(last, self.counter.currency);
+    
     if (update) {
-      horizontal.transition().duration(600).attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
-      pointer.transition().duration(600).attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
-      lastPrice.transition().duration(600).attr("transform","translate(0, "+lastY+")").text(showLast);
+      horizontal.transition().duration(600)
+        .attr("transform","translate(0, "+priceScale(last)+")")
+        .style(horizontalStyle);
+      pointer.transition().duration(600)
+        .attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")")
+        .style(pointerStyle);
+      lastPrice.transition().duration(600)
+        .attr("transform","translate(0, "+lastY+")")
+        .text(showLast);
+      bg.style({fill:pathStyle.fill, opacity:0.3})
+        .transition().duration(1000)
+        .style({opacity:0});
+      
     } else {
-      horizontal.attr("transform","translate(0, "+priceScale(last)+")").style(horizontalStyle);
-      pointer.attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")").style(pointerStyle);
-      lastPrice.attr("transform","translate(0, "+lastY+")").text(showLast);
+      horizontal.style(horizontalStyle)
+        .attr("transform","translate(0, "+priceScale(last)+")");
+      pointer.style(pointerStyle)
+        .attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")");
+      lastPrice.text(showLast)
+        .attr("transform","translate(0, "+lastY+")");
     }
     
     vol = amountToHuman(vol, self.base.currency, {min_precision:0, max_sig_digits:7});
