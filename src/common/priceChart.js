@@ -225,7 +225,7 @@ PriceChart = function (options) {
     startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
 
     if (liveFeed) liveFeed.stopListener();
-    if (options.live) setLiveFeed();
+    if (options.live && d.live) setLiveFeed();
     
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
@@ -258,7 +258,7 @@ PriceChart = function (options) {
       
       //merge the last candle with the updater candle - if
       //its not the same time interval it will be discarded
-      if (options.live) {
+      if (options.live && d.live) {
         liveFeed.resetStored(data[data.length-1]);
       }
       
