@@ -202,13 +202,15 @@ var MiniChart = function(base, counter, markets) {
 //add new data from the live feed to the chart  
   function liveUpdate (data) {
 
-    var lineData = self.lineData;
-    var first   = lineData.length ? lineData[0] : null;
-    var last    = lineData.length ? lineData[lineData.length-1] : null;
-    var point  = data;
-
+    var lineData  = self.lineData;
+    var first     = lineData.length ? lineData[0] : null;
+    var last      = lineData.length ? lineData[lineData.length-1] : null;
+    var point     = data;
+    var prev      = last ? last.close : point.close;
+    var direction;
+    
     if (point.low === 0) return;
-
+    
     point.startTime = moment.utc(point.startTime);
     point.live      = true;
     var bottom = moment(d3.time.day.offset(point.startTime, -1)).unix();
@@ -225,8 +227,19 @@ var MiniChart = function(base, counter, markets) {
         lineData.shift();
       }
     } 
+    
+    if (prev < point.close) {
+      direction = 'up';
+    } else if (prev > point.close) {
+      direction = 'down';
+    } else {
+      direction = 'unch';
+    }
+    
     //redraw the chart
-    if (lineData.length) drawData(true);
+    if (lineData.length) {
+      drawData(true, direction);
+    }
   }
   
 //draw the chart, not including data     
@@ -294,7 +307,6 @@ var MiniChart = function(base, counter, markets) {
     flip.append("rect").attr({width:margin.right,height:margin.bottom});
     flip.append("text").text("Flip").attr({"text-anchor":"middle",y:margin.bottom*4/5,x:margin.right/2});
    
-    
     horizontal = gEnter.append("line")
       .attr("class", "horizontal")
       .attr({x1:0,x2:width})
@@ -309,7 +321,7 @@ var MiniChart = function(base, counter, markets) {
   
 
 //Draw the data on the chart
-  function drawData(update) {
+  function drawData(update, direction) {
         
     if (!isLoading) {
       loader.transition().style("opacity",0);
@@ -334,24 +346,24 @@ var MiniChart = function(base, counter, markets) {
       last = self.lineData[self.lineData.length-1].close,
       vol  = d3.sum(self.lineData, function (d){return d.baseVolume}),
       pct  = (((last-open)/open)*100).toFixed(2),     
-      pathStyle, horizontalStyle, pointerStyle, changeStyle; 
+      pathStyle, horizontalStyle, pointerStyle, changeStyle, flash; 
       
       
     if (Math.abs(pct)<0.5) { //unchanged (less than .5%)
       pathStyle = {fill:"rgba(160,160,160,.6)",stroke:"#888"}; 
-      horizontalStyle = {stroke:"#777"};
+      horizontalStyle = {stroke:"#777", 'stroke-width':1.5};
       pointerStyle = {fill:"#aaa"};
       changeStyle  = {color:"#777"};
       
     } else if (last < open) {  //down
       pathStyle = {fill:"#c55",stroke:"#a00"}; 
-      horizontalStyle = {stroke:"#d22"};
+      horizontalStyle = {stroke:"#d22", 'stroke-width':1.5};
       pointerStyle = {fill:"#c33"};
       changeStyle  = {color:"#c33"};
       
     } else { //up
       pathStyle = {fill:"#8c7",stroke:"#483"}; 
-      horizontalStyle = {stroke:"#0a0"};
+      horizontalStyle = {stroke:"#0a0", 'stroke-width':1.5};
       pointerStyle = {fill:"#2a2"};
       changeStyle  = {color:"#2a2"};
     }
@@ -411,19 +423,28 @@ var MiniChart = function(base, counter, markets) {
     var showLast = amountToHuman(last, self.counter.currency);
     
     if (update) {
-      horizontal.transition().duration(600)
+      if (direction === 'up') {
+        flash = '#393';
+      } else if (direction === 'down') {
+        flash = '#a22';
+      } else {
+        flash = '#888';
+      }
+
+      horizontal.style({stroke : flash, 'stroke-width' : 4})
+        .transition().duration(600)
         .attr("transform","translate(0, "+priceScale(last)+")")
         .style(horizontalStyle);
-      pointer.transition().duration(600)
+      pointer.style({fill : flash})
+        .transition().duration(600)
         .attr("transform","translate("+(width+margin.left)+", "+priceScale(last)+")")
         .style(pointerStyle);
       lastPrice.transition().duration(600)
         .attr("transform","translate(0, "+lastY+")")
         .text(showLast);
-      bg.style({fill:pathStyle.fill, opacity:0.3})
+      bg.style({fill:flash, opacity:0.3})
         .transition().duration(1000)
         .style({opacity:0});
-      
     } else {
       horizontal.style(horizontalStyle)
         .attr("transform","translate(0, "+priceScale(last)+")");
