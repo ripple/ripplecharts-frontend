@@ -194,8 +194,6 @@ var MiniChart = function(base, counter, markets) {
 //suspend the live feed  
   this.suspend = function () {
     if (liveFeed) liveFeed.stopListener();
-    if (typeof removeResizeListener === 'function')
-      removeResizeListener(window, resizeChart);
   }
   
   
