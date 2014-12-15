@@ -149,10 +149,10 @@ var MiniChart = function(base, counter, markets) {
     });  
   }  
  
-  function getAlignedCandle() {
-    var aligned,
-        time = moment().utc();
-
+  function getAlignedCandle(time) {
+    var aligned;
+    
+    time = moment(time).utc();
     time.subtract(time.milliseconds(), "milliseconds");
           
     aligned = time.subtract({
@@ -213,19 +213,26 @@ var MiniChart = function(base, counter, markets) {
     
     point.startTime = moment.utc(point.startTime);
     point.live      = true;
-    var bottom = moment(d3.time.day.offset(point.startTime, -1)).unix();
+    var bottom = moment.utc().subtract(1, 'days').unix();
 
+    //remove the first point if it is before the start range
+    if (bottom > first.startTime.unix()){
+      lineData.shift();
+    }
+    
+    //dont append an empty candle,
+    //but do redraw the data
+    if (point.close === 0) {
+      drawData(); 
+      return;
+    }
+    
+    //replace the last point
     if (last && last.startTime.unix() === point.startTime.unix()) {
       lineData[lineData.length-1] = point;
+      
     } else {
-      //new point, only add it if something happened
-      if (point.baseVolume) {
-        lineData.push(point); //append the point
-      }
-      //remove the first point if it is before the start range
-      if (bottom > first.startTime.unix()){
-        lineData.shift();
-      }
+      lineData.push(point); //append the point
     } 
     
     if (prev < point.close) {
@@ -375,9 +382,13 @@ var MiniChart = function(base, counter, markets) {
     
     svg.datum(self.lineData).transition().style("opacity",1);
     
+    var start = getAlignedCandle(moment().subtract(1,'day'));
+    if (start.unix()<self.lineData[0].startTime.unix()) {
+      start = self.lineData[0].startTime;
+    }
     // Update the x-scale.
     xScale
-      .domain(d3.extent(self.lineData, function(d) { return d.startTime; }))
+      .domain([start, getAlignedCandle()])
       .range([0, width]);
     
 
