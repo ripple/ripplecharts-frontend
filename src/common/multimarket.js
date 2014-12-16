@@ -4,7 +4,8 @@ var MiniChart = function(base, counter, markets) {
     wrap, svg, bg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
-    dropdownA, dropdownB, dropdowns, loaded, liveFeed;
+    dropdownA, dropdownB, dropdowns, loaded, liveFeed,
+    lastUpdateTime, checkInterval;
   
   self.lineData = [];
   self.div      = markets.el.insert("div",".add").attr("class","chart");
@@ -87,7 +88,6 @@ var MiniChart = function(base, counter, markets) {
   load();
   addResizeListener(window, resizeChart); 
 
-
 //show status to the user, or remove it    
   function setStatus (string) {
     status.html(string); 
@@ -103,6 +103,7 @@ var MiniChart = function(base, counter, markets) {
   
 //load the chart data from the API       
   function load (update) {
+    setCheck();
     baseCurrency   = ripple.Currency.from_json(self.base.currency).to_human();
     counterCounter = ripple.Currency.from_json(self.counter.currency).to_human();
     markets.updateListHandler();
@@ -137,8 +138,9 @@ var MiniChart = function(base, counter, markets) {
     }, function(data){
       if (liveFeed) liveFeed.stopListener();
       setLiveFeed();
-      self.lineData = data;
-      isLoading     = false;
+      self.lineData  = data;
+      isLoading      = false;
+      lastUpdateTime = moment.utc().unix();
       drawData(true);
       
     }, function (error){
@@ -194,11 +196,15 @@ var MiniChart = function(base, counter, markets) {
 //suspend the live feed  
   this.suspend = function () {
     if (liveFeed) liveFeed.stopListener();
+    if (checkInterval) {
+      clearInterval(checkInterval);
+      checkInterval = null;
+    }
   }
   
   
 //add new data from the live feed to the chart  
-  function liveUpdate (data) {
+  function liveUpdate (data, finishedInterval) {
 
     var lineData  = self.lineData;
     var first     = lineData.length ? lineData[0] : null;
@@ -207,8 +213,7 @@ var MiniChart = function(base, counter, markets) {
     var prev      = last ? last.close : point.close;
     var direction;
     
-    if (point.low === 0) return;
-    
+    lastUpdateTime  = moment.utc().unix();
     point.startTime = moment.utc(point.startTime);
     point.live      = true;
     var bottom = moment.utc().subtract(1, 'days').unix();
@@ -243,7 +248,24 @@ var MiniChart = function(base, counter, markets) {
     
     //redraw the chart
     if (lineData.length) {
-      drawData(true, direction);
+      drawData(finishedInterval ? false : true, direction);
+    }
+  }
+
+  //reload the data if its stale
+  function check() {
+    var time = new Date();
+    time = time.getTime()/1000 - 2400; //40 minutes ago
+    if (lastUpdateTime < time) {
+      lastUpdateTime = moment.utc().unix();
+      load();
+    }
+  }
+  
+  //enable stale data check
+  function setCheck() {
+    if (!checkInterval) {
+      checkInterval = setInterval(check, 15 * 1000);
     }
   }
   
@@ -355,19 +377,19 @@ var MiniChart = function(base, counter, markets) {
       
       
     if (Math.abs(pct)<0.5) { //unchanged (less than .5%)
-      pathStyle = {fill:"rgba(160,160,160,.6)",stroke:"#888"}; 
+      pathStyle = {fill:"rgba(160,160,160,0.45)",stroke:"#888"}; 
       horizontalStyle = {stroke:"#777", 'stroke-width':1.5};
       pointerStyle = {fill:"#aaa"};
       changeStyle  = {color:"#777"};
       
     } else if (last < open) {  //down
-      pathStyle = {fill:"#c55",stroke:"#a00"}; 
+      pathStyle = {fill:"rgba(205,85,85,0.5)",stroke:"#a22"}; 
       horizontalStyle = {stroke:"#d22", 'stroke-width':1.5};
       pointerStyle = {fill:"#c33"};
       changeStyle  = {color:"#c33"};
       
     } else { //up
-      pathStyle = {fill:"#8c7",stroke:"#483"}; 
+      pathStyle = {fill:"rgba(145,205,115,0.4)",stroke:"#483"}; 
       horizontalStyle = {stroke:"#0a0", 'stroke-width':1.5};
       pointerStyle = {fill:"#2a2"};
       changeStyle  = {color:"#2a2"};

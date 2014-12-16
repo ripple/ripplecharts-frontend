@@ -100,7 +100,7 @@ function OffersExercisedListener(opts, displayFn) {
   this.finishedInterval = function() {      
     
     //send to display
-    this.displayFn(formatReduceResult(this.storedResults));
+    this.displayFn(formatReduceResult(this.storedResults), true);
     
     //reset the stored results
     var startTime = moment.utc(this.storedResults.startTime)
@@ -145,7 +145,7 @@ OffersExercisedListener.prototype.stopListener = function() {
 
   if (listener.interval) clearInterval(listener.interval);  
   if (listener.timeout)  clearTimeout(listener.timeout);
- 
+  if (listener.check)    clearInterval(listener.check);
 
   if (listener.txProcessor) {
     remote.removeListener('transaction_all', listener.txProcessor);
