@@ -97,17 +97,17 @@ var PriceChartWidget = function (options) {
   
   
   this.loadFromQS = function () {
-    
     var params = getParams();
-    
-    if (!params.base)    params.base    = {currency:"XRP", issuer:""};
-    if (!params.counter) params.counter = {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}; 
-    if (!params.type)    params.type    = "line";
-    if (!params.theme)   params.theme   = "light"; 
-    
+
+    if (!params.base)     params.base     = {currency:"XRP", issuer:""};
+    if (!params.counter)  params.counter  = {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}; 
+    if (!params.type)     params.type     = "line";
+    if (!params.theme)    params.theme    = "light"; 
+    if (!params.multiple) params.multiple = 1;
     
     params.end   = params.end   ? moment.utc(params.end)   : moment.utc(); 
-    params.start = params.start ? moment.utc(params.start) : defaultStart(params.end, params.interval);
+    params.start = params.start ? moment.utc(params.start) : defaultStart(params.end, params.interval, params.multiple);
+
     
     if (!params.interval) {
       
@@ -147,20 +147,25 @@ var PriceChartWidget = function (options) {
           params.multiple = 1;  
         }
       }
-      
-      //got everything, now load the chart
-      self.load(params);   
     }
     
-    function defaultStart(start, interval) {
-      if (!interval) interval = null;
-      if      (interval=="minutes") return moment.utc(d3.time.day.offset(start, -2));  
-      else if (interval=="hours")   return moment.utc(d3.time.day.offset(start, -5)); 
-      else if (interval=="days")    return moment.utc(d3.time.day.offset(start, -90)); 
-      else if (interval=="weeks")   return moment.utc(d3.time.year.offset(start, -2)); 
-      else if (interval=="months")  return moment.utc(d3.time.year.offset(start, -100)); 
-      else if (interval=="years")   return moment.utc(d3.time.year.offset(start, -100)); 
-      else return moment.utc(d3.time.day.offset(start, -2));
+    console.log(params);
+    //got everything, now load the chart
+    self.load(params);   
+    
+    function defaultStart(start, interval, multiple) {
+      var num = multiple * 200;
+      var i   = interval ? interval.slice(0,2) : null;
+      
+      if (!i) i = null;
+      
+      if      (i === "mi") return moment.utc().subtract(num, 'minutes'); 
+      else if (i === "ho") return moment.utc().subtract(num, 'hours'); 
+      else if (i === "da") return moment.utc().subtract(num, 'days'); 
+      else if (i === "we") return moment.utc().subtract(num, 'weeks'); 
+      else if (i === "mo") return moment.utc().subtract(num, 'months');
+      else if (i === "ye") return moment.utc().subtract(num, 'years'); 
+      else return moment.utc().subtract(1, 'days');
     }
     
     function getParams () {
