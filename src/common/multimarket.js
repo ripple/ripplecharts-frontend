@@ -4,8 +4,7 @@ var MiniChart = function(base, counter, markets) {
     wrap, svg, bg, svgEnter, pointer, gEnter, 
     flipping, flip, 
     status, horizontal, lastPrice, loader, isLoading,
-    dropdownA, dropdownB, dropdowns, loaded, liveFeed,
-    lastUpdateTime, checkInterval;
+    dropdownA, dropdownB, dropdowns, loaded, liveFeed;
   
   self.lineData = [];
   self.div      = markets.el.insert("div",".add").attr("class","chart");
@@ -103,7 +102,6 @@ var MiniChart = function(base, counter, markets) {
   
 //load the chart data from the API       
   function load (update) {
-    setCheck();
     baseCurrency   = ripple.Currency.from_json(self.base.currency).to_human();
     counterCounter = ripple.Currency.from_json(self.counter.currency).to_human();
     markets.updateListHandler();
@@ -140,7 +138,6 @@ var MiniChart = function(base, counter, markets) {
       setLiveFeed();
       self.lineData  = data;
       isLoading      = false;
-      lastUpdateTime = moment.utc().unix();
       drawData(true);
       
     }, function (error){
@@ -196,10 +193,6 @@ var MiniChart = function(base, counter, markets) {
 //suspend the live feed  
   this.suspend = function () {
     if (liveFeed) liveFeed.stopListener();
-    if (checkInterval) {
-      clearInterval(checkInterval);
-      checkInterval = null;
-    }
   }
   
   
@@ -211,9 +204,9 @@ var MiniChart = function(base, counter, markets) {
     var last      = lineData.length ? lineData[lineData.length-1] : null;
     var point     = data;
     var prev      = last ? last.close : point.close;
+    var end       = moment.utc(point.startTime).add(15, 'minutes');
     var direction;
     
-    lastUpdateTime  = moment.utc().unix();
     point.startTime = moment.utc(point.startTime);
     point.live      = true;
     var bottom = moment.utc().subtract(1, 'days').unix();
@@ -227,6 +220,12 @@ var MiniChart = function(base, counter, markets) {
     //but do redraw the data
     if (point.close === 0) {
       drawData(); 
+      return;
+      
+    //the close exceeds the interval, reload the chart  
+    } else if (moment.utc(point.closeTime).unix() > end.unix()) {
+      console.log('reloading chart');
+      load(true);
       return;
     }
     
@@ -249,23 +248,6 @@ var MiniChart = function(base, counter, markets) {
     //redraw the chart
     if (lineData.length) {
       drawData(finishedInterval ? false : true, direction);
-    }
-  }
-
-  //reload the data if its stale
-  function check() {
-    var time = new Date();
-    time = time.getTime()/1000 - 2400; //40 minutes ago
-    if (lastUpdateTime < time) {
-      lastUpdateTime = moment.utc().unix();
-      load();
-    }
-  }
-  
-  //enable stale data check
-  function setCheck() {
-    if (!checkInterval) {
-      checkInterval = setInterval(check, 15 * 1000);
     }
   }
   
@@ -622,7 +604,7 @@ var MultiMarket = function (options) {
 
   this.reload = function () {
     for (var i=0; i<self.charts.length; i++){
-      if (self.charts[i].load) self.charts[i].load(true);
+      if (self.charts[i].load) self.charts[i].load();
     }
   }
 
