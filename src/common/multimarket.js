@@ -609,7 +609,6 @@ var MultiMarket = function (options) {
       self.charts[i].suspend();
       self.charts[i].remove(false);
     }
-    
     if (!charts.length && !options.fixed)
       removeResizeListener(window, resizeButton);
     
@@ -619,8 +618,14 @@ var MultiMarket = function (options) {
     for (var j=0; j<charts.length; j++) {
       self.addChart(charts[j].base, charts[j].counter);
     }
+  } 
+
+  this.reload = function () {
+    for (var i=0; i<self.charts.length; i++){
+      if (self.charts[i].load) self.charts[i].load(true);
+    }
   }
- 
+
 //function for initializing callbacks  
   this.on = function(type, callback) {
     if      (type=='updateList') self.updateListCallback = callback;
