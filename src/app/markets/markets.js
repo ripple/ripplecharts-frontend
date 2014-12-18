@@ -60,11 +60,6 @@ angular.module( 'ripplecharts.markets', [
   $scope.range  = store.session.get('range') || store.get('range') || 
     Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
-  //update local storage
-  if ($scope.range.name !== 'custom') $scope.range.end = moment.utc()._d;
-  store.set('range', $scope.range);
-  store.session.set('range', $scope.range);
-
 //set up the currency pair dropdowns
   var loaded  = false, 
     dropdownB = ripple.currencyDropdown().selected($scope.trade)
@@ -250,7 +245,6 @@ angular.module( 'ripplecharts.markets', [
     .attr("href", "#")
     .classed("selected", function(d) { return d.name === $scope.interval; })
     .classed("disabled", function(d) {
-      console.log("1");
       var now    = moment.utc(),
           range  = d3.select("#range .selected").datum(),
           offset, start, end;
@@ -269,11 +263,16 @@ angular.module( 'ripplecharts.markets', [
       if (!this.classList.contains("disabled")) {
         var that  = this,
             range = store.get('range');
-        if (range !== "custom") {
+        if (range.name !== "custom") {
           d.offset = d3.select("#range .selected").datum().offset;
           d.live = true;
         }
-        else d.live = false;
+        else {
+          console.log("custom!");
+          d.start = range.start;
+          d.end = range.end;
+          d.live = false;
+        }
         store.set("interval", d.name);
         store.session.set("interval", d.name);
         interval.classed("selected", function() { return this === that; });
