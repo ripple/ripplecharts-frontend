@@ -114,21 +114,31 @@ angular.module( 'ripplecharts.markets', [
       ])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { return d.name === $scope.range; })
+    .classed("selected", function(d) { 
+      if (d.name === $scope.range.name){
+        if ($scope.range.name !== "custom"){
+          var now = moment.utc();
+          $scope.range.start = d.offset(now);
+          $scope.range.end = new Date(now);
+        }
+        return true;
+      } 
+    })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
       d3.event.preventDefault();
       var that = this,
           now  = moment.utc(); 
-      store.set("range", d.name);
-      store.session.set("range", d.name);      
+      store.set("range", {name: d.name} );
+      store.session.set("range", {name: d.name} );      
       range.classed("selected", function() { return this === that; });
+      console.log("start", new Date(moment(now).subtract(1,'d')), d.offset(now));
       $("#start")
         .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
-        .datepicker('setDate', new Date(d.offset(now)))
+        .datepicker('setDate', d.offset(now))
         .hide();
       $("#end")
-        .datepicker('option', 'minDate', new Date(d.offset(now)))
+        .datepicker('option', 'minDate', d.offset(now))
         .datepicker('setDate', new Date(now))
         .hide();
       $("#custom").removeClass('selected');
@@ -147,7 +157,7 @@ angular.module( 'ripplecharts.markets', [
       d.live = true;
       priceChart.load($scope.base, $scope.trade, d);
     });
-  
+
   //set up date selector
   ranges.append("a").html("custom").attr('href', '#').attr('id', 'custom')
     .data([{name: 'custom'}])
@@ -186,7 +196,7 @@ angular.module( 'ripplecharts.markets', [
     defaultDate: $scope.range.end,
     dateFormat: 'mm/dd/y',
     onSelect: function(dateText) {
-      var start = store.get('range').start,
+      var start = new Date(store.get('range').start),
           end   = new Date(dateText);
       $("#start").datepicker('option', 'maxDate', end);
       dateChange(start, end);
@@ -195,18 +205,19 @@ angular.module( 'ripplecharts.markets', [
 
   $("#start" ).datepicker({
     minDate: new Date("1/1/2013"),
-    maxDate: new Date($scope.range.end),
+    maxDate: new Date(moment($scope.range.end).subtract(1,"d")),
     defaultDate: $scope.range.start,
     dateFormat: 'mm/dd/y',
     onSelect: function(dateText) {
-      var start = new Date(dateText),
-          end   = store.session.get('range').end;
+      var start = new Date(moment(dateText).add(1,"d")),
+          end   = new Date(store.session.get('range').end);
       $("#end").datepicker('option', 'minDate', start);
       dateChange(start, end);
     }
   }).datepicker('setDate', new Date($scope.range.start));
 
   function dateChange(start, end){
+    console.log(start, end);
     var selected = false;
     store.set('range', {name: 'custom', start: start, end: end});
     store.session.set('range', {name: 'custom', start: start, end: end});
@@ -268,7 +279,6 @@ angular.module( 'ripplecharts.markets', [
           d.live = true;
         }
         else {
-          console.log("custom!");
           d.start = range.start;
           d.end = range.end;
           d.live = false;
