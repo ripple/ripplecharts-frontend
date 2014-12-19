@@ -197,7 +197,7 @@ angular.module( 'ripplecharts.markets', [
     onSelect: function(dateText) {
       var start = new Date(store.get('range').start),
           end   = new Date(dateText);
-      $("#start").datepicker('option', 'maxDate', end);
+      $("#start").datepicker('option', 'maxDate', new Date(moment(end).subtract(1,"d")));
       dateChange(start, end);
     }
   }).datepicker('setDate', new Date($scope.range.end));
@@ -273,6 +273,9 @@ angular.module( 'ripplecharts.markets', [
         var that  = this,
             range = store.get('range');
         if (range.name !== "custom") {
+          ranges.selectAll("a").datum(function(s){
+            
+          });
           d.offset = d3.select("#range .selected").datum().offset;
           d.live = true;
         }
