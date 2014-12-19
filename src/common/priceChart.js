@@ -196,8 +196,6 @@ PriceChart = function (options) {
 //load historical from API  	  	      			
   this.load = function (b, c, d) {
 
-    console.log("Price Chart Data:", d);
-
     if (!b) return setStatus("Base currency is required.");
     if (!c) return setStatus("Counter currency is required.");
     if (!d || !d.interval) return setStatus("Interval is required.");
