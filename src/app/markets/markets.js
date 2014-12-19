@@ -132,7 +132,6 @@ angular.module( 'ripplecharts.markets', [
       store.set("range", {name: d.name} );
       store.session.set("range", {name: d.name} );      
       range.classed("selected", function() { return this === that; });
-      console.log("start", new Date(moment(now).subtract(1,'d')), d.offset(now));
       $("#start")
         .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
         .datepicker('setDate', d.offset(now))
@@ -209,15 +208,14 @@ angular.module( 'ripplecharts.markets', [
     defaultDate: $scope.range.start,
     dateFormat: 'mm/dd/y',
     onSelect: function(dateText) {
-      var start = new Date(moment(dateText).add(1,"d")),
+      var start = new Date(dateText),
           end   = new Date(store.session.get('range').end);
-      $("#end").datepicker('option', 'minDate', start);
+      $("#end").datepicker('option', 'minDate', new Date(moment(start).add(1,"d")));
       dateChange(start, end);
     }
   }).datepicker('setDate', new Date($scope.range.start));
 
   function dateChange(start, end){
-    console.log(start, end);
     var selected = false;
     store.set('range', {name: 'custom', start: start, end: end});
     store.session.set('range', {name: 'custom', start: start, end: end});
