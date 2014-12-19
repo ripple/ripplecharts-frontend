@@ -268,15 +268,22 @@ angular.module( 'ripplecharts.markets', [
       return selectIntervals(start, end, d); })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
+      var rangeList, data;
       d3.event.preventDefault();
       if (!this.classList.contains("disabled")) {
         var that  = this,
             range = store.get('range');
         if (range.name !== "custom") {
-          ranges.selectAll("a").datum(function(s){
-            
-          });
-          d.offset = d3.select("#range .selected").datum().offset;
+
+          rangeList = ranges.selectAll("a")[0];
+          for (var i=0; i<rangeList.length; i++){
+            data = d3.select(rangeList[i]).datum();
+            if (data.name === range.name) {
+              d.offset = data.offset;
+              break;
+            }
+          }
+
           d.live = true;
         }
         else {
@@ -391,18 +398,20 @@ angular.module( 'ripplecharts.markets', [
     if (base.currency == "XRP") issuer = counter.issuer;
     else issuer = base.issuer;
     for (var key in gateways){
-      if (gateways[key].accounts[0].address == issuer) return gateways[key].startDate
+      if (gateways[key].accounts[0].address == issuer) return new Date(gateways[key].startDate);
     }
-    return "2013-1-1";
+    return new Date("2013-1-1");
   }
 
   function updateMaxrange(){
-    var current_range = store.get('range');
-    if (current_range.name === "max"){
-      current_range.start = getStartdate($scope.base, $scope.trade);
-      store.set('range', current_range);
-      store.session.set('range', current_range);
-    }
+      var start = getStartdate($scope.base, $scope.trade);
+      var now = moment.utc();
+      $("#start")
+        .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
+        .datepicker('setDate', start)
+      $("#end")
+        .datepicker('option', 'minDate', start)
+        .datepicker('setDate', new Date(now))
   }
 
   loaded = true;
