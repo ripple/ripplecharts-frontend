@@ -11,7 +11,6 @@ module.exports = {
     js: [  
       'vendor/moment/moment.js',
       'vendor/d3/d3.js',
-      'vendor/ripple/ripple.js',
       'deps/onResize.js',
       'src/common/apiHandler.js',
       'src/common/priceChart.js',

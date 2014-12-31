@@ -3,17 +3,17 @@ if (typeof LOADER_PNG == 'undefined')
       LOADER_PNG = "assets/images/rippleThrobber.png";
 else  LOADER_PNG = "data:image/png;base64," + LOADER_PNG;
 
-
 PriceChart = function (options) {
-  var self      = this,
-    xScale      = d3.time.scale(),
-    priceScale  = d3.scale.linear(),
-    volumeScale = d3.scale.linear(),
-    xAxis       = d3.svg.axis().scale(xScale),
-    volumeAxis  = d3.svg.axis().scale(volumeScale).orient("left").tickFormat(d3.format("s")),
-    priceAxis   = d3.svg.axis().scale(priceScale).orient("right"),
-    apiHandler  = new ApiHandler(options.url),
-    liveFeed, isLoading;
+  var self        = this;
+  var xScale      = d3.time.scale();
+  var priceScale  = d3.scale.linear();
+  var volumeScale = d3.scale.linear();
+  var xAxis       = d3.svg.axis().scale(xScale);
+  var volumeAxis  = d3.svg.axis().scale(volumeScale).orient("left").tickFormat(d3.format("s"));
+  var priceAxis   = d3.svg.axis().scale(priceScale).orient("right");
+  var apiHandler  = new ApiHandler(options.url);
+  var liveFeed;
+  var isLoading;
  
 //this can be a function that will return whenever the state changes,
 //such as when we start loading historical data, or stop  
@@ -387,8 +387,8 @@ PriceChart = function (options) {
     if      (candleWidth<3) candleWidth = 1; 
     else if (candleWidth<4) candleWidth = 2;
 
-    var baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
-    var counterCurrency = ripple.Currency.from_json(counter.currency).to_human();
+    var baseCurrency    = rippleCurrency(base.currency);
+    var counterCurrency = rippleCurrency(counter.currency);
     
     gEnter.select(".axis.price").select("text").text("Price ("+counterCurrency+")");
     gEnter.select(".axis.volume").select("text").text("Volume ("+baseCurrency+")");
@@ -550,13 +550,13 @@ PriceChart = function (options) {
       o, h, l, c, v;
 
     if (d) {
-      if (ripple && ripple.Amount) {
-        o = filter(d.open, counter.currency);
-        h = filter(d.high,  counter.currency);
-        l = filter(d.low,   counter.currency);
-        c = filter(d.close, counter.currency);
-        a = filter(d.vwap,  counter.currency);
-        v = filter(d.baseVolume, base.currency);
+      if (rippleAmount) {
+        o = rippleAmount(d.open, counter.currency);
+        h = rippleAmount(d.high,  counter.currency);
+        l = rippleAmount(d.low,   counter.currency);
+        c = rippleAmount(d.close, counter.currency);
+        a = rippleAmount(d.vwap,  counter.currency);
+        v = rippleAmount(d.baseVolume, base.currency);
         
       } else {
         o = d.open.toFixed(4);
@@ -567,7 +567,7 @@ PriceChart = function (options) {
         v = d.baseVolume.toFixed(2);
       }
 
-      var baseCurrency = ripple.Currency.from_json(base.currency).to_human();    
+      var baseCurrency = rippleCurrency(base.currency);    
       var details = div.select('.chartDetails');
       details.html("<span class='date'>"+ parseDate(d.startTime.local(), chartInterval) + 
         "</span><span><small>O:</small><b>" + o  + "</b></span>" +
@@ -591,12 +591,8 @@ PriceChart = function (options) {
       focus.style("opacity",1);
     }
   }
-
-  function filter(amount, currency) {
-    return ripple.Amount.from_human(amount + " " + currency).to_human({max_sig_digits:6});  
-  }
   
-//apply rules to get the start times to line up nicely
+  //apply rules to get the start times to line up nicely
   function getAlignedCandle(time) {
     var aligned;
     
@@ -696,5 +692,27 @@ PriceChart = function (options) {
     }
    
     return tzAbbr;
+  }
+  
+  //format an amount if ripple-lib is present
+  function rippleAmount (amount, currency, sig_digits) {
+    if (typeof ripple === 'undefined' || !ripple.Amount) {
+      return amount;
+    } 
+    
+    if (!sig_digits) {
+      sig_digits = 6;
+    }
+    
+    return ripple.Amount.from_human(amount + " " + currency).to_human({max_sig_digits:6});  
+  }
+
+  //format a currency if ripple-lib is present
+  function rippleCurrency (currency) {
+    if (typeof ripple === 'undefined' || !ripple.Currency) {
+      return currency;
+    }
+    
+    return ripple.Currency.from_json(base.currency).to_human();
   }
 }
