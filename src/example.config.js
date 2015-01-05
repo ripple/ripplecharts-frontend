@@ -8,7 +8,8 @@ Options = {
   base      : {currency:"BTC", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
   trade     : {currency:"XRP", issuer:""},
   chartType : "line",
-  interval  : "1h",
+  interval  : "15m",
+  range     : {name: "1d"},
  
   ripple    : {
     
