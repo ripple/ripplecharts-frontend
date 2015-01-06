@@ -66,14 +66,14 @@ angular.module( 'ripplecharts.markets', [
       .on("change", function(d) {
         if (loaded) {
           $scope.trade = d;
-          updateMaxrange();
+          if (store.get('range').name === "max") updateMaxrange();
           loadPair();
         }}),
     dropdownA = ripple.currencyDropdown().selected($scope.base)
       .on("change", function(d) {
         if (loaded) {
           $scope.base = d;
-          updateMaxrange();
+          if (store.get('range').name === "max") updateMaxrange();
           loadPair();
         }});
 
@@ -404,14 +404,14 @@ angular.module( 'ripplecharts.markets', [
   }
 
   function updateMaxrange(){
-      var start = getStartdate($scope.base, $scope.trade);
-      var now = moment.utc();
-      $("#start")
-        .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
-        .datepicker('setDate', start)
-      $("#end")
-        .datepicker('option', 'minDate', start)
-        .datepicker('setDate', new Date(now))
+    var start = getStartdate($scope.base, $scope.trade);
+    var now = moment.utc();
+    $("#start")
+      .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
+      .datepicker('setDate', start)
+    $("#end")
+      .datepicker('option', 'minDate', start)
+      .datepicker('setDate', new Date(now))
   }
 
   loaded = true;
