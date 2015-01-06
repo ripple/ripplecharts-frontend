@@ -66,14 +66,14 @@ angular.module( 'ripplecharts.markets', [
       .on("change", function(d) {
         if (loaded) {
           $scope.trade = d;
-          updateMaxrange();
+          if (store.get('range').name === "max") updateMaxrange();
           loadPair();
         }}),
     dropdownA = ripple.currencyDropdown().selected($scope.base)
       .on("change", function(d) {
         if (loaded) {
           $scope.base = d;
-          updateMaxrange();
+          if (store.get('range').name === "max") updateMaxrange();
           loadPair();
         }});
 
@@ -162,21 +162,21 @@ angular.module( 'ripplecharts.markets', [
     .data([{name: 'custom'}])
     .classed("selected", function(d) { return d.name === $scope.range.name; })
     .on('click', function(d){
-      //v?
-      var temp_range   = d3.select("#range .selected").datum(),
-          stored_range = {},
-          that         = this,
-          now          = moment.utc();
+      var data = d3.select("#range .selected").datum(),
+          that = this,
+          now  = moment.utc();
       $(this).addClass('selected');
       range.classed("selected", function() { return this === that; });
       d3.event.preventDefault();
-      stored_range = {
-        name  : "custom",
-        start : temp_range.offset(now),
-        end   : now
-      };
-      store.set('range', stored_range);
-      store.session.set('range', stored_range);
+      if (store.get("range").name !== "custom"){
+        var stored_range = {
+          name  : "custom",
+          start : data.offset(now),
+          end   : now
+        };
+        store.set('range', stored_range);
+        store.session.set('range', stored_range);
+      }
       $("#start").toggle();
       $("#end").toggle();
     });
@@ -226,10 +226,11 @@ angular.module( 'ripplecharts.markets', [
           selected = true;
           store.set("interval", d.name);
           store.session.set("interval", d.name);
-          d.start = moment.utc(start);
-          d.end = moment.utc(end);
-          d.live = false;
-          priceChart.load($scope.base, $scope.trade, d);
+          var s = $.extend(true, {}, d);
+          s.live = false;
+          s.start = moment.utc(start);
+          s.end = moment.utc(end);
+          priceChart.load($scope.base, $scope.trade, s);
           return true;
         } 
       });
@@ -274,7 +275,6 @@ angular.module( 'ripplecharts.markets', [
         var that  = this,
             range = store.get('range');
         if (range.name !== "custom") {
-
           rangeList = ranges.selectAll("a")[0];
           for (var i=0; i<rangeList.length; i++){
             data = d3.select(rangeList[i]).datum();
@@ -404,14 +404,14 @@ angular.module( 'ripplecharts.markets', [
   }
 
   function updateMaxrange(){
-      var start = getStartdate($scope.base, $scope.trade);
-      var now = moment.utc();
-      $("#start")
-        .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
-        .datepicker('setDate', start)
-      $("#end")
-        .datepicker('option', 'minDate', start)
-        .datepicker('setDate', new Date(now))
+    var start = getStartdate($scope.base, $scope.trade);
+    var now = moment.utc();
+    $("#start")
+      .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
+      .datepicker('setDate', start)
+    $("#end")
+      .datepicker('option', 'minDate', start)
+      .datepicker('setDate', new Date(now))
   }
 
   loaded = true;
