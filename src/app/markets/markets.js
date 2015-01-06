@@ -226,10 +226,11 @@ angular.module( 'ripplecharts.markets', [
           selected = true;
           store.set("interval", d.name);
           store.session.set("interval", d.name);
-          d.start = moment.utc(start);
-          d.end = moment.utc(end);
-          d.live = false;
-          priceChart.load($scope.base, $scope.trade, d);
+          var s = $.extend(true, {}, d);
+          s.live = false;
+          s.start = moment.utc(start);
+          s.end = moment.utc(end);
+          priceChart.load($scope.base, $scope.trade, s);
           return true;
         } 
       });
@@ -274,7 +275,6 @@ angular.module( 'ripplecharts.markets', [
         var that  = this,
             range = store.get('range');
         if (range.name !== "custom") {
-
           rangeList = ranges.selectAll("a")[0];
           for (var i=0; i<rangeList.length; i++){
             data = d3.select(rangeList[i]).datum();
