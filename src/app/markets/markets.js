@@ -445,8 +445,8 @@ angular.module( 'ripplecharts.markets', [
 
     if (d3.select("#range .selected").text() === "custom"){
       interval.live = false;
-      interval.start = $scope.range.start;
-      interval.end = $scope.range.end;
+      interval.start = store.get("range").start;
+      interval.end = store.get("range").end;
     } 
     else {
       interval.live = true;
