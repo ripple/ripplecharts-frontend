@@ -162,21 +162,21 @@ angular.module( 'ripplecharts.markets', [
     .data([{name: 'custom'}])
     .classed("selected", function(d) { return d.name === $scope.range.name; })
     .on('click', function(d){
-      //v?
-      var temp_range   = d3.select("#range .selected").datum(),
-          stored_range = {},
-          that         = this,
-          now          = moment.utc();
+      var data = d3.select("#range .selected").datum(),
+          that = this,
+          now  = moment.utc();
       $(this).addClass('selected');
       range.classed("selected", function() { return this === that; });
       d3.event.preventDefault();
-      stored_range = {
-        name  : "custom",
-        start : temp_range.offset(now),
-        end   : now
-      };
-      store.set('range', stored_range);
-      store.session.set('range', stored_range);
+      if (store.get("range").name !== "custom"){
+        var stored_range = {
+          name  : "custom",
+          start : data.offset(now),
+          end   : now
+        };
+        store.set('range', stored_range);
+        store.session.set('range', stored_range);
+      }
       $("#start").toggle();
       $("#end").toggle();
     });
