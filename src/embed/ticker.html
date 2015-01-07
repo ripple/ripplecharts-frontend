@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ripple Charts Embedded Chart</title>
+    
+    <!-- D3 needs this -->
+    <meta charset="utf-8">
+    
+    <script>
+      API    = "<%= api %>";  
+      DOMAIN = "<%= domain %>"; 
+    </script>
+    
+    <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
+    <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+
+    <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script><% }); %>
+  
+    <style>
+      body {
+        font-family:Arial, Helvetica, sans-serif;
+        text-align:center;  
+        margin:0;
+        background:#fff;
+        height:100%;
+        position:absolute;
+        width:100%;
+      }
+      
+    </style>
+  </head>
+  <body>
+
+    <div id="prices"></div>
+
+    <script>
+
+    TickerWidget({
+      base: {"currency":"XRP"},
+      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+    });
+           
+    </script>
+
+  </body>
+</html>   
