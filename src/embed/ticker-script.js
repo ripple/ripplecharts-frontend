@@ -1,5 +1,3 @@
-gateways = JSON0;
-
 var TickerWidget = function (options) {
   var self = this;
 
@@ -31,13 +29,15 @@ var Ticker = function(base, counter, markets){
     self.price = data[0].last;
     console.log("Initial:", self.price);
 
-  var test = ripple.currencyDropdown();
-  var base_gateway = test.getName(counter.issuer);
-  console.log("bgateway", counter.issuer, base_gateway);
+    var gateways = ripple.currencyDropdown();
     
-/*    self.div.append("div")
-      .attr("class", "gateway")
-      .text();*/
+    self.div.append("div")
+      .attr("class", "bgateway element")
+      .text(gateways.getName(base.issuer));
+
+    self.div.append("div")
+      .attr("class", "cgateway element")
+      .text(gateways.getName(counter.issuer));
 
     self.div.append("div")
       .attr("class", "price element")

@@ -15,7 +15,7 @@ module.exports = {
     ],
     
     json: [
-      'src/assets/gateways.json'
+      {name: "gateways", path: 'src/assets/gateways.json'}
     ],
 
     js: [  

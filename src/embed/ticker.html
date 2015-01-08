@@ -9,14 +9,14 @@
     <script>
       API    = "<%= api %>";  
       DOMAIN = "<%= domain %>";
-      <% json.forEach( function ( file, i ) { %>
-        JSON<%= i %> = <%= file %>;
-      <% }); %>
 
     </script>
     
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
+
+    <!-- compiled JSON --><% json.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script><% }); %>
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>

@@ -782,12 +782,15 @@ module.exports = function ( grunt ) {
         }
 
         //copy icon files to build/embed
+        var json_string = "";
         if (config.files.json){
-          config.files.json.forEach(function(file){
-            var filename = file.split("/").pop();
-            grunt.log.writeln("creating variable for "+filename);
-            jsonFiles.push( grunt.file.read(file, {encoding:null}));
-          })
+          config.files.json.forEach(function(file, i){
+            var varname = file.name,
+                json    = grunt.file.read(file.path, {encoding:null}).toString();
+            grunt.log.writeln("creating variable for "+varname);
+            json_string += "var "+varname+" = "+json+"; "
+          });
+          grunt.file.write(dir+'json.js', json_string);
         }
         
       } else {
@@ -840,13 +843,13 @@ module.exports = function ( grunt ) {
         }
 
         //get json files
-        var jsons = config.files.json;
-        if (jsons){
-          for (var j=0; j<jsons.length; j++){
-            var json = grunt.file.read(jsons[j], {encoding:null});
-            banner += 'var JSON'+j+'="'+json.toString('base64')+'";';
-          }
-        }
+        // var jsons = config.files.json;
+        // if (jsons){
+        //   for (var j=0; j<jsons.length; j++){
+        //     var json = grunt.file.read(jsons[j].path, {encoding:null});
+        //     banner += 'var JSON'+j+'="'+json.toString('base64')+'";';
+        //   }
+        // }
 
         grunt.config.set('uglify.embed_'+config.name, {
           options: {banner: banner},
@@ -869,7 +872,7 @@ module.exports = function ( grunt ) {
             data: {
               scripts  : jsFiles,
               styles   : cssFiles,
-              json     : jsonFiles,
+              json     : ["json.js"],
               mixpanel : deploymentConfig.mixpanel,
               api      : deploymentConfig.api,
               domain   : deploymentConfig.domain,
