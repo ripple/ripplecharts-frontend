@@ -750,7 +750,7 @@ module.exports = function ( grunt ) {
         grunt.file.copy(file, dir+"assets/images/"+filename);
       });      
 */      
-      var jsFiles = [], cssFiles = [];
+      var jsFiles = [], cssFiles = [], iconFiles = [], jsonFiles = [];
             
       if (type=="build") {
         
@@ -769,7 +769,26 @@ module.exports = function ( grunt ) {
           var filename = config.files.loader.split("/").pop();
           grunt.log.writeln('copying '+config.files.loader+" to "+dir+"assets/images/"+filename);
           grunt.file.copy(config.files.loader, dir+"assets/images/"+filename);         
-        }  
+        }
+
+        //copy icon files to build/embed
+        if (config.files.icons){
+          config.files.icons.forEach(function(file){
+            var filename = file.split("/").pop();
+            grunt.log.writeln("copying "+file+" to "+dir+"assets/icons/"+filename);
+            grunt.file.copy(file, dir+"assets/icons/"+filename);
+            iconFiles.push(filename);
+          })
+        }
+
+        //copy icon files to build/embed
+        if (config.files.json){
+          config.files.json.forEach(function(file){
+            var filename = file.split("/").pop();
+            grunt.log.writeln("creating variable for "+filename);
+            jsonFiles.push( grunt.file.read(file, {encoding:null}));
+          })
+        }
         
       } else {
         
@@ -800,7 +819,7 @@ module.exports = function ( grunt ) {
         });
         
         //get loader png
-        var loader = config.files.loader ? grunt.file.read(config.files.loader, {encoding:null}) : "";  
+        var loader = config.files.loader ? grunt.file.read(config.files.loader, {encoding:null}) : "";
         var banner = '<%= meta.banner %>'+
           'var API="'+deploymentConfig.api+'";'+
           'var DOMAIN="'+deploymentConfig.domain+'";';
@@ -810,7 +829,25 @@ module.exports = function ( grunt ) {
           
         if (loader)
           banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
-        
+
+        //get icons png
+        var icons = config.files.icons;
+        if (icons){
+          for (var i=0; i<icons.length; i++){
+            var icon = grunt.file.read(icons[i], {encoding:null});
+            banner += 'var ICON'+i+'_PNG="'+icon.toString('base64')+'";';
+          }
+        }
+
+        //get json files
+        var jsons = config.files.json;
+        if (jsons){
+          for (var j=0; j<jsons.length; j++){
+            var json = grunt.file.read(jsons[j], {encoding:null});
+            banner += 'var JSON'+j+'="'+json.toString('base64')+'";';
+          }
+        }
+
         grunt.config.set('uglify.embed_'+config.name, {
           options: {banner: banner},
           files:files     
@@ -832,6 +869,7 @@ module.exports = function ( grunt ) {
             data: {
               scripts  : jsFiles,
               styles   : cssFiles,
+              json     : jsonFiles,
               mixpanel : deploymentConfig.mixpanel,
               api      : deploymentConfig.api,
               domain   : deploymentConfig.domain,

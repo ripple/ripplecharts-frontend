@@ -8,7 +8,11 @@
     
     <script>
       API    = "<%= api %>";  
-      DOMAIN = "<%= domain %>"; 
+      DOMAIN = "<%= domain %>";
+      <% json.forEach( function ( file, i ) { %>
+        JSON<%= i %> = <%= file %>;
+      <% }); %>
+
     </script>
     
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
@@ -37,11 +41,22 @@
     <script>
 
     TickerWidget({
-      base: {"currency":"XRP"},
-      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+      url : API,
+      markets :
+        [ 
+          {
+            base: {"currency":"XRP"},
+            counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+          },
+          {
+            base: {"currency":"XRP"},
+            counter: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
+          }
+        ]
     });
            
     </script>
+
 
   </body>
 </html>   
