@@ -12,11 +12,15 @@ var TickerWidget = function (options) {
     addTicker(market.base, market.counter);
   }
 
+  this.loadFromQS = function(){
+
+  }
+
 }
 
 var Ticker = function(base, counter, markets){
   var self = this;
-  
+
   self.div        = markets.el.insert("div").attr("class","ticker");
   self.markets    = markets;
   self.price      = 0.0;
@@ -26,11 +30,20 @@ var Ticker = function(base, counter, markets){
     counter       : counter,
     last          : true
   }, function(err, data){
+    
+    var gateways = ripple.currencyDropdown();
+
     self.price = data[0].last;
     console.log("Initial:", self.price);
 
-    var gateways = ripple.currencyDropdown();
-    
+    self.div.on("click", function(d){
+      var path = "markets/"+base.currency+
+        (base.issuer ? ":"+base.issuer : "")+
+        "/"+counter.currency+
+        (counter.issuer ? ":"+counter.issuer : "");
+      window.location.href = "http://www.ripplecharts.com/#/" + path;
+    });
+
     self.div.append("div")
       .attr("class", "bgateway element")
       .text(gateways.getName(base.issuer));
@@ -53,16 +66,6 @@ var Ticker = function(base, counter, markets){
 
     self.div.append("div")
       .attr("class", "prev priceunch")
-
-    self.div.on("click", function(){
-      console.log("clicked");
-      var path = "/markets/"+base.currency+
-      (base.issuer ? ":"+base.issuer : "")+
-      "/"+counter.currency+
-      (counter.issuer ? ":"+counter.issuer : "");
-      $location.path(path);
-      $scope.$apply()
-    });
   });
 
   setLiveFeed(base, counter);
@@ -120,4 +123,24 @@ var Ticker = function(base, counter, markets){
 function addTicker(base, counter, name){
   new Ticker(base, counter, self);
 };
+
+function getParams () {
+  var params = {};
+  var query  = window.location.search.substring(1);
+  var vars   = query ? query.split("&") : [];
+  
+  for (var i = 0; i < vars.length; i++) {
+    var pair  = vars[i].split('=');
+    var key   = decodeURIComponent(pair[0]);
+    var value = decodeURIComponent(pair[1]);
+    
+    try {
+      params[key] = JSON.parse(value);
+    } catch (e) { //invalid json
+      params[key] = value;
+    } 
+  } 
+  
+  return params;   
+}  
 

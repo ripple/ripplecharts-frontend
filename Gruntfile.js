@@ -842,15 +842,6 @@ module.exports = function ( grunt ) {
           }
         }
 
-        //get json files
-        // var jsons = config.files.json;
-        // if (jsons){
-        //   for (var j=0; j<jsons.length; j++){
-        //     var json = grunt.file.read(jsons[j].path, {encoding:null});
-        //     banner += 'var JSON'+j+'="'+json.toString('base64')+'";';
-        //   }
-        // }
-
         grunt.config.set('uglify.embed_'+config.name, {
           options: {banner: banner},
           files:files     
