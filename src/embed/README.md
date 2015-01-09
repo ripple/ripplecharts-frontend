@@ -103,3 +103,32 @@ of loading from the query string or from custom parameters.
    type : "line"
  });
  ```
+
+##Live Ticker
+
+Widget for embedding a stock ticker within any website.  The widget is capable 
+of loading from the query string or from custom parameters.
+
+###How to Use:
+
+
+####Configuration options:
+``` 
+  id        : id of element that will contain the chart. if not specified, appended to body
+  apiURL    : custom url for the API backend, defaults to ripplecharts.com API
+```
+####Chart options:
+```
+  markets  : list of markets to be displayed on the live ticker 
+            e.g '[{base: {"currency":"XRP"},
+                  counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}}]'
+```
+
+####Embedded IFRAME:
+
+```
+<iframe src='http://ripplecharts.com/embed/ticker?markets=[{"counter":{"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},"base":{"currency":"XRP"}}]'/>
+```
+
+
+
