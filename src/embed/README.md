@@ -120,8 +120,12 @@ of loading from the query string or from custom parameters.
 ####Chart options:
 ```
   markets  : list of markets to be displayed on the live ticker 
-            e.g '[{base: {"currency":"XRP"},
-                  counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}}]'
+            e.g '[
+                    {
+                      base: {"currency":"XRP"},
+                      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+                    }
+                  ]'
 ```
 
 ####Embedded IFRAME:
