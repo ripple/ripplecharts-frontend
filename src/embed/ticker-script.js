@@ -4,21 +4,38 @@ var TickerWidget = function (options) {
   self.el         = d3.select("#prices").attr("class", "prices");
   self.apiHandler = new ApiHandler(options.url);
   self.options    = options;
-  self.markets    = options.markets;
 
-  for (var i=0; i<self.markets.length; i++){
-    var market = self.markets[i];
-    console.log(i, market);
-    addTicker(market.base, market.counter);
+  loader = self.el.append("img")
+    .attr("class", "loader")
+    .attr("src", "assets/images/rippleThrobber.png")
+
+  //Not from QS
+  if (options.markets){
+    self.markets = options.markets;
+    addMarkets(self.markets, function(){
+    });
+  }
+  //--
+
+  this.load = function(params){
+    if (!params) params = {};
+    if (!params.markets) params.markets = default_markets;
+    self.markets = params.markets;
+    addMarkets(self.markets);
   }
 
   this.loadFromQS = function(){
+    var params = getParams();
 
+    if (!params.markets) params.markets = default_markets;
+    self.markets = params.markets;
+    addMarkets(self.markets);
   }
 
+  return this;
 }
 
-var Ticker = function(base, counter, markets){
+var Ticker = function(base, counter, markets, callback){
   var self = this;
 
   self.div        = markets.el.insert("div").attr("class","ticker");
@@ -32,6 +49,8 @@ var Ticker = function(base, counter, markets){
   }, function(err, data){
     
     var gateways = ripple.currencyDropdown();
+    base.name = gateways.getName(base.issuer);
+    counter.name = gateways.getName(counter.issuer);
 
     self.price = data[0].last;
     console.log("Initial:", self.price);
@@ -44,13 +63,15 @@ var Ticker = function(base, counter, markets){
       window.location.href = "http://www.ripplecharts.com/#/" + path;
     });
 
-    self.div.append("div")
-      .attr("class", "bgateway element")
-      .text(gateways.getName(base.issuer));
+    if (base.name !== "")
+      self.div.append("div")
+        .attr("class", "bgateway element")
+        .text(base.name);
 
-    self.div.append("div")
-      .attr("class", "cgateway element")
-      .text(gateways.getName(counter.issuer));
+    if (counter.name !== "")
+      self.div.append("div")
+        .attr("class", "cgateway element")
+        .text(counter.name);
 
     self.div.append("div")
       .attr("class", "price element")
@@ -65,7 +86,9 @@ var Ticker = function(base, counter, markets){
       .text(counter.currency);
 
     self.div.append("div")
-      .attr("class", "prev priceunch")
+      .attr("class", "prev pricestatus priceunch")
+
+    callback();
   });
 
   setLiveFeed(base, counter);
@@ -113,15 +136,15 @@ var Ticker = function(base, counter, markets){
     self.div.select(".price")
       .text(parseFloat(self.price).toFixed(6));
 
-    if (direction === "up") self.div.select(".prev").attr("class", "prev priceup");
-    else if (direction === "down") self.div.select(".prev").attr("class", "prev pricedown");
-    else self.div.select(".prev").attr("class", "prev priceunch");
+    if (direction === "up") self.div.select(".prev").attr("class", "prev pricestatus priceup");
+    else if (direction === "down") self.div.select(".prev").attr("class", "prev pricestatus pricedown");
+    else self.div.select(".prev").attr("class", "prev pricestatus priceunch");
 
   }
 }
 
-function addTicker(base, counter, name){
-  new Ticker(base, counter, self);
+function addTicker(base, counter, callback){
+  new Ticker(base, counter, self, callback);
 };
 
 function getParams () {
@@ -140,7 +163,28 @@ function getParams () {
       params[key] = value;
     } 
   } 
-  
+  console.log(params);
   return params;   
-}  
+}
+
+function addMarkets(markets){
+  //add markets async and once done, remove loader
+  var count = 0;
+  for (var i=0; i<markets.length; i++){
+    var market = markets[i];
+    console.log(i, market);
+    addTicker(market.base, market.counter, function(){
+      console.log(markets.length, count);
+      count += 1;
+      if (count === markets.length) d3.select(".loader").style("opacity", 0);
+    });
+  }
+}
+
+var default_markets = [
+  {
+    base: {"currency":"XRP"},
+    counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+  }
+];
 

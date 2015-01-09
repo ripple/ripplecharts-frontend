@@ -750,7 +750,7 @@ module.exports = function ( grunt ) {
         grunt.file.copy(file, dir+"assets/images/"+filename);
       });      
 */      
-      var jsFiles = [], cssFiles = [], iconFiles = [], jsonFiles = [];
+      var jsFiles = [], cssFiles = [], iconFiles = [], jsonFiles = ["json.js"];
             
       if (type=="build") {
         
@@ -863,7 +863,7 @@ module.exports = function ( grunt ) {
             data: {
               scripts  : jsFiles,
               styles   : cssFiles,
-              json     : ["json.js"],
+              json     : jsonFiles,
               mixpanel : deploymentConfig.mixpanel,
               api      : deploymentConfig.api,
               domain   : deploymentConfig.domain,
