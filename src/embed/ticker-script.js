@@ -1,11 +1,11 @@
 var TickerWidget = function (options) {
-  var self = this;
+   var self = this;
 
   self.el         = d3.select("#prices").attr("class", "prices");
   self.apiHandler = new ApiHandler(options.url);
   self.options    = options;
 
-  loader = self.el.append("img")
+  loader = d3.select("body").append("img")
     .attr("class", "loader")
     .attr("src", "assets/images/rippleThrobber.png")
 
@@ -65,24 +65,26 @@ var Ticker = function(base, counter, markets, callback){
 
     if (base.name !== "")
       self.div.append("div")
-        .attr("class", "bgateway element")
+        .attr("class", "bgateway priceWrapper")
         .text(base.name);
+      self.div.attr("id", base.name);
 
     if (counter.name !== "")
       self.div.append("div")
-        .attr("class", "cgateway element")
+        .attr("class", "cgateway priceWrapper")
         .text(counter.name);
+      self.div.attr("id", counter.name);
 
     self.div.append("div")
-      .attr("class", "price element")
+      .attr("class", "price priceWrapper")
       .text(parseFloat(self.price).toFixed(6));
 
     self.div.append("div")
-      .attr("class", "bcurr element")
+      .attr("class", "bcurr priceWrapper")
       .text(base.currency);
 
     self.div.append("div")
-      .attr("class", "ccurr element")
+      .attr("class", "ccurr priceWrapper")
       .text(counter.currency);
 
     self.div.append("div")
@@ -138,7 +140,7 @@ var Ticker = function(base, counter, markets, callback){
 
     if (direction === "up") self.div.select(".prev").attr("class", "prev pricestatus priceup");
     else if (direction === "down") self.div.select(".prev").attr("class", "prev pricestatus pricedown");
-    else self.div.select(".prev").attr("class", "prev pricestatus priceunch");
+    //else self.div.select(".prev").attr("class", "prev pricestatus priceunch");
 
   }
 }
@@ -176,7 +178,31 @@ function addMarkets(markets){
     addTicker(market.base, market.counter, function(){
       console.log(markets.length, count);
       count += 1;
-      if (count === markets.length) d3.select(".loader").style("opacity", 0);
+      if (count === markets.length) {
+        console.log('done');
+        d3.selectAll(".loader").remove();
+        d3.selectAll(".ticker").style("opacity", 1);
+        
+        $("#prices").smoothDivScroll({
+            autoScrollingDirection: "endlessLoopRight",
+            autoScrollingStep: 1,
+            autoScrollingInterval: 15,
+            hotSpotScrolling: false 
+          });
+
+        $("#prices").smoothDivScroll("startAutoScrolling");
+
+        $("#prices").bind("mouseover", function(){
+          $("#prices").smoothDivScroll("stopAutoScrolling");
+        });
+        
+        // Mouse out
+        $("#prices").bind("mouseout", function(){
+          $("#prices").smoothDivScroll("startAutoScrolling");
+        });
+
+
+      }
     });
   }
 }
