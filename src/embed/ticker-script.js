@@ -85,7 +85,7 @@ var Ticker = function(base, counter, markets, callback){
 
     self.div.append("div")
       .attr("class", "ccurr priceWrapper")
-      .text(counter.currency);
+      .text("/"+counter.currency);
 
     self.div.append("div")
       .attr("class", "prev pricestatus priceunch")
