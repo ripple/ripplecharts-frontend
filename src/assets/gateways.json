@@ -214,5 +214,15 @@
             }],
         "hotwallets": ["rUR5QVHqFxRa8TSQawc1M6jKj7BvKzbHek"],
         "domain": "ripula.co.uk"
+    },
+    {
+        "name": "Mr. Ripple",
+        "startDate":"2014-10-5",
+        "accounts": [{
+            "address": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "currencies": ["JPY"]
+            }],
+        "hotwallets": [],
+        "domain": "mr-ripple.com"
     }
 ]
