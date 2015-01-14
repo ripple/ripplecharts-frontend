@@ -5,16 +5,14 @@ var TickerWidget = function (options) {
   self.apiHandler = new ApiHandler(options.url);
   self.options    = options;
 
-  loader = d3.select("body").append("img")
+  loader = d3.select("#tickerWrapper").append("img")
     .attr("class", "loader")
     .attr("src", "assets/images/rippleThrobber.png")
 
   //Not from QS
-  if (options.markets){
-    self.markets = options.markets;
-    addMarkets(self.markets, function(){
-    });
-  }
+  if (!options.markets) options.markets = default_markets;
+  self.markets = options.markets;
+  addMarkets(self.markets);
   //--
 
   this.load = function(params){
@@ -41,63 +39,102 @@ var Ticker = function(base, counter, markets, callback){
   self.div        = markets.el.insert("div").attr("class","ticker");
   self.markets    = markets;
   self.price      = 0.0;
+  self.startTime  = moment.utc().startOf("day");
 
-  req = self.markets.apiHandler.exchangeRates({
-    base          : base,
-    counter       : counter,
-    last          : true
-  }, function(err, data){
-    
-    var gateways = ripple.currencyDropdown();
-    base.name = gateways.getName(base.issuer);
-    counter.name = gateways.getName(counter.issuer);
+  var gateways = ripple.currencyDropdown();
+  base.name = gateways.getName(base.issuer);
+  counter.name = gateways.getName(counter.issuer);
 
-    self.price = data[0].last;
-    console.log("Initial:", self.price);
+  self.req1 = self.markets.apiHandler.offersExercised({    
+    base : base,
+    counter : counter,
+    startTime : "2013-1-1",
+    endTime : self.startTime,
+    reduce: false,
+    limit: 1,
+    descending : true,
+  }, function(oldPrice){
 
-    self.div.on("click", function(d){
-      var path = "markets/"+base.currency+
-        (base.issuer ? ":"+base.issuer : "")+
-        "/"+counter.currency+
-        (counter.issuer ? ":"+counter.issuer : "");
-      window.location.href = "http://www.ripplecharts.com/#/" + path;
+    self.oldPrice = oldPrice[0].price;
+
+    self.req2 = self.markets.apiHandler.offersExercised({    
+      base : base,
+      counter : counter,
+      startTime : "2013-1-1",
+      endTime : moment.utc(),
+      reduce: false,
+      limit: 1,
+      descending : true,
+    }, function(lastPrice){
+
+      self.price = lastPrice[0].price;
+
+      console.log("lp/op", base.name, counter.name, self.price, self.oldPrice);
+
+      self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
+
+      if (self.difference > 0) self.direction = "up";
+      else if (self.difference < 0) self.direction = "down";
+      else self.direction = "unch";
+
+      console.log("%", self.difference);
+
+      self.div.on("click", function(d){
+        var path = "markets/"+base.currency+
+          (base.issuer ? ":"+base.issuer : "")+
+          "/"+counter.currency+
+          (counter.issuer ? ":"+counter.issuer : "");
+        window.location.href = "http://www.ripplecharts.com/#/" + path;
+      });
+
+      if (base.name !== "")
+        self.div.append("div")
+          .attr("class", "baseGateway priceWrapper")
+          .text(base.name+"/ ");
+
+      if (counter.name !== "")
+        self.div.append("div")
+          .attr("class", "counterGateway priceWrapper")
+          .text(" "+counter.name);
+
+      self.div.append("div")
+        .attr("class", "price priceWrapper")
+        .text(parseFloat(self.price).toFixed(6));
+
+      if (base.currency !== "XRP")
+        self.div.append("div")
+          .attr("class", "baseCurrency priceWrapper")
+          .text(base.currency+"/");
+
+      self.div.append("div")
+        .attr("class", "counterCurrency priceWrapper")
+        .text(counter.currency);
+
+      self.div.append("div")
+        .attr("class", "pct")
+        .text(self.difference+"%");
+
+      self.div.append("div")
+        .attr("class", "priceStatus priceunch");
+
+      if (self.direction === "up"){ 
+        self.div.select(".priceStatus").attr("class", "priceStatus priceup");
+        self.div.select(".pct").attr("class", "pct pctUp");
+      }
+      else if (self.direction === "down"){ 
+        self.div.select(".priceStatus").attr("class", "priceStatus pricedown");
+        self.div.select(".pct").attr("class", "pct pctDown");
+      }
+
+      callback();
     });
 
-    if (base.name !== "")
-      self.div.append("div")
-        .attr("class", "bgateway priceWrapper")
-        .text(base.name);
-      self.div.attr("id", base.name);
-
-    if (counter.name !== "")
-      self.div.append("div")
-        .attr("class", "cgateway priceWrapper")
-        .text(counter.name);
-      self.div.attr("id", counter.name);
-
-    self.div.append("div")
-      .attr("class", "price priceWrapper")
-      .text(parseFloat(self.price).toFixed(6));
-
-    self.div.append("div")
-      .attr("class", "bcurr priceWrapper")
-      .text(base.currency);
-
-    self.div.append("div")
-      .attr("class", "ccurr priceWrapper")
-      .text("/"+counter.currency);
-
-    self.div.append("div")
-      .attr("class", "prev pricestatus priceunch")
-
-    callback();
   });
 
   setLiveFeed(base, counter);
 
   //enable the live feed via ripple-lib
   function setLiveFeed (base, counter) {
-    console.log("Starting with:", base.currency, counter.currency);
     var point = {
         startTime     : moment.utc(),
         baseVolume    : 0.0,
@@ -125,22 +162,28 @@ var Ticker = function(base, counter, markets, callback){
 
   //add new data from the live feed to the chart  
   function liveUpdate (data) {
-    var prev = self.price;
     var direction;
 
     if (data.close !== 0) self.price = data.close;
-    if (prev < self.price) direction = "up";
-    else if (prev > self.price) direction = "down";
-    else direction = "unch";
-    
-    console.log(base.currency, counter.currency, "price:", self.price, "prev", prev, direction);
+    self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
+    if (self.difference > 0) self.direction = "up";
+    else if (self.difference < 0) self.direction = "down";
+    else self.direction = "unch";
 
     self.div.select(".price")
+      .style("color", "#483");
+    self.div.select(".price")
+      .transition().delay(500)
       .text(parseFloat(self.price).toFixed(6));
 
-    if (direction === "up") self.div.select(".prev").attr("class", "prev pricestatus priceup");
-    else if (direction === "down") self.div.select(".prev").attr("class", "prev pricestatus pricedown");
-    //else self.div.select(".prev").attr("class", "prev pricestatus priceunch");
+
+    self.div.select(".price")
+      .transition().delay(1500).duration(500)
+      .style("color", "black")
+     
+
+    if (self.direction === "up") self.div.select(".priceStatus").attr("class", "priceStatus priceup");
+    else if (self.direction === "down") self.div.select(".priceStatus").attr("class", "priceStatus pricedown");
 
   }
 }
@@ -165,7 +208,6 @@ function getParams () {
       params[key] = value;
     } 
   } 
-  console.log(params);
   return params;   
 }
 
@@ -174,12 +216,9 @@ function addMarkets(markets){
   var count = 0;
   for (var i=0; i<markets.length; i++){
     var market = markets[i];
-    console.log(i, market);
     addTicker(market.base, market.counter, function(){
-      console.log(markets.length, count);
       count += 1;
       if (count === markets.length) {
-        console.log('done');
         d3.selectAll(".loader").remove();
         d3.selectAll(".ticker").style("opacity", 1);
         

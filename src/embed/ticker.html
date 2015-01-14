@@ -38,7 +38,9 @@
   </head>
   <body>
 
-    <div id="prices"></div>
+    <div id="tickerWrapper">
+      <div id="prices"></div>
+    </div>
 
     <script>
 
@@ -46,6 +48,10 @@
       url : API,
       markets :
         [ 
+          {
+            base: {"currency":"XRP"},
+            counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+          },
           {
             base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
             counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
@@ -91,7 +97,7 @@
 
 /*    TickerWidget({
      url : API
-    }).loadFromQS();*/
+    });*/
            
     </script>
 
