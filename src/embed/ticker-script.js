@@ -45,7 +45,20 @@ var Ticker = function(base, counter, markets, callback){
   base.name = gateways.getName(base.issuer);
   counter.name = gateways.getName(counter.issuer);
 
-  self.req1 = self.markets.apiHandler.offersExercised({    
+  var endTime = moment.utc().add(1,"d").startOf("day");
+  var remainder = endTime.diff(moment.utc());
+
+  if (remainder > 0){
+    self.timeout = setTimeout(function(){
+      console.log("FIRE!!");
+      setNext();
+      refreshTicker();
+    }, remainder);
+  } else {
+    setNext();
+  }
+
+  self.reqUtcPrice = self.markets.apiHandler.offersExercised({    
     base : base,
     counter : counter,
     startTime : "2013-1-1",
@@ -57,10 +70,10 @@ var Ticker = function(base, counter, markets, callback){
 
     self.oldPrice = oldPrice[0].price;
 
-    self.req2 = self.markets.apiHandler.offersExercised({    
+    self.reqCurrentPrice = self.markets.apiHandler.offersExercised({    
       base : base,
       counter : counter,
-      startTime : "2013-1-1",
+      startTime : moment.utc().subtract(1,"d"),
       endTime : moment.utc(),
       reduce: false,
       limit: 1,
@@ -68,16 +81,9 @@ var Ticker = function(base, counter, markets, callback){
     }, function(lastPrice){
 
       self.price = lastPrice[0].price;
-
-      console.log("lp/op", base.name, counter.name, self.price, self.oldPrice);
-
       self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
 
-      if (self.difference > 0) self.direction = "up";
-      else if (self.difference < 0) self.direction = "down";
-      else self.direction = "unch";
-
-      console.log("%", self.difference);
+      console.log("%", self.price, self.oldPrice, self.difference);
 
       self.div.on("click", function(d){
         var path = "markets/"+base.currency+
@@ -89,49 +95,78 @@ var Ticker = function(base, counter, markets, callback){
 
       if (base.name !== "")
         self.div.append("div")
-          .attr("class", "baseGateway priceWrapper")
-          .text(base.name+"/ ");
+          .attr("class", "baseGateway")
+          .text(base.name+"/");
 
       if (counter.name !== "")
         self.div.append("div")
-          .attr("class", "counterGateway priceWrapper")
-          .text(" "+counter.name);
+          .attr("class", "counterGateway")
+          .text(counter.name);
 
-      self.div.append("div")
+      self.divPrice = self.div.append("div")
         .attr("class", "price priceWrapper")
         .text(parseFloat(self.price).toFixed(6));
 
       if (base.currency !== "XRP")
         self.div.append("div")
-          .attr("class", "baseCurrency priceWrapper")
+          .attr("class", "baseCurrency")
           .text(base.currency+"/");
 
       self.div.append("div")
-        .attr("class", "counterCurrency priceWrapper")
+        .attr("class", "counterCurrency")
         .text(counter.currency);
 
-      self.div.append("div")
+      self.divPct = self.div.append("div")
         .attr("class", "pct")
         .text(self.difference+"%");
 
-      self.div.append("div")
+      self.divPriceStatus = self.div.append("div")
         .attr("class", "priceStatus priceunch");
 
-      if (self.direction === "up"){ 
-        self.div.select(".priceStatus").attr("class", "priceStatus priceup");
-        self.div.select(".pct").attr("class", "pct pctUp");
-      }
-      else if (self.direction === "down"){ 
-        self.div.select(".priceStatus").attr("class", "priceStatus pricedown");
-        self.div.select(".pct").attr("class", "pct pctDown");
-      }
+      updatePct();
 
       callback();
+      setLiveFeed(base, counter);
     });
-
   });
+  
+  function updatePct(){
+    if (self.difference > 0){
+        self.direction = "up"; 
+        self.divPriceStatus.attr("class", "priceStatus priceup");
+        self.divPct.attr("class", "pct pctUp");
+      }
+    else if (self.difference < 0){ 
+        self.direction = "down";
+        self.divPriceStatus.attr("class", "priceStatus pricedown");
+        self.divPct.attr("class", "pct pctDown");
+      }
+    else self.direction = "unch";
+  }
 
-  setLiveFeed(base, counter);
+  function refreshTicker(){
+    self.newUtcPrice = self.markets.apiHandler.offersExercised({    
+      base : base,
+      counter : counter,
+      startTime : "2013-1-1",
+      endTime : self.startTime,
+      reduce: false,
+      limit: 1,
+      descending : true,
+    }, function(oldPrice){
+      self.oldPrice = oldPrice[0].price;
+      self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
+      console.log("Refresh");
+      self.divPct.text(self.difference+"%");
+      updatePct();
+    });
+  }
+
+  function setNext(){
+    self.timeout = setInterval(function(){
+      refreshTicker();
+    },86400000);
+  }
 
   //enable the live feed via ripple-lib
   function setLiveFeed (base, counter) {
@@ -163,27 +198,35 @@ var Ticker = function(base, counter, markets, callback){
   //add new data from the live feed to the chart  
   function liveUpdate (data) {
     var direction;
+    var prev = self.price;
 
     if (data.close !== 0) self.price = data.close;
+    
+    //price lower, flash red
+    if (prev > self.price){
+      self.div.select(".price")
+        .style("color", "#a22");
+      self.div.select(".price")
+        .transition().delay(500)
+        .text(parseFloat(self.price).toFixed(6));
+      self.div.select(".price")
+        .transition().delay(1500).duration(500)
+        .style("color", "#3C3C3C:")
+    }
+    //price higher, flash green
+    else if (prev < self.price){
+      self.div.select(".price")
+        .style("color", "#483");
+      self.div.select(".price")
+        .transition().delay(500)
+        .text(parseFloat(self.price).toFixed(6));
+      self.div.select(".price")
+        .transition().delay(1500).duration(500)
+        .style("color", "#3C3C3C:")
+    }
+
     self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
-    if (self.difference > 0) self.direction = "up";
-    else if (self.difference < 0) self.direction = "down";
-    else self.direction = "unch";
-
-    self.div.select(".price")
-      .style("color", "#483");
-    self.div.select(".price")
-      .transition().delay(500)
-      .text(parseFloat(self.price).toFixed(6));
-
-
-    self.div.select(".price")
-      .transition().delay(1500).duration(500)
-      .style("color", "black")
-     
-
-    if (self.direction === "up") self.div.select(".priceStatus").attr("class", "priceStatus priceup");
-    else if (self.direction === "down") self.div.select(".priceStatus").attr("class", "priceStatus pricedown");
+    updatePct();
 
   }
 }
