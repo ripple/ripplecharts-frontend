@@ -7,6 +7,7 @@ module.exports = {
 
     html: "src/embed/ticker.html",
     loader: 'src/assets/images/rippleThrobber.png',
+    ripple: 'vendor/ripple/ripple.js',
 
     icons: [
       'src/assets/icons/arrow_down.png',
@@ -21,11 +22,10 @@ module.exports = {
     js: [  
       'vendor/moment/moment.js',
       'vendor/d3/d3.js',
-      'vendor/ripple/ripple.js',
       'vendor/jquery/jquery.js',
       'vendor/smooth-div-scroll/js/jquery-ui-1.10.3.custom.min.js',
-      'vendor/smooth-div-scroll/js/jquery.mousewheel.min.js',
       'vendor/smooth-div-scroll/js/jquery.smoothdivscroll-1.3-min.js',
+      'vendor/smooth-div-scroll/js/jquery.mousewheel.min.js',
       'deps/onResize.js',
       'src/common/apiHandler.js',
       'src/embed/ticker-script.js',

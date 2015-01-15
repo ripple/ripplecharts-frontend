@@ -1,5 +1,15 @@
+if (typeof LOADER_PNG == 'undefined') 
+      LOADER_PNG = "assets/images/rippleThrobber.png";
+else  LOADER_PNG = "data:image/png;base64," + LOADER_PNG;
+
 var TickerWidget = function (options) {
-   var self = this;
+  var self = this;
+
+  if (!options.customCSS && typeof CSS != 'undefined') {
+    var style = document.createElement("style");
+    style.innerHTML = CSS;
+    document.getElementsByTagName("head")[0].appendChild(style);
+  }
 
   self.el         = d3.select("#prices").attr("class", "prices");
   self.apiHandler = new ApiHandler(options.url);
@@ -7,13 +17,13 @@ var TickerWidget = function (options) {
 
   loader = d3.select("#tickerWrapper").append("img")
     .attr("class", "loader")
-    .attr("src", "assets/images/rippleThrobber.png")
+    .attr("src", LOADER_PNG);
 
-  //Not from QS
+/*  //Not from QS
   if (!options.markets) options.markets = default_markets;
   self.markets = options.markets;
   addMarkets(self.markets);
-  //--
+  //--*/
 
   this.load = function(params){
     if (!params) params = {};
@@ -24,7 +34,6 @@ var TickerWidget = function (options) {
 
   this.loadFromQS = function(){
     var params = getParams();
-
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
     addMarkets(self.markets);
@@ -50,7 +59,6 @@ var Ticker = function(base, counter, markets, callback){
 
   if (remainder > 0){
     self.timeout = setTimeout(function(){
-      console.log("FIRE!!");
       setNext();
       refreshTicker();
     }, remainder);
@@ -81,9 +89,7 @@ var Ticker = function(base, counter, markets, callback){
     }, function(lastPrice){
 
       self.price = lastPrice[0].price;
-      self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
-
-      console.log("%", self.price, self.oldPrice, self.difference);
+      updateDiff();
 
       self.div.on("click", function(d){
         var path = "markets/"+base.currency+
@@ -93,10 +99,14 @@ var Ticker = function(base, counter, markets, callback){
         window.location.href = "http://www.ripplecharts.com/#/" + path;
       });
 
-      if (base.name !== "")
+      if (base.name !== "" && counter.name !== "")
         self.div.append("div")
           .attr("class", "baseGateway")
           .text(base.name+"/");
+      else if (base.name !== "")
+        self.div.append("div")
+          .attr("class", "baseGateway")
+          .text(base.name);
 
       if (counter.name !== "")
         self.div.append("div")
@@ -107,10 +117,9 @@ var Ticker = function(base, counter, markets, callback){
         .attr("class", "price priceWrapper")
         .text(parseFloat(self.price).toFixed(6));
 
-      if (base.currency !== "XRP")
-        self.div.append("div")
-          .attr("class", "baseCurrency")
-          .text(base.currency+"/");
+      self.div.append("div")
+        .attr("class", "baseCurrency")
+        .text(base.currency+"/");
 
       self.div.append("div")
         .attr("class", "counterCurrency")
@@ -130,6 +139,12 @@ var Ticker = function(base, counter, markets, callback){
     });
   });
   
+  function updateDiff(){
+    self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100);
+    if (self.difference < 0.01 && self.difference > -0.01) self.difference = 0;
+    self.difference = self.difference.toFixed(2);
+  }
+
   function updatePct(){
     if (self.difference > 0){
         self.direction = "up"; 
@@ -141,10 +156,15 @@ var Ticker = function(base, counter, markets, callback){
         self.divPriceStatus.attr("class", "priceStatus pricedown");
         self.divPct.attr("class", "pct pctDown");
       }
-    else self.direction = "unch";
+    else {
+      self.direction = "unch";
+      self.divPriceStatus.attr("class", "priceStatus");
+      self.divPct.attr("class", "pct");
+    }
   }
 
   function refreshTicker(){
+    self.startTime = moment.utc().add(1,"h").startOf("day");
     self.newUtcPrice = self.markets.apiHandler.offersExercised({    
       base : base,
       counter : counter,
@@ -155,8 +175,7 @@ var Ticker = function(base, counter, markets, callback){
       descending : true,
     }, function(oldPrice){
       self.oldPrice = oldPrice[0].price;
-      self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
-      console.log("Refresh");
+      updateDiff();
       self.divPct.text(self.difference+"%");
       updatePct();
     });
@@ -211,7 +230,7 @@ var Ticker = function(base, counter, markets, callback){
         .text(parseFloat(self.price).toFixed(6));
       self.div.select(".price")
         .transition().delay(1500).duration(500)
-        .style("color", "#3C3C3C:")
+        .style("color", "#3C3C3C")
     }
     //price higher, flash green
     else if (prev < self.price){
@@ -222,10 +241,10 @@ var Ticker = function(base, counter, markets, callback){
         .text(parseFloat(self.price).toFixed(6));
       self.div.select(".price")
         .transition().delay(1500).duration(500)
-        .style("color", "#3C3C3C:")
+        .style("color", "#3C3C3C")
     }
 
-    self.difference = (((self.price-self.oldPrice)/self.oldPrice)*100).toFixed(2);
+    updateDiff();
     updatePct();
 
   }
@@ -289,10 +308,43 @@ function addMarkets(markets){
   }
 }
 
-var default_markets = [
-  {
-    base: {"currency":"XRP"},
-    counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
-  }
-];
+var default_markets =
+    [ 
+      {
+        base: {"currency":"XRP"},
+        counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+      },
+      {
+        base: {currency:"XRP"},
+        counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      },
+      {
+        base: {"currency":"XRP"},
+        counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+      },
+      {
+        base: {"currency":"XRP"},
+        counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      },
+      {
+        base: {"currency":"XRP"},
+        counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+      },
+      {
+        base: {"currency":"XRP"},
+        counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+      },
+      {
+        counter: {currency:"XRP"},
+        base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
+      },
+      {
+        base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
+        counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+      },
+      {
+        base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
+        counter: {"currency":"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+      }
+    ];
 
