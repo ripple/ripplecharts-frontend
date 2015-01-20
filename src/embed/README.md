@@ -114,7 +114,7 @@ of loading from the query string or from custom parameters.
 
 ####Configuration options:
 ``` 
-  id        : id of element that will contain the chart. if not specified, appended to body
+  id        : id of element that will contain the live ticker. if not specified, appended to body
   apiURL    : custom url for the API backend, defaults to ripplecharts.com API
 ```
 ####Chart options:
@@ -128,11 +128,53 @@ of loading from the query string or from custom parameters.
                   ]'
 ```
 
-####Embedded IFRAME:
+####Javascript object:
 
 ```
-<iframe src='http://ripplecharts.com/embed/ticker?markets=[{"counter":{"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},"base":{"currency":"XRP"}}]'/>
+<script type="text/javascript" src="http://localhost/~vahakn/ripplecharts-frontend/bin/embed/ticker/script.js"></script>
+
+//load from params
+var ticker = TickerWidget({
+  url : API,
+  id  : "liveTicker"
+});
+
+ticker.load({
+  markets: [ 
+    {
+      base: {"currency":"XRP"},
+      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+    },
+    {
+      base: {currency:"XRP"},
+      counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+    },
+    {
+      counter: {currency:"XRP"},
+      base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
+    },
+    {
+      base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
+      counter: {"currency":"XRP"},
+    }
+  ]  
+});
+
+
 ```
-
-
-

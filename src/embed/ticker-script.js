@@ -3,7 +3,9 @@ if (typeof LOADER_PNG == 'undefined')
 else  LOADER_PNG = "data:image/png;base64," + LOADER_PNG;
 
 var TickerWidget = function (options) {
-  var self = this;
+  var self = this, div;
+
+  if (!options) options = {};
 
   if (!options.customCSS && typeof CSS != 'undefined') {
     var style = document.createElement("style");
@@ -11,11 +13,18 @@ var TickerWidget = function (options) {
     document.getElementsByTagName("head")[0].appendChild(style);
   }
 
-  self.el         = d3.select("#prices").attr("class", "prices");
+  if (options.id) {
+    div       = d3.select("#"+options.id).append("div").attr("id", "tickerWrapper");
+    self.el   = div.append("div").attr("id", "prices");
+  } else {
+    div       = d3.select("body").append("div").attr("id", "tickerWrapper");
+    self.el   = div.append("div").attr("id", "prices");
+  }
+
   self.apiHandler = new ApiHandler(options.url);
   self.options    = options;
 
-  loader = d3.select("#tickerWrapper").append("img")
+  loader = div.append("img")
     .attr("class", "loader")
     .attr("src", LOADER_PNG);
 
@@ -340,11 +349,7 @@ var default_markets =
       },
       {
         base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
-        counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
-      },
-      {
-        base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
-        counter: {"currency":"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+        counter: {"currency":"XRP"},
       }
     ];
 
