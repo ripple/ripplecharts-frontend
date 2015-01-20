@@ -157,18 +157,18 @@ var Ticker = function(base, counter, markets, callback){
   function updatePct(){
     if (self.difference > 0){
         self.direction = "up"; 
-        self.divPriceStatus.attr("class", "priceStatus priceup");
-        self.divPct.attr("class", "pct pctUp");
+        self.divPriceStatus.attr("class", null).attr("class", "priceStatus priceup");
+        self.divPct.attr("class", null).attr("class", "pct pctUp");
       }
     else if (self.difference < 0){ 
         self.direction = "down";
-        self.divPriceStatus.attr("class", "priceStatus pricedown");
-        self.divPct.attr("class", "pct pctDown");
+        self.divPriceStatus.attr("class", null).attr("class", "priceStatus pricedown");
+        self.divPct.attr("class", null).attr("class", "pct pctDown");
       }
     else {
       self.direction = "unch";
-      self.divPriceStatus.attr("class", "priceStatus");
-      self.divPct.attr("class", "pct");
+      self.divPriceStatus.attr("class", null).attr("class", "priceStatus");
+      self.divPct.attr("class", null).attr("class", "pct");
     }
   }
 
