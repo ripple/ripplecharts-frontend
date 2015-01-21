@@ -1,3 +1,5 @@
+var listener_list = [];
+
 if (typeof LOADER_PNG == 'undefined') 
       LOADER_PNG = "assets/images/rippleThrobber.png";
 else  LOADER_PNG = "data:image/png;base64," + LOADER_PNG;
@@ -6,6 +8,8 @@ var TickerWidget = function (options) {
   var self = this, div;
 
   if (!options) options = {};
+
+  if (!options.closeable) options.closeable = false;
 
   if (!options.customCSS && typeof CSS != 'undefined') {
     var style = document.createElement("style");
@@ -28,24 +32,18 @@ var TickerWidget = function (options) {
     .attr("class", "loader")
     .attr("src", LOADER_PNG);
 
-/*  //Not from QS
-  if (!options.markets) options.markets = default_markets;
-  self.markets = options.markets;
-  addMarkets(self.markets);
-  //--*/
-
   this.load = function(params){
     if (!params) params = {};
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
-    addMarkets(self.markets);
+    addMarkets(self.markets, options.closeable);
   }
 
   this.loadFromQS = function(){
     var params = getParams();
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
-    addMarkets(self.markets);
+    addMarkets(self.markets, options.closeable);
   }
 
   return this;
@@ -221,6 +219,7 @@ var Ticker = function(base, counter, markets, callback){
     }
     
     liveFeed = new OffersExercisedListener (viewOptions, liveUpdate);
+    listener_list.push(liveFeed);
   }
 
   //add new data from the live feed to the chart  
@@ -254,6 +253,7 @@ var Ticker = function(base, counter, markets, callback){
     }
 
     updateDiff();
+    self.divPct.text(self.difference+"%");
     updatePct();
 
   }
@@ -282,7 +282,7 @@ function getParams () {
   return params;   
 }
 
-function addMarkets(markets){
+function addMarkets(markets, closeable){
   //add markets async and once done, remove loader
   var count = 0;
   for (var i=0; i<markets.length; i++){
@@ -292,6 +292,16 @@ function addMarkets(markets){
       if (count === markets.length) {
         d3.selectAll(".loader").remove();
         d3.selectAll(".ticker").style("opacity", 1);
+
+        if (closeable)
+          d3.select("#tickerWrapper").append("div").attr("class", "closer").text("x")
+          .on("click", function(d){
+            for (var i=0; i<listener_list.length; i++){
+              liveFeed = listener_list[i];
+              liveFeed.stopListener();
+            }
+            d3.select("#tickerWrapper").remove();
+          });
         
         $("#prices").smoothDivScroll({
             autoScrollingDirection: "endlessLoopRight",
