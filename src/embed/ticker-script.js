@@ -48,9 +48,7 @@ var TickerWidget = function (options) {
   }
 
   this.loadFromQS = function(){
-    console.log("load from QS");
     var params = getParams();
-    console.log(params);
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
     addMarkets(self.markets, options.closeable);
@@ -147,7 +145,7 @@ var Ticker = function(base, counter, markets, callback){
         .text(self.difference+"%");
 
       self.divPriceStatus = self.div.append("img")
-        .attr("class", "priceStatus priceunch");
+        .attr("class", "priceStatus");
 
       updatePct();
 
@@ -165,21 +163,20 @@ var Ticker = function(base, counter, markets, callback){
   function updatePct(){
     if (self.difference > 0){
         self.direction = "up"; 
-        self.divPriceStatus.attr("class", null)
-          .attr("class", "priceStatus priceup")
+        self.divPriceStatus
           .attr("src", ARROW_UP_PNG);
         self.divPct.attr("class", null).attr("class", "pct pctUp");
       }
     else if (self.difference < 0){ 
         self.direction = "down";
-        self.divPriceStatus.attr("class", null)
-          .attr("class", "priceStatus pricedown")
+        self.divPriceStatus
           .attr("src", ARROW_DOWN_PNG);
         self.divPct.attr("class", null).attr("class", "pct pctDown");
       }
     else {
       self.direction = "unch";
-      self.divPriceStatus.attr("class", null).attr("class", "priceStatus");
+      self.divPriceStatus
+        .attr("src", null);
       self.divPct.attr("class", null).attr("class", "pct");
     }
   }

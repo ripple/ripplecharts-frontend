@@ -40,21 +40,15 @@
     </style>
   </head>
   <body>
-
-    <script type="text/javascript" src="http://localhost/~vahakn/ripplecharts-frontend/bin/embed/ticker/script.js"></script>
-
-    <div id="test"></div>
-
+    <div id="liveTicker"></div>
     <script>
 
     TickerWidget({
       url : API,
-      id  : "test",
-      closeable : true
+      id  : "liveTicker",
+      closeable : false
     }).loadFromQS();
 
     </script>
-
-
   </body>
 </html>   

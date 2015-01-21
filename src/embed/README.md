@@ -132,7 +132,7 @@ of loading from the query string or from custom parameters.
 ####Embedded IFRAME:
 
 ```
-<iframe src='http://localhost/~vahakn/ripplecharts-frontend/bin/embed/ticker?markets=
+<iframe src='http://ripplecharts.com/embed/ticker?markets=
 [
   {
     "base":{"currency":"XRP"},
@@ -164,7 +164,7 @@ of loading from the query string or from custom parameters.
 ####Javascript object:
 
 ```
-<script type="text/javascript" src="http://localhost/~vahakn/ripplecharts-frontend/bin/embed/ticker/script.js"></script>
+<script type="text/javascript" src="http://ripplecharts.com/embed/ticker/script.js"></script>
 
 //load from params
 var ticker = TickerWidget({
