@@ -4,6 +4,14 @@ if (typeof LOADER_PNG == 'undefined')
       LOADER_PNG = "assets/images/rippleThrobber.png";
 else  LOADER_PNG = "data:image/png;base64," + LOADER_PNG;
 
+if (typeof ARROW_UP_PNG == 'undefined') 
+      ARROW_UP_PNG = "assets/icons/arrow_up.png";
+else  ARROW_UP_PNG = "data:image/png;base64," + ARROW_UP_PNG;
+
+if (typeof ARROW_DOWN_PNG == 'undefined') 
+      ARROW_DOWN_PNG = "assets/icons/arrow_down.png";
+else  ARROW_DOWN_PNG = "data:image/png;base64," + ARROW_DOWN_PNG;
+
 var TickerWidget = function (options) {
   var self = this, div;
 
@@ -40,7 +48,9 @@ var TickerWidget = function (options) {
   }
 
   this.loadFromQS = function(){
+    console.log("load from QS");
     var params = getParams();
+    console.log(params);
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
     addMarkets(self.markets, options.closeable);
@@ -136,7 +146,7 @@ var Ticker = function(base, counter, markets, callback){
         .attr("class", "pct")
         .text(self.difference+"%");
 
-      self.divPriceStatus = self.div.append("div")
+      self.divPriceStatus = self.div.append("img")
         .attr("class", "priceStatus priceunch");
 
       updatePct();
@@ -155,12 +165,16 @@ var Ticker = function(base, counter, markets, callback){
   function updatePct(){
     if (self.difference > 0){
         self.direction = "up"; 
-        self.divPriceStatus.attr("class", null).attr("class", "priceStatus priceup");
+        self.divPriceStatus.attr("class", null)
+          .attr("class", "priceStatus priceup")
+          .attr("src", ARROW_UP_PNG);
         self.divPct.attr("class", null).attr("class", "pct pctUp");
       }
     else if (self.difference < 0){ 
         self.direction = "down";
-        self.divPriceStatus.attr("class", null).attr("class", "priceStatus pricedown");
+        self.divPriceStatus.attr("class", null)
+          .attr("class", "priceStatus pricedown")
+          .attr("src", ARROW_DOWN_PNG);
         self.divPct.attr("class", null).attr("class", "pct pctDown");
       }
     else {
@@ -328,38 +342,38 @@ function addMarkets(markets, closeable){
 }
 
 var default_markets =
-    [ 
-      {
-        base: {"currency":"XRP"},
-        counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
-      },
-      {
-        base: {currency:"XRP"},
-        counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-      },
-      {
-        base: {"currency":"XRP"},
-        counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
-      },
-      {
-        base: {"currency":"XRP"},
-        counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-      },
-      {
-        base: {"currency":"XRP"},
-        counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
-      },
-      {
-        base: {"currency":"XRP"},
-        counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
-      },
-      {
-        counter: {currency:"XRP"},
-        base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
-      },
-      {
-        base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
-        counter: {"currency":"XRP"},
-      }
-    ];
+  [ 
+    {
+      base: {"currency":"XRP"},
+      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+    },
+    {
+      base: {currency:"XRP"},
+      counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+    },
+    {
+      counter: {currency:"XRP"},
+      base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
+    },
+    {
+      base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
+      counter: {"currency":"XRP"},
+    }
+  ];
 

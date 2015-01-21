@@ -860,7 +860,9 @@ module.exports = function ( grunt ) {
         if (icons){
           for (var i=0; i<icons.length; i++){
             var icon = grunt.file.read(icons[i], {encoding:null});
-            banner += 'var ICON'+i+'_PNG="'+icon.toString('base64')+'";';
+            filename = icons[i].split("/").pop();
+            filename = filename.split(".")[0].toUpperCase();
+            banner += 'var '+filename+'_PNG="'+icon.toString('base64')+'";';
           }
         }
 

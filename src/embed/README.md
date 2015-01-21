@@ -127,6 +127,39 @@ of loading from the query string or from custom parameters.
                     }
                   ]'
 ```
+###EXAMPLES
+
+####Embedded IFRAME:
+
+```
+<iframe src='http://localhost/~vahakn/ripplecharts-frontend/bin/embed/ticker?markets=
+[
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}
+  }
+]'/>
+```
 
 ####Javascript object:
 
