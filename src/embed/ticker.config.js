@@ -11,7 +11,8 @@ module.exports = {
 
     icons: [
       'src/assets/icons/arrow_down.png',
-      'src/assets/icons/arrow_up.png'
+      'src/assets/icons/arrow_up.png',
+      'src/assets/icons/icn_info.svg'
     ],
     
     json: [

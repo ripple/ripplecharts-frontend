@@ -12,12 +12,20 @@ if (typeof ARROW_DOWN_PNG == 'undefined')
       ARROW_DOWN_PNG = "assets/icons/arrow_down.png";
 else  ARROW_DOWN_PNG = "data:image/png;base64," + ARROW_DOWN_PNG;
 
+if (typeof ICN_INFO_PNG == 'undefined')
+      ICN_INFO_PNG = "assets/icons/icn_info.svg";
+else  ICN_INFO_PNG = "data:image/svg+xml;base64," + ICN_INFO_PNG;
+
+BLANK_PNG = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+
 var TickerWidget = function (options) {
   var self = this, div;
 
   if (!options) options = {};
 
   if (!options.closeable) options.closeable = false;
+
+  if (!options.info) options.info = true;
 
   if (!options.customCSS && typeof CSS != 'undefined') {
     var style = document.createElement("style");
@@ -44,14 +52,14 @@ var TickerWidget = function (options) {
     if (!params) params = {};
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
-    addMarkets(self.markets, options.closeable);
+    addMarkets(self.markets, options);
   }
 
   this.loadFromQS = function(){
     var params = getParams();
     if (!params.markets) params.markets = default_markets;
     self.markets = params.markets;
-    addMarkets(self.markets, options.closeable);
+    addMarkets(self.markets, options);
   }
 
   return this;
@@ -111,7 +119,15 @@ var Ticker = function(base, counter, markets, callback){
           (base.issuer ? ":"+base.issuer : "")+
           "/"+counter.currency+
           (counter.issuer ? ":"+counter.issuer : "");
-        window.location.href = "http://www.ripplecharts.com/#/" + path;
+        window.open("http://www.ripplecharts.com/#/"+path, "_blank");
+      });
+
+      self.div.on("mouseover", function(d){
+        self.divPrice.style("text-decoration", "underline");
+      });
+
+      self.div.on("mouseout", function(d){
+         self.divPrice.style("text-decoration", null);
       });
 
       if (base.name !== "" && counter.name !== "")
@@ -130,7 +146,7 @@ var Ticker = function(base, counter, markets, callback){
 
       self.divPrice = self.div.append("div")
         .attr("class", "price priceWrapper")
-        .text(parseFloat(self.price).toFixed(6));
+        .text(addCommas(parseFloat(self.price.toPrecision(6))));
 
       self.div.append("div")
         .attr("class", "baseCurrency")
@@ -176,7 +192,7 @@ var Ticker = function(base, counter, markets, callback){
     else {
       self.direction = "unch";
       self.divPriceStatus
-        .attr("src", null);
+        .attr("src", BLANK_PNG);
       self.divPct.attr("class", null).attr("class", "pct");
     }
   }
@@ -246,7 +262,7 @@ var Ticker = function(base, counter, markets, callback){
         .style("color", "#a22");
       self.div.select(".price")
         .transition().delay(500)
-        .text(parseFloat(self.price).toFixed(6));
+        .text(addCommas(parseFloat(self.price.toPrecision(6))));
       self.div.select(".price")
         .transition().delay(1500).duration(500)
         .style("color", "#3C3C3C")
@@ -257,7 +273,7 @@ var Ticker = function(base, counter, markets, callback){
         .style("color", "#483");
       self.div.select(".price")
         .transition().delay(500)
-        .text(parseFloat(self.price).toFixed(6));
+        .text(addCommas(parseFloat(self.price.toPrecision(6))));
       self.div.select(".price")
         .transition().delay(1500).duration(500)
         .style("color", "#3C3C3C")
@@ -293,7 +309,7 @@ function getParams () {
   return params;   
 }
 
-function addMarkets(markets, closeable){
+function addMarkets(markets, options){
   //add markets async and once done, remove loader
   var count = 0;
   for (var i=0; i<markets.length; i++){
@@ -304,7 +320,7 @@ function addMarkets(markets, closeable){
         d3.selectAll(".loader").remove();
         d3.selectAll(".ticker").style("opacity", 1);
 
-        if (closeable)
+        if (options.closeable)
           d3.select("#tickerWrapper").append("div").attr("class", "closer").text("x")
           .on("click", function(d){
             for (var i=0; i<listener_list.length; i++){
@@ -313,7 +329,46 @@ function addMarkets(markets, closeable){
             }
             d3.select("#tickerWrapper").remove();
           });
-        
+
+        if (options.info) {
+          var info = d3.select("#tickerWrapper").append("div").attr("class", "info closed")
+            .on("click", function(d){
+              d3.event.stopPropagation();
+              if (info.classed("closed")){
+                info
+                  .classed("closed", false)
+                  .classed("open", true)
+                  .transition().duration(500)
+                  .style({"background-color": "rgba(0,0,0,0.7)", "width" : "100%", "color" : "#fff"});
+                info_text
+                  .style({"width" : "100%", "padding" : "10px 0px", "height" : "40px"})
+                  .text(itext);
+              }
+              else if (info.classed("open")){
+                info
+                  .classed("open", false)
+                  .classed("closed", true)
+                  .style({"background-color" : "rgba(0,0,0,0)", "color" : "#000", "width" : null});
+                info_text
+                  .style({"padding" : "2px 1px", "width" : "20px", "height" : "60px"})
+                  .html("<img src='"+ICN_INFO_PNG+"'>");
+              }
+            });
+          var info_text = info.append("div")
+            .attr("class", "infoText")
+            .html("<img src='"+ICN_INFO_PNG+"'>");
+
+          d3.select("body").on("click", function(d){
+            info
+              .classed("open", false)
+              .classed("closed", true)
+              .style({"background-color" : "rgba(0,0,0,0)", "color" : "#000", "width" : null});
+            info_text
+              .style({"padding" : "2px 1px", "width" : "20px", "height" : "60px"})
+              .html("<img src='"+ICN_INFO_PNG+"'>");
+          });
+        }
+
         $("#prices").smoothDivScroll({
             autoScrollingDirection: "endlessLoopRight",
             autoScrollingStep: 1,
@@ -331,11 +386,22 @@ function addMarkets(markets, closeable){
         $("#prices").bind("mouseout", function(){
           $("#prices").smoothDivScroll("startAutoScrolling");
         });
-
-
       }
     });
   }
+}
+
+function addCommas(nStr)
+{
+    nStr += '';
+    x = nStr.split('.');
+    x1 = x[0];
+    x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
 }
 
 var default_markets =
@@ -345,20 +411,12 @@ var default_markets =
       counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
     },
     {
-      base: {currency:"XRP"},
-      counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      base: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+      counter: {"currency":"XRP"}
     },
     {
       base: {"currency":"XRP"},
-      counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
-    },
-    {
-      base: {"currency":"XRP"},
-      counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-    },
-    {
-      base: {"currency":"XRP"},
-      counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+      counter: {currency:"KRW","issuer":"rUkMKjQitpgAM5WTGk79xpjT38DEJY283d"},
     },
     {
       base: {"currency":"XRP"},
@@ -366,11 +424,21 @@ var default_markets =
     },
     {
       counter: {currency:"XRP"},
-      base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
+      base: {"currency":"EUR","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
     },
     {
-      base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
-      counter: {"currency":"XRP"},
+      base: {"currency":"XRP"},
+      counter: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}
     }
   ];
+
+
+var itext = "Each ticker represents the last traded price of each \
+            currency and gateway pair. The arrow and precentage represent \
+            the change in price since the start of the day (UTC). The \
+            prices and precentages update live and refresh at the start of \
+            each new day (UTC). The price flashing signifies that a trade just went through. \
+            A red flash signifies it lowering the price, whereas a green flash \
+            signifies that it raised the price.";
+
 
