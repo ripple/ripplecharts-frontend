@@ -750,7 +750,7 @@ module.exports = function ( grunt ) {
         grunt.file.copy(file, dir+"assets/images/"+filename);
       });      
 */      
-      var jsFiles = [], cssFiles = [];
+      var jsFiles = [], cssFiles = [], iconFiles = [], jsonFiles = ["json.js"], json_string = "", filename;
             
       if (type=="build") {
         
@@ -766,12 +766,56 @@ module.exports = function ( grunt ) {
           cssFiles.push('stylesheet.css');
           
         if (config.files.loader) {
-          var filename = config.files.loader.split("/").pop();
+          filename = config.files.loader.split("/").pop();
           grunt.log.writeln('copying '+config.files.loader+" to "+dir+"assets/images/"+filename);
           grunt.file.copy(config.files.loader, dir+"assets/images/"+filename);         
-        }  
+        }
+
+        if (config.files.ripple) {
+          filename = config.files.ripple.split("/").pop();
+          grunt.log.writeln('copying '+file+' to '+dir+filename);
+          grunt.file.copy(config.files.ripple, dir+filename); 
+        }
+
+        //copy icon files to build/embed
+        if (config.files.icons){
+          config.files.icons.forEach(function(file){
+            var filename = file.split("/").pop();
+            grunt.log.writeln("copying "+file+" to "+dir+"assets/icons/"+filename);
+            grunt.file.copy(file, dir+"assets/icons/"+filename);
+            iconFiles.push(filename);
+          })
+        }
+
+        //copy json files to build/embed
+        if (config.files.json){
+          config.files.json.forEach(function(file, i){
+            var varname = file.name,
+                json    = grunt.file.read(file.path, {encoding:null}).toString();
+            grunt.log.writeln("creating variable for "+varname);
+            json_string += "var "+varname+" = "+json+"; "
+          });
+          grunt.file.write(dir+'json.js', json_string);
+        }
         
       } else {
+
+        if (config.files.json){
+          config.files.json.forEach(function(file, i){
+            var varname = file.name,
+                json    = grunt.file.read(file.path, {encoding:null}).toString();
+            grunt.log.writeln("creating variable for "+varname);
+            json_string += "var "+varname+" = "+json+"; "
+          });
+          grunt.file.write(dir+'json.js', json_string);
+          config.files.js.push(dir+'json.js');
+        }
+
+        if (config.files.ripple) {
+          filename = config.files.ripple.split("/").pop();
+          grunt.log.writeln('copying '+file+' to '+dir+filename);
+          grunt.file.copy(config.files.ripple, dir+filename); 
+        }
         
         //compile files to bin/embed
         var jsFile = dir+"script.js";
@@ -800,7 +844,7 @@ module.exports = function ( grunt ) {
         });
         
         //get loader png
-        var loader = config.files.loader ? grunt.file.read(config.files.loader, {encoding:null}) : "";  
+        var loader = config.files.loader ? grunt.file.read(config.files.loader, {encoding:null}) : "";
         var banner = '<%= meta.banner %>'+
           'var API="'+deploymentConfig.api+'";'+
           'var DOMAIN="'+deploymentConfig.domain+'";';
@@ -810,7 +854,18 @@ module.exports = function ( grunt ) {
           
         if (loader)
           banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
-        
+
+        //get icons png
+        var icons = config.files.icons;
+        if (icons){
+          for (var i=0; i<icons.length; i++){
+            var icon = grunt.file.read(icons[i], {encoding:null});
+            filename = icons[i].split("/").pop();
+            filename = filename.split(".")[0].toUpperCase();
+            banner += 'var '+filename+'_PNG="'+icon.toString('base64')+'";';
+          }
+        }
+
         grunt.config.set('uglify.embed_'+config.name, {
           options: {banner: banner},
           files:files     
@@ -832,6 +887,8 @@ module.exports = function ( grunt ) {
             data: {
               scripts  : jsFiles,
               styles   : cssFiles,
+              json     : jsonFiles,
+              ripple   : "ripple.js",
               mixpanel : deploymentConfig.mixpanel,
               api      : deploymentConfig.api,
               domain   : deploymentConfig.domain,

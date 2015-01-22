@@ -1,0 +1,173 @@
+.closer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  padding: 3px 5px;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 10px;
+  cursor: pointer;
+  color: #000;
+
+  &:hover {
+    color: #666;
+  }
+}
+
+#prices .ticker {
+  margin: 15px;
+  display: inline-block;
+  opacity: 0;
+  cursor: pointer;
+}
+
+#prices .pct {
+  display: inline-block;
+  margin: 5px 5px 5px 0px;
+  font-weight: 300;
+  font-size: 14px;
+}
+
+#prices .pctUp {
+  color: #483;
+}
+
+#prices .pctDown {
+  color: #a22;
+}
+
+#prices {
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+  height: 60px;
+  position: relative;
+}
+
+#prices .price {
+  font-weight: 700;
+  display: inline-block;
+  margin: 5px;
+  color: #3C3C3C;
+}
+
+#prices .baseGateway {
+  color: #346aa9;
+  font-size: 12px;
+  display: inline-block; 
+}
+
+#prices .counterGateway {
+  color: #346aa9;
+  font-size: 12px;
+  display: inline-block; 
+}
+
+#prices .baseCurrency {
+  font-weight: 300;
+  display: inline-block;
+} 
+
+#prices .counterCurrency {
+  margin: 5px 5px 5px 0px;
+  font-weight: 300;
+  display: inline-block;
+}
+
+#prices .priceStatus {
+  display: inline-block;
+  height: 5px;
+  width: 10px;
+  padding-bottom: 2px;
+}
+
+#prices #scrollingText {
+  width: 100%;
+  height: 16px;
+  border: solid 1px #ccc;
+  position: relative;
+  padding: 2px 0px;
+  top: 150px;
+}
+
+/* animation for png loader */
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes rotating /* Safari and Chrome */ {
+  from {
+    transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+  }
+}
+
+.loader {
+  -webkit-animation: rotating 1s linear infinite;
+  -moz-animation: rotating 1s linear infinite;
+  -ms-animation: rotating 1s linear infinite;
+  -o-animation: rotating 1s linear infinite;
+  animation: rotating 1s linear infinite;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 17px;
+  margin: auto;
+  width: auto;
+  height: 25px;
+}
+
+div.scrollingHotSpotLeft {
+  min-width: 75px;
+  width: 10%;
+  height: 100%;
+  position: absolute;
+  z-index: 200;
+  left: 0;
+}
+
+div.scrollingHotSpotRight {
+  min-width: 75px;
+  width: 10%;
+  height: 100%;
+  position: absolute;
+  z-index: 200;
+  right: 0;
+}
+
+div.scrollWrapper {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+div.scrollableArea {
+  position: relative;
+  width: auto;
+  height: 100%;
+}

@@ -103,3 +103,111 @@ of loading from the query string or from custom parameters.
    type : "line"
  });
  ```
+
+##Live Ticker
+
+Widget for embedding a stock ticker within any website.  The widget is capable 
+of loading from the query string or from custom parameters.
+
+###How to Use:
+
+
+####Configuration options:
+``` 
+  id        : id of element that will contain the live ticker. if not specified, appended to body
+  apiURL    : custom url for the API backend, defaults to ripplecharts.com API
+```
+####Chart options:
+```
+  markets  : list of markets to be displayed on the live ticker 
+            e.g '[
+                    {
+                      base: {"currency":"XRP"},
+                      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+                    }
+                  ]'
+```
+###EXAMPLES
+
+####Embedded IFRAME:
+
+```
+<iframe src='http://ripplecharts.com/embed/ticker?markets=
+[
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"}
+  },
+  {
+    "base":{"currency":"XRP"},
+    "counter":{"currency":"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}
+  }
+]'/>
+```
+
+####Javascript object:
+
+```
+<script type="text/javascript" src="http://ripplecharts.com/embed/ticker/script.js"></script>
+
+//load from params
+var ticker = TickerWidget({
+  url : API,
+  id  : "liveTicker"
+});
+
+ticker.load({
+  markets: [ 
+    {
+      base: {"currency":"XRP"},
+      counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+    },
+    {
+      base: {currency:"XRP"},
+      counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+    },
+    {
+      counter: {currency:"XRP"},
+      base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
+    },
+    {
+      base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
+      counter: {"currency":"XRP"},
+    }
+  ]  
+});
+
+
+```
