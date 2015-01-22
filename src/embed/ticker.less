@@ -15,26 +15,21 @@
   }
 }
 
-#prices .ticker {
-  margin: 15px;
-  display: inline-block;
-  opacity: 0;
+.info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 60px;
+  color: #000;
+}
+
+.infoText{
+  overflow: hidden;
+  height: 60px;
+  width: 20px;
+  font-size: 12px;
+  padding: 2px 1px;
   cursor: pointer;
-}
-
-#prices .pct {
-  display: inline-block;
-  margin: 5px 5px 5px 0px;
-  font-weight: 300;
-  font-size: 14px;
-}
-
-#prices .pctUp {
-  color: #483;
-}
-
-#prices .pctDown {
-  color: #a22;
 }
 
 #prices {
@@ -44,52 +39,75 @@
   width: 100%;
   height: 60px;
   position: relative;
-}
+  background-color: #F5F5F5;
 
-#prices .price {
-  font-weight: 700;
+  .ticker {
+  margin: 15px;
   display: inline-block;
-  margin: 5px;
-  color: #3C3C3C;
-}
-
-#prices .baseGateway {
-  color: #346aa9;
-  font-size: 12px;
-  display: inline-block; 
-}
-
-#prices .counterGateway {
-  color: #346aa9;
-  font-size: 12px;
-  display: inline-block; 
-}
-
-#prices .baseCurrency {
-  font-weight: 300;
-  display: inline-block;
-} 
-
-#prices .counterCurrency {
-  margin: 5px 5px 5px 0px;
-  font-weight: 300;
-  display: inline-block;
-}
-
-#prices .priceStatus {
-  display: inline-block;
-  height: 5px;
-  width: 10px;
-  padding-bottom: 2px;
-}
-
-#prices #scrollingText {
-  width: 100%;
-  height: 16px;
-  border: solid 1px #ccc;
-  position: relative;
-  padding: 2px 0px;
-  top: 150px;
+  opacity: 0;
+  cursor: pointer;
+  }
+  
+  .pct {
+    display: inline-block;
+    margin: 5px 5px 5px 0px;
+    font-weight: 300;
+    font-size: 14px;
+  }
+  
+  .pctUp {
+    color: #483;
+  }
+  
+  .pctDown {
+    color: #a22;
+  }
+  
+  .price {
+    font-weight: 700;
+    display: inline-block;
+    margin: 5px;
+    color: #3C3C3C;
+  }
+  
+  .baseGateway {
+    color: #346aa9;
+    font-size: 12px;
+    display: inline-block; 
+  }
+  
+  .counterGateway {
+    color: #346aa9;
+    font-size: 12px;
+    display: inline-block; 
+  }
+  
+  .baseCurrency {
+    font-weight: 300;
+    display: inline-block;
+  }
+  
+  .counterCurrency {
+    margin: 5px 5px 5px 0px;
+    font-weight: 300;
+    display: inline-block;
+  }
+  
+  .priceStatus {
+    display: inline-block;
+    height: 5px;
+    width: 10px;
+    padding-bottom: 2px;
+  }
+  
+  #scrollingText {
+    width: 100%;
+    height: 16px;
+    border: solid 1px #ccc;
+    position: relative;
+    padding: 2px 0px;
+    top: 150px;
+  }
 }
 
 /* animation for png loader */
