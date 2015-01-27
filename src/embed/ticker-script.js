@@ -123,11 +123,11 @@ var Ticker = function(base, counter, markets, callback){
       });
 
       self.div.on("mouseover", function(d){
-        self.divPrice.style("text-decoration", "underline");
+        self.div.style("opacity", 1);
       });
 
       self.div.on("mouseout", function(d){
-         self.divPrice.style("text-decoration", null);
+         self.div.style("opacity", 0.7);
       });
 
       if (base.name !== "" && counter.name !== "")
@@ -180,19 +180,22 @@ var Ticker = function(base, counter, markets, callback){
     if (self.difference > 0){
         self.direction = "up"; 
         self.divPriceStatus
-          .attr("src", ARROW_UP_PNG);
+          .attr("src", ARROW_UP_PNG)
+          .style({"height" : 5, "width" : 10});
         self.divPct.attr("class", null).attr("class", "pct pctUp");
       }
     else if (self.difference < 0){ 
         self.direction = "down";
         self.divPriceStatus
-          .attr("src", ARROW_DOWN_PNG);
+          .attr("src", ARROW_DOWN_PNG)
+          .style({"height" : 5, "width" : 10});
         self.divPct.attr("class", null).attr("class", "pct pctDown");
       }
     else {
       self.direction = "unch";
       self.divPriceStatus
-        .attr("src", BLANK_PNG);
+        .attr("src", BLANK_PNG)
+        .style({"height" : 0, "width" : 0});
       self.divPct.attr("class", null).attr("class", "pct");
     }
   }
@@ -318,7 +321,7 @@ function addMarkets(markets, options){
       count += 1;
       if (count === markets.length) {
         d3.selectAll(".loader").remove();
-        d3.selectAll(".ticker").style("opacity", 1);
+        d3.selectAll(".ticker").style("opacity", 0.7);
 
         if (options.closeable)
           d3.select("#tickerWrapper").append("div").attr("class", "closer").text("x")
@@ -421,6 +424,14 @@ var default_markets =
     {
       base: {"currency":"XRP"},
       counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+    },
+    {
+      base: {"currency":"XRP"},
+      counter: {currency:"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+    },
+    {
+      base: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      counter: {"currency":"XRP"}
     },
     {
       counter: {currency:"XRP"},
