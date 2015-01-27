@@ -30,9 +30,9 @@ var PriceChartWidget = function (options) {
   
   if (!options) options = {};
   
-  if (!options.customCSS && typeof CSS != 'undefined') {
+  if (!options.customCSS && typeof PRICECHART_CSS != 'undefined') {
     var style = document.createElement("style");
-    style.innerHTML = CSS;
+    style.innerHTML = PRICECHART_CSS;
     document.getElementsByTagName("head")[0].appendChild(style);
   }
 

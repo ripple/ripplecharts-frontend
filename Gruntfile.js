@@ -850,7 +850,7 @@ module.exports = function ( grunt ) {
           'var DOMAIN="'+deploymentConfig.domain+'";';
         
         if (config.files.less && config.files.less.length) 
-          banner += 'var CSS="'+grunt.file.read(dir+"stylesheet.css")+'";';  
+          banner += 'var '+config.name.toUpperCase()+'_CSS="'+grunt.file.read(dir+"stylesheet.css")+'";';  
           
         if (loader)
           banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
