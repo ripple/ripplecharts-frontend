@@ -434,8 +434,8 @@ var default_markets =
       counter: {"currency":"XRP"}
     },
     {
-      counter: {currency:"XRP"},
-      base: {"currency":"EUR","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+      base: {currency:"XRP"},
+      counter: {"currency":"EUR","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
     },
     {
       base: {"currency":"XRP"},
