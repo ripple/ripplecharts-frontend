@@ -84,7 +84,7 @@
         "startDate": "2014-01-25",
         "accounts": [{
             "address": "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
-            "currencies": ["XAU","XAG", "USD"],
+            "currencies": ["XAU", "XAG", "USD", "SGD"],
             "hotwallets": []
             }]
     }, {
