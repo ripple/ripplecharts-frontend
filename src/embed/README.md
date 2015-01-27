@@ -116,6 +116,8 @@ of loading from the query string or from custom parameters.
 ``` 
   id        : id of element that will contain the live ticker. if not specified, appended to body
   apiURL    : custom url for the API backend, defaults to ripplecharts.com API
+  closeable : optional, if set to true will allow the user to close the live ticker
+  info      : optional, if set to true will allow the user to click the info button
 ```
 ####Chart options:
 ```
@@ -169,7 +171,9 @@ of loading from the query string or from custom parameters.
 //load from params
 var ticker = TickerWidget({
   url : API,
-  id  : "liveTicker"
+  id  : "liveTicker",
+  closeable : false,
+  info : true
 });
 
 ticker.load({
@@ -180,31 +184,31 @@ ticker.load({
     },
     {
       base: {currency:"XRP"},
-      counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      counter: {"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
     },
     {
       base: {"currency":"XRP"},
-      counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+      counter: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
     },
     {
       base: {"currency":"XRP"},
-      counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+      counter: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
     },
     {
       base: {"currency":"XRP"},
-      counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"},
+      counter: {currency:"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"}
     },
     {
       base: {"currency":"XRP"},
-      counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+      counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"}
     },
     {
       counter: {currency:"XRP"},
-      base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"},
+      base: {"currency":"JPY","issuer":"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"}
     },
     {
       base: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"},
-      counter: {"currency":"XRP"},
+      counter: {"currency":"XRP"}
     }
   ]  
 });

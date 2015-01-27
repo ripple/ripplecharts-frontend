@@ -43,10 +43,14 @@
   background-color: #F5F5F5;
 
   .ticker {
-  margin: 15px;
-  display: inline-block;
-  opacity: 0;
-  cursor: pointer;
+    margin: 15px;
+    display: inline-block;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+
+  .hidden{
+    display: none;
   }
   
   .pct {
@@ -145,7 +149,7 @@
   }
 }
 
-.loader {
+.tickerLoader {
   -webkit-animation: rotating 1s linear infinite;
   -moz-animation: rotating 1s linear infinite;
   -ms-animation: rotating 1s linear infinite;
