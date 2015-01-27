@@ -27,9 +27,9 @@ var TickerWidget = function (options) {
 
   if (!options.info) options.info = true;
 
-  if (!options.customCSS && typeof CSS != 'undefined') {
+  if (!options.customCSS && typeof TICKER_CSS != 'undefined') {
     var style = document.createElement("style");
-    style.innerHTML = CSS;
+    style.innerHTML = TICKER_CSS;
     document.getElementsByTagName("head")[0].appendChild(style);
   }
 
