@@ -495,7 +495,6 @@ var OrderBook = function (options) {
     }));  
   }
   
-  
   function pad(data, length) {
     length -= data.length;
     if (length<1) return data;
@@ -506,14 +505,15 @@ var OrderBook = function (options) {
   }
   
   function emitSpread () {
+    
+    if (!self.offers.bids || !self.offers.asks) return;
     if (options.emit) {
-       var opts = {
-          precision      : 4,
-          min_precision  : 4,
-          max_sig_digits : 10
+      var opts = {
+        precision      : 4,
+        min_precision  : 4,
+        max_sig_digits : 10
       }
         
-    
       options.emit('spread', {
         bid : self.offers.bids[0] ? self.offers.bids[0].price.to_human(opts) : "0.0",
         ask : self.offers.asks[0] ? self.offers.asks[0].price.to_human(opts) : "0.0"

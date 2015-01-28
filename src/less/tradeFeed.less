@@ -53,7 +53,7 @@
 .tradeFeed .table {
   width:100%; 
   position:relative; 
-  min-height:50px;
+  min-height:100px;
 }
 
 .tradeFeed .status {
@@ -78,15 +78,15 @@
 .tradeFeed table {
   width:100%;
   text-align:right;
-  border:1px solid #eee;
+  border:1px solid #ddd;
   border-left:none;
   border-spacing:1px;
   border-collapse:collapse;
-  font-family:Arial;
+  font-family:"Open Sans";
 
   td {
-    padding:3px 0;
-    border-bottom:1px solid #f0f0f0;
+    padding:2px 0;
+    border-top:1px solid #f0f0f0;
   }
   
   td.amount, td.price {
@@ -106,12 +106,13 @@
     font-size: 11px;
     
     .amount {
-      border-left: 1px solid #eee;
+      border-left: 1px solid #ddd;
     }
     
     td {
       text-align: center;
       background: rgba(0,0,0,.05);
+      border-top: 1px solid #ddd;
       
       small {
         font-weight:bold;
@@ -168,7 +169,7 @@
 }
 
 .dark .tradeFeed table {
-  border-color: #333;
+  border-color: #222;
 }
 
 .dark .tradeFeed table tr:nth-child(odd) {
@@ -187,10 +188,11 @@
   
   td {
     background: rgba(255,255,255,.05);
+    border-color: #222;
   }
   
   .amount {
-    border-left: 1px solid #333;
+    border-left: 1px solid #222;
   }
 }
     

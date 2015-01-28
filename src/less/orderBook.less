@@ -105,78 +105,76 @@
   width:auto;
   overflow:hidden;
   font-size:13px;
-  font-family:Arial;
+  font-family:"Open Sans";
   color:#555;
   margin:5px 60px 20px;
   opacity: .5;
-}
 
-.bookTables table {
-  width: 50%;
-  text-align:right;
-  border-collapse:collapse;
-  border:1px solid #ccc;
-}
+  table {
+    width: 50%;
+    text-align:right;
+    border-collapse:collapse;
+    border:1px solid #ddd;
 
-.bookTables th {
-  font-size:15px;
-  color:#333;  
-  font-weight:normal;
-  padding: 5px;
-  text-align:center;
-}
+    th {
+      font-size:15px;
+      color:#333;  
+      font-weight:normal;
+      padding: 5px;
+      text-align:center;
+      
+      span {
+        display:block;
+        font-size:12px;
+        font-weight:bold;
+        color:#ccc;
+      }      
+    }
+    
+    th.type {
+      text-align:center;
+      font-size:16px;
+      background:#eee;  
+      text-transform:uppercase;
+    }    
 
-.bookTables th span {
-  display:block;
-  font-size:12px;
-  font-weight:bold;
-  color:#ccc;
-}
+    td {
+      padding: 2px 0;
+      min-width:20px;
+      border-top: 1px solid #f6f6f6;
+    }
 
-.bookTables {
-  td {
-    padding: 1px 0;
-    min-width:20px;
+    td.dot {
+      text-align:center;
+      min-width:0;
+    }
+
+    td.price, td.sum, td.size {
+      text-align: right;
+    }
+
+    td.price-decimal, td.sum-decimal, td.size-decimal {
+      text-align: left;
+      color:#999;
+    }
+
+    .insig {
+      color:#c0c0c0;
+    }
+
+
+    tr:nth-child(odd) {
+      background:#fcfcfc;
+    }
   }
-  
-  td.dot {
-    text-align:center;
-    min-width:0;
+
+  .bidsTable {
+    float:left;
   }
-  
-  td.price, td.sum, td.size {
-    text-align: right;
+
+  .asksTable {
+    float:right;
   }
-  
-  td.price-decimal, td.sum-decimal, td.size-decimal {
-    text-align: left;
-    color:#999;
-  }
-}
-
-
-
-.bookTables td .insig {
-  color:#c0c0c0;
-}
-
-.bookTables tr:nth-child(odd) {
-  background:#f8f8f8;
-}
-
-.bookTables th.type {
-  text-align:center;
-  font-size:16px;
-  background:#eee;  
-  text-transform:uppercase;
-}
-
-.bookTables .bidsTable {
-  float:left;
-}
-
-.bookTables .asksTable {
-  float:right;
 }
 
 /*
@@ -209,42 +207,39 @@
 
 .dark .bookTables {
   color:#aaa;  
-}
 
-.dark .bookTables table {
-  border-color:#333;
-}
+  table {
+    border-color:#222;
+    
+    th span {
+      color:#555;
+    }    
+    
+    th {
+      color:#bbb;
+    }
+    
+    th.type {
+      background:#222;
+      color:#777;
+      font-weight:bold;
+    }
 
-.dark .bookTables th.type {
-  background:#222;
-  color:#777;
-  font-weight:bold;
-}
+    tr:nth-child(odd) {
+      background:#151515
+    }
+    
+    td {
+      border-top: 1px solid #222;
+    }
 
-.dark .bookTables tr:nth-child(odd) {
-  background:#151515
-}
+    td.price-decimal, td.sum-decimal, td.size-decimal {
+      color:#777;
+    }
 
-.dark .bookTables th {
-  color:#bbb;
-}
-
-.dark .bookTables th span {
-  color:#555;
-}
-
-.dark .bookTables tbody {
-  font-family:"Open Sans";
-}
-
-.dark .bookTables {
-  
-  td.price-decimal, td.sum-decimal, td.size-decimal {
-    color:#777;
-  }
-  
-  .insig {
-    color:#505050;
+    .insig {
+      color:#505050;
+    }    
   }
 }
 
