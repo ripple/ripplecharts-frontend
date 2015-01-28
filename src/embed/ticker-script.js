@@ -45,7 +45,7 @@ var TickerWidget = function (options) {
   self.options    = options;
 
   loader = div.append("img")
-    .attr("class", "loader")
+    .attr("class", "tickerLoader")
     .attr("src", LOADER_PNG);
 
   this.load = function(params){
@@ -68,7 +68,7 @@ var TickerWidget = function (options) {
 var Ticker = function(base, counter, markets, callback){
   var self = this;
 
-  self.div        = markets.el.insert("div").attr("class","ticker");
+  self.div        = markets.el.insert("div").attr("class","ticker hidden");
   self.markets    = markets;
   self.price      = 0.0;
   self.startTime  = moment.utc().startOf("day");
@@ -320,8 +320,8 @@ function addMarkets(markets, options){
     addTicker(market.base, market.counter, function(){
       count += 1;
       if (count === markets.length) {
-        d3.selectAll(".loader").remove();
-        d3.selectAll(".ticker").style("opacity", 0.7);
+        d3.selectAll(".tickerLoader").remove();
+        d3.selectAll(".ticker").classed("hidden", false);
 
         if (options.closeable)
           d3.select("#tickerWrapper").append("div").attr("class", "closer").text("x")
