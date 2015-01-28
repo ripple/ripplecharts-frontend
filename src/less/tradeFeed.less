@@ -83,6 +83,7 @@
   border-spacing:1px;
   border-collapse:collapse;
   font-family:"Open Sans";
+  font-size:13px;
 
   td {
     padding:2px 0;
@@ -99,7 +100,11 @@
   
   td.amount-decimal, td.price-decimal {
     text-align: left;
-    color:#888;
+    color:#999;
+  }
+  
+  .insig {
+    color:#ccc;
   }
   
   .trade-table-header {
@@ -155,67 +160,77 @@
   background:mediumseagreen;
 }
 
-.dark .tradeFeed {
-  color:#aaa;
-}
-
-.dark .tradeFeed .price .amount {
-  color:#ccc;  
-}
-
-.dark .tradeFeed  .pair {
-  color:#666;
-  font-weight:bold;  
-}
-
-.dark .tradeFeed table {
-  border-color: #222;
-}
-
-.dark .tradeFeed table tr:nth-child(odd) {
-  background:rgba(200,200,200,.1);
-}
-
-.dark .tradeFeed table tr:hover {
-  background:rgba(100,120,200,.2);
-}
-
-.dark .tradeFeed .time, .dark .tradeFeed small {
-  color:#666;
-}
-
-.dark .tradeFeed .trade-table-header {
-  
-  td {
-    background: rgba(255,255,255,.05);
-    border-color: #222;
-  }
-  
-  .amount {
-    border-left: 1px solid #222;
-  }
-}
+.dark {
+  .tradeFeed {
+    color:#aaa;
     
-.dark .tradeFeed table td {
-  border-color:#222;
-}
+    .price .amount {
+      color:#ccc;  
+    }
+    
+    td.amount-decimal, td.price-decimal {
+      color:#777;
+    }
+    
+    .pair {
+      color:#666;
+      font-weight:bold;  
+    }
+    
+    .insig {
+      color:#444;
+    }
 
-.dark .tradeFeed table .type {
-  background:#555;
-}
+    table {
+      border-color: #222;
+    
+      tr:nth-child(odd) {
+        background:rgba(200,200,200,.1);
+      }
 
-.dark .tradeFeed table .bid,  {
-  background:#c22;
-}
+      tr:hover {
+        background:rgba(100,120,200,.2);
+      }
+      
+      td {
+        border-color:#222;
+      }
 
-.dark .tradeFeed table .ask {
-  background:#4a4;
-}
+      .type {
+        background:#555;
+      }
 
-.dark .tradeFeed .daily .high {
-  color:#4a4;
-}
+      .bid,  {
+        background:#c22;
+      }
 
-.dark .tradeFeed .daily .low {
-  color:#c22;
+      .ask {
+        background:#4a4;
+      }
+
+      .daily .high {
+        color:#4a4;
+      }
+
+      .daily .low {
+        color:#c22;
+      }      
+    }
+
+    .time, .dark .tradeFeed small {
+      color:#666;
+    }
+
+    .trade-table-header {
+  
+      td {
+        background: rgba(255,255,255,.05);
+        border-color: #222;
+      }
+  
+      .amount {
+        border-left: 1px solid #222;
+      }
+    } 
+  }
 }

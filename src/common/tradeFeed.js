@@ -130,10 +130,16 @@ var TradeFeed = function (options) {
     
     rows.select(".type").attr('class', function(d){return "type "+d.type}); 
     rows.select(".amount").html(function(d){return d.amount.split('.')[0]});
-    rows.select(".amount-decimal").html(function(d){return d.amount.split('.')[1]});
+    rows.select(".amount-decimal").html(function(d){
+      var decimal = d.amount.split('.')[1];
+      return decimal ? decimal.replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+    });
     rows.select(".time").html(function(d){return d.time.local().format('h:mm:ss a')});
     rows.select(".price").html(function(d){return d.price.split('.')[0]}); 
-    rows.select(".price-decimal").html(function(d){return d.price.split('.')[1]}); 
+    rows.select(".price-decimal").html(function(d){
+      var decimal = d.price.split('.')[1];
+      return decimal ? decimal.replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+    });
   }
  
  
