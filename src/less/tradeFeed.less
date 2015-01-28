@@ -82,15 +82,47 @@
   border-left:none;
   border-spacing:1px;
   border-collapse:collapse;
+  font-family:Arial;
+
+  td {
+    padding:3px 0;
+    border-bottom:1px solid #f0f0f0;
+  }
+  
+  td.amount, td.price {
+    text-align: right;
+  }
+  
+  td.dot {
+    text-align: center;
+  }
+  
+  td.amount-decimal, td.price-decimal {
+    text-align: left;
+    color:#888;
+  }
+  
+  .trade-table-header {
+    font-size: 11px;
+    
+    .amount {
+      border-left: 1px solid #eee;
+    }
+    
+    td {
+      text-align: center;
+      background: rgba(0,0,0,.05);
+      
+      small {
+        font-weight:bold;
+        padding: 0 5px;
+      }
+    }
+  }
 }
 
 .tradeFeed table tr:nth-child(odd) {
   background:rgba(200,200,200,.05);
-}
-
-.tradeFeed table td {
-  padding:2px 5px;
-  border-bottom:1px solid #f0f0f0;
 }
 
 .tradeFeed table tr:hover  {
@@ -102,8 +134,10 @@
 }
 
 .tradeFeed table .time {
-  color:#999;
+  color:#aaa;
   font-size:12px;
+  text-align:center;
+  padding: 2px;
 }
 
 .tradeFeed table .type {
@@ -135,8 +169,8 @@
 
 .dark .tradeFeed table {
   border-color: #333;
-  font-weight:bold;
 }
+
 .dark .tradeFeed table tr:nth-child(odd) {
   background:rgba(200,200,200,.1);
 }
@@ -149,6 +183,17 @@
   color:#666;
 }
 
+.dark .tradeFeed .trade-table-header {
+  
+  td {
+    background: rgba(255,255,255,.05);
+  }
+  
+  .amount {
+    border-left: 1px solid #333;
+  }
+}
+    
 .dark .tradeFeed table td {
   border-color:#222;
 }

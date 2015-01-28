@@ -37,13 +37,14 @@ var OrderBook = function (options) {
     .data(["Bids"])
     .enter().append("th")
     .attr("class","type")
-    .attr("colspan",3)
+    .attr("colspan",9)
     .text(function(d) {return d;}); 
   
   //append second header      
   bidsHead.append("tr").attr("class","headerRow").selectAll("th")
     .data(["Total","Size","Bid Price"])
     .enter().append("th")
+    .attr('colspan', 3)
     .text(function(d) {return d;})
     .append("span"); 
     
@@ -56,13 +57,14 @@ var OrderBook = function (options) {
     .data(["Asks"])
     .enter().append("th")
     .attr("class","type")
-    .attr("colspan",3)
+    .attr("colspan",9)
     .text(function(d) {return d;}); 
   
   //append second header      
   asksHead.append("tr").attr("class","headerRow").selectAll("th")
     .data(["Ask Price","Size","Total"])
     .enter().append("th")
+    .attr('colspan', 3)
     .text(function(d) {return d;})
     .append("span");  
   
@@ -104,18 +106,20 @@ var OrderBook = function (options) {
     
     asks.on('model', handleAskModel);   
     bids.on('model', handleBidModel); 
+    
+    prepareBook();
   }
   
   function handleAskModel (offers) {
     self.offers.asks = handleBook(offers,'asks');
     drawData(); 
-    redrawBook();     
+    redrawBook('asks');     
   }
 
   function handleBidModel (offers) {
     self.offers.bids = handleBook(offers,'bids');
     drawData(); 
-    redrawBook();      
+    redrawBook('bids');      
   }
 
 //handle data returned from ripple-lib
@@ -330,52 +334,7 @@ var OrderBook = function (options) {
     }
   }
  
- 
-//redraw the order book below the depth chart  
-  function redrawBook () {
-    // create a row for each object in the data
-    if (!self.offers.bids || !self.offers.asks) return;
-    if (self.offers.bids.length || self.offers.asks.length)
-      bookTables.transition().style("opacity",1);
-
-    
-    function filter (d) {
-      var opts = {
-          precision      : 8,
-          min_precision  : 2,
-          max_sig_digits : 8
-      };
-      var parts;
-      var decimalPart;
-      var length;
-      
-      if (!d) return "&nbsp";
-      
-      value = d.to_human(opts); 
-      
-      parts = value.split(".");
-      if (parts[1] && parts[0] === "0") {
-        parts[1] = formatDecimal(parts[1], 4);
-      } else if (parts[1]) {
-        parts[1] = parts[1].slice(0, 4);
-      }
-      
-      decimalPart = parts[1] ?  parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
-      value = decimalPart && decimalPart.length > 0 ? parts[0] + "." + decimalPart : parts[0];
-      return value;  
-      
-      
-      function formatDecimal (num, digits) {
-        var sig = parseInt(num, 10).toString().length;
-        if (sig < digits) {
-          while (digits > sig++) num += '0';
-          return num;
-        } 
-        
-        return num.slice(0, num.length - sig + digits);
-      }
-    }
-    
+  function prepareBook () {
     bidsHead.select(".headerRow th:nth-child(1) span").html(baseCurrency);
     bidsHead.select(".headerRow th:nth-child(2) span").html(baseCurrency);
     bidsHead.select(".headerRow th:nth-child(3) span").html(counterCurrency);
@@ -383,35 +342,103 @@ var OrderBook = function (options) {
     asksHead.select(".headerRow th:nth-child(1) span").html(counterCurrency);
     asksHead.select(".headerRow th:nth-child(2) span").html(baseCurrency);
     asksHead.select(".headerRow th:nth-child(3) span").html(baseCurrency);
+  }
+  
+  //redraw the order book below the depth chart  
+  function redrawBook (type) {
+    if (!self.offers.bids && !self.offers.asks) return;
     
-    var length   = 20; 
-    var row      = bidsBody.selectAll("tr").data(pad(self.offers.bids.slice(0,length),length));
-    var rowEnter = row.enter().append("tr");
+    bookTables.transition().style("opacity",1);  
+
+    if (type === 'bids') {
+      row = bidsBody.selectAll("tr").data(extractData('bids'));
+      rowEnter = row.enter().append("tr");
+
+      rowEnter.append('td').attr('class','sum');
+      rowEnter.append('td').attr('class','dot');
+      rowEnter.append('td').attr('class','sum-decimal');
+      rowEnter.append('td').attr('class','size');
+      rowEnter.append('td').attr('class','dot');
+      rowEnter.append('td').attr('class','size-decimal');
+      rowEnter.append('td').attr('class','price');
+      rowEnter.append('td').attr('class','dot');
+      rowEnter.append('td').attr('class','price-decimal');
     
-    rowEnter.append("td").attr("class","sum");
-    rowEnter.append("td").attr("class","size");
-    rowEnter.append("td").attr("class","price");
+    } else {
+    
+      row = asksBody.selectAll("tr").data(extractData('asks'));
+      rowEnter = row.enter().append("tr");
+
+      rowEnter.append('td').attr('class','price');
+      rowEnter.append('td').attr('class','dot');
+      rowEnter.append('td').attr('class','price-decimal');
+      rowEnter.append('td').attr('class','size');
+      rowEnter.append('td').attr('class','dot');
+      rowEnter.append('td').attr('class','size-decimal');
+      rowEnter.append('td').attr('class','sum');
+      rowEnter.append('td').attr('class','dot');
+      rowEnter.append('td').attr('class','sum-decimal');
+    }
+    
+    row.select('.sum').html(function(d){return d[0]});
+    row.select('.sum-decimal').html(function(d){return d[1]});
+    row.select('.size').html(function(d){return d[2]});
+    row.select('.size-decimal').html(function(d){return d[3]});    
+    row.select('.price').html(function(d){return d[4]});
+    row.select('.price-decimal').html(function(d){return d[5]});
+    row.selectAll('.dot').data(function (d) { 
+      return d.length ? [true,true,true] : [false,false,false]})
+    .html(function(d) {return d ? '.' : '&nbsp'});
+    row.attr("title", function (d){ return d[6]; });
     row.exit().remove();
-    
-    row.select(".sum").html(function(offer){return filter(offer.sum)});
-    row.select(".size").html(function(offer){return filter(offer.TakerPays)});
-    row.select(".price").html(function(offer){return filter(offer.price)});
-    row.attr("title", function (d){ return d.Account; });
-    
-    row      = asksBody.selectAll("tr").data(pad(self.offers.asks.slice(0,length),length));
-    rowEnter = row.enter().append("tr");
-    
-    rowEnter.append("td").attr("class","price");
-    rowEnter.append("td").attr("class","size");
-    rowEnter.append("td").attr("class","sum");
-    row.exit().remove();
-    
-    row.select(".sum").html(function(offer){return filter(offer.sum)});
-    row.select(".size").html(function(offer){return filter(offer.TakerGets)});
-    row.select(".price").html(function(offer){return filter(offer.price)}); 
-    row.attr("title", function (d){ return d.Account; });
     
     emitSpread();
+    return;
+    
+    function splitValue (d, opts) {
+
+      var parts;
+      var decimalPart;
+      var length;
+      var pad;
+      
+      if (!d) return [];
+      if (!opts) {
+        opts = {
+          precision      : 8,
+          min_precision  : 4,
+          max_sig_digits : 10
+        };
+      }
+      
+      value = d.to_human(opts);   
+      parts = value.split(".");
+      parts[1] = parts[1] ? parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+      return parts;
+    }
+    
+    function extractData(type) {
+      var length = 30; 
+      var offers = self.offers[type].slice(0,length); 
+      var data   = [];
+      offers.forEach(function(offer) {
+        var sum   = splitValue(offer.sum);
+        var size  = splitValue(type === 'asks' ? offer.TakerGets : offer.TakerPays);
+        var price = splitValue(offer.price);
+        
+        data.push([
+          sum[0],
+          sum[1],
+          size[0],
+          size[1],
+          price[0],
+          price[1],
+          offer.Account
+        ]);
+      });
+      
+      return pad(data, length);
+    }
   }
 
 
@@ -474,7 +501,7 @@ var OrderBook = function (options) {
     if (length<1) return data;
     
     var newArray = [];
-    for (var i=0; i<length; i++) {newArray[i] = {};}
+    for (var i=0; i<length; i++) {newArray[i] = [];}
     return data.concat(newArray);
   }
   

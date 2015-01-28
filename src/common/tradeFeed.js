@@ -6,9 +6,9 @@ var TradeFeed = function (options) {
     listener, dailyTimer, high, low, close, volume;
  
   var numberFormat = {
-    precision      : 6,
-    min_precision  : 0,
-    max_sig_digits : 8
+    precision      : 8,
+    min_precision  : 4,
+    max_sig_digits : 10
   };
        
   var summary = div.append("div").attr('class', 'summary');
@@ -24,7 +24,13 @@ var TradeFeed = function (options) {
   
   var tableWrap = div.append('div').attr('class','table').append("div").attr("class","tableWrap");
   var table     = tableWrap.append('table');
-  table.append('thead');
+  var header    = table.append('thead').append('tr').attr('class', 'trade-table-header');
+  
+
+  header.append('td').attr('class', 'amount').attr('colspan', 4);
+  header.append('td').html('Time');
+  header.append('td').attr('class', 'price').attr('colspan', 3);
+  
   table.append('tbody');
   
   var status = tableWrap.append("h4").attr('class','status');
@@ -42,7 +48,12 @@ var TradeFeed = function (options) {
     
     if (listener) listener.updateViewOpts({base:base,counter:counter});
     else listener = new OffersExercisedListener({base:base,counter:counter}, handleTransaction);
-
+    
+    var b = ripple.Currency.from_json(self.base.currency).to_human();
+    var c = ripple.Currency.from_json(self.counter.currency).to_human();
+    
+    header.selectAll('.amount').html('Amount <small>'+b+'</small>');
+    header.selectAll('.price').html('Price <small>'+c+'</small>');
 /*   
     //mock data
     transactions = [
@@ -85,7 +96,7 @@ var TradeFeed = function (options) {
     //else if (last)                         trade.type = last.type;
     
     transactions.unshift(trade);  //prepend trade
-    transactions = transactions.slice(0,50);  //keep last 50
+    transactions = transactions.slice(0,60);  //keep last 60
     
     if (trade.price>high) high = trade.price;
     if (trade.price<low)  low  = trade.price;
@@ -109,14 +120,20 @@ var TradeFeed = function (options) {
     var baseCurrency = ripple.Currency.from_json(self.base.currency).to_human();
     rowEnter.append("td").attr("class","type");
     rowEnter.append("td").attr("class","amount");
+    rowEnter.append("td").attr("class","dot").html('.');
+    rowEnter.append("td").attr("class","amount-decimal");
     rowEnter.append("td").attr("class","time");
     rowEnter.append("td").attr("class","price");
+    rowEnter.append("td").attr("class","dot").html('.');
+    rowEnter.append("td").attr("class","price-decimal");
     rows.exit().remove();
     
     rows.select(".type").attr('class', function(d){return "type "+d.type}); 
-    rows.select(".amount").html(function(d){return d.amount+" <small>"+baseCurrency+"</small>"});
+    rows.select(".amount").html(function(d){return d.amount.split('.')[0]});
+    rows.select(".amount-decimal").html(function(d){return d.amount.split('.')[1]});
     rows.select(".time").html(function(d){return d.time.local().format('h:mm:ss a')});
-    rows.select(".price").html(function(d){return d.price}); 
+    rows.select(".price").html(function(d){return d.price.split('.')[0]}); 
+    rows.select(".price-decimal").html(function(d){return d.price.split('.')[1]}); 
   }
  
  
@@ -124,8 +141,8 @@ var TradeFeed = function (options) {
   function valueFilter (d, currency) {
     if (!d) return "&nbsp";
     var value = ripple.Amount.from_human(d + " " + currency).to_human(numberFormat);
-    if (!value) return "> 0.000001"; //must match min_precision variable
-    return value;      
+    if (!value) value = "> 0.000001"; //must match min_precision variable
+    return value;    
   }
  
  
@@ -193,7 +210,7 @@ var TradeFeed = function (options) {
       base       : self.base,
       counter    : self.counter,
       descending : true,
-      limit      : 50
+      limit      : 60
       
     }, function(data){
 
@@ -205,7 +222,7 @@ var TradeFeed = function (options) {
         transactions.push(d);  
       });
       
-      transactions = transactions.slice(0,50);   
+      transactions = transactions.slice(0,60);   
       updateTrades();
            
     }, function (error){

@@ -104,8 +104,9 @@
 .bookTables {
   width:auto;
   overflow:hidden;
-  font-size:14px;
-  color:#666;
+  font-size:13px;
+  font-family:Arial;
+  color:#555;
   margin:5px 60px 20px;
   opacity: .5;
 }
@@ -122,6 +123,7 @@
   color:#333;  
   font-weight:normal;
   padding: 5px;
+  text-align:center;
 }
 
 .bookTables th span {
@@ -131,9 +133,28 @@
   color:#ccc;
 }
 
-.bookTables td {
-  padding:2px 5px;
+.bookTables {
+  td {
+    padding: 1px 0;
+    min-width:20px;
+  }
+  
+  td.dot {
+    text-align:center;
+    min-width:0;
+  }
+  
+  td.price, td.sum, td.size {
+    text-align: right;
+  }
+  
+  td.price-decimal, td.sum-decimal, td.size-decimal {
+    text-align: left;
+    color:#999;
+  }
 }
+
+
 
 .bookTables td .insig {
   color:#c0c0c0;
@@ -187,7 +208,7 @@
 }
 
 .dark .bookTables {
-  color:#888;  
+  color:#aaa;  
 }
 
 .dark .bookTables table {
@@ -216,8 +237,15 @@
   font-family:"Open Sans";
 }
 
-.dark .bookTables td .insig {
-  color:#505050;
+.dark .bookTables {
+  
+  td.price-decimal, td.sum-decimal, td.size-decimal {
+    color:#777;
+  }
+  
+  .insig {
+    color:#505050;
+  }
 }
 
 @media (max-width: 767px) {
