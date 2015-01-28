@@ -106,7 +106,7 @@
   overflow:hidden;
   font-size:13px;
   font-family:"Open Sans";
-  color:#555;
+  color:#556;
   margin:5px 60px 20px;
   opacity: .5;
 
@@ -152,10 +152,19 @@
     td.price, td.sum, td.size {
       text-align: right;
     }
-
-    td.price-decimal, td.sum-decimal, td.size-decimal {
+    
+    td.sum {
+      color: #555;
+    }
+    
+    td.sum-decimal {
+      color: #999;
       text-align: left;
-      color:#999;
+    }
+
+    td.price-decimal, td.size-decimal {
+      text-align: left;
+      color:#99a;
     }
 
     .insig {
@@ -206,7 +215,7 @@
 }
 
 .dark .bookTables {
-  color:#aaa;  
+  color:#a0a0aa;  
 
   table {
     border-color:#222;
@@ -232,9 +241,17 @@
     td {
       border-top: 1px solid #222;
     }
+    
+    td.sum {
+      color: #aaa;
+    }
+    
+    td.sum-decimal {
+      color: #777;
+    }
 
-    td.price-decimal, td.sum-decimal, td.size-decimal {
-      color:#777;
+    td.price-decimal, td.size-decimal {
+      color:#6c6c77;
     }
 
     .insig {
