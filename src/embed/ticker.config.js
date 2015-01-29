@@ -20,9 +20,7 @@ module.exports = {
     ],
 
     js: [  
-      'vendor/moment/moment.js',
       'vendor/d3/d3.js',
-      'vendor/jquery/jquery.js',
       'vendor/smooth-div-scroll/js/jquery-ui-1.10.3.custom.min.js',
       'vendor/smooth-div-scroll/js/jquery.smoothdivscroll-1.3-min.js',
       'vendor/smooth-div-scroll/js/jquery.mousewheel.min.js',
