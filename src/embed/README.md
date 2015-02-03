@@ -137,36 +137,36 @@ of loading from the query string or from custom parameters.
 <iframe src='http://ripplecharts.com/embed/ticker?markets=
 [
   {
-    base: {"currency":"XRP"},
-    counter: {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
+    "base": {"currency":"XRP"},
+    "counter": {"currency":"USD","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
   },
   {
-    base: {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
-    counter: {"currency":"XRP"}
+    "base": {currency:"BTC","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+    "counter": {"currency":"XRP"}
   },
   {
-    base: {"currency":"XRP"},
-    counter: {currency:"KRW","issuer":"rUkMKjQitpgAM5WTGk79xpjT38DEJY283d"},
+    "base": {"currency":"XRP"},
+    "counter": {currency:"KRW","issuer":"rUkMKjQitpgAM5WTGk79xpjT38DEJY283d"},
   },
   {
-    base: {"currency":"XRP"},
-    counter: {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
+    "base": {"currency":"XRP"},
+    "counter": {currency:"JPY","issuer":"rMAz5ZnK73nyNUL4foAvaxdreczCkG3vA6"},
   },
   {
-    base: {"currency":"XRP"},
-    counter: {currency:"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
+    "base": {"currency":"XRP"},
+    "counter": {currency:"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}
   },
   {
-    base: {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-    counter: {"currency":"XRP"}
+    "base": {currency:"BTC","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
+    "counter": {"currency":"XRP"}
   },
       {
-    base: {currency:"XRP"},
-    counter: {"currency":"EUR","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
+    "base": {currency:"XRP"},
+    "counter": {"currency":"EUR","issuer":"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
   },
   {
-    base: {"currency":"XRP"},
-    counter: {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}
+    "base": {"currency":"XRP"},
+    "counter": {currency:"CNY","issuer":"rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK"}
   }
 ]'/>
 ```
