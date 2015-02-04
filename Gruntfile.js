@@ -750,7 +750,7 @@ module.exports = function ( grunt ) {
         grunt.file.copy(file, dir+"assets/images/"+filename);
       });      
 */      
-      var jsFiles = [], cssFiles = [], iconFiles = [], jsonFiles = ["json.js"], json_string = "", filename;
+      var jsFiles = [], cssFiles = [], iconFiles = [], commonFiles = [], jsonFiles = ["json.js"], json_string = "", filename;
             
       if (type=="build") {
         
@@ -771,10 +771,13 @@ module.exports = function ( grunt ) {
           grunt.file.copy(config.files.loader, dir+"assets/images/"+filename);         
         }
 
-        if (config.files.ripple) {
-          filename = config.files.ripple.split("/").pop();
-          grunt.log.writeln('copying '+file+' to '+dir+filename);
-          grunt.file.copy(config.files.ripple, dir+filename); 
+        if (config.files.common) {
+          config.files.common.forEach(function(file) {
+            filename = file.split("/").pop();
+            grunt.log.writeln('copying '+file+' to '+dir+filename);
+            grunt.file.copy(file, dir+filename);
+            commonFiles.push(filename);
+          }); 
         }
 
         //copy icon files to build/embed
@@ -811,10 +814,13 @@ module.exports = function ( grunt ) {
           config.files.js.push(dir+'json.js');
         }
 
-        if (config.files.ripple) {
-          filename = config.files.ripple.split("/").pop();
-          grunt.log.writeln('copying '+file+' to '+dir+filename);
-          grunt.file.copy(config.files.ripple, dir+filename); 
+        if (config.files.common) {
+          config.files.common.forEach(function(file){
+            filename = file.split("/").pop();
+            grunt.log.writeln('copying '+file+' to '+dir+filename);
+            grunt.file.copy(file, dir+filename);
+            commonFiles.push(filename);
+          }); 
         }
         
         //compile files to bin/embed
@@ -888,7 +894,7 @@ module.exports = function ( grunt ) {
               scripts  : jsFiles,
               styles   : cssFiles,
               json     : jsonFiles,
-              ripple   : "ripple.js",
+              common   : commonFiles,
               mixpanel : deploymentConfig.mixpanel,
               api      : deploymentConfig.api,
               domain   : deploymentConfig.domain,

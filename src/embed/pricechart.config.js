@@ -8,9 +8,13 @@ module.exports = {
     html: "src/embed/pricechart.html",
     loader: 'src/assets/images/rippleThrobber.png',
     
-    js: [  
-      'vendor/moment/moment.js',
+    common: [
       'vendor/d3/d3.js',
+      'vendor/ripple/ripple.js',
+      'vendor/moment/moment.js'
+    ],
+
+    js: [
       'deps/onResize.js',
       'src/common/apiHandler.js',
       'src/common/priceChart.js',

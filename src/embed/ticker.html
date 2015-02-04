@@ -20,8 +20,8 @@
     <!-- compiled JSON --><% json.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
 
-    <!-- compiled Ripplelib -->
-    <script type="text/javascript" src="<%= ripple %>"></script>
+    <!-- compiled common js --><% common.forEach( function ( file ) { %>
+    <script type="text/javascript" src="<%= file %>"></script><% }); %>
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
