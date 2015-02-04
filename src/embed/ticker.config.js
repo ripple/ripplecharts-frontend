@@ -29,7 +29,6 @@ module.exports = {
       'vendor/smooth-div-scroll/js/jquery-ui-1.10.3.custom.min.js',
       'vendor/smooth-div-scroll/js/jquery.smoothdivscroll-1.3-min.js',
       'vendor/smooth-div-scroll/js/jquery.mousewheel.min.js',
-      'deps/onResize.js',
       'src/common/apiHandler.js',
       'src/embed/ticker-script.js',
       'src/common/dropdowns.js',
