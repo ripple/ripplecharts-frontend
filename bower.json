@@ -15,7 +15,7 @@
     "angular-touch": "~1.2.6",
     "angular-snap": "~1.2.0",
     "font-awesome": "~4.0.3",
-    "d3": "~3.3.13",
+    "d3": "~3.5.4",
     "modernizr": "~2.7.1",
     "jquery": "~2.0.3",
     "jscrollpane": "~2.0.14",

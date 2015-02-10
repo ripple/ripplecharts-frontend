@@ -13,11 +13,12 @@ angular.element(document).ready(function() {
     'ripplecharts.history',
     'ui.state',
     'ui.route',
-    'snap'
+    'snap',
+    'gateways'
   ])
   
   .config( function myAppConfig ( $stateProvider, $urlRouterProvider ) {
-    $urlRouterProvider.otherwise( '/' );
+    $urlRouterProvider.otherwise('/');
   })
   
   .run(function($window, $rootScope) {

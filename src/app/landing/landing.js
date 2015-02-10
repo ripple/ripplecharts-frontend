@@ -11,11 +11,16 @@ angular.module( 'ripplecharts.landing', [
         templateUrl: 'landing/landing.tpl.html'
       }
     },
-    data:{ }
+    data:{ },
+    resolve : {
+      gateInit : function (gateways) {
+        return gateways.promise;
+      }
+    }
   });
 })
 
-.controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
+.controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location, gateways ) {
 
   var api   = new ApiHandler(API);
   var donut = new ValueSummary({id:"metricDetail"});

@@ -23,12 +23,20 @@ angular.module( 'ripplecharts.markets', [
         templateUrl: 'markets/markets.tpl.html'
       }
     },
-    data:{ pageTitle: 'Live Chart' }
+    data:{ pageTitle: 'Live Chart' },
+    resolve : {
+      gateInit : function (gateways) {
+        return gateways.promise;
+      }
+    }
   });
 })
 
-.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location) {
+.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
 
+  console.log(gateways.getCurrencies());
+  console.log(gateways.getIssuers('USD'));
+  
   if ($state.params.base && $state.params.trade) {
     
     var base = $state.params.base.split(":");
