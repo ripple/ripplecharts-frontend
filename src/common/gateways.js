@@ -34,6 +34,7 @@ angular.module('gateways', [])
   
     var getIssuers = function (currency, options) {
       var issuers = [ ];
+      var normalized;
       
       if (!options) options = { };
       
@@ -43,10 +44,11 @@ angular.module('gateways', [])
       
       for (var i in userGateways[currency]) {
         if (options.all || userGateways[currency][i].selected === true) {
+          normalized = userGateways[currency][i].name.toLowerCase().replace(/\W/g, '');
           issuers.push({
             name     : userGateways[currency][i].name,
             account  : userGateways[currency][i].account,
-            icon     : API + '/gateways/' + userGateways[currency][i].account + '/logos/small.png',
+            icon     : API + '/gateways/' + normalized + '/assets/logo.grayscale.svg',
             featured : userGateways[currency][i].featured,
             selected : userGateways[currency][i].selected
           });
