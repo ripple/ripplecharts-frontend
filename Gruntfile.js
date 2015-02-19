@@ -16,10 +16,8 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-recess');
   grunt.loadNpmTasks('grunt-karma');
-  grunt.loadNpmTasks('grunt-ngmin');
+  grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-html2js');
-  grunt.loadNpmTasks('grunt-aws');
-  grunt.loadNpmTasks('grunt-cloudflare');
 
   /**
    * Load in our build configuration file.
@@ -249,7 +247,7 @@ module.exports = function ( grunt ) {
      * `ng-min` annotates the sources before minifying. That is, it allows us
      * to code without the array syntax.
      */
-    ngmin: {
+    ngAnnotate: {
       compile: {
         files: [
           {
@@ -656,7 +654,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance', 'ngmin', 'concat:compile_js', 'uglify', 
+    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance', 'ngAnnotate', 'concat:compile_js', 'uglify', 
     'index:compile',  'embed:compile_css', 'embed:compile'
   ]);
 
@@ -837,7 +835,7 @@ module.exports = function ( grunt ) {
           dest: jsFile
         });
         
-        grunt.config.set('ngmin.embed_'+config.name, {
+        grunt.config.set('ngAnnotate.embed_'+config.name, {
           files: [
             {
               src: [ jsFile ],
@@ -855,9 +853,11 @@ module.exports = function ( grunt ) {
           'var API="'+deploymentConfig.api+'";'+
           'var DOMAIN="'+deploymentConfig.domain+'";';
         
-        if (config.files.less && config.files.less.length) 
-          banner += 'var '+config.name.toUpperCase()+'_CSS="'+grunt.file.read(dir+"stylesheet.css")+'";';  
-          
+        if (config.files.less && config.files.less.length) { 
+          var css = grunt.file.read(dir+"stylesheet.css").replace(/\r?\n|\r/g, '');
+          banner += 'var '+config.name.toUpperCase()+'_CSS="'+css+'";';  
+        }
+        
         if (loader)
           banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
 
@@ -880,7 +880,7 @@ module.exports = function ( grunt ) {
 
           
         grunt.task.run('concat:embed_'+config.name);
-        grunt.task.run('ngmin:embed_'+config.name);
+        grunt.task.run('ngAnnotate:embed_'+config.name);
         grunt.task.run('uglify:embed_'+config.name);
         
       }

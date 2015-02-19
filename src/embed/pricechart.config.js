@@ -24,6 +24,7 @@ module.exports = {
     less: [
       'src/less/priceChart.less',
       'src/embed/pricechart.less', 
+      'src/embed/ticker.less'
     ]
   }
 };
