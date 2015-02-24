@@ -4,122 +4,142 @@
     position: relative;
     clear:both;
 
+
   .background {
-      fill: none;
-      stroke : #999;
-      pointer-events: all;
-      stroke-width:1;
-      shape-rendering: crispEdges;
+    fill: none;
+    stroke : #999;
+    pointer-events: all;
+    stroke-width:1;
+    shape-rendering: crispEdges;
   }
 
   .loader {
-      width:40px;
-      position:absolute;
-      top:50%;
-      left:50%;	
-      margin-top:-20px;
-      margin-left:-20px;
+    width:40px;
+    position:absolute;
+    top:50%;
+    left:50%; 
+    margin-top:-20px;
+    margin-left:-20px;
   }
 
   .axis {
-      fill: #999;
-      shape-rendering: crispEdges;
+    fill: #999;
+    shape-rendering: crispEdges;
   }
 
   .axis .title {
-      stroke-width:1;
-      stroke: #bbb;
-      fill: #bbb;
+    stroke-width:1;
+    stroke: #bbb;
+    fill: #bbb;
   }
 
 
   .axis path, .axis line {
-      fill: none;
-      stroke: #999;
-      stroke-width: 1;
+    fill: none;
+    stroke: #999;
+    stroke-width: 1;
   }
 
   .axis text {
-      font-size:10px;
+    font-size:10px;
   }
 
   .axis.price text, .axis.volume text {
-      font-size:12px;
+    font-size:12px;
   }
 
   path {
-      fill: none;
-      stroke: #3369a8;
-      stroke-width:2;
-      stroke-linejoin: round;
+    fill: none;
+    stroke: #3369a8;
+    stroke-width:2;
+    stroke-linejoin: round;
   }
 
   line {
-      stroke: #999;
-      shape-rendering: crispEdges;
+    stroke: #999;
+    shape-rendering: crispEdges;
   }
 
   .status {
-      text-align:center;
-      color:#aaa;
-      position:absolute;
-      width:100%;
-      top:30%;
+    text-align:center;
+    color:#aaa;
+    position:absolute;
+    width:100%;
+    top:30%;
   }
 
   .hover {
-      stroke: #999;
-      stroke-width: 1;
+    stroke: #999;
+    stroke-width: 1;
   }
 
   .focus {
-      fill: rgba(255,255,255,.5);
-      stroke: #999;
+    fill: rgba(255,255,255,.5);
+    stroke: #999;
   }
 
   .focus.dark {
-      fill:#555;
-      stroke: none;
+    fill:#555;
+    stroke: none;
   }
 
   .volumeBars rect {
-      fill : #ddd;  
-      stroke : #bbb;
+    fill : #ddd;  
+    stroke : #bbb;
   }
 
   .title {
-      font-size:15px;
+    font-size:15px;
   }
 
+  //chartdetails
   .chartDetails {   
-      position: absolute;     
-      text-align: right;      
-      font-size:14px;   
-      color:#333; 
-      padding:1px 5px;
-      background:rgba(255,255,255,.5);
-      border-bottom:1px solid rgba(150,150,150,.2);     
-  }
+    position: absolute;     
+    text-align: right;      
+    font-size:14px;   
+    color:#333; 
+    padding:1px 5px;
+    background:rgba(255,255,255,.5);
+    border-bottom:1px solid rgba(150,150,150,.2);     
+  
 
-  .chartDetails span {
+    span {
       font-size:12px;
       color:#999;
       margin: 0 .25em;
       display:inline-block;
+    }
+
+    b {
+      margin:0 .25em;
+    }
+
+    .date {
+      text-align: right;
+      margin-right:20px;
+    }
+
+    .high {
+      color:#090;
+    }
+
+    .low {
+      color:#900;
+    }
+
+    .vwap {
+      color:#86b;
+    }
+
+    .volume {
+      color:#369;
+    }
   }
-
-  .chartDetails b {margin:0 .25em}
-  .chartDetails .date {text-align:right; margin-right:20px}
-  .chartDetails .high {color:#090}
-  .chartDetails .low {color:#900}
-  .chartDetails .vwap {color:#86b}
-  .chartDetails .volume {color:#369}
-
 }
 
- //candlesticks
- .candlesticks { 
-   rect {
+//candlesticks 
+.candlesticks {
+  rect {
       fill: #fff;
       stroke: #a22;
       stroke-width: 1;
@@ -146,71 +166,77 @@
   }
 
   line {
-      stroke-width : 1;	
+      stroke-width : 1; 
   }
 
   line.extent {
-    stroke-width : 1;	
+    stroke-width : 1; 
   }
 }
-
-
 
 /*
  * dark theme 
  */
+
 .dark {
-  
-   .priceChart .background,
-   .priceChart .hover,
-   .priceChart .axis path,
-   .priceChart .axis line {
-    stroke : #404040;
+
+  .candlesticks {
+    
+    line {
+      stroke-width: 1;
+      stroke:#a00;
+    }
+
+    .filled rect {
+      fill:#a00;
+    }
+
+    .up line {
+      stroke:#393;  
+    }
+
+    .up rect {
+      stroke:#393
+    }
+
+    .filled.up rect {
+      fill:#393;
+      stroke:#393;
+    }
+
+    rect {
+      fill:#000;
+      stroke-width:1;
+      stroke:#a00;
+    }
+
   }
 
-   .priceChart .axis text {
-    fill : #666; 
-    stroke: #666;
-  }
+  .priceChart {
 
-   .priceChart .volumeBars rect {
-    stroke:#888;
-    opacity:.4;
-  }
+    .background,
+    .hover,
+    .axis path,
+    .axis line {
+      stroke : #404040;
+    }
 
-   .priceChart .status {
-    color: #666;
-  }
+    .axis text {
+      fill : #666; 
+      stroke: #666;
+    }
 
-   .candlesticks line {
-    stroke-width: 1;
-    stroke:#a00;
-  }
+    .volumeBars rect {
+      stroke:#888;
+      opacity:.4;
+    }
 
-   .candlesticks .filled rect {
-    fill:#a00;
-  }
+    .status {
+      color: #666;
+    }
 
-   .candlesticks .up line {
-    stroke:#393;  
-  }
-   .candlesticks .up rect {
-    stroke:#393
-  }
-
-   .candlesticks .filled.up rect {
-    fill:#393;
-    stroke:#393;
-  }
-
-   .candlesticks rect {
-    fill:#000;
-    stroke-width:1;
-    stroke:#a00;
-  }
-
-   .priceChart .chartDetails {
-    background:rgba(255,255,255,.1);
-  }
+    .chartDetails {
+      background:rgba(255,255,255,.1);
+    }
+  } 
 }
-
