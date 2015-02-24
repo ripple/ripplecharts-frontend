@@ -20,6 +20,7 @@ angular.module('gateways', [])
   
     var getCurrencies = function () {
       var currencies = [];
+      currencies.push("XRP");
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
           if (userGateways[currency][i].selected === true) {

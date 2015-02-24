@@ -88,6 +88,7 @@ module.exports = {
       'vendor/jscrollpane/script/jquery.mousewheel.js',
       'vendor/jscrollpane/script/jquery.jscrollpane.js',
       'vendor/chartjs/Chart.js',
+      'vendor/ddslick/jquery.ddslick.min.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
       'deps/offersExercisedListener.js',
