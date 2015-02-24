@@ -68,7 +68,98 @@ angular.module( 'ripplecharts.markets', [
   $scope.range  = store.session.get('range') || store.get('range') || 
     Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
-//set up the currency pair dropdowns
+  var loaded = false;
+  var test = d3.select("#base");
+  var test2 = d3.select("#quote");
+  loadDropdowns(test);
+  loadDropdowns(test2);
+  
+
+  function loadDropdowns(selection) {
+    selection.html("");
+
+    var selectionId;
+    if (selection.attr("id") === "quote") selectionId = "trade";
+    else selectionId = "base";
+    var currencies     = gateways.getCurrencies();
+    var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
+    var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
+
+    //format currnecies for dropdowns
+    for (var i=0; i<currencies.length; i++) {
+      currencies[i] = {text: currencies[i], value: i};
+      console.log("Selectionid", selectionId);
+      if ($scope[selectionId].currency === currencies[i].text) currencies[i].selected = true;
+    }
+
+    console.log("crurencies", currencies);
+
+    $("#"+selectionId+"_currency").ddslick({
+      data: currencies,
+      imagePosition: "right",
+      onSelected: function (data) {
+          console.log(data);
+          changeCurrency(data.selectedData.text);
+      }
+    });
+
+    function changeCurrency(selected){
+      $("#"+selectionId+"_gateway").ddslick("destroy");
+      var issuers;
+      var issuer;
+
+      if (selected === "XRP") issuers = [{text: "nothing"}];
+      else issuers = gateways.getIssuers(selected);
+
+      for (var i=0; i<issuers.length; i++){
+        issuer = issuers[i];
+        issuer.text = issuer.name;
+        issuer.description = issuer.account;
+        issuer.imageSrc = issuer.icon;
+        issuer.value = i;
+
+        if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
+        else issuer.selected = false;
+
+      }
+
+      $("#"+selectionId+"_gateway").ddslick({
+        data: issuers,
+        imagePosition: "right",
+        onSelected: function (data) {
+            if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
+        }
+      });
+    }
+
+    function changeGateway(currency, issuer, selectionId){
+      console.log("Changing gateway:", currency, issuer, selectionId);
+
+      if (issuer)
+        $scope[selectionId] = {currency: currency, issuer: issuer};
+      else 
+        $scope[selectionId] = {currency: "XRP"};
+
+      if ($scope.range.name === "max") updateMaxrange();
+      console.log("SCOPES", $scope.base, $scope.trade);
+      loadPair();
+    }
+  }
+
+  d3.select("#flip").on("click", function(){ //probably better way to do this
+    loaded = false;
+    var swap     = $scope.trade;
+    $scope.trade = $scope.base;
+    $scope.base  = swap;
+    
+    loadDropdowns(test);
+    loadDropdowns(test2);
+
+    loaded = true;
+    loadPair();
+  });
+
+/*//set up the currency pair dropdowns
   var loaded  = false, 
     dropdownB = ripple.currencyDropdown().selected($scope.trade)
       .on("change", function(d) {
@@ -101,7 +192,7 @@ angular.module( 'ripplecharts.markets', [
     $scope.trade = $scope.base;
     $scope.base  = swap;
     loadPair();
-  });
+  });*/
   
   
   //set up the range selector  
