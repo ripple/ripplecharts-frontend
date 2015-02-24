@@ -40,18 +40,6 @@
   background:mediumseagreen;
 }
 
-.dark .markets .helpbox .type {
-  background:#555;
-}
-
-.dark .markets .helpbox .bid,  {
-  background:#c22;
-}
-
-.dark .markets .helpbox .ask {
-  background:#4a4;
-}
-
 .markets {
   text-align:center;
 }
@@ -86,8 +74,6 @@
   opacity:0.3;
   text-align:center;
 }
-
-
 
 #flip {
   margin:3px 5px;
@@ -147,13 +133,20 @@
   fill : #080;  
 }
 
-#interval {margin-left:60px; float:left; clear:both}
+#interval {
+  //margin-left: 30px; 
+  display: inline-block;
+  float: left; 
+}
+
+.rangeIntervalWrapper {
+  padding: 5px 0 10px 0;
+}
 
 #range {
-  margin-left:60px; 
-  float:left; 
-  clear:both;
-  width: auto;
+  margin-left: 60px; 
+  float: left; 
+  display: inline-block;
 }
 
 #dates {
@@ -177,10 +170,6 @@
   text-align: center;
 }
 
-.dark .datepicker{
-  border: 2px solid #137;
-}
-
 .disabled {
   color: #D3D3D3 !important;
 }
@@ -191,29 +180,13 @@
   cursor: default !important;
 }
 
-.dark .disabled {
-  color: rgb(50, 50, 50) !important;
-}
-
-.dark .disabled:hover{
-  color: rgb(50, 50, 50) !important;
-  border-style: none !important;
-  cursor: default !important;
-}
-
 #chartType {
-  float:right;
+  float: right;
   margin-right:60px;
 }
 
-#bookChart {margin-top:15px}
-
-/*
- *  dark theme 
- */
-.dark .rippleStatus {
-  color:@darkTextDark;
-  font-weight:bold;
+#bookChart {
+  margin-top:15px
 }
 
 /*
@@ -255,6 +228,13 @@
     clear:left;
   }
 }
+
+
+@media (min-width:1100px) {
+  #interval {
+    margin-left: 30px;
+  }
+} 
 
 @media (max-width: 979px) {
   
@@ -354,10 +334,6 @@
     height:100px;
   }
      
-  .dark #tradeFeed .tableWrap,  .dark .markets .col-md-3 {
-    border-color:#444;
-  }
-     
   #tradeFeed .summary {
     width:100% !important;
     display:block;
@@ -398,10 +374,6 @@
     min-width:200px;  
   }
   
-  .dark #currencyPair select {
-    border-width:3px;
-  }  
-
   #interval {margin-left:20px; zoom:1.25}
   #range {margin-left:0px; zoom:1.25}
   #chartType {margin-right:20px; zoom:1.25}

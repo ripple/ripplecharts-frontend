@@ -1,225 +1,230 @@
-.capChart {
+ .capChart {
   position:relative;
-}
 
-.capChart .controls {
-  margin:20px 60px 0 60px;  
-  overflow:hidden;
-}
+   .controls {
+    margin:20px 60px 0 60px;  
+    overflow:hidden;
+  }
 
-.capChart .controls .dropdownBox {
-  overflow:hidden;
-  float:left;
-}
+   .controls .dropdownBox {
+    overflow:hidden;
+    float:left;
+  }
 
-.capChart .controls .dropdowns {
-  display:inline-block;
-  padding-top:5px;
-}
+   .controls .dropdowns {
+    display:inline-block;
+    padding-top:5px;
+  }
 
-.capChart .controls .dataType select {
-  min-width:150px;
-}
+   .controls .dataType select {
+    min-width:150px;
+  }
 
-.capChart .controls .selectList {
-  padding-top:8px;
-}
+   .controls .selectList {
+    padding-top:8px;
+  }
 
-.capChart .controls .chartType {
-  float:left;
-  margin:0 20px;
-}
+   .controls .chartType {
+    float:left;
+    margin:0 20px;
+  }
 
-.capChart .controls .interval {
-  float:right;
-}
+   .controls .interval {
+    float:right;
+  }
 
-.capChart .background {
-    fill: none;
-    stroke : #ccc;
-    pointer-events: all;
-    stroke-width:1;
-    shape-rendering: crispEdges;
-}
+   .background {
+      fill: none;
+      stroke : #ccc;
+      pointer-events: all;
+      stroke-width:1;
+      shape-rendering: crispEdges;
+  }
 
-.capChart .chart {
-  position:relative;  
-  width:100%;
-}
+   .chart {
+    position:relative;  
+    width:100%;
+  }
 
-.capChart .status {
-  position:absolute;
-  top:50%;
-  text-align:center;
-  margin-top:-20px;
-  width:100%;
-  font-size:18px;  
-  color: rgba(150,150,150,.5);
-}
-
-.capChart .loader {
-    width:40px;
+   .status {
     position:absolute;
     top:50%;
-    left:50%; 
-    margin-left:-20px;
-    margin-top:-30px;
-    opacity:0;
-}
+    text-align:center;
+    margin-top:-20px;
+    width:100%;
+    font-size:18px;  
+    color: rgba(150,150,150,.5);
+  }
 
-.capChart .axis {
-    fill: #999;
-    shape-rendering: crispEdges;
-}
+   .loader {
+      width:40px;
+      position:absolute;
+      top:50%;
+      left:50%; 
+      margin-left:-20px;
+      margin-top:-30px;
+      opacity:0;
+  }
 
-.capChart .axis .title {
-    stroke-width:1;
-    stroke: #bbb;
-    fill: #bbb;
-    font-size:14px;
-}
+   .axis {
+      fill: #999;
+      shape-rendering: crispEdges;
+  }
+
+   .axis .title {
+      stroke-width:1;
+      stroke: #bbb;
+      fill: #bbb;
+      font-size:14px;
+  }
 
 
-.capChart .axis path, .capChart .axis line {
-    fill: none;
-    stroke: #999;
-    stroke-width: 1;
-}
+   .axis path,  .axis line {
+      fill: none;
+      stroke: #999;
+      stroke-width: 1;
+  }
 
-.capChart .line .l {
-  fill:none;
-  stroke-width:1.25;
-  stroke:@rippleBlue;  
-  stroke-linejoin: round;
-}
+   .line .l {
+    fill:none;
+    stroke-width:1.25;
+    stroke:@rippleBlue;  
+    stroke-linejoin: round;
+  }
 
-.capChart .line .a {
-  stroke:none;  
-  opacity:.1;
-  pointer-events:none;
-}
+   .line .a {
+    stroke:none;  
+    opacity:.1;
+    pointer-events:none;
+  }
 
-.capChart .axis text {
+   .axis text {
+      font-size:10px;
+  }
+
+   .tracer {
+    opacity:0;  
+    pointer-events:none;
+  }
+
+   .tracer line {
+    stroke:rgba(50,50,50,.5);   
+  }
+
+   .tracer circle {
+    fill:rgba(50,50,50,.5); 
+    stroke:none;
+  }
+
+   div.tooltip {   
+    position: absolute;           
+    text-align: center;           
+    width: 220px;                                  
+    padding: 10px;             
+    font-size:14px;   
+    background: rgba(255,255,255,.9);   
+    border: 1px solid #ccc;               
+    pointer-events: none; 
+    color:#777; 
+    z-index:1000; 
+    border-radius:2px;  
+    opacity:0;  
+  }
+
+   div.tooltip h5 {
+    margin:2px;
+  }
+
+   div.tooltip .address {
     font-size:10px;
-}
+  }
 
-.capChart .tracer {
-  opacity:0;  
-  pointer-events:none;
-}
+   div.tooltip .date {
+    padding-top:3px;
+    color:#aaa;
+  }
 
-.capChart .tracer line {
-  stroke:rgba(50,50,50,.5);   
-}
+   div.tooltip .amount {
+    font-size:18px;  
+    padding:2px;
+  }
 
-.capChart .tracer circle {
-  fill:rgba(50,50,50,.5); 
-  stroke:none;
-}
+   .legend {
+    overflow:hidden;
+    margin:20px 60px;  
+    text-align:center;
+  }
 
-.capChart div.tooltip {   
-  position: absolute;           
-  text-align: center;           
-  width: 220px;                                  
-  padding: 10px;             
-  font-size:14px;   
-  background: rgba(255,255,255,.9);   
-  border: 1px solid #ccc;               
-  pointer-events: none; 
-  color:#777; 
-  z-index:1000; 
-  border-radius:2px;  
-  opacity:0;  
-}
+   .legend .item {
+    display:inline-block;
+    text-align:left;
+    width:260px;
+    padding:5px 10px; 
+    margin:5px;
+    border:1px solid rgba(200,200,200,.15); 
+    border-radius:2px;
+    cursor:pointer;
+    background:rgba(200,200,200,.1);
+  }
 
-.capChart div.tooltip h5 {
-  margin:2px;
-}
+   .legend .item:hover {
+    border-color: rgba(170,170,170,.35);
+  }
 
-.capChart div.tooltip .address {
-  font-size:10px;
-}
+   .legend .item h5 {
+    margin:3px 0; 
+    font-size:18px;
+    min-height:18px;
+  }
 
-.capChart div.tooltip .date {
-  padding-top:3px;
-  color:#aaa;
-}
+   .legend .item .issuer {
+    font-size:11px;  
+  }
 
-.capChart div.tooltip .amount {
-  font-size:18px;  
-  padding:2px;
-}
+   .legend .item .amount {
+    color:#888;
+    font-size:15px;
+  }
 
-.capChart .legend {
-  overflow:hidden;
-  margin:20px 60px;  
-  text-align:center;
-}
-
-.capChart .legend .item {
-  display:inline-block;
-  text-align:left;
-  width:260px;
-  padding:5px 10px; 
-  margin:5px;
-  border:1px solid rgba(200,200,200,.15); 
-  border-radius:2px;
-  cursor:pointer;
-  background:rgba(200,200,200,.1);
-}
-
-.capChart .legend .item:hover {
-  border-color: rgba(170,170,170,.35);
-}
-
-.capChart .legend .item h5 {
-  margin:3px 0; 
-  font-size:18px;
-  min-height:18px;
-}
-
-.capChart .legend .item .issuer {
-  font-size:11px;  
-}
-
-.capChart .legend .item .amount {
-  color:#888;
-  font-size:15px;
 }
 
 /*
  * Dark Theme
  */
-.dark .capChart .section {
-  opacity:.7;
-}
 
-.dark .capChart .background,
-.dark .capChart .hover,
-.dark .capChart .axis path,
-.dark .capChart .axis line {
-  stroke : #404040;
-}
+.dark .capChart {
 
-.dark .capChart .line .a {  
-  opacity:.2;
-}
+   .section {
+    opacity:.7;
+  }
 
-.dark .capChart .axis text {
-  fill : #666; 
-  stroke: #666;
-}
+   .background,
+   .hover,
+   .axis path,
+   .axis line {
+    stroke : #404040;
+  }
 
-.dark .capChart .tracer line {
-  stroke:rgba(200,200,200,.7);   
-}
+   .line .a {  
+    opacity:.2;
+  }
 
-.dark .capChart .tracer circle {
-  fill:rgba(200,200,200,.7); 
-}
+   .axis text {
+    fill : #666; 
+    stroke: #666;
+  }
 
-.dark .capChart div.tooltip { 
-  background: rgba(40,40,40,.9);
-  border-color: #444;
-  color: #eee;
+   .tracer line {
+    stroke:rgba(200,200,200,.7);   
+  }
+
+   .tracer circle {
+    fill:rgba(200,200,200,.7); 
+  }
+
+   div.tooltip { 
+    background: rgba(40,40,40,.9);
+    border-color: #444;
+    color: #eee;
+  }
 }

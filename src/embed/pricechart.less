@@ -1,51 +1,242 @@
+.priceChart {
+    display:inline-block;
+    width:100%;
+    position: relative;
+    clear:both;
+
+
+  .background {
+    fill: none;
+    stroke : #999;
+    pointer-events: all;
+    stroke-width:1;
+    shape-rendering: crispEdges;
+  }
+
+  .loader {
+    width:40px;
+    position:absolute;
+    top:50%;
+    left:50%; 
+    margin-top:-20px;
+    margin-left:-20px;
+  }
+
+  .axis {
+    fill: #999;
+    shape-rendering: crispEdges;
+  }
+
+  .axis .title {
+    stroke-width:1;
+    stroke: #bbb;
+    fill: #bbb;
+  }
+
+
+  .axis path, .axis line {
+    fill: none;
+    stroke: #999;
+    stroke-width: 1;
+  }
+
+  .axis text {
+    font-size:10px;
+  }
+
+  .axis.price text, .axis.volume text {
+    font-size:12px;
+  }
+
+  path {
+    fill: none;
+    stroke: #3369a8;
+    stroke-width:2;
+    stroke-linejoin: round;
+  }
+
+  line {
+    stroke: #999;
+    shape-rendering: crispEdges;
+  }
+
+  .status {
+    text-align:center;
+    color:#aaa;
+    position:absolute;
+    width:100%;
+    top:30%;
+  }
+
+  .hover {
+    stroke: #999;
+    stroke-width: 1;
+  }
+
+  .focus {
+    fill: rgba(255,255,255,.5);
+    stroke: #999;
+  }
+
+  .focus.dark {
+    fill:#555;
+    stroke: none;
+  }
+
+  .volumeBars rect {
+    fill : #ddd;  
+    stroke : #bbb;
+  }
+
+  .title {
+    font-size:15px;
+  }
+
+  //chartdetails
+  .chartDetails {   
+    position: absolute;     
+    text-align: right;      
+    font-size:14px;   
+    color:#333; 
+    padding:1px 5px;
+    background:rgba(255,255,255,.5);
+    border-bottom:1px solid rgba(150,150,150,.2);     
+  
+
+    span {
+      font-size:12px;
+      color:#999;
+      margin: 0 .25em;
+      display:inline-block;
+    }
+
+    b {
+      margin:0 .25em;
+    }
+
+    .date {
+      text-align: right;
+      margin-right:20px;
+    }
+
+    .high {
+      color:#090;
+    }
+
+    .low {
+      color:#900;
+    }
+
+    .vwap {
+      color:#86b;
+    }
+
+    .volume {
+      color:#369;
+    }
+  }
+}
+
+//candlesticks 
+.candlesticks {
+  rect {
+      fill: #fff;
+      stroke: #a22;
+      stroke-width: 1;
+  }
+
+  line {
+      stroke: #a22;    
+  }
+
+  .filled rect {  
+    fill: #a22;
+  }
+
+  .up rect {
+    stroke: #3a3;
+  }
+
+  .up line {
+    stroke: #3a3; 
+  }
+
+  .up.filled rect { 
+    fill: #3a3;
+  }
+
+  line {
+      stroke-width : 1; 
+  }
+
+  line.extent {
+    stroke-width : 1; 
+  }
+}
+
+/*
+ * dark theme 
+ */
 
 .dark {
-  background:#000; 
-  color:#999;
-}
 
-.light {
-  background:#fff;
-}
+  .candlesticks {
+    
+    line {
+      stroke-width: 1;
+      stroke:#a00;
+    }
 
+    .filled rect {
+      fill:#a00;
+    }
 
-/* animation for png loader */
-@keyframes rotating {
-  from {
-    transform: rotate(0deg);
-    -ms-transform: rotate(0deg);
-    -moz-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
+    .up line {
+      stroke:#393;  
+    }
+
+    .up rect {
+      stroke:#393
+    }
+
+    .filled.up rect {
+      fill:#393;
+      stroke:#393;
+    }
+
+    rect {
+      fill:#000;
+      stroke-width:1;
+      stroke:#a00;
+    }
+
   }
-  to {
-    transform: rotate(360deg);
-    -ms-transform: rotate(360deg);
-    -moz-transform: rotate(360deg);
-    -webkit-transform: rotate(360deg);
-    -o-transform: rotate(360deg);
-  }
-}
-@-webkit-keyframes rotating /* Safari and Chrome */ {
-  from {
-    transform: rotate(0deg);
-    -ms-transform: rotate(0deg);
-    -moz-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-    -ms-transform: rotate(360deg);
-    -moz-transform: rotate(360deg);
-    -webkit-transform: rotate(360deg);
-    -o-transform: rotate(360deg);
-  }
-}
-.loader {
-  -webkit-animation: rotating 1s linear infinite;
-  -moz-animation: rotating 1s linear infinite;
-  -ms-animation: rotating 1s linear infinite;
-  -o-animation: rotating 1s linear infinite;
-  animation: rotating 1s linear infinite;
+
+  .priceChart {
+
+    .background,
+    .hover,
+    .axis path,
+    .axis line {
+      stroke : #404040;
+    }
+
+    .axis text {
+      fill : #666; 
+      stroke: #666;
+    }
+
+    .volumeBars rect {
+      stroke:#888;
+      opacity:.4;
+    }
+
+    .status {
+      color: #666;
+    }
+
+    .chartDetails {
+      background:rgba(255,255,255,.1);
+    }
+  } 
 }

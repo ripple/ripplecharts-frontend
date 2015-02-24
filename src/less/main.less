@@ -28,6 +28,7 @@
 @import '../../vendor/bootstrap/less/buttons.less';
 @import '../../vendor/bootstrap/less/input-groups.less';
 @import '../../vendor/bootstrap/less/dropdowns.less';
+@import '../../vendor/font-awesome/less/font-awesome.less';
 
 /**
  * This is our main variables file. It in turn imports the `variables` file from
@@ -320,10 +321,6 @@ h1, h2, h3, h4 {
   font-weight:bold;
 }
 
-.dark .selectList label {
-  color:#444;
-}
-
 .selectList a {
   font-size:12px;
   line-height:13px;
@@ -352,18 +349,18 @@ h1, h2, h3, h4 {
   margin:2px;
   width:auto;
   height:auto;
-  border:1.5px solid @rippleBlue;
-  color: @rippleBlue;
+  border:1.5px solid #ddd;
+  border-radius: 4px;
+  //color: @rippleBlue;
   background:none;
-
-  padding: 2px 20px 2px 4px;
+  padding: 10px 20px;
   line-height:1.2em;
   background-image:url('images/dropdownBlue.png');
   background-repeat: no-repeat;
   background-position: 95% 50%;
   background-size: 13px;
-  font-weight:bold;
-
+  font-family: 'Open Sans';
+  //font-weight:bold;
   -webkit-appearance:none;  
   -moz-appearance:none!important;
   -o-appearance:none;
@@ -378,10 +375,6 @@ h1, h2, h3, h4 {
 
 .dropdowns select:disabled {
   opacity:0.2;  
-}
-
-.dark .dropdowns select:disabled {
-  opacity:0.4;  
 }
 
 
@@ -422,14 +415,6 @@ h1, h2, h3, h4 {
 
 .helpbox a:hover {
   color:#aaa;
-}
-
-.dark .helpbox a {
-  color:#bbb;
-}
-
-.dark .helpbox a:hover {
-  color:#ddd;
 }
 
 /* animation for png loader */
