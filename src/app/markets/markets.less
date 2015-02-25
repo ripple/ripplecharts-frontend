@@ -1,6 +1,66 @@
 @import url(priceChart.css);
 @import url(orderBook.css);
 
+.markets {
+
+
+  #flip, #toCSV {
+    vertical-align: top;
+    padding-top: 15px;
+  }
+
+  .dd-container {
+    display: inline-block;
+  }
+
+  .dd-option {
+    padding: 0 10px;
+  }
+
+  .dd-options {
+    position: fixed;
+  }
+
+  .dd-option-text, .dd-selected-text {
+    line-height: 45px !important;
+    padding-left: 15px;
+    margin-bottom: 0;
+  }
+
+  .dd-selected {
+    color: #000;
+    font-family: "Open Sans";
+    padding: 0 10px;
+  }
+
+  .dd-select, .dd-option-selected, .dd-option {
+    background: transparent !important;
+  }
+
+  #base_gateway, #trade_gateway {
+    margin-left: 10px;
+  }
+
+  .disabledDropdown {
+    padding-top: 45px;
+    border: 1px solid #ccc;
+    opacity: .5;
+
+
+    .dd-select {
+      border: none !important;
+    }
+
+    .dd-pointer-down {
+      opacity: .25;
+      top: -22px !important;
+      right: 12px;
+    }
+  }
+
+
+}
+
 #priceChart {
   height:500px;
 }

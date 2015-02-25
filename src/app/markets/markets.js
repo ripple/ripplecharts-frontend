@@ -96,7 +96,8 @@ angular.module( 'ripplecharts.markets', [
 
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
-      imagePosition: "right",
+      imagePosition: "left",
+      width: "120px",
       onSelected: function (data) {
           console.log(data);
           changeCurrency(data.selectedData.text);
@@ -108,13 +109,14 @@ angular.module( 'ripplecharts.markets', [
       var issuers;
       var issuer;
 
-      if (selected === "XRP") issuers = [{text: "nothing"}];
+      if (selected === "XRP") issuers = [{}];
+
       else issuers = gateways.getIssuers(selected);
 
       for (var i=0; i<issuers.length; i++){
         issuer = issuers[i];
         issuer.text = issuer.name;
-        issuer.description = issuer.account;
+        //issuer.description = issuer.account;
         issuer.imageSrc = issuer.icon;
         issuer.value = i;
 
@@ -125,11 +127,14 @@ angular.module( 'ripplecharts.markets', [
 
       $("#"+selectionId+"_gateway").ddslick({
         data: issuers,
-        imagePosition: "right",
+        imagePosition: "left",
         onSelected: function (data) {
             if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
         }
       });
+
+      if (selected === "XRP") 
+        d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
     }
 
     function changeGateway(currency, issuer, selectionId){
