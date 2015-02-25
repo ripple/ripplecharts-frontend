@@ -66,14 +66,7 @@ angular.module( 'ripplecharts.markets', [
     Options.interval  || "15m";
 
   $scope.range  = store.session.get('range') || store.get('range') || 
-    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
-
-  var loaded = false;
-  var test = d3.select("#base");
-  var test2 = d3.select("#quote");
-  loadDropdowns(test);
-  loadDropdowns(test2);
-  
+    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };  
 
   function loadDropdowns(selection) {
     selection.html("");
@@ -151,14 +144,20 @@ angular.module( 'ripplecharts.markets', [
     }
   }
 
+  var loaded = false;
+  var dropdownA = d3.select("#base");
+  var dropdownB = d3.select("#quote");
+  loadDropdowns(dropdownA);
+  loadDropdowns(dropdownB);
+
   d3.select("#flip").on("click", function(){ //probably better way to do this
     loaded = false;
     var swap     = $scope.trade;
     $scope.trade = $scope.base;
     $scope.base  = swap;
     
-    loadDropdowns(test);
-    loadDropdowns(test2);
+    loadDropdowns(dropdownA);
+    loadDropdowns(dropdownB);
 
     loaded = true;
     loadPair();
