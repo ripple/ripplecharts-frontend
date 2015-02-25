@@ -78,9 +78,10 @@ angular.module( 'ripplecharts.markets', [
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
       currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i]).to_human(), 
+        text     : ripple.Currency.from_json(currencies[i].currency).to_human().replace(/ /g,''), 
         value    : i, 
-        currency : currencies[i]
+        currency : currencies[i].currency,
+        imageSrc : currencies[i].icon
       };
       if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
     }

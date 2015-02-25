@@ -20,11 +20,17 @@ angular.module('gateways', [])
   
     var getCurrencies = function () {
       var currencies = [];
-      currencies.push("XRP");
+      currencies.push({
+        currency  : "XRP",
+        icon      : "assets/icons/bitcoin.svg"
+      });
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
           if (userGateways[currency][i].selected === true) {
-            currencies.push(currency);
+            currencies.push({
+              currency : currency,
+              icon     : "assets/icons/bitcoin.svg"
+            });
             break;
           }
         }
