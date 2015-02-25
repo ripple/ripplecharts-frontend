@@ -1,8 +1,9 @@
+ .multiMarket {
 
-.multiMarket .add {
+ .add {
   width:320px;
   background:#f5f5f5;
-  float:left;
+  float: left;
   border: 1px solid #ddd;
   margin: 5px;
   font-size:200px;
@@ -11,13 +12,13 @@
   text-align:center;
 }
 
-.multiMarket .add:hover {
+ .add:hover {
   background:#f2f2f2;
   color:#d5d5d5;
   border-color:#ccc;
 }
 
-.multiMarket .chartHeader {
+ .chartHeader {
   font-size:18px;
   font-weight:bold;
   border-bottom:1px solid #ddd;
@@ -25,13 +26,13 @@
   color:#888;
 }
 
-.multiMarket .chartHeader small {
+ .chartHeader small {
   margin:5px;
   color:#aaa;
   font-weight:normal;
 }
 
-.multiMarket .chartDetails {
+ .chartDetails {
   width:100%;
   border-collapse:collapse;
   min-height:42px;
@@ -41,24 +42,24 @@
 }
 
 @-moz-document url-prefix() {
-  .multiMarket .chartDetails {
+  .chartDetails {
     height:40px;
   }
 }  
   
-.multiMarket .chartDetails label {display:inline}
-.multiMarket .chartDetails .range {float:left; text-align:left; padding-top:2px; font-size:12px; font-weight:bold; overflow:hidden}
-.multiMarket .chartDetails .range span {padding-right:5px}
-.multiMarket .chartDetails .range label {font-size:10px; line-height:12px; font-weight:bold; display:inline-block; margin:0; padding-left:5px}
-.multiMarket .chartDetails .range .high {color:#2a2;}
-.multiMarket .chartDetails .range .low {color:#c33;}
-.multiMarket .chartDetails .change {padding:0 5px; font-weight:bold;  font-size:20px; float:right; padding:7px 3px}
-.multiMarket .chartDetails .volume {font-size:14px; font-weight:bold; float:left; clear:left}
-.multiMarket .chartDetails .volume label {padding-left:5px; font-size:11px; color:#999; font-weight:bold}
-.multiMarket .chartDetails .volume small {padding:0 5px; font-size:11px; color:#999; font-weight:normal}
+ .chartDetails label {display:inline}
+ .chartDetails .range {float:left; text-align:left; padding-top:2px; font-size:12px; font-weight:bold; overflow:hidden}
+ .chartDetails .range span {padding-right:5px}
+ .chartDetails .range label {font-size:10px; line-height:12px; font-weight:bold; display:inline-block; margin:0; padding-left:5px}
+ .chartDetails .range .high {color:#2a2;}
+ .chartDetails .range .low {color:#c33;}
+ .chartDetails .change {padding:0 5px; font-weight:bold;  font-size:20px; float:right; padding:7px 3px}
+ .chartDetails .volume {font-size:14px; font-weight:bold; float:left; clear:left}
+ .chartDetails .volume label {padding-left:5px; font-size:11px; color:#999; font-weight:bold}
+ .chartDetails .volume small {padding:0 5px; font-size:11px; color:#999; font-weight:normal}
 
 
-.multiMarket .chart {
+ .chart {
   border:1px solid #ddd;
   margin:5px;
   float:left;
@@ -67,7 +68,7 @@
   overflow:hidden;
 }
 
-.multiMarket .chart .loader {
+ .chart .loader {
   width:40px;
   position:absolute;
   top: 50%;
@@ -78,55 +79,55 @@
   opacity:0;
 }
 
-.multiMarket .clickable:hover {
+ .clickable:hover {
   box-shadow:0 0 2px #36c, inset 0 0 2px #36c;
   border-color:#58b;
   border-radius:2px;  
   cursor:pointer;
 }
 
-.dark .multiMarket .clickable:hover {
+ .clickable:hover {
   box-shadow:0 0 5px #36c, inset 0 0 3px #36c;
   border-color:#249;  
 }
 
-.multiMarket .grid .domain {
+ .grid .domain {
   display:none;
 }
-.multiMarket .grid line {
+ .grid line {
   stroke:#eee;
 }
 
-.multiMarket .chart .axis {
+ .chart .axis {
   fill: #333;
   shape-rendering: crispEdges;
 }
 
-.multiMarket .chart .axis .tick line {
+ .chart .axis .tick line {
   stroke:none;  
 }
 
-.multiMarket .chart .axis .title {
+ .chart .axis .title {
   stroke-width:1;
   stroke: #bbb;
   fill: #bbb;
 }
 
 
-.multiMarket .chart .axis path, .chart .axis line {
+ .chart .axis path, .chart .axis line {
   fill: none;
   stroke: #999;
 }
 
-.multiMarket .chart .axis text {
+ .chart .axis text {
   font-size:10px;
 }
 
-.multiMarket .chart .axis.price text {
+ .chart .axis.price text {
   font-size:9px;
 }
 
-.multiMarket .chart .line {
+ .chart .line {
   fill:#ccc;
   stroke:#999;
   stroke-width: 1.25;
@@ -134,65 +135,65 @@
   opacity:.75;
 }
 
-.multiMarket .chart .down {
+ .chart .down {
   fill:#e88;
   stroke:#c44;
 }
 
-.multiMarket .chart .horizontal {
+ .chart .horizontal {
   stroke-width:1.5;
 }
 
-.multiMarket .chart .lastPrice {
+ .chart .lastPrice {
   font-size:24px;
   stroke:#333;
   fill:#333;
 }
 
-.multiMarket .chart .timeBackground {
+ .chart .timeBackground {
   fill: #ddd;
 }
 
-.multiMarket .chart .flip {
+ .chart .flip {
   fill: #999;  
   stroke:none;
   cursor:pointer;
 }
 
-.multiMarket .chart .flip:hover {
+ .chart .flip:hover {
   fill: #888;  
 }
 
-.multiMarket .chart .flip:active {
+ .chart .flip:active {
   fill: #456;  
 }
 
-.multiMarket .chart .flip text {
+ .chart .flip text {
   fill:#fff;
 }
 
-.multiMarket .chart .pointer {
+ .chart .pointer {
   fill: #aaa;
   stroke:none; 
 }
 
-.multiMarket .chart svg {display:block}
-.multiMarket .chart .dropdowns {
+ .chart svg {display:block}
+ .chart .dropdowns {
   border-top:1px solid #bbb;
   display:table;
   width:100%;
 }
-.multiMarket .chart .dropdowns div {
+ .chart .dropdowns div {
   overflow:hidden;
   display:table-cell;
   text-align:left;
 }
 
-.multiMarket .chart .dropdowns .base {
+ .chart .dropdowns .base {
   border-right:1px solid #ddd;  
 } 
 
-.multiMarket .chart .dropdowns select {
+ .chart .dropdowns select {
   -webkit-appearance: none;
   border:none;
   background:none;
@@ -208,25 +209,25 @@
   color:#666;
 }
 
-.multiMarket .chart .dropdowns .currency {
+ .chart .dropdowns .currency {
   font-size:16px;  
   width:60px;
 }
 
-.multiMarket .chart .dropdowns .gateway {
+ .chart .dropdowns .gateway {
   font-size:11px;
   width:96px;
   border:none;
 }
 
 @-moz-document url-prefix() {
-  .multiMarket .chart .dropdowns select {
+   .chart .dropdowns select {
     padding:3px 0;
     height:21px;
   }
 }
 
-.multiMarket .chart .status {
+ .chart .status {
   position:absolute;
   width:100%;
   text-align:center;
@@ -236,7 +237,7 @@
   margin-top:-20px;
 }
 
-.multiMarket .chart .closeButton {
+ .chart .closeButton {
   position: absolute;
   right: 0;
   top: 0;
@@ -250,9 +251,11 @@
   z-index:1;
 }
 
-.multiMarket .chart .closeButton:hover {
+ .chart .closeButton:hover {
   color:#777;
   background:#ddd;
+}
+
 }
 
 /*
@@ -260,79 +263,83 @@
  * 
  */
 
-.dark .multiMarket .chart {
-  border-color:#333;
-}
+ .dark .multiMarket {
 
-.dark .multiMarket .closeButton {
-  color:@darkTextDark
-}
+  .chart {
+    border-color:#333;
+  }
 
-.dark .multiMarket .chart .closeButton:hover {
-  color:#aaa;
-  background:@darkLine;
-}
+   .closeButton {
+    color:@darkTextDark
+  }
 
-.dark .multiMarket .grid line {
-  stroke:#222;
-}
+   .chart .closeButton:hover {
+    color:#aaa;
+    background:@darkLine;
+  }
 
-.dark .multiMarket .chart .axis path, .dark .chart .axis line {
-  stroke:#333;
-}
+   .grid line {
+    stroke:#222;
+  }
 
-.dark .multiMarket .chart .axis text {
-  fill:@darkText;
-}
- 
-.dark .multiMarket .chart .timeBackground {
-  fill: #333;
-}
+   .chart .axis path, .dark .chart .axis line {
+    stroke:#333;
+  }
 
-.dark .multiMarket .chart .flip {
-  fill: #555;
-}
+   .chart .axis text {
+    fill:@darkText;
+  }
+   
+   .chart .timeBackground {
+    fill: #333;
+  }
 
-.dark .multiMarket .chart .lastPrice {
-  stroke:#ddd;
-  fill:#ddd;
-}
+   .chart .flip {
+    fill: #555;
+  }
 
-.dark .multiMarket .chartHeader {
-  border-color:#444;
-}
+   .chart .lastPrice {
+    stroke:#ddd;
+    fill:#ddd;
+  }
 
-.dark .multiMarket .chartHeader small {
-  color:#555;
-}
+   .chartHeader {
+    border-color:#444;
+  }
 
-.dark .multiMarket .chartDetails {
-  background:rgba(255,255,255,.1);
-  border-color: #333;
-}
+   .chartHeader small {
+    color:#555;
+  }
 
-.dark .multiMarket .chartDetails .volume {
-  color:#ddd;
-}
+   .chartDetails {
+    background:rgba(255,255,255,.1);
+    border-color: #333;
+  }
 
-.dark .multiMarket .chart .dropdowns {
-  border-color:#333;
-  background:#151515;
-}
+   .chartDetails .volume {
+    color:#ddd;
+  }
 
-.dark .multiMarket .chart .dropdowns .base {
-  border-color:#333;  
-} 
+   .chart .dropdowns {
+    border-color:#333;
+    background:#151515;
+  }
 
-.dark .multiMarket .chart .dropdowns select {
-  border-color:#333;
-  color:#999;
-  font-weight:bold;
-  background-image: url('images/dropdownLight.png');
-}
+   .chart .dropdowns .base {
+    border-color:#333;  
+  } 
 
-.dark .multiMarket .add {
-  color:#333;
-  background:#222;
-  border-color:#333;
+   .chart .dropdowns select {
+    border-color:#333;
+    color:#999;
+    font-weight:bold;
+    background-image: url('images/dropdownLight.png');
+  }
+
+   .add {
+    color:#333;
+    background:#222;
+    border-color:#333;
+  }
+
 }

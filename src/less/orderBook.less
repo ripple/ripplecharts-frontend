@@ -2,103 +2,107 @@
     width:100%;
     position: relative;
     clear:both;
-}
-
-.orderbookChart .background {
-    fill: none;
-    stroke : #999;
-    pointer-events: all;
-    stroke-width:1;
-    shape-rendering: crispEdges;
-}
-
-.orderbookChart .loader {
-    width: 40px;
-    position: absolute;
-    top: 50%;
-    left: 50%; 
-    margin-top: -35px;
-    margin-left: -20px;
-}
-
-.orderbookChart .axis {
-    fill: #999;
-    shape-rendering: crispEdges;
-}
-
-.orderbookChart .axis .title {
-    stroke-width:1;
-    stroke: #bbb;
-    fill: #bbb;
-}
 
 
-.orderbookChart .axis path, .orderbookChart .axis line {
-    fill: none;
-    stroke: #999;
-    stroke-width: 1;
-}
+  .background {
+      fill: none;
+      stroke : #999;
+      pointer-events: all;
+      stroke-width:1;
+      shape-rendering: crispEdges;
+  }
 
-.orderbookChart .axis text {
-    font-size:10px;
-}
+  .loader {
+      width: 40px;
+      position: absolute;
+      top: 50%;
+      left: 50%; 
+      margin-top: -35px;
+      margin-left: -20px;
+  }
 
-.orderbookChart .axis.price text, .orderbookChart .axis.volume text {
+  .axis {
+      fill: #999;
+      shape-rendering: crispEdges;
+  }
+
+  .axis .title {
+      stroke-width:1;
+      stroke: #bbb;
+      fill: #bbb;
+  }
+
+
+  .axis path, .axis line {
+      fill: none;
+      stroke: #999;
+      stroke-width: 1;
+  }
+
+  .axis text {
+      font-size:10px;
+  }
+
+  .axis.price text, .axis.volume text {
+      font-size:12px;
+  }
+
+  path {
+      fill: none;
+      stroke: #3369a8;
+      stroke-width:2;
+      stroke-linejoin: round;
+  }
+
+  line {
+      stroke: #999;
+      shape-rendering: crispEdges;
+  }
+
+  .status {
+      text-align:center;
+      color:#aaa;
+      position:absolute;
+      width:100%;
+      top:30%;
+  }
+
+  .hover {
+      stroke: #999;
+      stroke-width: 1;
+  }
+
+  .focus {
+      fill: rgba(255,255,255,.5);
+      stroke: #999;
+  }
+
+  .focus.dark {
+      fill:#555;
+      stroke: none;
+  }
+
+  .centerline {
+    stroke:#cde
+  }
+
+  .chartDetails {   
+    position: absolute;     
+    text-align: right;      
+    font-size:14px;   
+    color:#333; 
+    padding:1px 5px;
+    background:rgba(255,255,255,.5);
+    border-bottom:1px solid rgba(150,150,150,.2);     
+  }
+
+  .chartDetails span {
     font-size:12px;
-}
+    color:#999;
+    margin: 0 .25em;
+    display:inline-block;
+  }
 
-.orderbookChart path {
-    fill: none;
-    stroke: #3369a8;
-    stroke-width:2;
-    stroke-linejoin: round;
-}
-
-.orderbookChart line {
-    stroke: #999;
-    shape-rendering: crispEdges;
-}
-
-.orderbookChart .status {
-    text-align:center;
-    color:#aaa;
-    position:absolute;
-    width:100%;
-    top:30%;
-}
-
-.orderbookChart .hover {
-    stroke: #999;
-    stroke-width: 1;
-}
-
-.orderbookChart .focus {
-    fill: rgba(255,255,255,.5);
-    stroke: #999;
-}
-
-.orderbookChart .focus.dark {
-    fill:#555;
-    stroke: none;
-}
-
-.orderbookChart .centerline {stroke:#cde}
-
-.orderbookChart .chartDetails {   
-  position: absolute;     
-  text-align: right;      
-  font-size:14px;   
-  color:#333; 
-  padding:1px 5px;
-  background:rgba(255,255,255,.5);
-  border-bottom:1px solid rgba(150,150,150,.2);     
-}
-
-.orderbookChart .chartDetails span {
-  font-size:12px;
-  color:#999;
-  margin: 0 .25em;
-  display:inline-block;
 }
 
 .bookTables {
@@ -194,28 +198,31 @@
  *  dark theme 
  */
 
-.dark .orderbookChart .centerline {
-  stroke:#123;
-}
+.dark .orderbookChart {
 
-.dark .orderbookChart .background,
-.dark .orderbookChart .hover,
-.dark .orderbookChart .axis path,
-.dark .orderbookChart .axis line {
-  stroke : #404040;
-}
+  .centerline {
+    stroke:#123;
+  }
 
-.dark .orderbookChart .axis text {
-  fill : #666; 
-  stroke: #666;
-}
+  .background,
+  .hover,
+  .axis path,
+  .axis line {
+    stroke : #404040;
+  }
 
-.dark .orderbookChart .status {
-  color: #666;
-}
+  .axis text {
+    fill : #666; 
+    stroke: #666;
+  }
 
-.dark .orderbookChart .chartDetails {
-  background:rgba(255,255,255,.1);
+  .status {
+    color: #666;
+  }
+
+  .chartDetails {
+    background:rgba(255,255,255,.1);
+  }
 }
 
 .dark .bookTables {

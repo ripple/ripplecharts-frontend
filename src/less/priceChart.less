@@ -1,134 +1,99 @@
-
-
 .priceChart {
     display:inline-block;
     width:100%;
     position: relative;
     clear:both;
-}
 
-.priceChart .background {
+
+  .background {
     fill: none;
     stroke : #999;
     pointer-events: all;
     stroke-width:1;
     shape-rendering: crispEdges;
-}
+  }
 
-.priceChart .loader {
+  .loader {
     width:40px;
     position:absolute;
     top:50%;
-    left:50%;	
+    left:50%; 
     margin-top:-20px;
     margin-left:-20px;
-}
+  }
 
-.priceChart .axis {
+  .axis {
     fill: #999;
     shape-rendering: crispEdges;
-}
+  }
 
-.priceChart .axis .title {
+  .axis .title {
     stroke-width:1;
     stroke: #bbb;
     fill: #bbb;
-}
+  }
 
 
-.priceChart .axis path, .priceChart .axis line {
+  .axis path, .axis line {
     fill: none;
     stroke: #999;
     stroke-width: 1;
-}
+  }
 
-.priceChart .axis text {
+  .axis text {
     font-size:10px;
-}
+  }
 
-.priceChart .axis.price text, .priceChart .axis.volume text {
+  .axis.price text, .axis.volume text {
     font-size:12px;
-}
+  }
 
-.priceChart path {
+  path {
     fill: none;
     stroke: #3369a8;
     stroke-width:2;
     stroke-linejoin: round;
-}
+  }
 
-.priceChart line {
+  line {
     stroke: #999;
     shape-rendering: crispEdges;
-}
+  }
 
-.priceChart .status {
+  .status {
     text-align:center;
     color:#aaa;
     position:absolute;
     width:100%;
     top:30%;
-}
+  }
 
-.priceChart .hover {
+  .hover {
     stroke: #999;
     stroke-width: 1;
-}
+  }
 
-.priceChart .focus {
+  .focus {
     fill: rgba(255,255,255,.5);
     stroke: #999;
-}
+  }
 
-.priceChart .focus.dark {
+  .focus.dark {
     fill:#555;
     stroke: none;
-}
+  }
 
-.candlesticks rect {
-    fill: #fff;
-    stroke: #a22;
-    stroke-width: 1;
-}
-
-.candlesticks line {
-    stroke: #a22;    
-}
-
-.candlesticks .filled rect {  
-  fill: #a22;
-}
-
-.candlesticks .up rect {
-  stroke: #3a3;
-}
-
-.candlesticks .up line {
-  stroke: #3a3; 
-}
-
-.candlesticks .up.filled rect { 
-  fill: #3a3;
-}
-
-.candlesticks line {
-    stroke-width : 1;	
-}
-
-.candlesticks line.extent {
-  stroke-width : 1;	
-}
-
-.priceChart .volumeBars rect {
-    fill : #ddd;	
+  .volumeBars rect {
+    fill : #ddd;  
     stroke : #bbb;
-}
+  }
 
-.priceChart .title {
+  .title {
     font-size:15px;
-}
+  }
 
-.priceChart .chartDetails {   
+  //chartdetails
+  .chartDetails {   
     position: absolute;     
     text-align: right;      
     font-size:14px;   
@@ -136,77 +101,142 @@
     padding:1px 5px;
     background:rgba(255,255,255,.5);
     border-bottom:1px solid rgba(150,150,150,.2);     
+  
+
+    span {
+      font-size:12px;
+      color:#999;
+      margin: 0 .25em;
+      display:inline-block;
+    }
+
+    b {
+      margin:0 .25em;
+    }
+
+    .date {
+      text-align: right;
+      margin-right:20px;
+    }
+
+    .high {
+      color:#090;
+    }
+
+    .low {
+      color:#900;
+    }
+
+    .vwap {
+      color:#86b;
+    }
+
+    .volume {
+      color:#369;
+    }
+  }
 }
 
-.priceChart .chartDetails span {
-    font-size:12px;
-    color:#999;
-    margin: 0 .25em;
-    display:inline-block;
+//candlesticks 
+.candlesticks {
+  rect {
+      fill: #fff;
+      stroke: #a22;
+      stroke-width: 1;
+  }
+
+  line {
+      stroke: #a22;    
+  }
+
+  .filled rect {  
+    fill: #a22;
+  }
+
+  .up rect {
+    stroke: #3a3;
+  }
+
+  .up line {
+    stroke: #3a3; 
+  }
+
+  .up.filled rect { 
+    fill: #3a3;
+  }
+
+  line {
+      stroke-width : 1; 
+  }
+
+  line.extent {
+    stroke-width : 1; 
+  }
 }
-
-.priceChart .chartDetails b {margin:0 .25em}
-
-.priceChart .chartDetails .date {text-align:right; margin-right:20px}
-.priceChart .chartDetails .high {color:#090}
-.priceChart .chartDetails .low {color:#900}
-.priceChart .chartDetails .vwap {color:#86b}
-.priceChart .chartDetails .volume {color:#369}
-
 
 /*
  * dark theme 
  */
 
-.dark .priceChart .background,
-.dark .priceChart .hover,
-.dark .priceChart .axis path,
-.dark .priceChart .axis line {
-  stroke : #404040;
-}
+.dark {
 
-.dark .priceChart .axis text {
-  fill : #666; 
-  stroke: #666;
-}
+  .candlesticks {
+    
+    line {
+      stroke-width: 1;
+      stroke:#a00;
+    }
 
-.dark .priceChart .volumeBars rect {
-  stroke:#888;
-  opacity:.4;
-}
+    .filled rect {
+      fill:#a00;
+    }
 
-.dark .priceChart .status {
-  color: #666;
-}
+    .up line {
+      stroke:#393;  
+    }
 
-.dark .candlesticks line {
-  stroke-width: 1;
-  stroke:#a00;
-}
+    .up rect {
+      stroke:#393
+    }
 
-.dark .candlesticks .filled rect {
-  fill:#a00;
-}
+    .filled.up rect {
+      fill:#393;
+      stroke:#393;
+    }
 
-.dark .candlesticks .up line {
-  stroke:#393;  
-}
-.dark .candlesticks .up rect {
-  stroke:#393
-}
+    rect {
+      fill:#000;
+      stroke-width:1;
+      stroke:#a00;
+    }
 
-.dark .candlesticks .filled.up rect {
-  fill:#393;
-  stroke:#393;
-}
+  }
 
-.dark .candlesticks rect {
-  fill:#000;
-  stroke-width:1;
-  stroke:#a00;
-}
+  .priceChart {
 
-.dark .priceChart .chartDetails {
-  background:rgba(255,255,255,.1);
-}
+    .background,
+    .hover,
+    .axis path,
+    .axis line {
+      stroke : #404040;
+    }
 
+    .axis text {
+      fill : #666; 
+      stroke: #666;
+    }
+
+    .volumeBars rect {
+      stroke:#888;
+      opacity:.4;
+    }
+
+    .status {
+      color: #666;
+    }
+
+    .chartDetails {
+      background:rgba(255,255,255,.1);
+    }
+  } 
+}
