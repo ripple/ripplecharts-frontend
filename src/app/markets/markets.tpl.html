@@ -26,6 +26,17 @@
         <tr><td class="type"></td><th>Same as previous price</th></tr>
       </table>
     </div>
+    <div class="rippleStatus">
+          <div class="items">
+            <div class="label" ng-bind="ledgerLabel"></div>
+            <div class="index" ng-bind="ledgerIndex">--</div>
+            <div class="status">
+              <svg height="20" width="20" ng-class="connectionStatus">
+                <circle cx="10" cy="10" r="5" fill="#c00" />
+              </svg>
+            </div>
+          </div>
+        </div>
     <div id="tradeFeed"></div> 
   </div>   
   
@@ -74,17 +85,7 @@
     </div> 
     <div class="controls"> 
       <div id="currencyPair">
-        <div class="rippleStatus">
-          <div class="items">
-            <div class="label" ng-bind="ledgerLabel"></div>
-            <div class="index" ng-bind="ledgerIndex">--</div>
-            <div class="status">
-              <svg height="20" width="20" ng-class="connectionStatus">
-                <circle cx="10" cy="10" r="5" fill="#c00" />
-              </svg>
-            </div>
-          </div>
-        </div>
+        
               
         <div id="base" class="dropdowns"></div>
         <div id="flip"><span>Flip</span></div>
