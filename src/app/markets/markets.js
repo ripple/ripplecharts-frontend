@@ -33,9 +33,6 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
-
-  console.log(gateways.getCurrencies());
-  console.log(gateways.getIssuers('USD'));
   
   if ($state.params.base && $state.params.trade) {
     
@@ -66,14 +63,7 @@ angular.module( 'ripplecharts.markets', [
     Options.interval  || "15m";
 
   $scope.range  = store.session.get('range') || store.get('range') || 
-    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
-
-  var loaded = false;
-  var test = d3.select("#base");
-  var test2 = d3.select("#quote");
-  loadDropdowns(test);
-  loadDropdowns(test2);
-  
+    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };  
 
   function loadDropdowns(selection) {
     selection.html("");
@@ -87,20 +77,21 @@ angular.module( 'ripplecharts.markets', [
 
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
-      currencies[i] = {text: currencies[i], value: i};
-      console.log("Selectionid", selectionId);
-      if ($scope[selectionId].currency === currencies[i].text) currencies[i].selected = true;
+      currencies[i] = {
+        text     : ripple.Currency.from_json(currencies[i].currency).to_human().replace(/ /g,''), 
+        value    : i, 
+        currency : currencies[i].currency,
+        imageSrc : currencies[i].icon
+      };
+      if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
     }
-
-    console.log("crurencies", currencies);
 
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
       imagePosition: "left",
       width: "120px",
       onSelected: function (data) {
-          console.log(data);
-          changeCurrency(data.selectedData.text);
+        changeCurrency(data.selectedData.currency);
       }
     });
 
@@ -116,7 +107,6 @@ angular.module( 'ripplecharts.markets', [
       for (var i=0; i<issuers.length; i++){
         issuer = issuers[i];
         issuer.text = issuer.name;
-        //issuer.description = issuer.account;
         issuer.imageSrc = issuer.icon;
         issuer.value = i;
 
@@ -138,18 +128,20 @@ angular.module( 'ripplecharts.markets', [
     }
 
     function changeGateway(currency, issuer, selectionId){
-      console.log("Changing gateway:", currency, issuer, selectionId);
-
       if (issuer)
         $scope[selectionId] = {currency: currency, issuer: issuer};
       else 
         $scope[selectionId] = {currency: "XRP"};
-
       if ($scope.range.name === "max") updateMaxrange();
-      console.log("SCOPES", $scope.base, $scope.trade);
       loadPair();
     }
   }
+
+  var loaded = false;
+  var dropdownA = d3.select("#base");
+  var dropdownB = d3.select("#quote");
+  loadDropdowns(dropdownA);
+  loadDropdowns(dropdownB);
 
   d3.select("#flip").on("click", function(){ //probably better way to do this
     loaded = false;
@@ -157,48 +149,12 @@ angular.module( 'ripplecharts.markets', [
     $scope.trade = $scope.base;
     $scope.base  = swap;
     
-    loadDropdowns(test);
-    loadDropdowns(test2);
+    loadDropdowns(dropdownA);
+    loadDropdowns(dropdownB);
 
     loaded = true;
     loadPair();
   });
-
-/*//set up the currency pair dropdowns
-  var loaded  = false, 
-    dropdownB = ripple.currencyDropdown().selected($scope.trade)
-      .on("change", function(d) {
-        if (loaded) {
-          $scope.trade = d;
-          if ($scope.range.name === "max") updateMaxrange();
-          loadPair();
-        }}),
-    dropdownA = ripple.currencyDropdown().selected($scope.base)
-      .on("change", function(d) {
-        if (loaded) {
-          $scope.base = d;
-          if ($scope.range.name === "max") updateMaxrange();
-          loadPair();
-        }});
-
-  d3.select("#base").call(dropdownA);
-  d3.select("#quote").call(dropdownB);
-  d3.select("#flip").on("click", function(){ //probably better way to do this
-    dropdownA.selected($scope.trade);
-    dropdownB.selected($scope.base);
-    d3.select("#base").selectAll("select").remove();
-    d3.select("#quote").selectAll("select").remove();
-    loaded = false;
-    d3.select("#base").call(dropdownA);
-    d3.select("#quote").call(dropdownB);
-    loaded = true;
-    
-    swap         = $scope.trade;
-    $scope.trade = $scope.base;
-    $scope.base  = swap;
-    loadPair();
-  });*/
-  
   
   //set up the range selector  
   var ranges = d3.select("#range").attr("class","selectList");
