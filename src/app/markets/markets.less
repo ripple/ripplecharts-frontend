@@ -26,11 +26,51 @@
     position: fixed;
   }
 
+  .dd-pointer {
+    right: 7px;
+  }
+
   .dd-option-text, .dd-selected-text {
     line-height: 45px !important;
     padding-left: 15px;
     margin-bottom: 0;
   }
+
+  //currency specific
+  #base_currency, #trade_currency {
+
+    max-width: 85px;
+
+    .dd-select, .dd-options {
+      max-width: 85px;
+    }
+
+    .dd-option-text, .dd-selected-text {
+      padding-left: 0;
+    }
+
+    .dd-option, .dd-selected {
+      padding: 0 3px;
+    }
+
+  }
+
+  //gateway specific
+  #base_gateway, #trade_gateway {
+    max-width: 250px;
+
+    .dd-select, .dd-options {
+      max-width: 250px;
+    }
+
+    .dd-selected-text {
+      //float: right;
+      //padding-right: 20px;
+    }
+
+
+  }
+   
 
   .dd-selected {
     color: #000;
@@ -159,15 +199,13 @@
 }
 
 .rippleStatus {
-  float:right;
   overflow:hidden;
   color:#aaa;
-  margin-top:2px;
+  padding-top: 15px;
 }
 
 .rippleStatus .items {
-  display:table; 
-  margin-top:2px; 
+  display: inline-block; 
 }
 
 .rippleStatus .items div {

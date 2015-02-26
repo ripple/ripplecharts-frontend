@@ -22,14 +22,14 @@ angular.module('gateways', [])
       var currencies = [];
       currencies.push({
         currency  : "XRP",
-        icon      : "assets/icons/bitcoin.svg"
+        icon      : "assets/icons/curr_btc.svg"
       });
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
           if (userGateways[currency][i].selected === true) {
             currencies.push({
               currency : currency,
-              icon     : "assets/icons/bitcoin.svg"
+              icon     : "assets/icons/curr_btc.svg" 
             });
             break;
           }

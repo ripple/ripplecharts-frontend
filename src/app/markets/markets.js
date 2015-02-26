@@ -78,7 +78,7 @@ angular.module( 'ripplecharts.markets', [
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
       currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human().replace(/ /g,''), 
+        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
         value    : i, 
         currency : currencies[i].currency,
         imageSrc : currencies[i].icon
