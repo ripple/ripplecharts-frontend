@@ -22,14 +22,14 @@ angular.module('gateways', [])
       var currencies = [];
       currencies.push({
         currency  : "XRP",
-        icon      : "assets/icons/curr_btc.svg"
+        icon      : API + '/currencies/xrp.svg'
       });
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
           if (userGateways[currency][i].selected === true) {
             currencies.push({
               currency : currency,
-              icon     : "assets/icons/curr_btc.svg" 
+              icon     : API + '/currencies/'+ currency +'.svg'
             });
             break;
           }
@@ -55,7 +55,7 @@ angular.module('gateways', [])
           issuers.push({
             name     : userGateways[currency][i].name,
             account  : userGateways[currency][i].account,
-            icon     : API + '/gateways/' + normalized + '/assets/logo.grayscale.svg',
+            icon     : API + '/gateways/' + normalized + '/assets/logo.svg',
             featured : userGateways[currency][i].featured,
             selected : userGateways[currency][i].selected
           });
