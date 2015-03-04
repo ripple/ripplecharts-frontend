@@ -33,6 +33,8 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
+
+  console.log(gateways.getIssuers('BTC'));
   
   if ($state.params.base && $state.params.trade) {
     

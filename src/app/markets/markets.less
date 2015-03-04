@@ -6,7 +6,16 @@
   #base_currency img.dd-selected-image, #trade_currency img.dd-selected-image,
   #base_currency .dd-option-image, #trade_currency .dd-option-image  {
     max-width: 24px;
-    padding-top: 15px;
+    margin-top: -2px;
+  }
+
+  .dd-option-image, .dd-selected-image {
+    float: none; //override default
+    margin-right: 2px;
+  }
+
+  #currencyPair a:hover, a:focus {
+      text-decoration: none;
   }
 
   #flip, #toCSV {
@@ -30,8 +39,12 @@
     right: 7px;
   }
 
+  .dd-option-text {
+    cursor: pointer;
+  }
+
   .dd-option-text, .dd-selected-text {
-    line-height: 45px !important;
+    line-height: 47px !important;
     padding-left: 15px;
     margin-bottom: 0;
   }
@@ -152,7 +165,7 @@
 }
 
 #currencyPair {
-  margin:10px 60px 5px 60px;
+  margin: 10px auto 5px 60px;
   text-align:left;
 }
 
