@@ -82,7 +82,7 @@ angular.element(document).ready(function() {
       if (obj) {
         $scope.ledgerLabel = "Ledger #:";
         $scope.ledgerIndex = commas(parseInt(obj.ledger.ledger_index,10));
-        $scope.totalCoins  = commas(parseInt(obj.ledger.total_coins,10)/1000000); 
+        $scope.totalCoins  = commas(parseInt(obj.ledger.total_coins,10)/1000000, 6); 
         $scope.$apply();
       }
     }  
