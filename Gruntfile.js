@@ -421,6 +421,7 @@ module.exports = function ( grunt ) {
         src: [
           '<%= vendor_files.js %>',
           '<%= build_dir %>/src/**/*.js',
+          '<%= build_dir %>/src/**/*.html',
           '<%= html2js.common.dest %>',
           '<%= html2js.app.dest %>',
           //'<%= vendor_files.css %>',

@@ -145,6 +145,10 @@ angular.module( 'ripplecharts.markets', [
   loadDropdowns(dropdownA);
   loadDropdowns(dropdownB);
 
+  //append edit list option to dropdowns
+  $('#base_currency ul.dd-options').add('#trade_currency ul.dd-options').append('<li ui-route="/manage-currencies" ng-class="{active:$uiRoute !== false}" class="edit_list currency"><a href="#/manage-currencies"><span class="plus">+</span> Edit List</a></li>');
+  $('#base_gateway ul.dd-options').add('#trade_gateway ul.dd-options').append('<li ui-route="/manage-gateways" ng-class="{active:$uiRoute !== false}" class="edit_list gateway"><a href="#/manage-gateways"><span class="plus">+</span> Edit List</a></li>');
+
   d3.select("#flip").on("click", function(){ //probably better way to do this
     loaded = false;
     var swap     = $scope.trade;
