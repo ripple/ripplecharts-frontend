@@ -80,9 +80,11 @@ angular.element(document).ready(function() {
 
     function handleLedger(err, obj) {
       if (obj) {
+        var totalCoins = obj.ledger.total_coins,
+            totalCoinsXrp = [commas(parseInt(totalCoins.slice(0, -6), 10)), totalCoins.slice(-6)].join(".");
         $scope.ledgerLabel = "Ledger #:";
-        $scope.ledgerIndex = commas(parseInt(obj.ledger.ledger_index,10));
-        $scope.totalCoins  = commas(parseInt(obj.ledger.total_coins,10)/1000000, 6);
+        $scope.ledgerIndex = commas(parseInt(obj.ledger.ledger_index, 10));
+        $scope.totalCoins  = totalCoinsXrp;
         $scope.$apply();
       }
     }
