@@ -4,11 +4,11 @@
  * the Grunt configuration that is automatically processed.
  */
 
-@font-face { font-family: "Open Sans Light"; src: url('fonts/OpenSans-Light.ttf'); } 
-@font-face { font-family: "Open Sans Light"; font-style:italic; src: url('fonts/OpenSans-LightItalic.ttf'); } 
-@font-face { font-family: "Open Sans Light"; font-weight: bold; src: url('fonts/OpenSans-Bold.ttf'); } 
-@font-face { font-family: "Open Sans Light"; font-weight: bold; font-style:italic; src: url('fonts/OpenSans-BoldItalic.ttf'); } 
-@font-face { font-family: "Open Sans"; src: url('fonts/OpenSans-Regular.ttf'); } 
+@font-face { font-family: "Open Sans Light"; src: url('fonts/OpenSans-Light.ttf'); }
+@font-face { font-family: "Open Sans Light"; font-style:italic; src: url('fonts/OpenSans-LightItalic.ttf'); }
+@font-face { font-family: "Open Sans Light"; font-weight: bold; src: url('fonts/OpenSans-Bold.ttf'); }
+@font-face { font-family: "Open Sans Light"; font-weight: bold; font-style:italic; src: url('fonts/OpenSans-BoldItalic.ttf'); }
+@font-face { font-family: "Open Sans"; src: url('fonts/OpenSans-Regular.ttf'); }
 
 /**
  * First, we include the Twitter Bootstrap LESS files. Only the ones used in the
@@ -30,7 +30,6 @@
 @import '../../vendor/bootstrap/less/dropdowns.less';
 @import '../../vendor/font-awesome/less/font-awesome.less';
 
-
 /**
  * This is our main variables file. It in turn imports the `variables` file from
  * Twitter Bootstrap. We must include it last so we can overwrite any variable
@@ -38,10 +37,9 @@
  */
 
 @import 'variables.less';
-@import '../../vendor/fontawesome/less/font-awesome.less';
 
 body {
-  font-family: "Open Sans Light", Helvetica, Arial, sans-serif; 
+  font-family: "Open Sans Light", Helvetica, Arial, sans-serif;
   padding:0 !important;
   line-height:inherit;
   width:100%;
@@ -57,7 +55,7 @@ html {
 }
 
 ul {
-  padding:0;  
+  padding:0;
 }
 
 label {
@@ -65,7 +63,7 @@ label {
 }
 
 label {
-  cursor:auto; /* override bootstrap */ 
+  cursor:auto; /* override bootstrap */
 }
 
 code, pre, .pre {
@@ -105,7 +103,7 @@ h1, h2, h3, h4 {
 }
 
 .headerPad {
-  height:55px;  
+  height:55px;
 }
 
 /**
@@ -116,13 +114,13 @@ h1, h2, h3, h4 {
   position:fixed;
   height:37px;
   width:2px;
-  margin-left:-2px;  
+  margin-left:-2px;
   z-index:5;
   display:none;
 }
 
 .nav-toggle {
-  margin:12px 10px 10px 20px;  
+  margin:12px 10px 10px 20px;
   float:left;
   cursor:pointer;
   color:#ccc;
@@ -153,9 +151,9 @@ h1, h2, h3, h4 {
 
 .nav .category img {
   height:18px;
-  width:auto; 
-  margin:1px 5px; 
-  //float:left; 
+  width:auto;
+  margin:1px 5px;
+  //float:left;
 }
 
 .nav .page {
@@ -169,18 +167,17 @@ h1, h2, h3, h4 {
   margin-left:40px;
 }
 .nav li a:hover {
-  background:none 
+  background:none
 }
 
 .nav li a {
   font-size:14px;
-  border-radius:1px;  
+  border-radius:1px;
   padding:11px 20px;
   color:#666;
   display:block;
   text-decoration:none;
 }
-
 
 .nav .page li {
   border-top:1px solid #f4f4f4;
@@ -188,7 +185,7 @@ h1, h2, h3, h4 {
 }
 
 .nav .page li:first-child {
-  border-top:none;  
+  border-top:none;
 }
 
 .nav .page li:last-child {
@@ -213,7 +210,7 @@ h1, h2, h3, h4 {
 }
 
 .nav .page li a:hover {
-  color:#486db4;  
+  color:#486db4;
 }
 
 .nav .page li.active a{
@@ -272,7 +269,7 @@ h1, h2, h3, h4 {
 #helpButton:hover {
   background:#444;
   color:#eee;
-  border-color:#999;  
+  border-color:#999;
 }
 
 #helpButton:active {
@@ -283,8 +280,8 @@ h1, h2, h3, h4 {
 }
 
 
-/* 
- * Content 
+/*
+ * Content
  */
 .snap-drawers {
   background:#282828;
@@ -301,7 +298,7 @@ h1, h2, h3, h4 {
 }
 
 .snap-content {
-  background:#000; 
+  background:#000;
   border-left:1px solid #e8e8e8;
   margin-left:-1px;
   width:100%;
@@ -362,7 +359,7 @@ h1, h2, h3, h4 {
   background-size: 13px;
   font-family: 'Open Sans';
   //font-weight:bold;
-  -webkit-appearance:none;  
+  -webkit-appearance:none;
   -moz-appearance:none!important;
   -o-appearance:none;
   appearance: none;
@@ -375,17 +372,16 @@ h1, h2, h3, h4 {
 }
 
 .dropdowns select:disabled {
-  opacity:0.2;  
+  opacity:0.2;
 }
-
 
 .helpbox {
   border:1px solid rgba(150,150,150,.3);
   border-radius:1px;
   background:rgba(200,200,200,.2);
   -webkit-transition: .3s;
-  transition: .3s; 
-  opacity:0; 
+  transition: .3s;
+  opacity:0;
   height:0;
   line-height:0;
   padding:0;
@@ -435,6 +431,7 @@ h1, h2, h3, h4 {
     -o-transform: rotate(360deg);
   }
 }
+
 @-webkit-keyframes rotating /* Safari and Chrome */ {
   from {
     transform: rotate(0deg);
@@ -451,6 +448,7 @@ h1, h2, h3, h4 {
     -o-transform: rotate(360deg);
   }
 }
+
 .loader {
   -webkit-animation: rotating 1s linear infinite;
   -moz-animation: rotating 1s linear infinite;
@@ -460,7 +458,7 @@ h1, h2, h3, h4 {
 }
 
 .disclaimer {
-  font-size:11px;  
+  font-size:11px;
   font-family:"Open Sans";
   margin-bottom:20px;
   color:#ccc;
@@ -471,12 +469,12 @@ h1, h2, h3, h4 {
  */
 
 .footerPad {
-  height:120px;  
+  height:120px;
 }
 
 footer {
   border-top:1px solid #333;
-  text-align:center;  
+  text-align:center;
   position:absolute;
   bottom:0;
   width:100%;
@@ -503,7 +501,6 @@ footer .links {
 
 footer a {
   color:#777;
-  
 }
 
 footer a:hover {
@@ -519,21 +516,15 @@ footer .links a:first-child {
   margin-left:0;
 }
 
-@import 'light.less';
-@import 'dark.less';
-
-
-/*
- * Inputs 
- */
-
-
 /**
  * Now that all app-wide styles have been applied, we can load the styles for
- * all the submodules and components we are using. 
+ * all the submodules and components we are using.
  *
  * TODO: In a later version of this boilerplate, I'd like to automate this.
  */
+
+@import 'light.less';
+@import 'dark.less';
 
 @import '../app/landing/landing.less';
 @import '../app/markets/markets.less';
@@ -564,130 +555,124 @@ footer .links a:first-child {
 
 @media (max-width: 480px) {
   .footerPad {
-    height:200px;  
+    height:200px;
   }
-  
-  footer .links a:first-child {margin:0 10px}  
+
+  footer .links a:first-child {margin:0 10px}
   footer .links a {
     display: inline-block;
     width: 35%;
   }
-  
+
   footer .footerInner {
     width:90%
   }
-  
 }
 
 /*
  * New header
  */
- 
- 	.main {
- 		padding-top: 20px;
- 	}
- 
- 	.mobile_only {
-  	display: none;
-  }
-  
-  .main_menu {
-  
-  	font-family: 'Open Sans';
-  
-  	li.color_picker {
-			margin-top: 7px !important;
-		}
-  
-  	li.category:hover > .sub_wrapper > ul.subnav { 
-  		display: block;
-  	}
-  	
-  	li.category a:hover,  li.category a:active {
-  		color: #346aa9;
-  	}
-  	
-  	.sub_wrapper {
-			padding-top: 11px;
-			height: auto;
-			width: auto;
-			position: relative;
-			right: 20px;
-		}
-  	
-  	.subnav {
-			display: none;
-			position: absolute;
-			background: #fff;
-			border-left: 1px solid #346aa9;
-			border-right: 1px solid #346aa9;
-			border-bottom: 1px solid #346aa9;
-			padding: 12px 0 12px 18px;
-			min-width: 180px;
-			z-index: 9999;
-				-o-transition:.5s;
-  			-ms-transition:.5s;
-  			-moz-transition:5s;
-  			-webkit-transition:.5s;
-  			transition:.5s;
 
-			& li {
-				list-style-type: none;
-				
-				& :hover {
-				color: #346aa9 !important;
-				}
-			}
-		}
+.main {
+  padding-top: 20px;
+}
 
-  	li.category {
-			display: inline-block;
-		}
-  
-		.nav {
-			float: right;
-			border-bottom: none;		
-		
-		& .top, .category {
-				background: transparent; 
-				border-right: none;
-				border-bottom: none;
-				border-top: none;
-			}
-		
-		}
-				
-		#helpButton_new {
-			padding-right: 10px;
-		}
-		
-  
-  }
-  
-  .toggle_theme_mobile, #helpButton_new_mobile, img.more_info, .toggle_theme {
-			cursor: pointer;
-	}
-	
-	#helpButton_new_mobile {
-			margin: 10px 20px;
-			color: #666;
-	}
-		
-  
- @media (max-width: 768px) {
- 
- 		.main_menu .nav {
- 			display: none;
- 		}
- 
-		.mobile_only {
-			display: block !important;
+ .mobile_only {
+  display: none;
+}
 
-		}
-		
-		.nav .category img {
-  		float:left; 
-		}
-		
-		
+.main_menu {
+  font-family: 'Open Sans';
+
+  li.color_picker {
+    margin-top: 7px !important;
   }
+
+  li.category:hover > .sub_wrapper > ul.subnav {
+    display: block;
+  }
+
+  li.category a:hover,  li.category a:active {
+    color: #346aa9;
+  }
+
+  .sub_wrapper {
+    padding-top: 11px;
+    height: auto;
+    width: auto;
+    position: relative;
+    right: 20px;
+  }
+
+  .subnav {
+    display: none;
+    position: absolute;
+    background: #fff;
+    border-left: 1px solid #346aa9;
+    border-right: 1px solid #346aa9;
+    border-bottom: 1px solid #346aa9;
+    padding: 12px 0 12px 18px;
+    min-width: 180px;
+    z-index: 9999;
+      -o-transition:.5s;
+      -ms-transition:.5s;
+      -moz-transition:5s;
+      -webkit-transition:.5s;
+      transition:.5s;
+
+    & li {
+      list-style-type: none;
+
+      & :hover {
+      color: #346aa9 !important;
+      }
+    }
+  }
+
+  li.category {
+    display: inline-block;
+  }
+
+  .nav {
+    float: right;
+    border-bottom: none;
+
+  & .top, .category {
+      background: transparent;
+      border-right: none;
+      border-bottom: none;
+      border-top: none;
+    }
+
+  }
+
+  #helpButton_new {
+    padding-right: 10px;
+  }
+}
+
+.toggle_theme_mobile, #helpButton_new_mobile, img.more_info, .toggle_theme {
+    cursor: pointer;
+}
+
+#helpButton_new_mobile {
+    margin: 10px 20px;
+    color: #666;
+}
+
+
+@media (max-width: 768px) {
+
+   .main_menu .nav {
+     display: none;
+   }
+
+  .mobile_only {
+    display: block !important;
+
+  }
+
+  .nav .category img {
+    float:left;
+  }
+}
