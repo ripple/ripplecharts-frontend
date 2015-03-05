@@ -5,6 +5,8 @@ angular.element(document).ready(function() {
     'templates-common',
     'ripplecharts.landing',
     'ripplecharts.markets',
+    'ripplecharts.manage-currencies',
+    'ripplecharts.manage-gateways',
     'ripplecharts.multimarkets',
     'ripplecharts.activeAccounts',
     'ripplecharts.graph',
