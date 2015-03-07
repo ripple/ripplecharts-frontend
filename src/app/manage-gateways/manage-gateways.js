@@ -27,13 +27,16 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     $('#btnSave').click(function() {
 
-      var val = $('#txtName').val();
-     if ( ( val.length == 34 && val.charAt(0) === "r" ) || val.charAt(0) === "~" ) {
+    var val = $('#txtName').val();
+      //if the manual gateway entered is 34 characters and begins with an r or begins with a '~' then add it
+      if ( ( val.length == 34 && val.charAt(0) === "r" ) || val.charAt(0) === "~" ) {
         addCheckbox($('#txtName').val());
         $('.description').html('');
       } else {
+      //otherwise print a warning
         $('.description').html('Please enter a valid Ripple Address or name');
       }
+      //clear placeholder
       $('.manual').val("");
     });
 
@@ -50,7 +53,7 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     $('.removeBtn').each(function() {
       $(this).click(function() {
-        $(this).parent().remove();
+        $(this).parent().fadeOut();
       });
     });
 

@@ -24,13 +24,16 @@ angular.module( 'ripplecharts.manage-currencies', [
 .controller( 'ManageCurrenciesCtrl', function ManageCurrenciesCtrl( $scope, gateways) {
 
     $('#btnSave').click(function() {
-        if($('#txtName').val().length === 3 ) {
-          addCheckbox($('#txtName').val());
-          $('.description').html('');
-        } else {
-          $('.description').html('Please enter a valid currency code');
-        }
-        $('.manual').val("");
+      //if the manual currency entered is 3 characters then add it
+      if($('#txtName').val().length === 3 ) {
+        addCheckbox($('#txtName').val());
+        $('.description').html('');
+      } else {
+      //otherwise print a warning
+        $('.description').html('Please enter a valid currency code');
+      }
+      //clear placeholder
+      $('.manual').val("");
     });
 
     function addCheckbox( name ) {
@@ -46,7 +49,7 @@ angular.module( 'ripplecharts.manage-currencies', [
       
       $('.removeBtn').each(function() {
         $(this).click(function() {
-          $(this).parent().remove();
+          $(this).parent().fadeOut();
         });
       });
 
