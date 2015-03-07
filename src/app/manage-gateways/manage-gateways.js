@@ -4,8 +4,8 @@ angular.module( 'ripplecharts.manage-gateways', [
 ])
 
 .config(function config( $stateProvider ) {
-  $stateProvider.state( 'manage-gateways', {
-    url: '/manage-gateways',
+  $stateProvider.state( 'manage-gateway', {
+    url: '/manage-gateway',
     views: {
       "main": {
         controller: 'ManageGatewaysCtrl',
@@ -23,7 +23,40 @@ angular.module( 'ripplecharts.manage-gateways', [
 
 .controller( 'ManageGatewaysCtrl', function ManageGatewaysCtrl( $scope, $state, $location, gateways ) {
 
-    if ($state.params.base && $state.params.trade) {
+   
+
+    $('#btnSave').click(function() {
+
+      var val = $('#txtName').val();
+     if ( ( val.length == 34 && val.charAt(0) === "r" ) || val.charAt(0) === "~" ) {
+        addCheckbox($('#txtName').val());
+        $('.description').html('');
+      } else {
+        $('.description').html('Please enter a valid Ripple Address or name');
+      }
+      $('.manual').val("");
+    });
+
+    function addCheckbox( name ) {
+
+    var container = $('#gatewayList');
+    var inputs = container.find('input');
+    var id = inputs.length+1;
+    var wrapper = $('<div class="inputWrapper">').appendTo(container);
+
+    $('<input />', { type: 'checkbox', id: 'currency-'+id, value: name }).appendTo(wrapper);
+    $('<label />', { 'for': 'currency-'+id, text: name }).appendTo(wrapper);
+    $('<a class="removeBtn">remove</a></div><br/>').appendTo(wrapper);
+
+    $('.removeBtn').each(function() {
+      $(this).click(function() {
+        $(this).parent().remove();
+      });
+    });
+
+    }
+
+   if ($state.params.base && $state.params.trade) {
     
     var base = $state.params.base.split(":");
     base = {currency:base[0],issuer:base[1] ? base[1]:""};
@@ -38,7 +71,7 @@ angular.module( 'ripplecharts.manage-gateways', [
     return;
   }
 
-  //load settings from session, local storage, options, or defaults  
+//load settings from session, local storage, options, or defaults  
   $scope.base  = store.session.get('base') || store.get('base') || 
     Options.base || {currency:"XRP", issuer:""};
   
@@ -54,82 +87,83 @@ angular.module( 'ripplecharts.manage-gateways', [
   $scope.range  = store.session.get('range') || store.get('range') || 
     Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };  
 
-    function loadDropdowns(selection) {
-        selection.html("");
+  function loadDropdowns(selection) {
+    selection.html("");
 
-        var selectionId;
-        if (selection.attr("id") === "quote") selectionId = "trade";
-        else selectionId = "base";
-        var currencies     = gateways.getCurrencies();
-        var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
-        var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
+    var selectionId;
+    if (selection.attr("id") === "quote") selectionId = "trade";
+    else selectionId = "base";
+    var currencies     = gateways.getCurrencies();
+    var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
+    var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
 
-        //format currnecies for dropdowns
-        for (var i=0; i<currencies.length; i++) {
-          currencies[i] = {
-            text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-            value    : i, 
-            currency : currencies[i].currency,
-            imageSrc : currencies[i].icon
-          };
-          if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
-        }
+    //format currnecies for dropdowns
+    for (var i=0; i<currencies.length; i++) {
+      currencies[i] = {
+        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
+        value    : i, 
+        currency : currencies[i].currency,
+        imageSrc : currencies[i].icon
+      };
+      if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
+    }
 
-        $("#"+selectionId+"_currency").ddslick({
-          data: currencies,
-          imagePosition: "left",
-          width: "120px",
-          onSelected: function (data) {
-            changeCurrency(data.selectedData.currency);
-          }
-        });
+    $("#"+selectionId+"_currency").ddslick({
+      data: currencies,
+      imagePosition: "left",
+      width: "120px",
+      onSelected: function (data) {
+        changeCurrency(data.selectedData.currency);
+      }
+    });
 
-        function changeCurrency(selected){
-          $("#"+selectionId+"_gateway").ddslick("destroy");
-          var issuers;
-          var issuer;
 
-          if (selected === "XRP") issuers = [{}];
+    function changeCurrency(selected){
+      $("#"+selectionId+"_gateway").ddslick("destroy");
+      var issuers;
+      var issuer;
 
-          else issuers = gateways.getIssuers(selected);
+      if (selected === "XRP") issuers = [{}];
 
-          for (var i=0; i<issuers.length; i++){
-            issuer = issuers[i];
-            issuer.text = issuer.name;
-            issuer.imageSrc = issuer.icon;
-            issuer.value = i;
+      else issuers = gateways.getIssuers(selected);
 
-            if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
-            else issuer.selected = false;
+      for (var i=0; i<issuers.length; i++){
+        issuer = issuers[i];
+        issuer.text = issuer.name;
+        if (selected != "XRP") 
+          issuer.imageSrc = issuer.assets['logo.svg'];
+        issuer.value = i;
 
-          }
-
-          $("#"+selectionId+"_gateway").ddslick({
-            data: issuers,
-            imagePosition: "left",
-            onSelected: function (data) {
-                if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
-            }
-          });
-
-          if (selected === "XRP") 
-            d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
-        }
-
-        function changeGateway(currency, issuer, selectionId){
-          if (issuer)
-            $scope[selectionId] = {currency: currency, issuer: issuer};
-          else 
-            $scope[selectionId] = {currency: "XRP"};
-          if ($scope.range.name === "max") updateMaxrange();
-          loadPair();
-        }
+        if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
+        else issuer.selected = false;
       }
 
-      var loaded = false;
-      var dropdownA = d3.select("#base");
-      var dropdownB = d3.select("#quote");
-      loadDropdowns(dropdownA);
-      //loadDropdowns(dropdownB);
+      $("#"+selectionId+"_gateway").ddslick({
+        data: issuers,
+        imagePosition: "left",
+        onSelected: function (data) {
+            if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
+        }
+      });
+
+      if (selected === "XRP") 
+        d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
+    }
+
+    function changeGateway(currency, issuer, selectionId){
+      if (issuer)
+        $scope[selectionId] = {currency: currency, issuer: issuer};
+      else 
+        $scope[selectionId] = {currency: "XRP"};
+      if ($scope.range.name === "max") updateMaxrange();
+      loadPair();
+      editList(selectionId, 'gateway');
+    }
+  }
+
+  var loaded = false;
+  var dropdownA = d3.select("#base");
+  loadDropdowns(dropdownA);
+ 
   
 });

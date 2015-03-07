@@ -2,8 +2,8 @@
   <div class="sub_nav">
     <div class="container">
       <ul class="manage-menu">
-        <li ui-route="/manage-currencies" ng-class="{active:$uiRoute !== false}" class="menu-manage-currencies"><a href="#/manage-currencies">Manage Currencies</a></li>
-        <li ui-route="/manage-gateways" ng-class="{active:$uiRoute !== false}" class="menu-manage-gateways"><a href="#/manage-gateways">Manage Gateways</a></li>
+        <li ui-route="/manage-currency" ng-class="{active:$uiRoute !== false}" class="menu-manage-currency"><a href="#/manage-currency">Manage Currencies</a></li>
+        <li ui-route="/manage-gateway" ng-class="{active:$uiRoute !== false}" class="menu-manage-gateway"><a href="#/manage-gateway">Manage Gateways</a></li>
       </ul>
     </div>
   </div>
@@ -13,14 +13,23 @@
   </div>
   <div class="container manage">
     <h5>Standard Currencies</h5>
-    <div id="curr_list"></div>
+    <div id="curr_list">
+      <div class="col-md-6 first_column"></div>
+      <div class="col-md-6 second_column"></div>
+    </div>
     <hr>
-    <h5>Add currencies manually</h5>
-      <input class="manual"></input>
-      <button class="submit btn">Add</button>
-      <p class="description">Currency Code</p>
+
+    <h5>Add currencies manually</h5> 
+      <input placeholder="Currency Code" maxlength="3" class="manual" type="text" id="txtName" />
+      <input type="button" value="Add" id="btnSave" class="submit btn" />
+      <span class="description"></span>
+        <div class="col-md-6 clear">
+          <div id="currencyList"></div>
+        </div>
     <hr>
-    <button class="submit btn">Save</button>
+
+    <button class="submit btn save">Save</button>
+
   </div>
 </div>
 <style>

@@ -2,8 +2,8 @@
   <div class="sub_nav">
     <div class="container">
       <ul class="manage-menu">
-        <li ui-route="/manage-currencies" ng-class="{active:$uiRoute !== false}" class="menu-manage-currencies"><a href="#/manage-currencies">Manage Currencies</a></li>
-        <li ui-route="/manage-gateways" ng-class="{active:$uiRoute !== false}" class="menu-manage-gateways"><a href="#/manage-gateways">Manage Gateways</a></li>
+        <li ui-route="/manage-currency" ng-class="{active:$uiRoute !== false}" class="menu-manage-currency"><a href="#/manage-currency">Manage Currencies</a></li>
+        <li ui-route="/manage-gateway" ng-class="{active:$uiRoute !== false}" class="menu-manage-gateway"><a href="#/manage-gateway">Manage Gateways</a></li>
       </ul>
     </div>
   </div>
@@ -16,14 +16,18 @@
    		<div id="base" class="dropdowns"></div>
         <div id="quote" class="dropdowns"></div>
     <h5>IRBA registered gateways</h5>
-    	<p class="description">The IRBA is a Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut a ex condimentum, sagittis nunc nec, viverra nibh. Donec bibendum, nunc in lacinia culis, turpis es</p>
+    	<p class="irba">The IRBA is a Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut a ex condimentum, sagittis nunc nec, viverra nibh. Donec bibendum, nunc in lacinia culis, turpis es</p>
     <hr>
     <h5>Other gateways</h5>
+   <!--  TODO: populate non-featured gateways here -->
     <hr>
     <h5>Add gateways manually</h5>
-      <input class="manual"></input>
-      <button class="submit btn">Add</button>
-      <p class="description">Ripple Address or Name</p>
+      <input placeholder="Ripple Address or Name" class="manual" type="text" id="txtName" />
+      <input type="button" value="Add" id="btnSave" class="submit btn" />
+      <p class="description"></p>
+      <div class="col-md-6 clear">
+          <div id="gatewayList"></div>
+      </div>
     <hr>
     <button class="submit btn">Save</button>
   </div>
