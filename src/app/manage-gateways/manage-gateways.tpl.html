@@ -2,28 +2,33 @@
   <div class="sub_nav">
     <div class="container">
       <ul class="manage-menu">
-        <li ui-route="/manage-currencies" ng-class="{active:$uiRoute !== false}" class="menu-manage-currencies"><a href="#/manage-currencies">Manage Currencies</a></li>
-        <li ui-route="/manage-gateways" ng-class="{active:$uiRoute !== false}" class="menu-manage-gateways"><a href="#/manage-gateways">Manage Gateways</a></li>
+        <li ui-route="/manage-currency" ng-class="{active:$uiRoute !== false}" class="menu-manage-currency"><a href="#/manage-currency">Manage Currencies</a></li>
+        <li ui-route="/manage-gateway" ng-class="{active:$uiRoute !== false}" class="menu-manage-gateway"><a href="#/manage-gateway">Manage Gateways</a></li>
       </ul>
     </div>
   </div>
   <div class="helpbox" ng-class="{showHelp : showHelp}">
     <h5>Manage Gateways</h5>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    <p>Customize and manage currencies and gateways for the drop down in the ‘Live Chart’ page. For gateways that are not already in the drop down, use the “Add gateways manually” field to add a custom gateway based on its ripple address or name. </p>
+    <p>Customizations such as gateway currency pairs and custom gateways are saved in cookies locally. Removing the cookies or accessing ripplecharts.com on a different browser will not have the customizations transferred over.</p>
   </div>
   <div class="container manage">
     <h5>Select curency to manage gateways for that curency.</h5>
    		<div id="base" class="dropdowns"></div>
         <div id="quote" class="dropdowns"></div>
     <h5>IRBA registered gateways</h5>
-    	<p class="description">The IRBA is a Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut a ex condimentum, sagittis nunc nec, viverra nibh. Donec bibendum, nunc in lacinia culis, turpis es</p>
+    	<p class="irba">The IRBA is a Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut a ex condimentum, sagittis nunc nec, viverra nibh. Donec bibendum, nunc in lacinia culis, turpis es</p>
     <hr>
     <h5>Other gateways</h5>
+   <!--  TODO: populate non-featured gateways here -->
     <hr>
     <h5>Add gateways manually</h5>
-      <input class="manual"></input>
-      <button class="submit btn">Add</button>
-      <p class="description">Ripple Address or Name</p>
+      <input placeholder="Ripple Address or Name" class="manual" type="text" id="txtName" />
+      <input type="button" value="Add" id="btnSave" class="submit btn" />
+      <p class="description"></p>
+      <div class="col-md-6 clear">
+          <div id="gatewayList"></div>
+      </div>
     <hr>
     <button class="submit btn">Save</button>
   </div>

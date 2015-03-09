@@ -34,7 +34,7 @@ angular.module( 'ripplecharts.markets', [
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
 
-  console.log(gateways.getIssuers('BTC'));
+  console.log(gateways.getIssuers('JPY'));
   
   if ($state.params.base && $state.params.trade) {
     
@@ -97,6 +97,9 @@ angular.module( 'ripplecharts.markets', [
       }
     });
 
+    editList(selectionId, 'gateway');
+    editList(selectionId, 'currency');
+
     function changeCurrency(selected){
       $("#"+selectionId+"_gateway").ddslick("destroy");
       var issuers;
@@ -109,12 +112,12 @@ angular.module( 'ripplecharts.markets', [
       for (var i=0; i<issuers.length; i++){
         issuer = issuers[i];
         issuer.text = issuer.name;
-        issuer.imageSrc = issuer.icon;
+        if (selected != "XRP") 
+          issuer.imageSrc = issuer.assets['logo.svg'];
         issuer.value = i;
 
         if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
         else issuer.selected = false;
-
       }
 
       $("#"+selectionId+"_gateway").ddslick({
@@ -136,6 +139,8 @@ angular.module( 'ripplecharts.markets', [
         $scope[selectionId] = {currency: "XRP"};
       if ($scope.range.name === "max") updateMaxrange();
       loadPair();
+      if ($('li.edit_list.gateway').length !=2) 
+        editList(selectionId, 'gateway');
     }
   }
 
@@ -144,10 +149,12 @@ angular.module( 'ripplecharts.markets', [
   var dropdownB = d3.select("#quote");
   loadDropdowns(dropdownA);
   loadDropdowns(dropdownB);
+ 
 
   //append edit list option to dropdowns
-  $('#base_currency ul.dd-options').add('#trade_currency ul.dd-options').append('<li ui-route="/manage-currencies" ng-class="{active:$uiRoute !== false}" class="edit_list currency"><a href="#/manage-currencies"><span class="plus">+</span> Edit List</a></li>');
-  $('#base_gateway ul.dd-options').add('#trade_gateway ul.dd-options').append('<li ui-route="/manage-gateways" ng-class="{active:$uiRoute !== false}" class="edit_list gateway"><a href="#/manage-gateways"><span class="plus">+</span> Edit List</a></li>');
+  function editList( selectionId, selectionSuffix ) {
+    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><a href="#/manage-' + selectionSuffix + '"><span class="plus">+</span> Edit List</a></li>');
+  }
 
   d3.select("#flip").on("click", function(){ //probably better way to do this
     loaded = false;

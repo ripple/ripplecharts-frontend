@@ -677,3 +677,148 @@ footer .links a:first-child {
     float:left;
   }
 }
+
+/*
+ * DDslick dropdown styles
+ */
+
+ //all currency images
+  #base_currency img.dd-selected-image, #trade_currency img.dd-selected-image,
+  #base_currency .dd-option-image, #trade_currency .dd-option-image  {
+    max-width: 11px;
+    margin-top: -2px;
+    height: auto;
+  }
+
+  .dd-option-image, .dd-selected-image {
+    float: none !important; //override default
+    margin-right: 2px;
+  }
+
+  #currencyPair a:hover, a:focus {
+      text-decoration: none;
+  }
+
+  .dd-container {
+    display: inline-block;
+  }
+
+  .dd-option {
+    padding: 0 10px;
+  }
+
+  .dd-options {
+    position: fixed !important;
+  }
+
+  .dd-pointer {
+    right: 7px;
+  }
+
+  .dd-option-text {
+    cursor: pointer;
+  }
+
+  .dd-option-text, .dd-selected-text {
+    line-height: 47px !important;
+    padding-left: 15px;
+    margin-bottom: 0;
+  }
+
+  //edit list button
+  li.edit_list {
+    height: 48px;
+    line-height: 48px;
+  
+    a {
+      color: #000;
+      vertical-align: top;
+    }
+
+    .plus {
+      color: rgb(153, 153, 153);
+      font-size: 24px;
+      margin: 0 5px;
+      font-weight: bold;
+    }
+
+    //gateway specific edit button
+    &.gateway {
+
+      .plus {
+        margin: 0 5px 0 10px;
+      }
+
+    }
+
+  }
+
+
+  #base_gateway, #trade_gateway {
+    margin-left: 10px;
+  }
+
+  //currency specific
+  #base_currency, #trade_currency {
+
+    max-width: 85px;
+
+    .dd-select, .dd-options {
+      max-width: 85px;
+    }
+
+    .dd-option-text, .dd-selected-text {
+      padding-left: 0;
+    }
+
+    .dd-option, .dd-selected {
+      padding: 0 3px;
+    }
+
+  }
+
+  //gateway specific
+  #base_gateway, #trade_gateway {
+    max-width: 250px;
+
+    .dd-select, .dd-options {
+      max-width: 250px;
+    }
+
+  }
+
+  .dd-selected, .dd-option-text {
+    color: #000;
+    font-family: "Open Sans";
+    padding: 0 10px !important;
+
+    &:hover {
+      color: #000;
+    }
+  }
+
+  .dd-select, .dd-option-selected, .dd-option {
+    background: transparent !important;
+  }
+
+  .disabledDropdown {
+    padding-top: 45px;
+    border: 1px solid #ccc;
+    opacity: .5;
+  
+    .dd-select {
+      border: none !important;
+    }
+
+    .dd-pointer-down {
+      opacity: .25;
+      top: -22px !important;
+      right: 12px;
+      cursor: initial !important;
+    }
+
+    li {
+      display: none;
+    }
+
+  }

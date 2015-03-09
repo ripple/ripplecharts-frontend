@@ -1,6 +1,17 @@
 //manage currencies & gateways
 .manage_wrapper {
 
+  font-family: "Open Sans" !important;
+
+  .dd-selected {
+    color: #000;
+    padding: 0 10px;
+  }
+
+  .dd-option:hover {
+    text-decoration: none;
+  }
+
   .manage {
 
     margin: 40px auto 0;
@@ -18,28 +29,63 @@
     .curr_symb {
       width: 12px;
       height: auto;
+      margin-right: 5px;
     }
 
-    #curr_list input {
-      margin: 5px 5px 5px 10px;
+    #btnSave {
+      float: left;
+    }
+
+    .clear {
+      clear: both;
+    }
+
+    #curr_list {
+      min-height: 240px;
+     
+      input {
+        margin: 5px 5px 10px 10px;
+      }
+    }
+
+    .removeBtn {
+      float: right;
+    }
+
+    hr {
+      clear: both;
+    }
+
+    #currencyList, #gatewayList {
+      max-width: 450px;
+
+      input {
+        margin-right: 5px;
+      }
     }
 
     input.manual {
       padding: 9px;
       vertical-align: bottom;
       min-width: 350px;
-      margin-right: 20px;
+      float: left;
+      margin: 0 20px 20px 0;
     }
 
     .description {
+      color: #b01e2e;
+      font-size: 12px;
+      margin: 5px 0;
+      display: block;
+      clear: both;
+    }
+
+    .irba {
       color: #999;
       font-size: 12px;
       margin: 5px 0;
     }
 
-    h5 {
-      font-family: 'Open Sans';
-    }
   }
 
   .sub_nav {
@@ -47,7 +93,6 @@
     padding: 5px;
     height: 55px;
     border-bottom: 1px solid #ccc;
-    font-family: 'Open Sans';
 
     .manage-menu {
       line-height: 45px;
