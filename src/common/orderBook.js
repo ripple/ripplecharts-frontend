@@ -464,6 +464,8 @@ var OrderBook = function (options) {
     var w = parseInt(wrap.style('width'), 10);
     var h = parseInt(wrap.style('height'), 10);
 
+    if (!w || !h) return;
+
     options.width  = w - options.margin.left - options.margin.right;
     options.height = h - options.margin.top - options.margin.bottom;
 

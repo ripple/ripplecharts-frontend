@@ -485,6 +485,8 @@ var MiniChart = function(base, counter, markets) {
     width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
     height = width/2>150 ? width/2 : 150
 
+    if (!width) return;
+
     if (old != width) {
       drawChart();
       drawData();

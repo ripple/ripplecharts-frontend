@@ -30,8 +30,8 @@ PriceChart = function (options) {
 
   type = options.type ? options.type : "line";  //default to line
   wrap = options.id ? d3.select("#"+options.id) : d3.select("body").append("div");
-  h    = parseInt(wrap.style('height'), 10);
-  w    = parseInt(wrap.style('width'), 10);
+  h    = parseInt(wrap.style('height'), 10) || 0;
+  w    = parseInt(wrap.style('width'), 10) || 0;
   div  = wrap.append("div").attr("class","priceChart");
   wrap.classed("priceChartWrap");
 
@@ -150,6 +150,8 @@ PriceChart = function (options) {
 
     var w = parseInt(wrap.style('width'), 10);
     var h = parseInt(wrap.style('height'), 10);
+
+    if (!w || !h) return;
 
     options.width  = w-options.margin.left - options.margin.right;
     options.height = h-options.margin.top - options.margin.bottom;
