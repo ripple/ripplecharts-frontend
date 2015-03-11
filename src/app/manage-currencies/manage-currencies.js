@@ -27,10 +27,10 @@ angular.module( 'ripplecharts.manage-currencies', [
       //if the manual currency entered is 3 characters then add it
       if($('#txtName').val().length === 3 ) {
         addCheckbox($('#txtName').val());
-        $('.description').html('');
+        $('.description').html('').css("clear" , "none");
       } else {
       //otherwise print a warning
-        $('.description').html('Please enter a valid currency code');
+        $('.description').html('Please enter a valid currency code').css("clear" , "both");
       }
       //clear placeholder
       $('.manual').val("");
