@@ -682,17 +682,22 @@ footer .links a:first-child {
  * DDslick dropdown styles
  */
 
- //all currency images
-  #base_currency img.dd-selected-image, #trade_currency img.dd-selected-image,
+ //dropdown currency images
   #base_currency .dd-option-image, #trade_currency .dd-option-image  {
-    max-width: 11px;
-    margin-top: -2px;
+    max-width: 14px;
+    margin: -2px -4px 0 4px;
+    height: auto;
+  }
+
+  //selected currency images
+  #base_currency img.dd-selected-image, #trade_currency img.dd-selected-image {
+    max-width: 14px;
+    margin: -2px 7px 0 -2px;
     height: auto;
   }
 
   .dd-option-image, .dd-selected-image {
     float: none !important; //override default
-    margin-right: 2px;
   }
 
   #currencyPair a:hover, a:focus {
@@ -701,10 +706,6 @@ footer .links a:first-child {
 
   .dd-container {
     display: inline-block;
-  }
-
-  .dd-option {
-    padding: 0 10px;
   }
 
   .dd-options {
@@ -720,39 +721,10 @@ footer .links a:first-child {
   }
 
   .dd-option-text, .dd-selected-text {
-    line-height: 47px !important;
+    line-height: 40px !important;
     padding-left: 15px;
     margin-bottom: 0;
   }
-
-  //edit list button
-  li.edit_list {
-    height: 48px;
-    line-height: 48px;
-  
-    a {
-      color: #000;
-      vertical-align: top;
-    }
-
-    .plus {
-      color: rgb(153, 153, 153);
-      font-size: 24px;
-      margin: 0 5px;
-      font-weight: bold;
-    }
-
-    //gateway specific edit button
-    &.gateway {
-
-      .plus {
-        margin: 0 5px 0 10px;
-      }
-
-    }
-
-  }
-
 
   #base_gateway, #trade_gateway {
     margin-left: 10px;
@@ -785,6 +757,10 @@ footer .links a:first-child {
       max-width: 250px;
     }
 
+  .dd-option {
+    padding: 0 10px !important;
+  }
+
   }
 
   .dd-selected, .dd-option-text {
@@ -802,7 +778,7 @@ footer .links a:first-child {
   }
 
   .disabledDropdown {
-    padding-top: 45px;
+    padding-top: 40px;
     border: 1px solid #ccc;
     opacity: .5;
   

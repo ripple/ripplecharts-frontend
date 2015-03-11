@@ -31,10 +31,10 @@ angular.module( 'ripplecharts.manage-gateways', [
       //if the manual gateway entered is 34 characters and begins with an r or begins with a '~' then add it
       if ( ( val.length == 34 && val.charAt(0) === "r" ) || val.charAt(0) === "~" ) {
         addCheckbox($('#txtName').val());
-        $('.description').html('');
+        $('.description').html('').removeClass('clear');
       } else {
       //otherwise print a warning
-        $('.description').html('Please enter a valid Ripple Address or name');
+        $('.description').html('Please enter a valid Ripple Address or name').addClass('clear');
       }
       //clear placeholder
       $('.manual').val("");
@@ -98,16 +98,20 @@ angular.module( 'ripplecharts.manage-gateways', [
     else selectionId = "base";
     var currencies     = gateways.getCurrencies();
     var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
-    var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
+    //var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
 
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
-      currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-        value    : i, 
-        currency : currencies[i].currency,
-        imageSrc : currencies[i].icon
-      };
+      if (currencies[i].currency === "XRP") {
+        //don't populate XRP in currency dropdown
+      } else {
+        currencies[i] = {
+          text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
+          value    : i, 
+          currency : currencies[i].currency,
+          imageSrc : currencies[i].icon
+        };
+      }
       if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
     }
 
@@ -122,46 +126,44 @@ angular.module( 'ripplecharts.manage-gateways', [
 
 
     function changeCurrency(selected){
-      $("#"+selectionId+"_gateway").ddslick("destroy");
-      var issuers;
+      $('#gateway_curr_list').html('');
+      $('#irba_gateway_curr_list').html('');
+      var issuers = gateways.getIssuers(selected);
       var issuer;
-
-      if (selected === "XRP") issuers = [{}];
-
-      else issuers = gateways.getIssuers(selected);
 
       for (var i=0; i<issuers.length; i++){
         issuer = issuers[i];
         issuer.text = issuer.name;
+
         if (selected != "XRP") 
           issuer.imageSrc = issuer.assets['logo.svg'];
         issuer.value = i;
 
         if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
         else issuer.selected = false;
+
+        if (issuers[i].imageSrc !== undefined) {
+
+          var gatewayList = d3.select('#gateway_curr_list');
+
+          gatewayList.append("input").attr("type", "checkbox");
+          gatewayList.append("img")
+            .attr("class", "gateway_symb")
+            .attr("src", issuers[i].icon)
+
+        } else {
+
+          var irbaGatewayList = d3.select('#irba_gateway_curr_list');
+
+          irbaGatewayList.append("input").attr("type", "checkbox");
+          irbaGatewayList.append("text").text(issuers[i].name);
+          irbaGatewayList.append("p");
+        }
+          
       }
 
-      $("#"+selectionId+"_gateway").ddslick({
-        data: issuers,
-        imagePosition: "left",
-        onSelected: function (data) {
-            if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
-        }
-      });
-
-      if (selected === "XRP") 
-        d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
     }
 
-    function changeGateway(currency, issuer, selectionId){
-      if (issuer)
-        $scope[selectionId] = {currency: currency, issuer: issuer};
-      else 
-        $scope[selectionId] = {currency: "XRP"};
-      if ($scope.range.name === "max") updateMaxrange();
-      loadPair();
-      editList(selectionId, 'gateway');
-    }
   }
 
   var loaded = false;
