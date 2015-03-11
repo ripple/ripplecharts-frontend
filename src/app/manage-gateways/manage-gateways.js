@@ -31,10 +31,10 @@ angular.module( 'ripplecharts.manage-gateways', [
       //if the manual gateway entered is 34 characters and begins with an r or begins with a '~' then add it
       if ( ( val.length == 34 && val.charAt(0) === "r" ) || val.charAt(0) === "~" ) {
         addCheckbox($('#txtName').val());
-        $('.description').html('').css("clear" , "none");
+        $('.description').html('').removeClass('clear');
       } else {
       //otherwise print a warning
-        $('.description').html('Please enter a valid Ripple Address or name').css("clear" , "both");
+        $('.description').html('Please enter a valid Ripple Address or name').addClass('clear');
       }
       //clear placeholder
       $('.manual').val("");
