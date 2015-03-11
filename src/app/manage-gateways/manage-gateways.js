@@ -98,10 +98,13 @@ angular.module( 'ripplecharts.manage-gateways', [
     else selectionId = "base";
     var currencies     = gateways.getCurrencies();
     var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
-    var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
+    //var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
 
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
+      if (currencies[i].text === 'XRP') {
+
+      } else {
       currencies[i] = {
         text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
         value    : i, 
@@ -110,6 +113,7 @@ angular.module( 'ripplecharts.manage-gateways', [
       };
       if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
     }
+  }
 
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
@@ -122,13 +126,9 @@ angular.module( 'ripplecharts.manage-gateways', [
 
 
     function changeCurrency(selected){
-      $("#"+selectionId+"_gateway").ddslick("destroy");
-      var issuers;
+      $('#gateway_curr_list').html('');
+      var issuers = gateways.getIssuers(selected);
       var issuer;
-
-      if (selected === "XRP") issuers = [{}];
-
-      else issuers = gateways.getIssuers(selected);
 
       for (var i=0; i<issuers.length; i++){
         issuer = issuers[i];
@@ -139,29 +139,29 @@ angular.module( 'ripplecharts.manage-gateways', [
 
         if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
         else issuer.selected = false;
+
+        if (issuers[i].imageSrc !== undefined) {
+
+          var gatewayList = d3.select('#gateway_curr_list');
+
+          gatewayList.append("input").attr("type", "checkbox");
+          gatewayList.append("img")
+            .attr("class", "gateway_symb")
+            .attr("src", issuers[i].icon)
+
+        } else {
+
+          var irbaGatewayList = d3.select('#irba_gateway_curr_list');
+
+          irbaGatewayList.append("input").attr("type", "checkbox");
+          irbaGatewayList.append("text").text(issuers[i].name);
+          irbaGatewayList.append("p");
+        }
+          
       }
 
-      $("#"+selectionId+"_gateway").ddslick({
-        data: issuers,
-        imagePosition: "left",
-        onSelected: function (data) {
-            if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
-        }
-      });
-
-      if (selected === "XRP") 
-        d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
     }
 
-    function changeGateway(currency, issuer, selectionId){
-      if (issuer)
-        $scope[selectionId] = {currency: currency, issuer: issuer};
-      else 
-        $scope[selectionId] = {currency: "XRP"};
-      if ($scope.range.name === "max") updateMaxrange();
-      loadPair();
-      editList(selectionId, 'gateway');
-    }
   }
 
   var loaded = false;
