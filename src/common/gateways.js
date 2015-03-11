@@ -19,21 +19,48 @@ angular.module('gateways', [])
     });
 
     var getCurrencies = function () {
+      console.log("sg",store.session.get('customCurrencies'));
+      console.log("g",store.get('customCurrencies'));
+
       var currencies = [];
+      var excludedCurrencies =  store.get('excludedCurrencies') || store.session.get('excludedCurrencies') || [];
+      var customCurrencies   =  store.get('customCurrencies') || store.session.get('customCurrencies') || [];
+      var include = true;
+
+      if (excludedCurrencies.indexOf("XRP") !== -1) include = false;
+      else include = true;
+
       currencies.push({
-        currency  : "XRP",
-        icon      : API + '/currencies/xrp.svg'
+        currency : "XRP",
+        icon     : API + '/currencies/xrp.svg',
+        custom   : false,
+        include  : include
       });
+
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
           if (userGateways[currency][i].selected === true) {
+            if (excludedCurrencies.indexOf(currency) !== -1) include = false;
+            else include = true;
             currencies.push({
               currency : currency,
-              icon     : API + '/currencies/'+ currency +'.svg'
+              icon     : API + '/currencies/'+ currency +'.svg',
+              custom   : false,
+              include  : include
             });
             break;
           }
         }
+      }
+
+      for (var j=0; j < customCurrencies.length; j++) {
+        if (customCurrencies[j].indexOf(customCurrencies[j]) !== -1) include = false;
+        else include = true;
+        currencies.push({
+          currency : customCurrencies[j],
+          custom   : true,
+          include  : include
+        });
       }
 
       return currencies;

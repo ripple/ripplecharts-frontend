@@ -34,7 +34,7 @@ angular.module( 'ripplecharts.markets', [
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
 
-  console.log(gateways.getIssuers('JPY'));
+  console.log(gateways.getCurrencies());
   
   if ($state.params.base && $state.params.trade) {
     
@@ -78,15 +78,23 @@ angular.module( 'ripplecharts.markets', [
     var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
 
     //format currnecies for dropdowns
-    for (var i=0; i<currencies.length; i++) {
-      currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-        value    : i, 
-        currency : currencies[i].currency,
-        imageSrc : currencies[i].icon
-      };
-      if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
+    var i = currencies.length;
+    while (i--) {
+      if (!currencies[i].include) {
+        currencies.splice(i, 1);
+      }
+      else {
+        currencies[i] = {
+          text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
+          value    : i, 
+          currency : currencies[i].currency,
+          imageSrc : currencies[i].icon
+        };
+        if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
+      }
     }
+
+    console.log("new", currencies);
 
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
