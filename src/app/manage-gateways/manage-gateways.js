@@ -123,6 +123,7 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     function changeCurrency(selected){
       $('#gateway_curr_list').html('');
+      $('#irba_gateway_curr_list').html('');
       var issuers = gateways.getIssuers(selected);
       var issuer;
 
