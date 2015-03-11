@@ -102,12 +102,16 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
-      currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-        value    : i, 
-        currency : currencies[i].currency,
-        imageSrc : currencies[i].icon
-      };
+      if (currencies[i].currency === "XRP") {
+        //don't populate XRP in currency dropdown
+      } else {
+        currencies[i] = {
+          text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
+          value    : i, 
+          currency : currencies[i].currency,
+          imageSrc : currencies[i].icon
+        };
+      }
       if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
     }
 
@@ -130,6 +134,7 @@ angular.module( 'ripplecharts.manage-gateways', [
       for (var i=0; i<issuers.length; i++){
         issuer = issuers[i];
         issuer.text = issuer.name;
+
         if (selected != "XRP") 
           issuer.imageSrc = issuer.assets['logo.svg'];
         issuer.value = i;
