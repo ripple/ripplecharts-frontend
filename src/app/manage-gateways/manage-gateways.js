@@ -102,9 +102,6 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     //format currnecies for dropdowns
     for (var i=0; i<currencies.length; i++) {
-      if (currencies[i].text === 'XRP') {
-
-      } else {
       currencies[i] = {
         text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
         value    : i, 
@@ -113,7 +110,6 @@ angular.module( 'ripplecharts.manage-gateways', [
       };
       if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
     }
-  }
 
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
