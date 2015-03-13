@@ -537,7 +537,7 @@ var MultiMarket = function (options) {
       });
 
     resizeButton();
-    addResizeListener(window, resizeButton);
+    addResizeListener(self.el.node(), resizeButton);
   }
 
 //resize the "add chart" button to keep the same dimensions as the charts
