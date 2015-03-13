@@ -114,7 +114,7 @@
             }]
     }, {
         "name": "Ripple LatAm",
-        "startDate": "2014-05-01", 
+        "startDate": "2014-05-01",
         "accounts": [{
             "address": "rP5ShE8dGBH6hHtNvRESdMceen36XFBQmh",
             "currencies": ["BRL","UYU","PEN","MXN","BTC","LTC","USD","CLP","ARS"],
@@ -128,7 +128,7 @@
             "address": "rrh7rf1gV2pXAoqA8oYbpHd8TKv5ZQeo67",
             "currencies": [
               {
-                "label" : "XAU", 
+                "label" : "XAU",
                 "code"  : "0158415500000000C1F76FF6ECB0BAC600000000"
               }
             ]
@@ -224,5 +224,15 @@
             }],
         "hotwallets": [],
         "domain": "mr-ripple.com"
+    },
+    {
+        "name": "Gatehub",
+        "startDate":"2015-2-15",
+        "accounts": [{
+            "address": "rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq",
+            "currencies": ["EUR","USD"]
+            }],
+        "hotwallets": ["rhotcWYdfn6qxhVMbPKGDF3XCKqwXar5J4"],
+        "domain": "gatehub.net"
     }
 ]
