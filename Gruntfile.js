@@ -16,10 +16,8 @@ module.exports = function ( grunt ) {
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-recess');
   grunt.loadNpmTasks('grunt-karma');
-  grunt.loadNpmTasks('grunt-ngmin');
+  grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-html2js');
-  grunt.loadNpmTasks('grunt-aws');
-  grunt.loadNpmTasks('grunt-cloudflare');
 
   /**
    * Load in our build configuration file.
