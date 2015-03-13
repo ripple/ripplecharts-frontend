@@ -149,7 +149,6 @@ var PriceChartWidget = function (options) {
       }
     }
     
-    console.log(params);
     //got everything, now load the chart
     self.load(params);   
     
@@ -190,7 +189,10 @@ var PriceChartWidget = function (options) {
   }
   
   //expose this function if the user wants to force a resize
-  this.resize = priceChart.resizeChart;
+  this.resize  = priceChart.resizeChart;
+  
+  //call this function to suspend the resize listener
+  this.suspend = priceChart.suspend();
   
   return this;
 }
