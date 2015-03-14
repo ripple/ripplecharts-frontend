@@ -247,7 +247,7 @@ module.exports = function ( grunt ) {
      * `ng-min` annotates the sources before minifying. That is, it allows us
      * to code without the array syntax.
      */
-    ngmin: {
+    ngAnnotate : {
       compile: {
         files: [
           {
@@ -654,7 +654,7 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance', 'ngmin', 'concat:compile_js', 'uglify',
+    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance', 'ngAnnotate', 'concat:compile_js', 'uglify',
     'index:compile',  'embed:compile_css', 'embed:compile'
   ]);
 
@@ -835,7 +835,7 @@ module.exports = function ( grunt ) {
           dest: jsFile
         });
 
-        grunt.config.set('ngmin.embed_'+config.name, {
+        grunt.config.set('ngAnnotate.embed_'+config.name, {
           files: [
             {
               src: [ jsFile ],
@@ -878,7 +878,7 @@ module.exports = function ( grunt ) {
 
 
         grunt.task.run('concat:embed_'+config.name);
-        grunt.task.run('ngmin:embed_'+config.name);
+        grunt.task.run('ngAnnotate:embed_'+config.name);
         grunt.task.run('uglify:embed_'+config.name);
 
       }
