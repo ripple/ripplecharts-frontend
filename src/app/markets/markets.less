@@ -22,6 +22,7 @@
 
 .markets .controls {
   overflow:hidden;
+  padding-top: 5px;
 }
 
 .markets .helpbox .type {
@@ -53,7 +54,7 @@
 }
 
 #currencyPair {
-  margin: 10px auto 5px 60px;
+  margin: 10px 20px 5px 60px;
   text-align:left;
 }
 
@@ -81,14 +82,15 @@
 }
 
 #flip {
-  margin:3px 5px;
+  //margin:3px 5px;
   font-size:12px; 
   cursor:pointer;
   color:#666;
   display:inline-block;
-  width:40px;
+  //width:40px;
   text-align:center;
   font-family:"Open Sans";
+  padding: 12px 8px 0;
 }
 
 #flip span {
@@ -262,11 +264,11 @@ li.edit_list {
 }
 
 
-@media (min-width:1100px) {
+//@media (min-width:1100px) {
   #interval {
-    margin-left: 30px;
+    margin-left: 60px;
   }
-} 
+//} 
 
 @media (max-width: 979px) {
   
@@ -312,11 +314,18 @@ li.edit_list {
   }  
 }
 
+@media (max-width: 768px) {
+  .rippleStatus {
+    display: none;
+  }
+}
+
 @media (max-width: 840px) {
   #currencyPair {
     width:94%;
-    text-align:center;
-    margin:10px 3%;
+    //text-align: left;
+    margin:10px auto;
+    display: inline;
   }
   
   .rippleStatus {
@@ -332,9 +341,13 @@ li.edit_list {
 
 @media (max-width: 600px) {
   
-  #interval label {display:none}
-  #range {margin-left:0px; float: center}
-  #interval {margin-left:60px; float: left}
+  #interval label {display:none;}
+  #range {margin-left:0px; float: center;}
+  #interval {
+    //margin-left:60px; 
+    float: center;
+  }
+
   #dates {
     width: auto;
     height: auto;
@@ -379,11 +392,21 @@ li.edit_list {
   #currencyPair {
     display:inline-block;
     width:400px;
-    margin-bottom:20px;
+    //margin-bottom:20px;
   }
   
   #toCSV {
     width:40px;
+  }
+
+  #chartType {
+    float: none;
+    margin-right: 0;
+    padding-bottom: 5px;
+  }
+
+  .rangeIntervalWrapper {
+    padding: 5px 0;
   }
 }
 
@@ -431,4 +454,6 @@ li.edit_list {
     zoom:1.33;
     margin:10px;  
   }
+
+
 }
