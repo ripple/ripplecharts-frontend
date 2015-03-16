@@ -853,8 +853,10 @@ module.exports = function ( grunt ) {
           'var API="'+deploymentConfig.api+'";'+
           'var DOMAIN="'+deploymentConfig.domain+'";';
 
-        if (config.files.less && config.files.less.length)
-          banner += 'var '+config.name.toUpperCase()+'_CSS="'+grunt.file.read(dir+"stylesheet.css")+'";';
+        if (config.files.less && config.files.less.length) {
+          var css = grunt.file.read(dir+"stylesheet.css").replace(/\r?\n|\r/g, '');
+          banner += 'var '+config.name.toUpperCase()+'_CSS="'+css+'";';
+        }
 
         if (loader)
           banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
