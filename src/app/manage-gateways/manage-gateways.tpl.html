@@ -14,7 +14,7 @@
   </div>
   <div class="container manage">
     <h5>Select curency to manage gateways for that curency.</h5>
-   		<div id="base" class="dropdowns"></div>
+   		<div id="dropdown"></div>
       <div id="quote" class="dropdowns"></div>
     <h5>IRBA registered gateways</h5>
       <div id="gateway_curr_list"></div>
@@ -25,13 +25,15 @@
     <hr>
     <h5>Add gateways manually</h5>
       <input placeholder="Ripple Address or Name" class="manual" type="text" id="txtName" />
-      <input type="button" value="Add" id="btnSave" class="submit btn" />
+      <input type="button" value="Add" id="btnAdd" class="submit btn" />
       <p class="description"></p>
       <div class="col-md-6 clear">
-          <div id="gatewayList"></div>
+          <div id="custom_gateway_list"></div>
       </div>
-    <hr>
-    <button class="submit btn">Save</button>
+    
+    <!-- <hr> -->
+    <!-- <button class="submit btn">Save</button> -->
+    
   </div>
 </div>
 <style>

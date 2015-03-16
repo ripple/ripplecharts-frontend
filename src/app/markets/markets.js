@@ -34,7 +34,7 @@ angular.module( 'ripplecharts.markets', [
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
 
-  console.log(gateways.getIssuers('JPY'));
+  console.log(gateways.getCurrencies());
   
   if ($state.params.base && $state.params.trade) {
     
@@ -78,14 +78,20 @@ angular.module( 'ripplecharts.markets', [
     var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
 
     //format currnecies for dropdowns
-    for (var i=0; i<currencies.length; i++) {
-      currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-        value    : i, 
-        currency : currencies[i].currency,
-        imageSrc : currencies[i].icon
-      };
-      if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
+    var i = currencies.length;
+    while (i--) {
+      if (!currencies[i].include) {
+        currencies.splice(i, 1);
+      }
+      else {
+        currencies[i] = {
+          text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
+          value    : i, 
+          currency : currencies[i].currency,
+          imageSrc : currencies[i].icon
+        };
+        if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
+      }
     }
 
     $("#"+selectionId+"_currency").ddslick({
@@ -104,21 +110,38 @@ angular.module( 'ripplecharts.markets', [
       $("#"+selectionId+"_gateway").ddslick("destroy");
       var issuers;
       var issuer;
+      var picked = false;
 
       if (selected === "XRP") issuers = [{}];
 
       else issuers = gateways.getIssuers(selected);
 
-      for (var i=0; i<issuers.length; i++){
-        issuer = issuers[i];
-        issuer.text = issuer.name;
-        if (selected != "XRP") 
-          issuer.imageSrc = issuer.assets['logo.svg'];
-        issuer.value = i;
 
-        if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
-        else issuer.selected = false;
+      var i = issuers.length;
+      while (i--) {
+        issuer = issuers[i];
+        if (selected != "XRP" && !issuers[i].include) {
+          issuers.splice(i, 1);
+        } else {
+          issuer.text = issuer.name;
+          if (selected != "XRP" && !issuer.custom) {
+            issuer.imageSrc = issuer.assets['logo.svg'];
+          }
+          issuer.value = i;
+          if ($scope[selectionId].issuer === issuer.account) {
+            issuer.selected = true;
+          }
+          else issuer.selected = false;
+        }
       }
+
+      //Special edge case for custom issuer being duplicate of featured
+      for (i=0; i<issuers.length; i++) {
+        if (issuers[i].selected && !picked) picked = true;
+        else if (issuers[i].selected && picked) issuers[i].selected = false;
+      }
+
+      console.log("all done:", issuers);
 
       $("#"+selectionId+"_gateway").ddslick({
         data: issuers,
@@ -153,7 +176,7 @@ angular.module( 'ripplecharts.markets', [
 
   //append edit list option to dropdowns
   function editList( selectionId, selectionSuffix ) {
-    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><a href="#/manage-' + selectionSuffix + '"><span class="plus">+</span> Edit List</a></li>');
+    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><a href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><span class="plus">+</span> Edit List</a></li>');
   }
 
   d3.select("#flip").on("click", function(){ //probably better way to do this
