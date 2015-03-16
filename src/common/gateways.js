@@ -54,12 +54,13 @@ angular.module('gateways', [])
       }
 
       for (var j=0; j < customCurrencies.length; j++) {
-        if (customCurrencies[j].indexOf(customCurrencies[j]) !== -1) include = false;
+        if (excludedCurrencies.indexOf(customCurrencies[j]) !== -1) include = false;
         else include = true;
         currencies.push({
           currency : customCurrencies[j],
           custom   : true,
-          include  : include
+          include  : include,
+          icon     : API + '/currencies/default.svg'
         });
       }
 
@@ -70,6 +71,10 @@ angular.module('gateways', [])
       var issuers = [ ];
       var normalized;
       var assets;
+      var name;
+
+      var excludedGateways =  store.get('excludedGateways') || store.session.get('excludedGateways') || [];
+      var customGateways   =  store.get('customGateways') || store.session.get('customGateways') || [];
 
       if (!options) options = { };
 
@@ -82,13 +87,35 @@ angular.module('gateways', [])
           normalized = userGateways[currency][i].name.toLowerCase().replace(/\W/g, '');
           assets = handleAssets(userGateways[currency][i].assets, normalized);
 
+          if (getIndex(excludedGateways, currency, userGateways[currency][i].account) !== -1) include = false;
+          else include = true;
+
           issuers.push({
             name     : userGateways[currency][i].name,
             account  : userGateways[currency][i].account,
             icon     : API + '/gateways/' + normalized + '/assets/logo.svg',
             assets   : assets,
             featured : userGateways[currency][i].featured,
-            selected : userGateways[currency][i].selected
+            selected : userGateways[currency][i].selected,
+            custom   : false,
+            include  : include 
+          });
+        }
+      }
+
+      for (var j=0; j < customGateways.length; j++) {
+        if (getIndex(excludedGateways, customGateways[j].currency, customGateways[j].issuer) !== -1) include = false;
+        else include = true;
+        if (currency === customGateways[j].currency) {
+          if (customGateways[j].name) name = customGateways[j].name;
+          else name = customGateways[j].issuer;
+          issuers.push({
+            name     : name,
+            account  : customGateways[j].issuer,
+            featured : false,
+            selected : false,
+            custom   : true,
+            include  : include 
           });
         }
       }
@@ -107,6 +134,20 @@ angular.module('gateways', [])
 
         return obj;
       }
+
+      function getIndex(array, currency, iss) {
+        var index = -1;
+        var gateway;
+        for (var i=0; i< array.length; i++) {
+          gateway = array[i];
+          if (gateway.currency === currency && gateway.issuer === iss) {
+            index = i;
+            break;
+          }
+        }
+        return index;
+      }
+
     };
 
     return {

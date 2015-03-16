@@ -26,27 +26,49 @@ angular.module( 'ripplecharts.manage-currencies', [
   var currencies = gateways.getCurrencies();
   var curr_col1  = d3.select('#curr_list .first_column');
   var curr_col2  = d3.select('#curr_list .second_column');
-  var other_col  = d3.select('#other_curr_list .other_currencies');
+  var other_col  = d3.select('#currencyList');
 
   console.log(currencies);
+
+  //load settings from session, local storage, options, or defaults  
+  $scope.base  = store.session.get('base') || store.get('base') || 
+    Options.base || {currency:"XRP", issuer:""};
+  
+  $scope.trade = store.session.get('trade') || store.get('trade') || 
+    Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
 
   $scope.excludedCurrencies = store.get('excludedCurrencies') || store.session.get('excludedCurrencies') || [];
   $scope.customCurrencies   = store.get('customCurrencies') || store.session.get('customCurrencies') || [];
 
   //Add standard currency boxes
-  currencies.forEach(function(currency, i){
+  currencies.forEach(function(currency, i) {
 
+    //FIX i < something problem
     if (!currency.custom  && i < 9) {
       currencyWrapper = curr_col1.append('div').attr('class', 'currency strd');
     } else if (!currency.custom && i > 8){
       currencyWrapper = curr_col2.append('div').attr('class', 'currency strd');
     } else if (currency.custom) {
-      currencyWrapper = other_col.append('div').attr('class', 'currency custom');
+      currencyWrapper = other_col.append('div').attr('class', 'currency custom inputWrapper');
     }
-    //add other
 
-    currencyWrapper.append('input').attr('type', 'checkbox').property('checked', currency.include);
-    if (currency.icon)
+    currencyWrapper.append('input').attr('type', 'checkbox').property('checked', currency.include)
+      .on('change', function() {
+        var status = d3.select(this).property('checked');
+        var index = $scope.excludedCurrencies.indexOf(currency.currency);
+        if (!status) {
+          if (index === -1) $scope.excludedCurrencies.push(currency.currency);
+        }
+        else $scope.excludedCurrencies.splice(index, 1);
+        store.set('excludedCurrencies', $scope.excludedCurrencies);
+        store.session.set('excludedCurrencies', $scope.excludedCurrencies);
+        if (!status) {
+          checkLocal(currency.currency, 'base');
+          checkLocal(currency.currency, 'trade');
+        }
+      });
+
+    if (!currency.custom)
       currencyWrapper.append('img').attr('class', 'curr_symb').attr('src', currency.icon);
     currencyWrapper.append('text').text(currency.currency);
     if (currency.custom)
@@ -60,25 +82,10 @@ angular.module( 'ripplecharts.manage-currencies', [
         });
   });
 
-  var strd = d3.selectAll('.currency').on('change', function(d){
-    var self             = d3.select(this);
-    var selectedCurrency = self.select('text').text();
-    var input            = self.select('input');
-    var status           = input.property('checked');
-    var index = $scope.excludedCurrencies.indexOf(selectedCurrency);
-    if (!status) {
-      if (index === -1) $scope.excludedCurrencies.push(selectedCurrency);
-    }
-    else $scope.excludedCurrencies.splice(index, 1);
-    store.set('excludedCurrencies', $scope.excludedCurrencies);
-    store.session.set('excludedCurrencies', $scope.excludedCurrencies); 
-
-  });
-
   //Add custom currencies
   var addButton = d3.select('#btnAdd').on('click', function() {
-    var addBox  = d3.select('#txtName');
-    var newCurr = addBox.property('value');
+    var addBox      = d3.select('#txtName');
+    var newCurr     = addBox.property('value');
     var description = d3.select('.description');
     if (newCurr.length === 3) {
       addCheckbox(newCurr);
@@ -90,43 +97,57 @@ angular.module( 'ripplecharts.manage-currencies', [
     addBox.property('value', '');
   });
 
-  //Save custom currencies
-  var saveButton = d3.select('#btnSave').on('click', function() {
-    var entries = d3.selectAll('.inputWrapper');
-    entries.each(function(){
-      var self  = d3.select(this);
-      var name  = self.select('label').text();
-      var index = $scope.customCurrencies.indexOf(name);
-      if (index === -1) {
-        $scope.customCurrencies.push(name);
-        store.session.set('customCurrencies', $scope.customCurrencies);
-        store.set('customCurrencies', $scope.customCurrencies);
-        currencyWrapper = other_col.append('div');
-        currencyWrapper.append('input').attr('type', 'checkbox').property('checked', true);
-        //add condition for checkbox
-        currencyWrapper.append('text').text(name);
-        currencyWrapper.append('a').attr('class', 'removeBtn').text('remove')
-          .on('click', function(){
-            index = $scope.customCurrencies.indexOf(name);
-            d3.select(this.parentNode).remove();
-            $scope.customCurrencies.splice(index, 1);
-            store.session.set('customCurrencies', $scope.customCurrencies);
-            store.set('customCurrencies', $scope.customCurrencies);
-          });
-      } 
-    });
-    entries.remove();
-  });
-
   //Add checkbox
   function addCheckbox ( name ) {
     var container    = d3.select('#currencyList');
     var inputWrapper = container.append('div').attr('class', 'inputWrapper');
+    var index        = $scope.customCurrencies.indexOf(name);
 
-    inputWrapper.append('label').text(name);
-    inputWrapper.append('a').attr('class', 'removeBtn').text('remove').on('click', function(){
-      inputWrapper.remove();
-    });
+    if (index === -1) {
+      $scope.customCurrencies.push(name);
+      store.session.set('customCurrencies', $scope.customCurrencies);
+      store.set('customCurrencies', $scope.customCurrencies);
+      inputWrapper.append('input').attr('type', 'checkbox').property('checked', true);
+      inputWrapper.append('label').text(name);
+      inputWrapper.append('a').attr('class', 'removeBtn').text('remove').on('click', function(){
+        inputWrapper.remove();
+        index = $scope.customCurrencies.indexOf(name);
+        d3.select(this.parentNode).remove();
+        $scope.customCurrencies.splice(index, 1);
+        store.session.set('customCurrencies', $scope.customCurrencies);
+        store.set('customCurrencies', $scope.customCurrencies);
+        //ADD remove from excluded
+      });
+    } 
+  }
+
+
+  //CLEAN UP
+  function checkLocal(currency, select) {
+    var passed = false;
+    if ($scope[select].currency === currency){
+      console.log("same!", select);
+      var clist = gateways.getCurrencies();
+      for(var j=0; j<clist.length; j++) {
+        if (clist[j].include && passed) {
+          var list = gateways.getIssuers(clist[j].currency);
+          for(var i=0; i<list.length; i++) {
+            gateway = list[i];
+            if (gateway.include) {
+              console.log("gateway", gateway);
+              $scope[select] = {currency: clist[j].currency, issuer: gateway.account};
+              store.set(select, $scope[select]);
+              store.session.set(select, $scope[select]);
+              return;
+            }
+          }
+        }
+        if (clist[j].currency === currency) passed = true;
+      }
+      $scope[select] = {currency: 'XRP'};
+      store.set(select, $scope[select]);
+      store.session.set(select, $scope[select]);
+    }
   }
   
 });
