@@ -83,7 +83,13 @@ angular.module( 'ripplecharts.manage-currencies', [
       currencyWrapper.append('a').attr('class', 'removeBtn').text('remove')
         .on('click', function() {
           var index = $scope.customCurrencies.indexOf(currency.currency);
-          d3.select(this.parentNode).remove();
+          currencyWrapper.transition()
+            .transition()
+            .duration(300)
+            .style('opacity', 0)
+            .each('end', function(){
+              d3.select(this).remove();
+            });
           $scope.customCurrencies.splice(index, 1);
           store.session.set('customCurrencies', $scope.customCurrencies);
           store.set('customCurrencies', $scope.customCurrencies);
@@ -92,6 +98,16 @@ angular.module( 'ripplecharts.manage-currencies', [
 
   //Add custom currencies
   var addButton = d3.select('#btnAdd').on('click', function() {
+    add();
+  });
+
+  $('#txtName').keypress(function(event) {
+    if (event.keyCode == 13) {
+      add();
+    }
+  });
+
+  function add() {
     var addBox      = d3.select('#txtName');
     var newCurr     = addBox.property('value');
     var description = d3.select('.description');
@@ -103,7 +119,7 @@ angular.module( 'ripplecharts.manage-currencies', [
       description.html('Please enter a valid currency code.')
     }
     addBox.property('value', '');
-  });
+  }
 
   //Add checkbox
   function addCheckbox ( name ) {
@@ -118,9 +134,14 @@ angular.module( 'ripplecharts.manage-currencies', [
       inputWrapper.append('input').attr('type', 'checkbox').property('checked', true);
       inputWrapper.append('label').text(name);
       inputWrapper.append('a').attr('class', 'removeBtn').text('remove').on('click', function(){
-        inputWrapper.remove();
+        inputWrapper.transition()
+          .transition()
+          .duration(300)
+          .style('opacity', 0)
+          .each('end', function(){
+            d3.select(this).remove();
+          });
         index = $scope.customCurrencies.indexOf(name);
-        d3.select(this.parentNode).remove();
         $scope.customCurrencies.splice(index, 1);
         store.session.set('customCurrencies', $scope.customCurrencies);
         store.set('customCurrencies', $scope.customCurrencies);
@@ -128,7 +149,6 @@ angular.module( 'ripplecharts.manage-currencies', [
       });
     } 
   }
-
 
   //CLEAN UP
   function checkLocal(currency, select) {

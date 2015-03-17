@@ -67,7 +67,7 @@ angular.module( 'ripplecharts.manage-gateways', [
   function add(){
     addBox  = d3.select('#txtName');
     newGateway = addBox.property('value');
-    description = d3.select('.description').html('');
+    description = d3.select('.description').html('Loading...');
     d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
       if (err) description.html('Could not load custom gateway.');
       else {
@@ -104,7 +104,14 @@ angular.module( 'ripplecharts.manage-gateways', [
       else inputWrapper.append('text').text(iss);
       
       inputWrapper.append('a').attr('class', 'removeBtn').text('remove').on('click', function(){
-        inputWrapper.remove();
+        inputWrapper.transition()
+          .transition()
+          .duration(500)
+          .style('opacity', 0)
+          .each('end', function(){
+            d3.select(this).remove();
+          });
+
         removeCustom(currency, iss);
       });
     } 
@@ -208,7 +215,13 @@ angular.module( 'ripplecharts.manage-gateways', [
             inputWrapper.append('text').text(issuers[i].name+" ("+issuers[i].account+")");
           else inputWrapper.append('text').text(issuers[i].account);
           inputWrapper.append('a').attr('class', 'removeBtn').text('remove').on('click', function(){
-            inputWrapper.remove();
+            inputWrapper.transition()
+              .transition()
+              .duration(300)
+              .style('opacity', 0)
+              .each('end', function(){
+                d3.select(this).remove();
+              });
             removeCustom(selected, issuer.account);
           });
         }
