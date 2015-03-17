@@ -69,7 +69,7 @@ networkGraph = function () {
             ["#d9dae3","#dfd0d8"]]};
 
   var HIGH_SATURATION_COLORS = {
-    "__N": "#f00", //RED  
+    "__N": "#f00", //RED
     "BTC": "#fa0", //ORANGE
     "EUR": "#af0", //YELLOW
     "USD": "#0f0", //LIME
@@ -192,13 +192,13 @@ networkGraph = function () {
 
         getLines(options, function (err, resp){
           if (err) return callback(err);
-          lines = lines.concat(resp.lines);  
+          lines = lines.concat(resp.lines);
           callback (null, {account:options.account, message:message, lines:lines});
         });
       } else {
         callback (null, {account:options.account, message:message, lines:lines});
       }
-    });  
+    });
 
     request.request();
     message = request.message;
@@ -259,6 +259,7 @@ networkGraph = function () {
     //request transactions for the current account, with offset = nodes[nodeMap[address]].transactions.length
     var rrat = (function() {return function(){
       var x = remote.request_account_tx({
+        binary:false,
         account: focalNode,
         limit: TRANSACTION_PAGE_LENGTH,
         ledger_index_min: -1,
@@ -344,7 +345,7 @@ networkGraph = function () {
     delete pendingRequests[this.message.id];
     var n = nodes[nodeMap[obj.account]];
     var noMoreTransactions = true;
-    if (n.transactions) { //XXXX Uncaught TypeError: Cannot read property 'transactions' of undefined 
+    if (n.transactions) { //XXXX Uncaught TypeError: Cannot read property 'transactions' of undefined
       //You don't want to add the same set of transactions more than once.
       //So, only add the transactions if one of the following is true:
       //1. We have no marker stored locally.
@@ -473,7 +474,7 @@ networkGraph = function () {
       setTimeout(function(){animateTransaction(tx);}, 2000);
       var animateButton = $('<input type="button" value="animate"/>');
       animateButton.on('click', function (){animateTransaction(txx)});
-      $("#leftHeading").html('Transaction information ').append(animateButton); 
+      $("#leftHeading").html('Transaction information ').append(animateButton);
       $("#feedTab").addClass("unselectedTab").removeClass("selectedTab");
       $("#individualTab").addClass("unselectedTab").removeClass("selectedTab");
       $("#transactionInformation").show();
@@ -611,10 +612,10 @@ networkGraph = function () {
     var td  = $('<td style="width:40px;">');
     var div = $('<div class="'+transactionType+' icon" title="'+txAltText[transactionType]+'">&nbsp;</div>');
     if (transactionType=='send') div.on('contextmenu', function(){
-      animateInPlaceWithHash(tx.hash); 
+      animateInPlaceWithHash(tx.hash);
       return false;
     }).on('click', function(){
-      showTransactionWithHash(tx.hash); 
+      showTransactionWithHash(tx.hash);
     });
 
    td.append(div);
@@ -719,9 +720,9 @@ networkGraph = function () {
       "<b>Hash:</b> <tt>"+result.hash+"</tt><br/>"+
       (result.inLedger ? "<b>Ledger:</b> "+result.inLedger+"<br/>" : "")+
       "<b>Signing key:</b> <tt>"+result.SigningPubKey+
-      "</tt><br/><b>Signature:</b><br/><div class='bigString' style='width:"+result.TxnSignature.length*4+"px;'>"+result.TxnSignature+"</div>");  
+      "</tt><br/><b>Signature:</b><br/><div class='bigString' style='width:"+result.TxnSignature.length*4+"px;'>"+result.TxnSignature+"</div>");
 
-    return div;  
+    return div;
   }
 
 
@@ -743,7 +744,7 @@ networkGraph = function () {
     //Receive an array of the format:
     //[{"account":"rnziParaNb8nsU4aruQdwYE3j5jUcqjzFm","balance":"0","currency":"BTC","limit":"0","limit_peer":"0.25","quality_in":0,"quality_out":0},
     //{"account":"rU5KBPzSyPycRVW1HdgCKjYpU6W9PKQdE8","balance":"0","currency":"BTC","limit":"0","limit_peer":"10","quality_in":0,"quality_out":0}]
-    nodes[nodeMap[origin]].trustLines = trustLines; //XXXX Uncaught TypeError: Cannot set property 'trustLines' of undefined 
+    nodes[nodeMap[origin]].trustLines = trustLines; //XXXX Uncaught TypeError: Cannot set property 'trustLines' of undefined
     nodes[nodeMap[origin]].balances = getBalances(origin);
 
     if (origin == focalNode) {
@@ -759,7 +760,7 @@ networkGraph = function () {
         .attr("r", HALO_MARGIN+nodeRadius(nodes[nodeMap[origin]]) );
     }
 
-    if ((degreeMap[origin] < RECURSION_DEPTH 
+    if ((degreeMap[origin] < RECURSION_DEPTH
          || ( degreeMap[origin] == RECURSION_DEPTH) && transactionMode)) {
 
       if (!transactionMode && trustLines.length >= MAX_NUTL) {
@@ -801,7 +802,7 @@ networkGraph = function () {
               newNodes.push(node);
               nodes.push(node);
               //Only add the node if the trust line is non-zero.
-              degreeMap[account] = degreeMap[origin] + 1; 
+              degreeMap[account] = degreeMap[origin] + 1;
               serverGetInfo(account); //If this node is not on the list yet, we're going to need to get the info and trustLines for it.
               serverGetLines(account);
             }
@@ -854,7 +855,7 @@ networkGraph = function () {
       }
       link.currency=trustLines[i].currency;
       le_links.push(link);
-    }  
+    }
   }
 
 
@@ -882,7 +883,7 @@ networkGraph = function () {
     translationX += d3.event.dx;
     translationY += d3.event.dy;
     panAndZoom();
-  } 
+  }
 
 
   function zoomOut() {
@@ -936,7 +937,7 @@ networkGraph = function () {
       .attr("stop-opacity","1");
   }
 
-  for (var cur in COLOR_TABLE) {  
+  for (var cur in COLOR_TABLE) {
     var shades = COLOR_TABLE[cur];
     for (var i=0; i<shades.length; i++) {
       defineRadialGradient("gradient"+cur+i, shades[i][0], shades[i][1]);
@@ -972,7 +973,7 @@ networkGraph = function () {
     var bal = currentCurrencyBalance(accountNode);
     if (currentCurrency != "XRP") {
       bal = bal * 1000000000;
-    } 
+    }
     return 14+Math.pow(Math.log(Math.abs(bal)+1),3) / 2000;
     //TESTING FUN STUFF
     /*var tl = accountNode.trustLines.length;
@@ -1027,7 +1028,7 @@ networkGraph = function () {
       if (nutl>MAX_NUTL) {
         alert('Account '+address+' has too many trustlines to show ('+nutl+')');
       } else {
-        serverGetLines(address); 
+        serverGetLines(address);
       }
       updateInformation(address);
     }
@@ -1104,7 +1105,7 @@ networkGraph = function () {
 
 
   function colorNodes(nodeSelection, colorDegree) {
-    nodeSelection.style("fill", function(d) { 
+    nodeSelection.style("fill", function(d) {
         var cur = findCur(d);
         return ("url(#gradient"+cur+colorDegree+")");
       })
@@ -1140,15 +1141,15 @@ networkGraph = function () {
       if (link.source.account.Account == address ||
           link.target.account.Account == address) { // If this address is party to the link...
         le_links[i].opacity = 1;
-      } else { 
+      } else {
         le_links[i].opacity = 0.3;
       }
-    } 
+    }
 
 
     svg.select("g#linkGroup").selectAll("line.static")
       .data(le_links)
-      .style("opacity", function (d) {return d.opacity}); 
+      .style("opacity", function (d) {return d.opacity});
   }
 
   function reassignColors(address) {
@@ -1160,7 +1161,7 @@ networkGraph = function () {
       //only if the new degree is lower than the previous one (or the degree is as yet unknown)
       if (typeof degreeMap[counterparty] == "undefined" || degreeMap[counterparty] > degreeMap[address]+1) {
         degreeMap[counterparty] = degreeMap[address]+1;
-        reassignColors(counterparty);  
+        reassignColors(counterparty);
       }
     }
 
@@ -1171,7 +1172,7 @@ networkGraph = function () {
         goon(link.target.account.Account);
       } else if (link.target.account.Account == address) {
         goon(link.source.account.Account);
-      } 
+      }
     }
   }
 
@@ -1182,7 +1183,7 @@ networkGraph = function () {
         colorNodes(svg.select("g#nodeGroup").select("circle#_"+address), 3);
         fadeNodes(address, true);
       }
-    } 
+    }
   }
 
 
@@ -1258,7 +1259,7 @@ networkGraph = function () {
       if(!HIGH_SATURATION_COLORS.hasOwnProperty(initialCur)) {initialCur = "___";}
     } else {
       initialCur = "XRP";
-    } 
+    }
     shine(true, tx.Account, initialCur);
 
     if (amount.currency) {
@@ -1266,7 +1267,7 @@ networkGraph = function () {
       if(!HIGH_SATURATION_COLORS.hasOwnProperty(finalCur)) {finalCur = "___";}
     } else {
       finalCur = "XRP";
-    } 
+    }
 
     if (tx.Paths) {
       pathList = [];
@@ -1353,8 +1354,8 @@ function addNodes(degree) {
   colorNodes(node, colorDegree);
   node.append("svg:title").text( function(d) { return d.account.Account;} );
   node.call(force.drag);
-  
-  
+
+
 
   var link = svg.select("g#linkGroup").selectAll("line.static").data(force.links())
     .enter().append("svg:line")
@@ -1377,12 +1378,12 @@ function addNodes(degree) {
 
 
   arrowhead = setArrowheads(arrowhead);
-  
+
   function euclidean(pointA, pointB) {
     return Math.sqrt(Math.pow(pointA.x-pointB.x,2)
       +Math.pow(pointA.y-pointB.y,2));
   }
-  
+
   function projection(distance, origin, towards) {
     var farDistance = euclidean(origin, towards);
     var scalar = distance/farDistance;
@@ -1390,15 +1391,15 @@ function addNodes(degree) {
     var yOutput = origin.y + (towards.y-origin.y)*scalar;
     return {x:xOutput, y:yOutput};
   }
-  
+
   function angle(pointA, pointB) {
     return 180/Math.PI * Math.atan2(pointB.y-pointA.y, pointB.x-pointA.x);
   }
-  
+
   function thetaValue(value) {
     return value/(1+value) * 1.04719755 // max = 60 degrees in radians
   }
-  
+
   function setArrowheads(selection) {
     return selection
       .attr("id", function(d) { return "arrow_"+d.source.account.Account;})
@@ -1411,7 +1412,7 @@ function addNodes(degree) {
 
   }
 
-  
+
   var halo = svg.select("g#haloGroup").selectAll("circle.halo").data(nodes)
     .enter().append("svg:circle")
     .attr("class", "halo")
@@ -1419,12 +1420,12 @@ function addNodes(degree) {
     .attr("cx", function(d) { return d.x; })
     .attr("cy", function(d) { return d.y; })
     .attr("r", function(d){ return HALO_MARGIN+nodeRadius(d);} );
-    
+
   force.start();
-  
 
 
-  
+
+
 
   force.on("tick", function(e) {
     var node = svg.selectAll("circle.node");
@@ -1441,7 +1442,7 @@ function addNodes(degree) {
       .attr("cy", function(d) { return d.y; });
     setArrowheads(arrowhead);
   });
-  
+
   force.drag().on("dragstart", function(){
     d3.event.sourceEvent.stopPropagation(); // silence other listeners
   });
@@ -1452,7 +1453,7 @@ function refocus(focus, erase, noExpand) {
   if (erase) {
     eraseGraph();
   }
-  
+
   store.session.set("graphID", focus);
   lastFocalNode = focalNode;
   focalNode = focus;
@@ -1514,7 +1515,7 @@ function roundNumber(number) {
 function updateInformation(address) {
   $('#focus').val(address);
   $('#focalAddress').text(address);
-  
+
   var currencies = [];
   var balances = getBalances(address);
   for (var currency in balances) {
@@ -1527,7 +1528,7 @@ function updateInformation(address) {
     trustLines = [];
   }
 
-  
+
   $('#balanceTable').html("");
   $('#balanceTable').append(
     '<tr class="toprow">'+
@@ -1538,20 +1539,20 @@ function updateInformation(address) {
       '<td class="bold amount" id="xrpBalance">'+commas(nodes[nodeMap[address]].account.Balance/1000000)+'</td>'+
       '<td class="light expander">&nbsp;</td>'+
     '</tr>');
- 
+
   function sortHelper (a,b) {
-    return Math.abs(b.balance)-Math.abs(a.balance);    
+    return Math.abs(b.balance)-Math.abs(a.balance);
   }
-  
+
   function rowClick(){
-    toggleExpansion(this);  
+    toggleExpansion(this);
   }
-  
+
   for (var i=0; i<currencies.length; i++) {
     var cur = currencies[i];
     var trustLinesForCur = [];
     var tr, tl;
-    
+
     for (var j=0; j<trustLines.length; j++) {
       var trustLine = trustLines[j];
       if (trustLine.currency == cur) {
@@ -1568,11 +1569,11 @@ function updateInformation(address) {
         '<td class="bold amount">'+commas(balances[cur])+'</td>'+
         '<td class="light expander">'+(trustLinesForCur.length ? '<span id="'+cur+'Expander">+</span></td>' : '&nbsp;')+
       '</tr>');
-    
+
     if (trustLinesForCur.length) tr.click(rowClick);
     $('#balanceTable').append(tr);
-      
-      
+
+
     if (trustLinesForCur.length) {
       $('#balanceTable').append(
         '<tr class="innertablecontainer" id="'+cur+'">'+
@@ -1587,21 +1588,21 @@ function updateInformation(address) {
           '<td class="light midsize mediumgray center" style="width:16%">Balance</td>'+
           '<td class="light midsize mediumgray right" style="width:16%;">Max</td>'+
         '</tr>');
-        
+
       for (var k=0; k<trustLinesForCur.length; k++) {
         tl = trustLinesForCur[k];
         tr = $('<tr/>').append($('<th class="light address"/>').append(clickableAccountSpan(tl.account)));
         tr.append(
           '<td class="light '+(tl.limit_peer>0 ? 'negative ' : '')+'amount"><span title="'+commas(-1*tl.limit_peer)+'">'+roundNumber(-1*tl.limit_peer)+'</span></td>'+
           '<td style="width:37px;" class="bold '+(tl.balance<0 ? 'negative ' : '')+'amount center"><span title="'+commas(tl.balance)+'">'+roundNumber(tl.balance)+'</span></td>'+
-          '<td style="width:37px;" class="light '+(tl.limit<0 ? 'negative ' : '')+'amount right"><span title="'+commas(tl.limit)+'">'+roundNumber(tl.limit)+'</span></td>' 
+          '<td style="width:37px;" class="light '+(tl.limit<0 ? 'negative ' : '')+'amount right"><span title="'+commas(tl.limit)+'">'+roundNumber(tl.limit)+'</span></td>'
         );
-        
+
         $('#'+cur+'InnerTable').append(tr);
-      }   
+      }
     }
   }
-  
+
   updateTransactions(address);
 }
 
@@ -1629,9 +1630,9 @@ function showTransactionWithHash(hash) {
   //window.location.hash = hash;
   changeMode("transaction",transactionMap[hash]);
 }
-  
+
 var transactionMap = {};
-  
+
 function updateTransactions(address, appending) {
   if (!appending) {
     $('#transactionTable').html("");
@@ -1687,8 +1688,8 @@ function updateTransactions(address, appending) {
             var mn = meta.AffectedNodes[j].ModifiedNode || meta.AffectedNodes[j].DeletedNode || meta.AffectedNodes[j].CreatedNode;
             var LatestFields = mn.FinalFields || mn.NewFields;
             var diff,type,cur,issuer,cip;
-              
-            
+
+
             if (mn && LatestFields) {
               if (LatestFields.Account == address || (LatestFields.HighLimit && LatestFields.HighLimit.issuer == address) ) {
                 type = mn.LedgerEntryType;
@@ -1705,7 +1706,7 @@ function updateTransactions(address, appending) {
                   diff = 0-(LatestFields.Balance.value - (mn.PreviousFields ? mn.PreviousFields.Balance.value : 0));
                   cur = LatestFields.Balance.currency;
                   issuer = LatestFields.LowLimit.issuer;
-                  cip = cur+":"+issuer; 
+                  cip = cur+":"+issuer;
                   //console.log("Got/gave", cip, ":", diff);
                   if (affectedBalances[cip]) {
                     affectedBalances[cip]+=diff;
@@ -1721,7 +1722,7 @@ function updateTransactions(address, appending) {
               }
             }
           }
-          
+
           var affectedKeys = Object.keys(affectedBalances)
           if (affectedKeys.length == 2) {
             var fip = affectedBalances[affectedKeys[0]] > 0;
@@ -1731,7 +1732,7 @@ function updateTransactions(address, appending) {
             var negative = affectedBalances[affectedKeys[negKey]];
             if (positive * negative > 0) {
               console.log("Could not interpret as offerin.");
-              continue; 
+              continue;
             } else {
               transactionType = "offerin";
               amount = affectedKeys[posKey]=="XRP" ? positive : {value: positive, currency: affectedKeys[posKey]};
@@ -1758,7 +1759,7 @@ function updateTransactions(address, appending) {
           amount = amount/1000000;
         }
       }
-      
+
       if (secondAmount) {
         if (secondAmount.currency) {
           secondCurrency = secondAmount.currency.split(":")[0];
@@ -1769,49 +1770,49 @@ function updateTransactions(address, appending) {
           secondAmount = secondAmount/1000000;
         }
       }
-      
+
       transactionMap[tx.hash] = tx;
       transactionMap[tx.hash].meta = meta;
       var success = meta.TransactionResult == "tesSUCCESS" ? "" : "failed";
       var result =  meta.TransactionResult == "tesSUCCESS" ? "" : "["+meta.TransactionResult+"] ";
       var tr = $('<tr hash="'+tx.hash+'"/>');
       var td = $('<td style="width:10%;"/>');
-      var div = $('<div class="'+transactionType+success+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div>');    
-        
-      if (transactionType=='send' || 
+      var div = $('<div class="'+transactionType+success+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div>');
+
+      if (transactionType=='send' ||
           transactionType=='receive' ||
           transactionType=='intermediate') {
-            
-        div.on('contextmenu', makeMenuClick(tx)).on('click', makeClick(tx)); 
-         
+
+        div.on('contextmenu', makeMenuClick(tx)).on('click', makeClick(tx));
+
       } else {
         div.css('cursor', "default");
       }
-      
+
       td.append(div);
       tr.append(td);
-      
+
       td = $('<td style="width:90%"'+(counterparty===""?' colspan="1"':'')+'>');
       var span = $('<span style="float:left">');
       span.append('<span '+(aissuer&&!(transactionType=='trustin'||transactionType=='trustout')?'title="'+aissuer+'"':'')+'>');
-      
-      if (amount) span.append('<span class="bold amount small" >'+commas(amount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+currency+'</span></span>');      
+
+      if (amount) span.append('<span class="bold amount small" >'+commas(amount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+currency+'</span></span>');
       if (secondAmount) span.append(' <i class="light small darkgray" style="margin-right:5px">for</i> <span '+(secondAissuer&&!(transactionType=='trustin'||transactionType=='trustout')?'title="'+secondAissuer+'"':'')+'><span class="bold amount small">'+commas(secondAmount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+secondCurrency+'</span>');
       span.append(agoDate(tx.date));
       td.append(span);
 
-      
+
       if (counterparty) td.append(clickableAccountSpan(counterparty).css({
         display         : "block",
-        "margin-top"    : "3px", 
+        "margin-top"    : "3px",
         overflow        : "hidden",
         "text-overflow" : "ellipsis"
       }).addClass("right"));
-        
-      tr.append(td);  
+
+      tr.append(td);
       $('#transactionTable').append(tr);
     }
-    
+
     if (!nodes[nodeMap[address]].transactionsFinished) { //Are there more?
       $('#transactionTable').append('<tr id="transactionThrobber"><td colspan=3 style="text-align:center; padding:10px"><img class="loader" src="assets/images/rippleThrobber.png" width=30 height=30 /></td></tr>');
       $('#transactionThrobber').bind('inview', function (event, visible) {
@@ -1825,17 +1826,17 @@ function updateTransactions(address, appending) {
     }
 
   }
-  
+
   function makeMenuClick(tx) {
     return function () {
-        animateInPlaceWithHash(tx.hash); 
+        animateInPlaceWithHash(tx.hash);
         return false;
     };
   }
-  
+
   function makeClick(tx) {
     return function(){
-        showTransactionWithHash(tx.hash); 
+        showTransactionWithHash(tx.hash);
     }
   }
 }
@@ -1885,7 +1886,7 @@ function agoDate(secondsSince2000) {
   if (number === 0) {
     number = "";
   }
-  
+
   var d = new Date(0);
   d.setUTCSeconds(secondsSince2000+UNIX_RIPPLE_TIME);
   return '<span style="margin-right:5px" class="light small mediumgray date" title="'+d.toUTCString()+'">'+number+" "+unit+' ago</span>';
@@ -1938,7 +1939,7 @@ function linkOrNot(d) {
   if(currentCurrency=="XRP" || currentCurrency==d.currency) {
     var o = 5*Math.pow(Math.log(1+d.value),0.3333);
     return o;
-  } 
+  }
   else{return 0;}
 }
 
@@ -1996,7 +1997,7 @@ function focusOtherCurrency(that) {
 
 function blurOtherCurrency(that) {
 
-  if ($(that).val()==='' || $(that).css('font-style')=='italic') { 
+  if ($(that).val()==='' || $(that).css('font-style')=='italic') {
     $(that).css('font-style','italic').css('color','#999').val('other');
   } else {
     var upper=$(that).val().toUpperCase();
@@ -2016,7 +2017,7 @@ window.onhashchange = function(){
     } else if ("0123456789ABCDEF".indexOf(window.location.hash.charAt(1)) != -1) {
       showTransactionWithHash(window.location.hash.substring(1));
     }
-    
+
   } else {
   }
   changingFocus = false;
@@ -2035,52 +2036,51 @@ window.onhashchange = function(){
       $(this).blur();
     }
   });
-  
+
   $('#searchButton').click(gotoThing);
-  
+
   $('#feedTab').click(function(){
     changeMode('feed');
   });
-  
+
   $('#individualTab').click(function(){
     changeMode('individual',senderAddress);
   });
-  
+
   $('#zoomInButton').click(zoomIn);
   $('#zoomOutButton').click(zoomOut);
   $('#currency').change(function(){
     changeCurrency(this.value);
   });
-  
+
   $('#otherCurrency')
     .focus(function(){focusOtherCurrency(this)})
     .blur(function(){blurOtherCurrency(this)});
-  
+
   updateInformation(focalNode);
-  
+
   function resizeGraph () {
-    //translationX = parseInt(svg.style("width"),10)/4; 
+    //translationX = parseInt(svg.style("width"),10)/4;
     //translationY = parseInt(svg.style("height"),10)/4;
     translationX = translationY = 0;
     panAndZoom();
   }
-  
-  addResizeListener(window, resizeGraph);
-  
+
+  addResizeListener($('#visualization').get(0), resizeGraph);
+
   this.suspend = function (){
     force.stop();
-    removeResizeListener(window, resizeGraph); 
     clearInterval(requestRepetitionInterval);
   }
-  
+
   function isConnected() {
     var server;
-    
+
     return remote._connected
     && (server = remote._getServer())
     && (Date.now() - server._lastLedgerClose <= 1000 * 20);
   }
-  
+
   function init () {
       //Subscriptions
       remote.on('ledger_closed', function(x,y){
@@ -2089,10 +2089,10 @@ window.onhashchange = function(){
         remote.request_ledger('closed', handleLedger);
       });
       remote.on('transaction_all', handleTransaction);
-      
+
       //Get current ledger
       remote.request_ledger('closed', handleLedger);
-    
+
       if (firstTime) {
         if (transaction_id && transaction_id !== "") {
           nodeMap = {};
@@ -2107,16 +2107,16 @@ window.onhashchange = function(){
           serverGetInfo(focalNode);
         }
       }
-      firstTime = false;    
+      firstTime = false;
   }
-  
+
   if (isConnected(remote)) {
     init();
-      
+
   } else {
     //Opening sequence:
     remote.connect(function() {
       init();
     });
   }
-} 
+}
