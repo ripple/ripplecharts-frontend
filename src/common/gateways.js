@@ -19,8 +19,6 @@ angular.module('gateways', [])
     });
 
     var getCurrencies = function () {
-      console.log("sg",store.session.get('customCurrencies'));
-      console.log("g",store.get('customCurrencies'));
 
       var currencies = [];
       var excludedCurrencies =  store.get('excludedCurrencies') || store.session.get('excludedCurrencies') || [];
@@ -30,16 +28,10 @@ angular.module('gateways', [])
       if (excludedCurrencies.indexOf("XRP") !== -1) include = false;
       else include = true;
 
-      currencies.push({
-        currency : "XRP",
-        icon     : API + '/currencies/xrp.svg',
-        custom   : false,
-        include  : include
-      });
-
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
-          if (userGateways[currency][i].selected === true) {
+          //temporarily removing XAU.5
+          if (userGateways[currency][i].selected === true && currency !== '0158415500000000C1F76FF6ECB0BAC600000000') {
             if (excludedCurrencies.indexOf(currency) !== -1) include = false;
             else include = true;
             currencies.push({
@@ -51,7 +43,20 @@ angular.module('gateways', [])
             break;
           }
         }
-      }
+      } 
+
+      currencies.sort(function(a, b){
+        if(a.currency < b.currency) return -1;
+        if(a.currency > b.currency) return 1;
+        return 0;
+      });
+
+      currencies.unshift({
+        currency : "XRP",
+        icon     : API + '/currencies/xrp.svg',
+        custom   : false,
+        include  : include
+      });
 
       for (var j=0; j < customCurrencies.length; j++) {
         if (excludedCurrencies.indexOf(customCurrencies[j]) !== -1) include = false;
@@ -73,8 +78,8 @@ angular.module('gateways', [])
       var assets;
       var name;
 
-      var excludedGateways =  store.get('excludedGateways') || store.session.get('excludedGateways') || [];
-      var customGateways   =  store.get('customGateways') || store.session.get('customGateways') || [];
+      var excludedGateways =  store.get('excludedGateways') || store.session.get('excludedGateways') || {};
+      var customGateways   =  store.get('customGateways') || store.session.get('customGateways') || {};
 
       if (!options) options = { };
 
@@ -103,15 +108,15 @@ angular.module('gateways', [])
         }
       }
 
-      for (var j=0; j < customGateways.length; j++) {
-        if (getIndex(excludedGateways, customGateways[j].currency, customGateways[j].issuer) !== -1) include = false;
-        else include = true;
-        if (currency === customGateways[j].currency) {
-          if (customGateways[j].name) name = customGateways[j].name;
+      if (currency in customGateways) {
+        for (var j=0; j < customGateways[currency].length; j++) {
+          if (getIndex(excludedGateways, currency, customGateways[currency][j].issuer) !== -1) include = false;
+          else include = true;
+          if (customGateways[currency][j].name) name = customGateways[currency][j].name;
           else name = customGateways[j].issuer;
           issuers.push({
             name     : name,
-            account  : customGateways[j].issuer,
+            account  : customGateways[currency][j].issuer,
             featured : false,
             selected : false,
             custom   : true,
@@ -134,19 +139,22 @@ angular.module('gateways', [])
 
         return obj;
       }
-
-      function getIndex(array, currency, iss) {
+    
+      function getIndex(object, currency, iss) {
         var index = -1;
         var gateway;
-        for (var i=0; i< array.length; i++) {
-          gateway = array[i];
-          if (gateway.currency === currency && gateway.issuer === iss) {
-            index = i;
-            break;
+        if (currency in object) {
+          var array = object[currency];
+          for (var i=0; i< array.length; i++) {
+            gateway = array[i];
+            if (gateway.issuer === iss) {
+              index = i;
+              break;
+            }
           }
         }
         return index;
-      }
+      } 
 
     };
 

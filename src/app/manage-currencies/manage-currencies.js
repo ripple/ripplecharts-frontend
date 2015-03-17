@@ -28,8 +28,6 @@ angular.module( 'ripplecharts.manage-currencies', [
   var curr_col2  = d3.select('#curr_list .second_column');
   var other_col  = d3.select('#currencyList');
 
-  console.log(currencies);
-
   //load settings from session, local storage, options, or defaults  
   $scope.base  = store.session.get('base') || store.get('base') || 
     Options.base || {currency:"XRP", issuer:""};
@@ -40,8 +38,12 @@ angular.module( 'ripplecharts.manage-currencies', [
   $scope.excludedCurrencies = store.get('excludedCurrencies') || store.session.get('excludedCurrencies') || [];
   $scope.customCurrencies   = store.get('customCurrencies') || store.session.get('customCurrencies') || [];
 
+  $scope.excludedGateways = store.get('excludedGateways') || store.session.get('excludedGateways') || [];
+
   //Add standard currency boxes
   currencies.forEach(function(currency, i) {
+
+    var checkbox;
 
     //FIX i < something problem
     if (!currency.custom  && i < 9) {
@@ -52,14 +54,19 @@ angular.module( 'ripplecharts.manage-currencies', [
       currencyWrapper = other_col.append('div').attr('class', 'currency custom inputWrapper');
     }
 
-    currencyWrapper.append('input').attr('type', 'checkbox').property('checked', currency.include)
+    checkbox = currencyWrapper.append('input').attr('type', 'checkbox').property('checked', currency.include)
       .on('change', function() {
         var status = d3.select(this).property('checked');
         var index = $scope.excludedCurrencies.indexOf(currency.currency);
         if (!status) {
           if (index === -1) $scope.excludedCurrencies.push(currency.currency);
         }
-        else $scope.excludedCurrencies.splice(index, 1);
+        else {
+          $scope.excludedCurrencies.splice(index, 1);
+          delete $scope.excludedGateways[currency.currency];
+          store.set('excludedGateways', $scope.excludedGateways);
+          store.session.set('excludedGateways', $scope.excludedGateways);
+        }
         store.set('excludedCurrencies', $scope.excludedCurrencies);
         store.session.set('excludedCurrencies', $scope.excludedCurrencies);
         if (!status) {
@@ -67,6 +74,8 @@ angular.module( 'ripplecharts.manage-currencies', [
           checkLocal(currency.currency, 'trade');
         }
       });
+
+    if (currency.currency === "XRP") checkbox.property('disabled', true);
 
     if (!currency.custom)
       currencyWrapper.append('img').attr('class', 'curr_symb').attr('src', currency.icon);
@@ -126,7 +135,6 @@ angular.module( 'ripplecharts.manage-currencies', [
   function checkLocal(currency, select) {
     var passed = false;
     if ($scope[select].currency === currency){
-      console.log("same!", select);
       var clist = gateways.getCurrencies();
       for(var j=0; j<clist.length; j++) {
         if (clist[j].include && passed) {
@@ -134,7 +142,6 @@ angular.module( 'ripplecharts.manage-currencies', [
           for(var i=0; i<list.length; i++) {
             gateway = list[i];
             if (gateway.include) {
-              console.log("gateway", gateway);
               $scope[select] = {currency: clist[j].currency, issuer: gateway.account};
               store.set(select, $scope[select]);
               store.session.set(select, $scope[select]);
