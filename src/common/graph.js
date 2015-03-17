@@ -259,6 +259,7 @@ networkGraph = function () {
     //request transactions for the current account, with offset = nodes[nodeMap[address]].transactions.length
     var rrat = (function() {return function(){
       var x = remote.request_account_tx({
+        binary:false,
         account: focalNode,
         limit: TRANSACTION_PAGE_LENGTH,
         ledger_index_min: -1,
