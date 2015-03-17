@@ -655,7 +655,6 @@ module.exports = function ( grunt ) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-
     'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance',
     'ngAnnotate', 'concat:compile_js', 'uglify',
     'index:compile',  'embed:compile_css', 'embed:compile'
