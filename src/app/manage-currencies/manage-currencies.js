@@ -45,7 +45,6 @@ angular.module( 'ripplecharts.manage-currencies', [
 
     var checkbox;
 
-    //FIX i < something problem
     if (!currency.custom  && i < 9) {
       currencyWrapper = curr_col1.append('div').attr('class', 'currency strd');
     } else if (!currency.custom && i > 8){
