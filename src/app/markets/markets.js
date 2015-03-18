@@ -33,8 +33,6 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
-
-  console.log(gateways.getCurrencies());
   
   if ($state.params.base && $state.params.trade) {
     
@@ -140,8 +138,6 @@ angular.module( 'ripplecharts.markets', [
         if (issuers[i].selected && !picked) picked = true;
         else if (issuers[i].selected && picked) issuers[i].selected = false;
       }
-
-      console.log("all done:", issuers);
 
       $("#"+selectionId+"_gateway").ddslick({
         data: issuers,
