@@ -97,7 +97,12 @@ angular.module( 'ripplecharts.markets', [
       imagePosition: "left",
       width: "120px",
       onSelected: function (data) {
-        changeCurrency(data.selectedData.currency);
+        if (!loaded) {
+          changeCurrency(data.selectedData.currency);
+        }
+        else if (data.selectedData.currency !== $scope[selectionId].currency) {
+          changeCurrency(data.selectedData.currency);
+        }
       }
     });
 
@@ -105,24 +110,31 @@ angular.module( 'ripplecharts.markets', [
     editList(selectionId, 'currency');
 
     function changeCurrency(selected){
+      console.log("Changing");
       $("#"+selectionId+"_gateway").ddslick("destroy");
       var issuers;
       var issuer;
-      var picked = false;
+      var picked  = false;
+      var disable = false;
 
-      if (selected === "XRP") issuers = [{}];
+      if (selected !== $scope[selectionId].currency) {
+        console.log("different");
+      }
 
-      else issuers = gateways.getIssuers(selected);
-
+      issuers = gateways.getIssuers(selected);
+      if (selected === "XRP" || issuers.length === 0) {
+        issuers = [{}];
+        disable = true;
+      }
 
       var i = issuers.length;
       while (i--) {
         issuer = issuers[i];
-        if (selected != "XRP" && !issuers[i].include) {
+        if (disable !== true && !issuers[i].include) {
           issuers.splice(i, 1);
         } else {
           issuer.text = issuer.name;
-          if (selected != "XRP" && !issuer.custom) {
+          if (disable !== true && !issuer.custom) {
             issuer.imageSrc = issuer.assets['logo.svg'];
           }
           issuer.value = i;
@@ -143,12 +155,17 @@ angular.module( 'ripplecharts.markets', [
         data: issuers,
         imagePosition: "left",
         onSelected: function (data) {
-            if (loaded) changeGateway(selected, data.selectedData.account, selectionId);
+          if (loaded && data.selectedData.account !== $scope[selectionId].issuer) {
+            console.log("different:", data.selectedData.account, $scope[selectionId].issuer);
+            changeGateway(selected, data.selectedData.account, selectionId);
+          }
         }
       });
 
-      if (selected === "XRP") 
+      if (disable === true) {
         d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
+      }
+
     }
 
     function changeGateway(currency, issuer, selectionId){

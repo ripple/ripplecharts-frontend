@@ -83,9 +83,9 @@ angular.module('gateways', [])
 
       if (!options) options = { };
 
-      if (!userGateways[currency]) {
+      /*if (!userGateways[currency]) {
         return issuers;
-      }
+      }*/
 
       for (var i in userGateways[currency]) {
         if (options.all || userGateways[currency][i].selected === true) {
