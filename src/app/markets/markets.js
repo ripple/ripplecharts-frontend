@@ -110,16 +110,11 @@ angular.module( 'ripplecharts.markets', [
     editList(selectionId, 'currency');
 
     function changeCurrency(selected){
-      console.log("Changing");
       $("#"+selectionId+"_gateway").ddslick("destroy");
       var issuers;
       var issuer;
       var picked  = false;
       var disable = false;
-
-      if (selected !== $scope[selectionId].currency) {
-        console.log("different");
-      }
 
       issuers = gateways.getIssuers(selected);
       if (selected === "XRP" || issuers.length === 0) {
@@ -156,7 +151,6 @@ angular.module( 'ripplecharts.markets', [
         imagePosition: "left",
         onSelected: function (data) {
           if (loaded && data.selectedData.account !== $scope[selectionId].issuer) {
-            console.log("different:", data.selectedData.account, $scope[selectionId].issuer);
             changeGateway(selected, data.selectedData.account, selectionId);
           }
         }
