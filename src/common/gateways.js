@@ -83,10 +83,6 @@ angular.module('gateways', [])
 
       if (!options) options = { };
 
-      if (!userGateways[currency]) {
-        return issuers;
-      }
-
       for (var i in userGateways[currency]) {
         if (options.all || userGateways[currency][i].selected === true) {
           normalized = userGateways[currency][i].name.toLowerCase().replace(/\W/g, '');

@@ -84,6 +84,17 @@ angular.module( 'ripplecharts.manage-gateways', [
     addBox.property('value', '');
   }
 
+  var saved = d3.select('.saved');
+  function flashSaved() {
+    saved.transition()
+      .duration(500)
+      .style('opacity', 1);
+    saved.transition()
+      .delay(1500)
+      .duration(500)
+      .style('opacity', 0);
+  }
+
   //Add custom entry
   function addCheckbox(currency, iss, name) {
 
@@ -262,6 +273,8 @@ angular.module( 'ripplecharts.manage-gateways', [
     if (pickNextGateway(currency) === false) {
       excludeCurrency(currency);
     }
+
+    flashSaved();
   }
 
   function addCustom(currency, issuer, name) {
@@ -271,6 +284,8 @@ angular.module( 'ripplecharts.manage-gateways', [
     $scope.customGateways[currency].push({issuer: issuer, name: name})
     store.session.set('customGateways', $scope.customGateways);
     store.set('customGateways', $scope.customGateways);
+
+    flashSaved();
   }
 
   function removeCustom(currency, iss) {
@@ -286,6 +301,8 @@ angular.module( 'ripplecharts.manage-gateways', [
     if ($scope.excludedGateways[currency].length === 0) delete $scope.excludedGateways[currency];
     store.session.set('excludedGateways', $scope.excludedGateways);
     store.set('excludedGateways', $scope.excludedGateways);
+
+    flashSaved();
   }
 
   function excludeCurrency(currency) {
