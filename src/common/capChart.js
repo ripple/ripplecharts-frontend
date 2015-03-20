@@ -88,7 +88,7 @@ function CapChart(options) {
       {name: "month",  interval:"day",   offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"month", offset: function(d) { return "Jan 1 2013" }}
+      {name: "max",    interval:"month", offset: function(d) { return moment.utc('2013-01-01'); }}
     ])
     .enter().append("a")
     .attr("href", "#")
@@ -216,8 +216,8 @@ function CapChart(options) {
     var end      = moment.utc();
 
     apiHandler.valueSent({
-      startTime     : range.offset(end),
-      endTime       : end,
+      startTime     : moment.utc(range.offset(end)).format(),
+      endTime       : end.format(),
       timeIncrement : range.interval,
       currency      : c.currency,
       issuer        : c.issuer
@@ -281,8 +281,8 @@ function CapChart(options) {
     var end      = moment.utc();
 
     apiHandler.offersExercised({
-      startTime     : range.offset(end),
-      endTime       : end,
+      startTime     : moment.utc(range.offset(end)).format(),
+      endTime       : end.format(),
       timeIncrement : range.interval,
       descending    : false,
       base          : base,
@@ -337,8 +337,8 @@ function CapChart(options) {
     apiHandler.issuerCapitalization({
       timeIncrement : range.interval,
       currencies    : issuers,
-      startTime     : range.offset(end),
-      endTime       : end
+      startTime     : moment.utc(range.offset(end)).format(),
+      endTime       : end.format()
 
     }, function(data){
 

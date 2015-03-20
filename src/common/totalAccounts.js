@@ -2,13 +2,13 @@ var TotalAccounts = function (options) {
   var self        = this;
   var apiHandler  = new ApiHandler(options.url);
   var request, basisRequest;
-  
+
   if (options.id) self.div = d3.select("#"+options.id).attr("class","chartWrap");
   else            self.div = d3.select("body").append("div").attr("class","chartWrap");
-  
+
   var list = self.div.append("div").attr("class","interval selectList");
   self.div.append("div").attr("class","lineChart").attr('id', options.id+"Chart");
-  
+
   list.append("label").html("Range:");
   var interval = list.selectAll("a")
     .data([
@@ -27,12 +27,12 @@ var TotalAccounts = function (options) {
       var that = this;
       interval.classed("selected", function() { return this === that; });
       if (d.name == "custom") {
-        //$('#range').slideToggle();    
+        //$('#range').slideToggle();
       } else selectRange (d);
     });
-  
-  
-//create new line chart    
+
+
+//create new line chart
   var chart = new LineChart({
     id         : options.id+"Chart",
     title      : "Total Accounts",
@@ -40,55 +40,55 @@ var TotalAccounts = function (options) {
     rightTitle : "Total",
     resize     : true,
     tooltip    : function (d, increment) {
-      return "<div>"+parseDate(d.x.local(), increment) + 
-        "</div><span>Accounts Created:</span>" + d.y2 + 
+      return "<div>"+parseDate(d.x.local(), increment) +
+        "</div><span>Accounts Created:</span>" + d.y2 +
         "<br/><span>Total Accounts:</span>" + d.y
       }
   });
-  
-  
+
+
   function selectRange (d) {
-    var end   = new Date();
+    var end   = moment.utc();
     var start = d.offset(end);
-    
+
     //$('#startTime').datepicker('setValue', start);
     //$('#endTime').datepicker('setValue', end);
     update(d.interval, start, end);
   }
-  
-  
+
+
   function update (increment, start, end) {
     chart.loading = true;
     chart.fadeOut();
-    
-    if (start.getFullYear()<2005) { //because of bug in API for earlier dates   
+
+    if (start.getFullYear()<2005) { //because of bug in API for earlier dates
       chart.basis = 0;
       updateHelper({
-        startTime     : start,
-        endTime       : end,
+        startTime     : moment.utc(start).format(),
+        endTime       : end.format(),
         timeIncrement : increment,
         descending    : true
-      }); 
-            
+      });
+
     } else {
       if (basisRequest) basisRequest.abort();
-      basisRequest = apiHandler.getTotalAccounts(start, function(err, total) {
+      basisRequest = apiHandler.getTotalAccounts(moment.utc(start).format(), function(err, total) {
         chart.basis = total;
 
         updateHelper({
-          startTime     : start,
-          endTime       : end,
+          startTime     : moment.utc(start).format(),
+          endTime       : end.format(),
           timeIncrement : increment,
           descending    : true
         });
       });
-    } 
-  } 
-  
+    }
+  }
+
   this.suspend = function () {
     chart.suspend(); //remove resize listener
-  } 
-  
+  }
+
   function updateHelper (params) {
     if (request) request.abort();
     request = apiHandler.accountsCreated(params, function (err, data) {
@@ -97,15 +97,15 @@ var TotalAccounts = function (options) {
         console.log(err);
         chart.loading = false;
         chart.setStatus(err.text ? err.text : "Unable to load data");
-        return;        
+        return;
       }
-      
+
       var total  = chart.basis,
         lineData = [];
-        
+
       data.splice(0,1);
       data.reverse(); //descending option doesnt work
-      
+
       lineData = data.map(function(d){
         total += d[1];
         return {
@@ -113,22 +113,22 @@ var TotalAccounts = function (options) {
           y  : total,
           y2 : d[1]}
       });
-      
+
       chart.loading = false;
       chart.redraw(params.timeIncrement, lineData);
     });
-  } 
-  
+  }
+
   function parseDate (date, increment) {
     var monthNames = [ "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December" ];
-    
-    
+
+
     if      (increment == "month") return monthNames[date.month()] + " " + date.year();
     else if (increment == "day")   return monthNames[date.month()] + " " + date.date();
     else if (increment == "hour")  return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm A");
     else return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm:ss A");
   }
-  
+
   self.div.select(".interval .selected")[0][0].click();
 }

@@ -241,8 +241,8 @@ PriceChart = function (options) {
 
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime     : startTime.toDate(),
-      endTime       : endTime.toDate(),
+      startTime     : startTime.format(),
+      endTime       : endTime.format(),
       timeIncrement : d.interval,
       timeMultiple  : d.multiple,
       descending    : false,
