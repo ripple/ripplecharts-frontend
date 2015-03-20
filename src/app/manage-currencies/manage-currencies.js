@@ -89,7 +89,7 @@ angular.module( 'ripplecharts.manage-currencies', [
     saved.transition()
       .delay(1500)
       .duration(500)
-      .style('opacity', 0);
+      //.style('opacity', 0);
   }
 
   $('#txtName').keypress(function(event) {

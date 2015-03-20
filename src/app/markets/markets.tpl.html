@@ -88,21 +88,28 @@
         
               
         <div id="base" class="dropdowns"></div>
-        <div id="flip"><span>Flip</span></div>
+        <div id="flip">
+          <img class="flipImg" src="assets/images/exchange.png"/>
+        </div>
         <div id="quote" class="dropdowns"></div>
-        <a id="toCSV" disabled="true" title="Export to CSV">
-          <img src="assets/images/download.svg"/>
-        </a>
+        
       </div>
       
       <div class="rangeIntervalWrapper">
         <div id="range"></div>
         <div id="interval"></div>
       </div>
-      <div id="chartType"></div>
+      
 
     </div>
     <div id="priceChart" data-snap-ignore="true"></div>
+    <div class="col-md-12 bottomWrapper">
+      <a id="toCSV" disabled="true" title="Export to CSV">
+        <i class="fa fa-download"></i>
+          Download historical data
+      </a>
+       <div id="chartType"></div> 
+    </div>
     <div class="helpbox" ng-class="{showHelp : showHelp}">
       <h5>Order Book</h5>
       <p>
