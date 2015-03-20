@@ -1,10 +1,19 @@
 @import url(priceChart.css);
 @import url(orderBook.css);
 
-#flip, #toCSV {
+#flip {
   vertical-align: top;
-  padding-top: 15px;
+
+  :hover {
+    text-decoration: none;
+  }
+
+  img {
+    width: 15px;
+    height: auto;
+  }   
 }
+
 
 #priceChart {
   height:500px;
@@ -54,8 +63,8 @@
 }
 
 #currencyPair {
-  margin: 10px 20px 5px 60px;
-  text-align:left;
+  margin: 10px 0 5px 60px;
+  text-align: left;
 }
 
 #currencyPair .gateway {
@@ -69,28 +78,51 @@
 
 #base, #quote {
   display: inline-block;
+  text-align: left;
 }
 
 #toCSV {
-  display:inline-block;
-  cursor:pointer; 
-  margin:2px 5px;
-  color:#ccc;
-  text-decoration:none;
-  opacity:0.3;
-  text-align:center;
+  display: block;
+  cursor: pointer; 
+  margin: 0 auto;
+  color:#666;
+  text-decoration: none;
+  opacity: 0.3;
+  text-align: center;
+  margin-left: 60px;
+  position: absolute;
+  left: 0;
+  line-height: 35px;
+}
+
+.bottomWrapper {
+  padding: 5px 0 15px 0;
+  height: 35px;
+
+  .selectList a.selected {
+    font-weight: normal;
+    border-bottom: none;
+    opacity: .8;
+  }
+
+  .selectList a:hover {
+    border-bottom: none;
+  }
+}
+
+.rightWrapper {
+  float: right;
+  margin-left: 55px;
 }
 
 #flip {
-  //margin:3px 5px;
   font-size:12px; 
   cursor:pointer;
   color:#666;
   display:inline-block;
-  //width:40px;
   text-align:center;
   font-family:"Open Sans";
-  padding: 12px 8px 0;
+  padding: 12px 6px 0;
 }
 
 #flip span {
@@ -139,13 +171,18 @@
 }
 
 #interval {
-  //margin-left: 30px; 
+  margin-left: 60px;
   display: inline-block;
-  float: left; 
+  float: left;
+  margin-right: 160px; 
 }
 
 .rangeIntervalWrapper {
   padding: 5px 0 10px 0;
+  clear: both;
+  display: inline-block;
+  float: left;
+  width: 100%;
 }
 
 #range {
@@ -187,7 +224,29 @@
 
 #chartType {
   float: right;
-  margin-right:60px;
+  margin-right: 60px;
+  display: inline-block;
+  position: absolute;
+  right: 0;
+}
+
+.candlestickGraphic {
+  background: url('images/candlestick.svg') no-repeat top right;
+  background-size: contain;
+  color: transparent !important;
+  height: 35px;
+  width: 25px;
+  margin-left: 20px !important;
+  opacity: .4;
+}
+
+.lineGraphic {
+  background: url('images/linechart.svg') no-repeat top right;
+  background-size: contain;
+  color: transparent !important;
+  width: auto;
+  height: 35px;
+  opacity: .4;
 }
 
 #bookChart {
@@ -253,24 +312,27 @@ li.edit_list {
   margin-right:60px;
 }
 
-@media (max-width:1100px) {
-  .markets .dropdowns, .markets #flip, .markets #toCSV {
-    float:left;
-  }  
-  
-  .markets #quote {
-    clear:left;
+@media (max-width:1223px) and (min-width:1002px) {
+  #chartType {
+    position: relative;
   }
 }
 
-
-//@media (min-width:1100px) {
-  #interval {
-    margin-left: 60px;
+@media (max-width:1100px) {
+  .markets .dropdowns, .markets #flip, .markets #toCSV {
+    //float:left;
+  }  
+  
+  .markets #quote {
+    clear: left;
   }
-//} 
+}
 
 @media (max-width: 979px) {
+
+  // #currencyPair {
+  //   text-align: center;
+  // }
   
   .markets .col-md-3, .markets .col-md-9 {
     width:100% !important;
@@ -321,12 +383,6 @@ li.edit_list {
 }
 
 @media (max-width: 840px) {
-  #currencyPair {
-    width:94%;
-    //text-align: left;
-    margin:10px auto;
-    display: inline;
-  }
   
   .rippleStatus {
     float:none;
@@ -341,12 +397,9 @@ li.edit_list {
 
 @media (max-width: 600px) {
   
-  #range {
-    margin-left:0px; 
-    float: center;
-  }
-
-  #interval {
+  #range, #interval  {
+    margin-left: 0; 
+    margin-right: 0;
     float: center;
   }
 
@@ -398,7 +451,7 @@ li.edit_list {
   }
   
   #toCSV {
-    width:40px;
+    //width:40px;
   }
 
   #chartType {
@@ -433,15 +486,15 @@ li.edit_list {
   
   #interval {margin-left:20px; zoom:1.25}
   #range {margin-left:0px; zoom:1.25}
-  #chartType {margin-right:20px; zoom:1.25}
+  #chartType {margin-right:20px; }
   #flip {
     font-size:16px;
     margin-right:-5px;
   }
   
   #toCSV {
-    padding:0;
-    margin-right:-5px;
+   margin-left: 25px;
+  margin-right:-5px;
   }
   
   #toCSV img {

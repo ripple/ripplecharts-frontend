@@ -395,11 +395,13 @@ angular.module( 'ripplecharts.markets', [
       }
     });
 
-  //set up the chart type selector    
+  //set up the chart type selector     
   var chartType = d3.select("#chartType").attr("class","selectList").selectAll("a")
     .data(["line", "candlestick"])
     .enter().append("a")
     .attr("href", "#")
+    .classed('lineGraphic', function(d) { return d === 'line'; })
+    .classed('candlestickGraphic', function(d) { return d === 'candlestick'; })
     .classed("selected", function(d) { return d === $scope.chartType; })
     .text(function(d) { return d; })   
     .on("click", function(d) {
