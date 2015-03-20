@@ -95,25 +95,6 @@
   line-height: 35px;
 }
 
-.bottomWrapper {
-  padding: 5px 0 15px 0;
-  height: 35px;
-
-  .selectList a.selected {
-    font-weight: normal;
-    border-bottom: none;
-    opacity: .8;
-  }
-
-  .selectList a:hover {
-    border-bottom: none;
-  }
-}
-
-.rightWrapper {
-  float: right;
-  margin-left: 55px;
-}
 
 #flip {
   font-size:12px; 
@@ -178,7 +159,7 @@
 }
 
 .rangeIntervalWrapper {
-  padding: 5px 0 10px 0;
+  padding: 5px 0 0 0;
   clear: both;
   display: inline-block;
   float: left;
@@ -222,6 +203,22 @@
   cursor: default !important;
 }
 
+.bottomWrapper {
+  height: 35px;
+  clear: both;
+  margin: 2px 0;
+
+  .selectList a.selected {
+    font-weight: normal;
+    border-bottom: none;
+    opacity: .8;
+  }
+
+  .selectList a:hover {
+    border-bottom: none;
+  }
+}
+
 #chartType {
   float: right;
   margin-right: 60px;
@@ -232,20 +229,22 @@
 
 .candlestickGraphic {
   background: url('images/candlestick.svg') no-repeat top right;
-  background-size: contain;
+  background-size: 19px;
   color: transparent !important;
-  height: 35px;
-  width: 25px;
-  margin-left: 20px !important;
   opacity: .4;
+  width: 19px;
+  height: 19px;
+  margin-left: 5px !important;
+  vertical-align: sub;
 }
 
 .lineGraphic {
-  background: url('images/linechart.svg') no-repeat top right;
-  background-size: contain;
+  background: url('images/linechartgraph.svg') no-repeat top right;
+  vertical-align: sub;
+  background-size: 19px;
+  height: 19px;
+  width: 19px;
   color: transparent !important;
-  width: auto;
-  height: 35px;
   opacity: .4;
 }
 
@@ -449,16 +448,6 @@ li.edit_list {
     width:400px;
     //margin-bottom:20px;
   }
-  
-  #toCSV {
-    //width:40px;
-  }
-
-  #chartType {
-    float: none;
-    margin-right: 0;
-    padding-bottom: 5px;
-  }
 
   .rangeIntervalWrapper {
     padding: 5px 0;
@@ -486,16 +475,12 @@ li.edit_list {
   
   #interval {margin-left:20px; zoom:1.25}
   #range {margin-left:0px; zoom:1.25}
-  #chartType {margin-right:20px; }
   #flip {
     font-size:16px;
     margin-right:-5px;
   }
   
-  #toCSV {
-   margin-left: 25px;
-  margin-right:-5px;
-  }
+
   
   #toCSV img {
     width:35px;
