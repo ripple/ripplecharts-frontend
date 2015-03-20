@@ -102,6 +102,10 @@ var MiniChart = function(base, counter, markets) {
 
 //load the chart data from the API
   function load (update) {
+    if (isLoading) {
+      return;
+    }
+
     baseCurrency   = ripple.Currency.from_json(self.base.currency).to_human();
     counterCounter = ripple.Currency.from_json(self.counter.currency).to_human();
     markets.updateListHandler();
@@ -125,8 +129,8 @@ var MiniChart = function(base, counter, markets) {
     */
     if (self.request) self.request.abort();
     self.request = self.markets.apiHandler.offersExercised({
-      startTime     : new Date(),
-      endTime       : d3.time.day.offset(new Date(), -1),
+      startTime     : moment.utc().format(),
+      endTime       : moment.utc().subtract(1, 'day').format(),
       timeIncrement : "minute",
       timeMultiple  : 15,
       descending    : false,
@@ -592,8 +596,6 @@ var MultiMarket = function (options) {
       self.charts[i].suspend();
       self.charts[i].remove(false);
     }
-    if (!charts.length && !options.fixed)
-      removeResizeListener(window, resizeButton);
 
     if (!charts.length && interval)
       clearInterval(interval);
