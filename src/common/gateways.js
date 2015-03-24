@@ -25,8 +25,8 @@ angular.module('gateways', [])
       var customCurrencies   =  store.get('customCurrencies') || store.session.get('customCurrencies') || [];
       var include = true;
 
-      if (excludedCurrencies.indexOf("XRP") !== -1) include = false;
-      else include = true;
+/*      if (excludedCurrencies.indexOf("XRP") !== -1) include = false;
+      else include = true;*/
 
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
@@ -55,7 +55,7 @@ angular.module('gateways', [])
         currency : "XRP",
         icon     : API + '/currencies/xrp.svg',
         custom   : false,
-        include  : include
+        include  : true
       });
 
       for (var j=0; j < customCurrencies.length; j++) {
