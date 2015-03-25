@@ -183,7 +183,7 @@ angular.module( 'ripplecharts.markets', [
 
   //append edit list option to dropdowns
   function editList( selectionId, selectionSuffix ) {
-    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><a href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><span class="plus">+</span> Edit List</a></li>');
+    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><a href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><span class="plus">+</span> Edit</a></li>');
   }
 
   d3.select("#flip").on("click", function(){ //probably better way to do this
@@ -400,6 +400,7 @@ angular.module( 'ripplecharts.markets', [
     .data(["line", "candlestick"])
     .enter().append("a")
     .attr("href", "#")
+    .attr("title", "Toggle candlestick/line")
     .classed('lineGraphic', function(d) { return d === 'line'; })
     .classed('candlestickGraphic', function(d) { return d === 'candlestick'; })
     .classed("selected", function(d) { return d === $scope.chartType; })

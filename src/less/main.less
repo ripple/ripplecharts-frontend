@@ -685,7 +685,7 @@ footer .links a:first-child {
  //dropdown currency images
   #base_currency .dd-option-image, #trade_currency .dd-option-image  {
     max-width: 14px;
-    margin: -2px -4px 0 4px;
+    margin: -2px -4px 0 10px;
     height: auto;
   }
 
@@ -733,10 +733,10 @@ footer .links a:first-child {
   //currency specific
   #base_currency, #trade_currency {
 
-    max-width: 85px;
+    max-width: 95px;
 
     .dd-select, .dd-options {
-      max-width: 85px;
+      max-width: 95px;
     }
 
     .dd-option-text, .dd-selected-text {
@@ -758,12 +758,22 @@ footer .links a:first-child {
     }
 
   .dd-option {
-    padding: 0 10px !important;
+    padding: 0 15px !important;
   }
 
   }
 
-  .dd-selected, .dd-option-text {
+  .dd-selected {
+    color: #000;
+    font-family: "Open Sans";
+    padding: 0 15px !important;
+
+    &:hover {
+      color: #000;
+    }
+  }
+
+  .dd-option-text {
     color: #000;
     font-family: "Open Sans";
     padding: 0 10px !important;
@@ -771,8 +781,7 @@ footer .links a:first-child {
     &:hover {
       color: #000;
     }
-  }
-
+}
   .dd-select, .dd-option-selected, .dd-option {
     background: transparent !important;
   }

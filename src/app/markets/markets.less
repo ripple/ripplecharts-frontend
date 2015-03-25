@@ -82,17 +82,20 @@
 }
 
 #toCSV {
-  display: block;
+  display: inline-block;
   cursor: pointer; 
   margin: 0 auto;
   color:#666;
   text-decoration: none;
   opacity: 0.3;
   text-align: center;
-  margin-left: 60px;
-  position: absolute;
-  left: 0;
-  line-height: 35px;
+  vertical-align: top;
+  padding: 10px 5px;
+}
+
+.downloadIcon {
+  width: 18px;
+  height: auto;
 }
 
 
@@ -152,10 +155,10 @@
 }
 
 #interval {
-  margin-left: 60px;
+  // margin-left: 60px;
   display: inline-block;
   float: left;
-  margin-right: 160px; 
+  //margin-right: 160px; 
 }
 
 .rangeIntervalWrapper {
@@ -163,13 +166,24 @@
   clear: both;
   display: inline-block;
   float: left;
-  width: 100%;
+  margin-left: 60px;
+  max-width: 655px;
 }
 
 #range {
-  margin-left: 60px; 
+  margin-right: 65px; 
   float: left; 
   display: inline-block;
+}
+
+.chartTypeWrapper {
+  float: right;
+
+  .selectList a.selected {
+    font-weight: normal;
+    border-bottom: none;
+    opacity: .8;
+  }
 }
 
 #dates {
@@ -223,8 +237,6 @@
   float: right;
   margin-right: 60px;
   display: inline-block;
-  position: absolute;
-  right: 0;
 }
 
 .candlestickGraphic {
@@ -236,16 +248,18 @@
   height: 19px;
   margin-left: 5px !important;
   vertical-align: sub;
+  border: none !important
 }
 
 .lineGraphic {
-  background: url('images/linechartgraph.svg') no-repeat top right;
+  background: url('images/linechart.svg') no-repeat top right;
   vertical-align: sub;
   background-size: 19px;
   height: 19px;
   width: 19px;
   color: transparent !important;
   opacity: .4;
+  border: none !important
 }
 
 #bookChart {
@@ -266,7 +280,7 @@ li.edit_list {
   .plus {
     color: rgb(153, 153, 153);
     font-size: 24px;
-    margin: 0 5px;
+    margin: 0 7px 0 13px;
     font-weight: bold;
   }
 
@@ -274,7 +288,7 @@ li.edit_list {
   &.gateway {
 
     .plus {
-      margin: 0 5px 0 10px;
+      margin: 0 10px 0 17px;
     }
 
   }
@@ -311,11 +325,6 @@ li.edit_list {
   margin-right:60px;
 }
 
-@media (max-width:1223px) and (min-width:1002px) {
-  #chartType {
-    position: relative;
-  }
-}
 
 @media (max-width:1100px) {
   .markets .dropdowns, .markets #flip, .markets #toCSV {
@@ -329,9 +338,6 @@ li.edit_list {
 
 @media (max-width: 979px) {
 
-  // #currencyPair {
-  //   text-align: center;
-  // }
   
   .markets .col-md-3, .markets .col-md-9 {
     width:100% !important;
@@ -374,7 +380,22 @@ li.edit_list {
     float:none;
   }  
 }
+@media (max-width: 1175px) {
 
+  #toCSV {
+    display: none;
+  }
+
+  .rangeIntervalWrapper {
+    max-width: 400px;
+  }
+
+  .chartTypeWrapper {
+    position: relative;
+    top: 20px;
+  }
+
+}
 @media (max-width: 980px) {
   .rippleStatus {
     display: none;
@@ -395,6 +416,17 @@ li.edit_list {
 }
 
 @media (max-width: 600px) {
+
+  .chartTypeWrapper {
+    top: 0px; 
+    clear: both;
+    float: none;
+  }
+
+  #chartType {
+    float: none;
+    margin-right: 0;
+  }
   
   #range, #interval  {
     margin-left: 0; 
@@ -451,6 +483,7 @@ li.edit_list {
 
   .rangeIntervalWrapper {
     padding: 5px 0;
+    //margin-left: 0;
   }
 }
 
@@ -461,6 +494,10 @@ li.edit_list {
   .markets #bookChart,
   .markets #bookTables { 
     zoom: 0.75;  //zoom 75% for phones
+  }
+
+  #chartType {
+    zoom: 1.25;
   }
   
   #currencyPair select{
