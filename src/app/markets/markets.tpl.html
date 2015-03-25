@@ -79,7 +79,7 @@
       <p>
         Hover your mouse over the chart to see open, high, low, and close values
         for each of the data points.  To download a csv file of the data from the 
-        current chart, click the <img src="assets/images/download.svg" /> icon to 
+        current chart, click the <img class="downloadIcon" src="assets/images/download_icn.svg" /> icon to 
         the right of the currency dropdowns.
       </p>
     </div> 
@@ -89,24 +89,22 @@
               
         <div id="base" class="dropdowns"></div>
         <div id="flip">
-          <img class="flipImg" src="assets/images/exchange.png"/>
+          <img class="flipImg" title="Flip pair" src="assets/images/flip.svg"/>
         </div>
         <div id="quote" class="dropdowns"></div>
-        
+         <a id="toCSV" disabled="true" title="Export to CSV">
+        <img class="downloadIcon" src="assets/images/download_icn.svg"/>
+         
+      </a>
       </div>
       
       <div class="rangeIntervalWrapper">
         <div id="range"></div>
         <div id="interval"></div>
       </div>
-       <div class="col-md-12 bottomWrapper">
-      <a id="toCSV" disabled="true" title="Export to CSV">
-        <i class="fa fa-download"></i>
-          Download historical data
-      </a>
-       <div id="chartType"></div> 
-    </div>
-
+      <div class="chartTypeWrapper">
+        <div id="chartType"></div> 
+      </div>
     </div>
     <div id="priceChart" data-snap-ignore="true"></div>
     <div class="helpbox" ng-class="{showHelp : showHelp}">
