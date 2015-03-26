@@ -92,6 +92,12 @@ angular.module( 'ripplecharts.markets', [
       }
     }
 
+    $scope.$watch('theme', function(){
+      changeCurrency($scope[selectionId].currency);
+      editList(selectionId, 'gateway');
+      editList(selectionId, 'currency');
+    });
+
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
       imagePosition: "left",
@@ -99,8 +105,7 @@ angular.module( 'ripplecharts.markets', [
       onSelected: function (data) {
         if (!loaded) {
           changeCurrency(data.selectedData.currency);
-        }
-        else if (data.selectedData.currency !== $scope[selectionId].currency) {
+        } else if (data.selectedData.currency !== $scope[selectionId].currency) {
           changeCurrency(data.selectedData.currency);
         }
       }
@@ -108,38 +113,14 @@ angular.module( 'ripplecharts.markets', [
 
     editList(selectionId, 'gateway');
     editList(selectionId, 'currency');
-
-    //convert svg images to inline so we can adjust fills in dark mode
-    var gatewayImages = $('#base_gateway img').add('#trade_gateway img');
-    
-    gatewayImages.each(function(){
-      var $img = jQuery(this);
-      var imgID = $img.attr('id');
-      var imgClass = $img.attr('class');
-      var imgURL = $img.attr('src');
-
-    $.get(imgURL, function(data) {
-        // Get the SVG tag, ignore the rest
-        var $svg = jQuery(data).find('svg');
-
-        // Add replaced image's ID to the new SVG
-        if(typeof imgID !== 'undefined') {
-            $svg = $svg.attr('id', imgID);
-        }
-        // Add replaced image's classes to the new SVG
-        if(typeof imgClass !== 'undefined') {
-            $svg = $svg.attr('class', imgClass+' replaced-svg');
-        }
-
-        // Remove any invalid XML tags as per http://validator.w3.org
-        $svg = $svg.removeAttr('xmlns:a');
-
-        // Replace image with new SVG
-        $img.replaceWith($svg);
-
-    }, 'xml');
-
-  });
+  
+    function checkThemeLogo(issuer) {
+      if ($scope.theme == 'dark') { 
+        issuer.imageSrc = issuer.assets['logo.grayscale.svg']; 
+      } else if ($scope.theme == 'light') { 
+        issuer.imageSrc = issuer.assets['logo.svg']; 
+      }
+    }
 
     function changeCurrency(selected){
       $("#"+selectionId+"_gateway").ddslick("destroy");
@@ -162,8 +143,9 @@ angular.module( 'ripplecharts.markets', [
         } else {
           issuer.text = issuer.name;
           if (disable !== true && !issuer.custom) {
-            issuer.imageSrc = issuer.assets['logo.svg'];
+            checkThemeLogo(issuer);
           }
+
           issuer.value = i;
           if ($scope[selectionId].issuer === issuer.account) {
             issuer.selected = true;
@@ -177,6 +159,7 @@ angular.module( 'ripplecharts.markets', [
         if (issuers[i].selected && !picked) picked = true;
         else if (issuers[i].selected && picked) issuers[i].selected = false;
       }
+
 
       $("#"+selectionId+"_gateway").ddslick({
         data: issuers,
@@ -211,7 +194,6 @@ angular.module( 'ripplecharts.markets', [
   var dropdownB = d3.select("#quote");
   loadDropdowns(dropdownA);
   loadDropdowns(dropdownB);
- 
 
   //append edit list option to dropdowns
   function editList( selectionId, selectionSuffix ) {
