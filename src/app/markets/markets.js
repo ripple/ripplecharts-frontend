@@ -95,7 +95,6 @@ angular.module( 'ripplecharts.markets', [
     $scope.$watch('theme', function(){
       changeCurrency($scope[selectionId].currency);
       editList(selectionId, 'gateway');
-      editList(selectionId, 'currency');
     });
 
     $("#"+selectionId+"_currency").ddslick({
