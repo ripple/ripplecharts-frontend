@@ -121,8 +121,7 @@ angular.module('gateways', [])
           });
         }
       }
-      
-      console.log(issuers);
+
       return issuers;
 
       //add API endpoint to asset filenames

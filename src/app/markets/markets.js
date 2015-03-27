@@ -92,6 +92,11 @@ angular.module( 'ripplecharts.markets', [
       }
     }
 
+    $scope.$watch('theme', function(){   
+      changeCurrency($scope[selectionId].currency);    
+      editList(selectionId, 'gateway');    
+    });
+
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
       imagePosition: "left",
@@ -99,8 +104,7 @@ angular.module( 'ripplecharts.markets', [
       onSelected: function (data) {
         if (!loaded) {
           changeCurrency(data.selectedData.currency);
-        }
-        else if (data.selectedData.currency !== $scope[selectionId].currency) {
+        } else if (data.selectedData.currency !== $scope[selectionId].currency) {
           changeCurrency(data.selectedData.currency);
         }
       }
@@ -108,6 +112,14 @@ angular.module( 'ripplecharts.markets', [
 
     editList(selectionId, 'gateway');
     editList(selectionId, 'currency');
+
+    function checkThemeLogo(issuer) {    
+      if ($scope.theme == 'dark') {    
+        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];     
+      } else if ($scope.theme == 'light') {    
+        issuer.imageSrc = issuer.assets['logo.svg'];     
+      }    
+    }
 
     function changeCurrency(selected){
       $("#"+selectionId+"_gateway").ddslick("destroy");
@@ -130,9 +142,10 @@ angular.module( 'ripplecharts.markets', [
         } else {
           issuer.text = issuer.name;
           if (disable !== true && !issuer.custom) {
-            issuer.imageSrc = issuer.assets['logo.svg'];
+            checkThemeLogo(issuer);
           }
           issuer.value = i;
+
           if ($scope[selectionId].issuer === issuer.account) {
             issuer.selected = true;
           }
@@ -402,6 +415,7 @@ angular.module( 'ripplecharts.markets', [
     .data(["line", "candlestick"])
     .enter().append("a")
     .attr("href", "#")
+    .attr("title", "Toggle candlestick/line")
     .classed('lineGraphic', function(d) { return d === 'line'; })
     .classed('candlestickGraphic', function(d) { return d === 'candlestick'; })
     .classed("selected", function(d) { return d === $scope.chartType; })
@@ -499,7 +513,7 @@ angular.module( 'ripplecharts.markets', [
     var minDate = new Date();
     var candidate;
     var changed = false;
-    
+
     if (base.issuer) {
       gatewayList = gateways.getIssuers(base.currency);
       gatewayList.forEach(function(gateway){
