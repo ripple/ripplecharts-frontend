@@ -163,16 +163,16 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     if (!picked) currencies[1].selected = true;
 
-    function checkThemeLogo(issuer) {    
-      if ($scope.theme == 'dark') {    
-        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];     
-      } else if ($scope.theme == 'light') {    
-        issuer.imageSrc = issuer.assets['logo.svg'];     
-      }    
-    }    
+    function checkThemeLogo(issuer) {
+      if ($scope.theme == 'dark') {
+        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];
+      } else if ($scope.theme == 'light') {
+        issuer.imageSrc = issuer.assets['logo.svg'];
+      }
+    }
      
-    $scope.$watch('theme', function(){   
-      changeCurrency($scope[selectionId].currency);    
+    $scope.$watch('theme', function(){
+      changeCurrency($scope[selectionId].currency);
     });
 
     $("#"+selectionId+"_currency").ddslick({

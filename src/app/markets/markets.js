@@ -92,9 +92,9 @@ angular.module( 'ripplecharts.markets', [
       }
     }
 
-    $scope.$watch('theme', function(){   
-      changeCurrency($scope[selectionId].currency);    
-      editList(selectionId, 'gateway');    
+    $scope.$watch('theme', function(){
+      changeCurrency($scope[selectionId].currency);
+      editList(selectionId, 'gateway');
     });
 
     $("#"+selectionId+"_currency").ddslick({
@@ -113,12 +113,12 @@ angular.module( 'ripplecharts.markets', [
     editList(selectionId, 'gateway');
     editList(selectionId, 'currency');
 
-    function checkThemeLogo(issuer) {    
-      if ($scope.theme == 'dark') {    
-        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];     
-      } else if ($scope.theme == 'light') {    
-        issuer.imageSrc = issuer.assets['logo.svg'];     
-      }    
+    function checkThemeLogo(issuer) {
+      if ($scope.theme == 'dark') {
+        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];
+      } else if ($scope.theme == 'light') {
+        issuer.imageSrc = issuer.assets['logo.svg'];
+      }
     }
 
     function changeCurrency(selected){
@@ -145,7 +145,6 @@ angular.module( 'ripplecharts.markets', [
             checkThemeLogo(issuer);
           }
           issuer.value = i;
-
           if ($scope[selectionId].issuer === issuer.account) {
             issuer.selected = true;
           }
