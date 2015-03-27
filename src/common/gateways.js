@@ -92,14 +92,15 @@ angular.module('gateways', [])
           else include = true;
 
           issuers.push({
-            name     : userGateways[currency][i].name,
-            account  : userGateways[currency][i].account,
-            icon     : API + '/gateways/' + normalized + '/assets/logo.svg',
-            assets   : assets,
-            featured : userGateways[currency][i].featured,
-            selected : userGateways[currency][i].selected,
-            custom   : false,
-            include  : include 
+            name      : userGateways[currency][i].name,
+            account   : userGateways[currency][i].account,
+            icon      : API + '/gateways/' + normalized + '/assets/logo.svg',
+            assets    : assets,
+            featured  : userGateways[currency][i].featured,
+            selected  : userGateways[currency][i].selected,
+            custom    : false,
+            include   : include,
+            startDate : userGateways[currency][i].startDate
           });
         }
       }
@@ -120,7 +121,8 @@ angular.module('gateways', [])
           });
         }
       }
-
+      
+      console.log(issuers);
       return issuers;
 
       //add API endpoint to asset filenames

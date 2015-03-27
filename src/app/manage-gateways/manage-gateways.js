@@ -141,7 +141,7 @@ angular.module( 'ripplecharts.manage-gateways', [
 
     associatedCurrency = $scope[selectionId].currency;
 
-    //format currnecies for dropdowns
+    //format currnecies for dropdowns`
     for (var i=0; i<currencies.length; i++) {
       if (currencies[i].currency === "XRP") {
         //don't populate XRP in currency dropdown
@@ -162,18 +162,6 @@ angular.module( 'ripplecharts.manage-gateways', [
     }
 
     if (!picked) currencies[1].selected = true;
-
-    function checkThemeLogo(issuer) {
-      if ($scope.theme == 'dark') { 
-        issuer.imageSrc = issuer.assets['logo.grayscale.svg']; 
-      } else if ($scope.theme == 'light') { 
-        issuer.imageSrc = issuer.assets['logo.svg']; 
-      }
-    }
-
-    $scope.$watch('theme', function(){
-      changeCurrency($scope[selectionId].currency);
-    });
 
     $("#"+selectionId+"_currency").ddslick({
       data: currencies,
@@ -200,8 +188,7 @@ angular.module( 'ripplecharts.manage-gateways', [
         issuer.text = issuer.name;
 
         if (selected != "XRP" && !issuer.custom) {
-          //issuer.imageSrc = issuer.assets['logo.svg'];
-         checkThemeLogo(issuer);
+          issuer.imageSrc = issuer.assets['logo.svg'];
         }
         if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
         else issuer.selected = false;
@@ -230,7 +217,7 @@ angular.module( 'ripplecharts.manage-gateways', [
         if (issuer.imageSrc) {
           inputWrapper.append("img")
             .attr("class", "gateway_symb")
-            .attr("src", issuers[i].imageSrc)
+            .attr("src", issuers[i].icon)
         } else if (!issuer.custom) {
           inputWrapper.append("text").text(issuers[i].name);
           inputWrapper.append("p");
@@ -348,14 +335,14 @@ angular.module( 'ripplecharts.manage-gateways', [
     var c;
     for (var i=0; i<currencyList.length; i++) {
       c = currencyList[i];
-      if (picked && c.include) {
+      if (picked && c.include && c.currency !== "XRP") {
         return c;
       }
       if (c.currency === currency) picked = true;
     }
     for (i=1; i<currencyList.length; i++) {
       c = currencyList[i];
-      if (picked && c.include){
+      if (picked && c.include && c.currency !== "XRP"){
         return c;
       }
     }
