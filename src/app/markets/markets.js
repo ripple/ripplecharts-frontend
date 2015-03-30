@@ -196,7 +196,7 @@ angular.module( 'ripplecharts.markets', [
 
   //append edit list option to dropdowns
   function editList( selectionId, selectionSuffix ) {
-    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><a href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><span class="plus">+</span> Edit</a></li>');
+    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<a class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><span class="plus">+</span> Edit</li></a>');
   }
 
   d3.select("#flip").on("click", function(){ //probably better way to do this
