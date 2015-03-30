@@ -267,14 +267,15 @@
 }
 
 //edit list button
-li.edit_list {
-  height: 48px;
-  line-height: 48px;
+.edit_list {
+  height: 41px;
+  line-height: 41px;
   font-family: 'Open Sans';
+  color: #000;
+  vertical-align: top;
 
-  a {
-    color: #000;
-    vertical-align: top;
+  &:hover {
+    background: #fafafa;
   }
 
   .plus {
@@ -283,17 +284,16 @@ li.edit_list {
     margin: 0 7px 0 13px;
     font-weight: bold;
   }
+}
 
-  //gateway specific edit button
-  &.gateway {
+//gateway specific edit button
+  .edit_list.gateway {
 
     .plus {
-      margin: 0 10px 0 17px;
+      margin: 0 10px 0 25px;
     }
 
   }
-
-}
 
 /*
  * Responsive tweaks 
