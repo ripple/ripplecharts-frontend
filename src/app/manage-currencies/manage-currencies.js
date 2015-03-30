@@ -185,11 +185,10 @@ angular.module( 'ripplecharts.manage-currencies', [
   }
 
   function checkLocal(currency, select) {
-    var passed = false;
     if ($scope[select].currency === currency){
       var clist = gateways.getCurrencies();
       for(var j=0; j<clist.length; j++) {
-        if (clist[j].include && passed) {
+        if (clist[j].include && clist[j].currency !== "XRP") {
           var list = gateways.getIssuers(clist[j].currency);
           for(var i=0; i<list.length; i++) {
             gateway = list[i];
@@ -201,7 +200,6 @@ angular.module( 'ripplecharts.manage-currencies', [
             }
           }
         }
-        if (clist[j].currency === currency) passed = true;
       }
       $scope[select] = {currency: 'XRP'};
       store.set(select, $scope[select]);

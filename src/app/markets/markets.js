@@ -94,7 +94,9 @@ angular.module( 'ripplecharts.markets', [
 
     $scope.$watch('theme', function(){
       changeCurrency($scope[selectionId].currency);
-      editList(selectionId, 'gateway');
+      if ($('li.edit_list.gateway').length !=2) {
+        editList(selectionId, 'gateway');
+      }
     });
 
     $("#"+selectionId+"_currency").ddslick({
@@ -112,12 +114,12 @@ angular.module( 'ripplecharts.markets', [
 
     editList(selectionId, 'gateway');
     editList(selectionId, 'currency');
-  
+
     function checkThemeLogo(issuer) {
-      if ($scope.theme == 'dark') { 
-        issuer.imageSrc = issuer.assets['logo.grayscale.svg']; 
-      } else if ($scope.theme == 'light') { 
-        issuer.imageSrc = issuer.assets['logo.svg']; 
+      if ($scope.theme == 'dark') {
+        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];
+      } else if ($scope.theme == 'light') {
+        issuer.imageSrc = issuer.assets['logo.svg'];
       }
     }
 
@@ -144,7 +146,6 @@ angular.module( 'ripplecharts.markets', [
           if (disable !== true && !issuer.custom) {
             checkThemeLogo(issuer);
           }
-
           issuer.value = i;
           if ($scope[selectionId].issuer === issuer.account) {
             issuer.selected = true;
@@ -159,12 +160,13 @@ angular.module( 'ripplecharts.markets', [
         else if (issuers[i].selected && picked) issuers[i].selected = false;
       }
 
-
       $("#"+selectionId+"_gateway").ddslick({
         data: issuers,
         imagePosition: "left",
         onSelected: function (data) {
-          if (loaded && data.selectedData.account !== $scope[selectionId].issuer) {
+          var different_issuer   = data.selectedData.account !== $scope[selectionId].issuer;
+          var different_currency = selected !== $scope[selectionId].currency;
+          if (loaded && (different_currency || different_issuer)) {
             changeGateway(selected, data.selectedData.account, selectionId);
           }
         }
@@ -180,11 +182,12 @@ angular.module( 'ripplecharts.markets', [
       if (issuer)
         $scope[selectionId] = {currency: currency, issuer: issuer};
       else 
-        $scope[selectionId] = {currency: "XRP"};
+        $scope[selectionId] = {currency: currency};
       if ($scope.range.name === "max") updateMaxrange();
       loadPair();
-      if ($('li.edit_list.gateway').length !=2) 
+      if ($('li.edit_list.gateway').length !=2) {
         editList(selectionId, 'gateway');
+      }
     }
   }
 
@@ -193,6 +196,7 @@ angular.module( 'ripplecharts.markets', [
   var dropdownB = d3.select("#quote");
   loadDropdowns(dropdownA);
   loadDropdowns(dropdownB);
+ 
 
   //append edit list option to dropdowns
   function editList( selectionId, selectionSuffix ) {
@@ -507,13 +511,38 @@ angular.module( 'ripplecharts.markets', [
   }       
 
   function getStartdate(base, counter){
-    var issuer;
-    if (base.currency == "XRP") issuer = counter.issuer;
-    else issuer = base.issuer;
-    for (var key in gateways){
-      if (gateways[key].accounts[0].address == issuer) return new Date(gateways[key].startDate);
+    var gatewayList;
+    var minDate = new Date();
+    var candidate;
+    var changed = false;
+
+    if (base.issuer) {
+      gatewayList = gateways.getIssuers(base.currency);
+      gatewayList.forEach(function(gateway){
+        if (base.issuer === gateway.account && gateway.startDate) {
+          candidate = new Date(gateway.startDate);
+          if (candidate < minDate) {
+            minDate = candidate;
+            changed = true;
+          }
+        }
+      });
     }
-    return new Date("2013-1-1");
+    if (counter.issuer) {
+      gatewayList = gateways.getIssuers(counter.currency);
+      gatewayList.forEach(function(gateway){
+        if (counter.issuer === gateway.account && gateway.startDate) {
+          candidate = new Date(gateway.startDate);
+          if (candidate < minDate) {
+            minDate = candidate;
+            changed = true;
+          }
+        }
+      });
+    }
+
+    if (!changed) return new Date('2013-1-1');
+    else return minDate;
   }
 
   function updateMaxrange(){

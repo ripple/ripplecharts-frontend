@@ -164,10 +164,10 @@ angular.module( 'ripplecharts.manage-gateways', [
     if (!picked) currencies[1].selected = true;
 
     function checkThemeLogo(issuer) {
-      if ($scope.theme == 'dark') { 
-        issuer.imageSrc = issuer.assets['logo.grayscale.svg']; 
-      } else if ($scope.theme == 'light') { 
-        issuer.imageSrc = issuer.assets['logo.svg']; 
+      if ($scope.theme == 'dark') {
+        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];
+      } else if ($scope.theme == 'light') {
+        issuer.imageSrc = issuer.assets['logo.svg'];
       }
     }
 
@@ -201,7 +201,7 @@ angular.module( 'ripplecharts.manage-gateways', [
 
         if (selected != "XRP" && !issuer.custom) {
           //issuer.imageSrc = issuer.assets['logo.svg'];
-         checkThemeLogo(issuer);
+          checkThemeLogo(issuer);
         }
         if ($scope[selectionId].issuer === issuer.account) issuer.selected = true;
         else issuer.selected = false;
@@ -324,7 +324,6 @@ angular.module( 'ripplecharts.manage-gateways', [
     store.session.set('excludedCurrencies', $scope.excludedCurrencies);
   }
 
-  //FIX RIGHT HERE
   function checkLocal(currency, iss, select) {
     var gateway;
     if ($scope[select].currency === currency && $scope[select].issuer === iss){
@@ -348,14 +347,14 @@ angular.module( 'ripplecharts.manage-gateways', [
     var c;
     for (var i=0; i<currencyList.length; i++) {
       c = currencyList[i];
-      if (picked && c.include) {
+      if (picked && c.include && c.currency !== "XRP") {
         return c;
       }
       if (c.currency === currency) picked = true;
     }
     for (i=1; i<currencyList.length; i++) {
       c = currencyList[i];
-      if (picked && c.include){
+      if (picked && c.include && c.currency !== "XRP"){
         return c;
       }
     }
