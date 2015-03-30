@@ -170,7 +170,7 @@ angular.module( 'ripplecharts.manage-gateways', [
         issuer.imageSrc = issuer.assets['logo.svg'];
       }
     }
-     
+
     $scope.$watch('theme', function(){
       changeCurrency($scope[selectionId].currency);
     });
@@ -324,7 +324,6 @@ angular.module( 'ripplecharts.manage-gateways', [
     store.session.set('excludedCurrencies', $scope.excludedCurrencies);
   }
 
-  //FIX RIGHT HERE
   function checkLocal(currency, iss, select) {
     var gateway;
     if ($scope[select].currency === currency && $scope[select].issuer === iss){

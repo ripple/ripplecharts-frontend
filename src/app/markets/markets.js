@@ -94,7 +94,9 @@ angular.module( 'ripplecharts.markets', [
 
     $scope.$watch('theme', function(){
       changeCurrency($scope[selectionId].currency);
-      editList(selectionId, 'gateway');
+      if ($('li.edit_list.gateway').length !=2) {
+        editList(selectionId, 'gateway');
+      }
     });
 
     $("#"+selectionId+"_currency").ddslick({
@@ -163,7 +165,7 @@ angular.module( 'ripplecharts.markets', [
         imagePosition: "left",
         onSelected: function (data) {
           var different_issuer   = data.selectedData.account !== $scope[selectionId].issuer;
-          var different_currency = data.selectedData.currency !== $scope[selectionId].currency;
+          var different_currency = selected !== $scope[selectionId].currency;
           if (loaded && (different_currency || different_issuer)) {
             changeGateway(selected, data.selectedData.account, selectionId);
           }
@@ -180,11 +182,12 @@ angular.module( 'ripplecharts.markets', [
       if (issuer)
         $scope[selectionId] = {currency: currency, issuer: issuer};
       else 
-        $scope[selectionId] = {currency: "XRP"};
+        $scope[selectionId] = {currency: currency};
       if ($scope.range.name === "max") updateMaxrange();
       loadPair();
-      if ($('li.edit_list.gateway').length !=2) 
+      if ($('li.edit_list.gateway').length !=2) {
         editList(selectionId, 'gateway');
+      }
     }
   }
 
