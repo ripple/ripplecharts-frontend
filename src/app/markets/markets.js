@@ -571,7 +571,6 @@ angular.module( 'ripplecharts.markets', [
   }
 
   function updateScopeStore(option, value){
-    console.log(option, value);
     $scope[option] = value;
     store.set(option, value);
     store.session.set(option, value);
