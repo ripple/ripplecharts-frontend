@@ -299,8 +299,12 @@ angular.module( 'ripplecharts.markets', [
     });
   
   ranges.append("div").attr('id', 'dates');
-  d3.select('#dates').append("input").attr('type', 'text').attr('id', 'start').attr('class', 'datepicker');
-  d3.select('#dates').append("input").attr('type', 'text').attr('id', 'end').attr('class', 'datepicker');
+  d3.select('#dates').append("input").attr('type', 'text')
+    .attr('id', 'start').attr('class', 'datepicker')
+    .property('maxLength', 8);
+  d3.select('#dates').append("input").attr('type', 'text')
+    .attr('id', 'end').attr('class', 'datepicker')
+    .property('maxLength', 8);
   if(!$("#custom").hasClass("selected")){
     $("#start").hide();
     $("#end").hide();
@@ -314,6 +318,11 @@ angular.module( 'ripplecharts.markets', [
     onSelect: function(dateText) {
       var start = new Date($scope.range.start),
           end   = new Date(dateText);
+
+      if (end.getFullYear() < 1999) {
+        end.setFullYear(end.getFullYear() + 100);
+      }
+
       $("#start").datepicker('option', 'maxDate', new Date(moment(end).subtract(1,"d")));
       dateChange(start, end);
     }
@@ -327,6 +336,11 @@ angular.module( 'ripplecharts.markets', [
     onSelect: function(dateText) {
       var start = new Date(dateText),
           end   = new Date($scope.range.end);
+
+      if (start.getFullYear() < 1999) {
+        start.setFullYear(start.getFullYear() + 100);
+      }
+
       $("#end").datepicker('option', 'minDate', new Date(moment(start).add(1,"d")));
       dateChange(start, end);
     }
@@ -557,6 +571,7 @@ angular.module( 'ripplecharts.markets', [
   }
 
   function updateScopeStore(option, value){
+    console.log(option, value);
     $scope[option] = value;
     store.set(option, value);
     store.session.set(option, value);

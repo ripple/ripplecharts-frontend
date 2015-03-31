@@ -25,13 +25,10 @@ angular.module('gateways', [])
       var customCurrencies   =  store.get('customCurrencies') || store.session.get('customCurrencies') || [];
       var include = true;
 
-/*      if (excludedCurrencies.indexOf("XRP") !== -1) include = false;
-      else include = true;*/
-
       for (var currency in userGateways) {
         for (var i=0; i<userGateways[currency].length; i++) {
           //temporarily removing XAU.5
-          if (userGateways[currency][i].selected === true && currency !== '0158415500000000C1F76FF6ECB0BAC600000000') {
+          if (userGateways[currency][i].selected === true) {
             if (excludedCurrencies.indexOf(currency) !== -1) include = false;
             else include = true;
             currencies.push({
