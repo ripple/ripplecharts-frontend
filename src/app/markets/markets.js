@@ -33,37 +33,37 @@ angular.module( 'ripplecharts.markets', [
 })
 
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
-  
+
   if ($state.params.base && $state.params.trade) {
-    
+
     var base = $state.params.base.split(":");
     base = {currency:base[0],issuer:base[1] ? base[1]:""};
     var trade = $state.params.trade.split(":");
-    trade = {currency:trade[0],issuer:trade[1] ? trade[1]:""};   
+    trade = {currency:trade[0],issuer:trade[1] ? trade[1]:""};
 
     store.set('base',  base);
     store.set('trade', trade);
     store.session.set('base',  base);
-    store.session.set('trade', trade);  
+    store.session.set('trade', trade);
     $location.path("/markets").replace(); //to remove the data from the URL
     return;
   }
 
-//load settings from session, local storage, options, or defaults  
-  $scope.base  = store.session.get('base') || store.get('base') || 
+//load settings from session, local storage, options, or defaults
+  $scope.base  = store.session.get('base') || store.get('base') ||
     Options.base || {currency:"XRP", issuer:""};
-  
-  $scope.trade = store.session.get('trade') || store.get('trade') || 
+
+  $scope.trade = store.session.get('trade') || store.get('trade') ||
     Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
-  
-  $scope.chartType = store.session.get('chartType') || store.get('chartType') || 
+
+  $scope.chartType = store.session.get('chartType') || store.get('chartType') ||
     Options.chartType || "line";
-  
-  $scope.interval  = store.session.get('interval') || store.get('interval') || 
+
+  $scope.interval  = store.session.get('interval') || store.get('interval') ||
     Options.interval  || "15m";
 
-  $scope.range  = store.session.get('range') || store.get('range') || 
-    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };  
+  $scope.range  = store.session.get('range') || store.get('range') ||
+    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
   function loadDropdowns(selection) {
     selection.html("");
@@ -78,18 +78,14 @@ angular.module( 'ripplecharts.markets', [
     //format currnecies for dropdowns
     var i = currencies.length;
     while (i--) {
-      if (!currencies[i].include) {
-        currencies.splice(i, 1);
-      }
-      else {
-        currencies[i] = {
-          text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-          value    : i, 
-          currency : currencies[i].currency,
-          imageSrc : currencies[i].icon
-        };
-        if ($scope[selectionId].currency === currencies[i].currency) currencies[i].selected = true;
-      }
+      currencies[i] = {
+        text     : ripple.Currency.from_json(currencies[i].currency).to_human(),
+        value    : i,
+        currency : currencies[i].currency,
+        imageSrc : currencies[i].icon
+      };
+      if ($scope[selectionId].currency === currencies[i].currency)
+        currencies[i].selected = true;
     }
 
     $scope.$watch('theme', function(){
@@ -139,26 +135,23 @@ angular.module( 'ripplecharts.markets', [
       var i = issuers.length;
       while (i--) {
         issuer = issuers[i];
-        if (disable !== true && !issuers[i].include) {
-          issuers.splice(i, 1);
-        } else {
-          issuer.text = issuer.name;
-          if (disable !== true && !issuer.custom) {
-            checkThemeLogo(issuer);
-          }
-          issuer.value = i;
-          if ($scope[selectionId].issuer === issuer.account) {
-            issuer.selected = true;
-          }
-          else issuer.selected = false;
+
+        issuer.text = issuer.name;
+        if (issuer.assets) {
+          checkThemeLogo(issuer);
         }
+        issuer.value = i;
+        if ($scope[selectionId].issuer === issuer.account) {
+          issuer.selected = true;
+        }
+        else issuer.selected = false;
       }
 
       //Special edge case for custom issuer being duplicate of featured
-      for (i=0; i<issuers.length; i++) {
-        if (issuers[i].selected && !picked) picked = true;
-        else if (issuers[i].selected && picked) issuers[i].selected = false;
-      }
+      //for (i=0; i<issuers.length; i++) {
+      //  if (issuers[i].selected && !picked) picked = true;
+      //  else if (issuers[i].selected && picked) issuers[i].selected = false;
+      //}
 
       $("#"+selectionId+"_gateway").ddslick({
         data: issuers,
@@ -181,7 +174,7 @@ angular.module( 'ripplecharts.markets', [
     function changeGateway(currency, issuer, selectionId){
       if (issuer)
         $scope[selectionId] = {currency: currency, issuer: issuer};
-      else 
+      else
         $scope[selectionId] = {currency: currency};
       if ($scope.range.name === "max") updateMaxrange();
       loadPair();
@@ -196,7 +189,7 @@ angular.module( 'ripplecharts.markets', [
   var dropdownB = d3.select("#quote");
   loadDropdowns(dropdownA);
   loadDropdowns(dropdownB);
- 
+
 
   //append edit list option to dropdowns
   function editList( selectionId, selectionSuffix ) {
@@ -208,15 +201,15 @@ angular.module( 'ripplecharts.markets', [
     var swap     = $scope.trade;
     $scope.trade = $scope.base;
     $scope.base  = swap;
-    
+
     loadDropdowns(dropdownA);
     loadDropdowns(dropdownB);
 
     loaded = true;
     loadPair();
   });
-  
-  //set up the range selector  
+
+  //set up the range selector
   var ranges = d3.select("#range").attr("class","selectList");
   ranges.append("label").html("Range:");
   var range = ranges.selectAll("a")
@@ -234,7 +227,7 @@ angular.module( 'ripplecharts.markets', [
       ])
     .enter().append("a")
     .attr("href", "#")
-    .classed("selected", function(d) { 
+    .classed("selected", function(d) {
       if (d.name === $scope.range.name){
         if ($scope.range.name !== "custom"){
           var now = moment.utc();
@@ -242,14 +235,14 @@ angular.module( 'ripplecharts.markets', [
           $scope.range.end = new Date(now);
         }
         return true;
-      } 
+      }
     })
     .text(function(d) { return d.name; })
     .on("click", function(d) {
       d3.event.preventDefault();
       var that = this,
           now  = moment.utc();
-      updateScopeStore("range", {name: d.name});     
+      updateScopeStore("range", {name: d.name});
       range.classed("selected", function() { return this === that; });
       $("#start")
         .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
@@ -261,12 +254,12 @@ angular.module( 'ripplecharts.markets', [
         .hide();
       $("#custom").removeClass('selected');
       intervals.selectAll("a")
-        .classed("selected", function(s) { 
+        .classed("selected", function(s) {
           if (s.multiple === d.multiple && s.interval === d.interval){
             updateScopeStore("interval", s.name);
             return true;
           }
-          else return false; 
+          else return false;
         })
         .classed("disabled", function(s){
           return selectIntervals(d.offset(now), now, s);
@@ -297,7 +290,7 @@ angular.module( 'ripplecharts.markets', [
       $("#start").toggle();
       $("#end").toggle();
     });
-  
+
   ranges.append("div").attr('id', 'dates');
   d3.select('#dates').append("input").attr('type', 'text')
     .attr('id', 'start').attr('class', 'datepicker')
@@ -361,11 +354,11 @@ angular.module( 'ripplecharts.markets', [
           s.end = moment.utc(end);
           priceChart.load($scope.base, $scope.trade, s);
           return true;
-        } 
+        }
       });
   }
 
-  //set up the interval selector  
+  //set up the interval selector
   var intervals = d3.select("#interval").attr("class","selectList");
   intervals.append("label").html("Interval:");
   var interval = intervals.selectAll("a")
@@ -393,7 +386,7 @@ angular.module( 'ripplecharts.markets', [
       }
       else{
         start = $scope.range.start;
-        end = $scope.range.end;  
+        end = $scope.range.end;
       }
       return selectIntervals(start, end, d); })
     .text(function(d) { return d.name; })
@@ -426,7 +419,7 @@ angular.module( 'ripplecharts.markets', [
       }
     });
 
-  //set up the chart type selector     
+  //set up the chart type selector
   var chartType = d3.select("#chartType").attr("class","selectList").selectAll("a")
     .data(["line", "candlestick"])
     .enter().append("a")
@@ -435,13 +428,13 @@ angular.module( 'ripplecharts.markets', [
     .classed('lineGraphic', function(d) { return d === 'line'; })
     .classed('candlestickGraphic', function(d) { return d === 'candlestick'; })
     .classed("selected", function(d) { return d === $scope.chartType; })
-    .text(function(d) { return d; })   
+    .text(function(d) { return d; })
     .on("click", function(d) {
       d3.event.preventDefault();
       var that = this;
       store.set("chartType", d);
       store.session.set("chartType", d);
-      
+
       chartType.classed("selected", function() { return this === that; });
       chartType.selected = d;
       priceChart.setType(d);
@@ -450,34 +443,34 @@ angular.module( 'ripplecharts.markets', [
 //set up the price chart
   var priceChart = new PriceChart ({
     id     : "priceChart",
-    url    : API,  
+    url    : API,
     type   : $scope.chartType,
     live   : true,
     resize : true
-  });   
+  });
 
   var toCSV = d3.select("#toCSV");
   toCSV.on('click', function(){
     if (toCSV.attr("disabled")) return;
-    var data = priceChart.getRawData();  
+    var data = priceChart.getRawData();
     var list = [];
-    
+
     for (var i=0; i<data.length; i++) {
       list.push(JSON.parse(JSON.stringify(data[i])));
     }
-    
-    var csv = jsonToCSV(list); 
+
+    var csv = jsonToCSV(list);
     if (!!Modernizr.prefixed('requestFileSystem', window)) {
       var blob  = new Blob([csv], {'type':'application/octet-stream'});
-      this.href = window.URL.createObjectURL(blob);     
+      this.href = window.URL.createObjectURL(blob);
     } else {
       this.href = "data:text/csv;charset=utf-8," + escape(csv);
     }
 
-    this.download = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv";  
+    this.download = $scope.base.currency+"_"+$scope.trade.currency+"_historical.csv";
     this.target   = "_blank";
   });
-  
+
   priceChart.onStateChange = function(state) {
     if (state=='loaded') toCSV.style("opacity",1).attr("disabled",null);
     else toCSV.style("opacity",0.3).attr("disabled",true);
@@ -489,7 +482,7 @@ angular.module( 'ripplecharts.markets', [
     switch (d.name){
       case "5m":
         num = diff/(300);
-        break; 
+        break;
       case "15m":
         num = diff/(900);
         break;
@@ -522,7 +515,7 @@ angular.module( 'ripplecharts.markets', [
     }
     if(num <= 366 && num >= 25) return false;
     else return true;
-  }       
+  }
 
   function getStartdate(base, counter){
     var gatewayList;
@@ -577,14 +570,14 @@ angular.module( 'ripplecharts.markets', [
   }
 
   loaded = true;
-  
-  //set up the order book      
+
+  //set up the order book
   function emitHandler (type, data) {
     if (type=='spread') {
-      document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;    
-    }     
+      document.title = data.bid+"/"+data.ask+" "+$scope.base.currency+"/"+$scope.trade.currency;
+    }
   }
-  
+
   book = new OrderBook ({
     chartID : "bookChart",
     tableID : "bookTables",
@@ -593,12 +586,12 @@ angular.module( 'ripplecharts.markets', [
     emit    : emitHandler
   });
 
-//set up trades feed  
+//set up trades feed
   tradeFeed = new TradeFeed({
     id     : "tradeFeed",
-    url    : API   
+    url    : API
   });
-  
+
 //single function to reload all feeds when something changes
   function loadPair() {
 
@@ -609,7 +602,7 @@ angular.module( 'ripplecharts.markets', [
       interval.live = false;
       interval.start = $scope.range.start;
       interval.end = $scope.range.end;
-    } 
+    }
     else {
       interval.live = true;
       interval.offset = range.offset;
@@ -617,41 +610,41 @@ angular.module( 'ripplecharts.markets', [
 
     store.set('base',  $scope.base);
     store.set('trade', $scope.trade);
-    
+
     store.session.set('base',  $scope.base);
     store.session.set('trade', $scope.trade);
 
     priceChart.load($scope.base, $scope.trade, interval);
-    book.getMarket($scope.base, $scope.trade); 
-    tradeFeed.loadPair ($scope.base, $scope.trade);   
+    book.getMarket($scope.base, $scope.trade);
+    tradeFeed.loadPair ($scope.base, $scope.trade);
     mixpanel.track("Price Chart", {
       "Base Currency"  : $scope.base.currency  + ($scope.base.issuer  ? "."+$scope.base.issuer  : ""),
       "Trade Currency" : $scope.trade.currency + ($scope.trade.issuer ? "."+$scope.trade.issuer : ""),
       "Interval"       : interval.name,
       "Chart Type"     : priceChart.type
-    }); 
+    });
   }
 
 
-//stop the listeners when leaving page  
+//stop the listeners when leaving page
   $scope.$on("$destroy", function(){
     priceChart.suspend();
     book.suspend();
-    tradeFeed.suspend(); 
+    tradeFeed.suspend();
   });
-  
 
-//reload data when coming back online  
-  $scope.$watch('online', function(online) { 
+
+//reload data when coming back online
+  $scope.$watch('online', function(online) {
     if (online) {
-      remote.connect();  
+      remote.connect();
       setTimeout(function(){ //put this in to prevent getting "unable to load data"
-        loadPair(); 
+        loadPair();
       }, 100);
-         
-    
+
+
     } else {
-      remote.disconnect();       
+      remote.disconnect();
     }
   });
 });
