@@ -152,6 +152,13 @@ angular.module('gateways', [])
       }
     }
 
+    issuers.sort(function(a,b) {
+      if (a.featured && b.featured) return 0;
+      else if (a.featured) return -1;
+      else if (b.featured) return 1;
+      else return 0;
+    });
+
     return issuers;
   };
 
