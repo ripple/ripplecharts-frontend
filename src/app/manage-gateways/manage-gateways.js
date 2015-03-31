@@ -37,8 +37,8 @@ angular.module( 'ripplecharts.manage-gateways', [
   var loaded = false;
   var dropdownA;
 
-  if (query === 'trade' || query === 'quote') query = 'quote';
-  else if (query !== 'base') query = 'base';
+  if (query === 'trade')  query = 'trade';
+  else                    query = 'base';
 
   dropdownA = d3.select('#dropdown').append('div')
     .attr('id', query).attr('class', 'dropdown');
@@ -118,13 +118,10 @@ angular.module( 'ripplecharts.manage-gateways', [
   function loadDropdowns(selection) {
     selection.html("");
 
-    var selectionId;
-    if (selection.attr("id") === "quote") selectionId = "trade";
-    else selectionId = "base";
-
-    var currencies         = gateways.getCurrencies('included');
-    var currencySelect     = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
-    var picked             = false;
+    var selectionId    = selection.attr("id");
+    var currencies     = gateways.getCurrencies();
+    var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
+    var picked         = false;
 
     //remove XRP
     currencies.shift();

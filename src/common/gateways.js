@@ -13,21 +13,34 @@ angular.module('gateways', [])
     custom = store.session.get('userGateways') ||
       store.get('userGateways') || { };
 
-    //add or update gateways
+    //add or update gateways based
+    //on data from api
     for (currency in defaultGateways) {
+
+      //unknown currency,
+      //add it as a default
       if (!custom[currency]) {
         custom[currency] = {
           custom  : false,
           issuers : { }
         };
+
+      //must be a default
+      //currency
       } else {
         custom[currency].custom = false;
       }
 
+      //update gateways with the new data
       for (var i in defaultGateways[currency]) {
         gateway = defaultGateways[currency][i];
+
+        //if its already here,
+        //use the current include
         if (custom[currency].issuers[gateway.account]) {
           gateway.include = custom[currency].issuers[gateway.account].include;
+
+        //otherwise, include it if featured
         } else {
           gateway.include = defaultGateways[currency][i].featured;
         }
@@ -35,12 +48,6 @@ angular.module('gateways', [])
         normalized     = gateway.name.toLowerCase().replace(/\W/g, '');
         gateway.assets = handleAssets(gateway.assets, normalized);
         custom[currency].issuers[gateway.account] = gateway;
-
-        //the first time we see this currency, include it
-        //only if at least one of the gateways is included
-        if (gateway.include && typeof custom[currency].include === 'undefined') {
-          custom[currency].include = true;
-        }
       }
     }
 
@@ -52,6 +59,7 @@ angular.module('gateways', [])
       }
     }
 
+    //save
     store.session.set('userGateways', custom);
     store.set('userGateways', custom);
   });
@@ -74,7 +82,7 @@ angular.module('gateways', [])
    * get currencies from user defined list
    */
 
-  var getCurrencies = function (mode) {
+  var getCurrencies = function (all) {
 
     var currencies = [];
     var include;
@@ -82,11 +90,6 @@ angular.module('gateways', [])
     //add currencies from cusom list
     for (var currency in custom) {
       if (currency === '0158415500000000C1F76FF6ECB0BAC600000000') {
-        continue;
-      }
-
-      //skip ignored currencies
-      if (!custom[currency].include && !mode) {
         continue;
       }
 
@@ -107,11 +110,10 @@ angular.module('gateways', [])
 
       //if none are selected, only add if all = true
       if (include)  currencies.push(include);
-      else if (mode === 'all' || (
-        mode && custom[currency].include)) currencies.push({
+      else if (all) currencies.push({
         currency : currency,
         icon     : API + '/currencies/'+ currency +'.svg',
-        include  : custom[currency].include,
+        include  : false,
         custom   : custom[currency].custom
       });
     }
@@ -153,14 +155,34 @@ angular.module('gateways', [])
     return issuers;
   };
 
+  /**
+   * updateCurrency
+   * add/remove/include/exclude
+   */
+
   var updateCurrency = function (options) {
     var currency = options.currency.toUpperCase();
+    var featured;
+    var issuer;
 
-    //include or exclude
-    if (options.exclude || options.include) {
-      if (!custom[currency]) return;
+    //include currency, include featured
+    //if there are any, otherwise include all
+    if (options.include && custom[currency]) {
+      featured = hasFeatured(custom[currency].issuers);
 
-      custom[currency].include = options.include ? true : false;
+      for (issuer in custom[currency].issuers) {
+        if (featured && !custom[currency].issuers[issuer].featured) {
+          continue;
+        }
+
+        custom[currency].issuers[issuer].include = true;
+      }
+
+    //exclude currency, exclude all issuers
+    } else if (options.exclude && custom[currency]) {
+      for (issuer in custom[currency].issuers) {
+        custom[currency].issuers[issuer].include = false;
+      }
 
     //add custom
     } else if (options.add && !custom[currency]) {
@@ -175,15 +197,31 @@ angular.module('gateways', [])
 
     } else return;
 
+    //save
     store.session.set('userGateways', custom);
     store.set('userGateways', custom);
+
+    //check for featured gateway
+    function hasFeatured(issuers) {
+      for (var i in issuers) {
+        if (issuers[i].featured) return true;
+      }
+
+      return false;
+    }
   };
+
+  /**
+   * updateIssuer
+   * add/remove/include/exclude
+   */
 
   var updateIssuer = function (options) {
     var currency = options.currency.toUpperCase();
     var issuer   = options.issuer;
 
     if (!custom[currency]) return;
+
     //include or exclude
     if (options.exclude || options.include) {
       if (!custom[currency].issuers[issuer]) return;
@@ -203,6 +241,7 @@ angular.module('gateways', [])
       delete custom[currency].issuers[issuer];
     } else return;
 
+    //save
     store.session.set('userGateways', custom);
     store.set('userGateways', custom);
   };
