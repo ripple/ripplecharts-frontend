@@ -195,7 +195,7 @@ angular.module('gateways', [])
     } else if (options.add && !custom[currency]) {
       custom[currency] = {
         custom  : true,
-        issuers : []
+        issuers : { }
       };
 
     //remove custom
