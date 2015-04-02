@@ -11,7 +11,7 @@
   img {
     width: 15px;
     height: auto;
-  }   
+  }
 }
 
 
@@ -35,7 +35,7 @@
 }
 
 .markets .helpbox .type {
-  width: 5px; 
+  width: 5px;
   background:#ccc;
   padding:0;
 }
@@ -44,7 +44,7 @@
   margin: 10px;
 }
 .markets .helpbox table th {
-  padding:2px 10px;  
+  padding:2px 10px;
 }
 
 .markets .helpbox .bid {
@@ -68,7 +68,7 @@
 }
 
 #currencyPair .gateway {
-  min-width:150px;  
+  min-width:150px;
 }
 
 #currencyPair h3 {
@@ -83,7 +83,7 @@
 
 #toCSV {
   display: inline-block;
-  cursor: pointer; 
+  cursor: pointer;
   margin: 0 auto;
   color:#666;
   text-decoration: none;
@@ -100,7 +100,7 @@
 
 
 #flip {
-  font-size:12px; 
+  font-size:12px;
   cursor:pointer;
   color:#666;
   display:inline-block;
@@ -114,7 +114,7 @@
 }
 
 #flip:hover span {
-  border-color:#666;  
+  border-color:#666;
 }
 
 .rippleStatus {
@@ -124,7 +124,7 @@
 }
 
 .rippleStatus .items {
-  display: inline-block; 
+  display: inline-block;
 }
 
 .rippleStatus .items div {
@@ -147,18 +147,18 @@
 }
 
 .rippleStatus svg.disconnected circle {
-  fill : #c00;  
+  fill : #c00;
 }
 
 .rippleStatus svg.connected circle {
-  fill : #080;  
+  fill : #080;
 }
 
 #interval {
   // margin-left: 60px;
   display: inline-block;
   float: left;
-  //margin-right: 160px; 
+  //margin-right: 160px;
 }
 
 .rangeIntervalWrapper {
@@ -171,8 +171,8 @@
 }
 
 #range {
-  margin-right: 65px; 
-  float: left; 
+  margin-right: 65px;
+  float: left;
   display: inline-block;
 }
 
@@ -296,10 +296,10 @@
   }
 
 /*
- * Responsive tweaks 
+ * Responsive tweaks
  */
 .markets.row {
-  margin: 0 !important;  
+  margin: 0 !important;
 }
 
 .markets .col-md-3 {
@@ -329,8 +329,8 @@
 @media (max-width:1100px) {
   .markets .dropdowns, .markets #flip, .markets #toCSV {
     //float:left;
-  }  
-  
+  }
+
   .markets #quote {
     clear: left;
   }
@@ -338,47 +338,47 @@
 
 @media (max-width: 979px) {
 
-  
+
   .markets .col-md-3, .markets .col-md-9 {
     width:100% !important;
     margin: 0 !important;
   }
-  
+
   .markets .col-md-3 {
     display:table;
-    border-bottom:1px solid rgba(150,150,150,.2); 
+    border-bottom:1px solid rgba(150,150,150,.2);
   }
-  
+
   .markets .col-md-3 .helpbox {
     display:table-caption;
     margin-left:60px;
     margin-right:60px;
   }
-  
+
   #tradeFeed {
     display:table-row;
   }
-  
+
   #tradeFeed .summary {
     width:50% !important;
     display:table-cell;
     vertical-align:top;
-    border-right:1px solid rgba(150,150,150,.2); 
+    border-right:1px solid rgba(150,150,150,.2);
   }
-  
+
   #tradeFeed .table {
     display:table-cell;
     vertical-align:top;
   }
-  
+
   #tradeFeed .tableWrap {
     height:120px;
     overflow:auto;
   }
-  
+
   .markets .dropdowns, .markets #flip, .markets #toCSV {
     float:none;
-  }  
+  }
 }
 @media (max-width: 1175px) {
 
@@ -403,12 +403,12 @@
 }
 
 @media (max-width: 840px) {
-  
+
   .rippleStatus {
     float:none;
     text-align:center;
   }
-  
+
   .rippleStatus .items {
     display:inline-table;
     margin:0 10px 10px;
@@ -418,7 +418,7 @@
 @media (max-width: 600px) {
 
   .chartTypeWrapper {
-    top: 0px; 
+    top: 0px;
     clear: both;
     float: none;
   }
@@ -427,9 +427,9 @@
     float: none;
     margin-right: 0;
   }
-  
+
   #range, #interval  {
-    margin-left: 0; 
+    margin-left: 0;
     margin-right: 0;
     float: center;
   }
@@ -448,33 +448,33 @@
 
   .markets .col-md-3 {
     display:block;
-    border-color:#ccc;
+    border-color:rgba(150,150,150,.5);
     padding:0 !important;
   }
-  
+
   .markets .col-md-3 .helpbox {
     display:inherit;
   }
 
   #tradeFeed {
-    display:block; 
-  } 
-  
+    display:block;
+  }
+
   #tradeFeed .tableWrap {
     border-top: 1px solid #ccc;
     height:100px;
   }
-     
+
   #tradeFeed .summary {
     width:100% !important;
     display:block;
     border:none;
   }
-  
+
   #tradeFeed .table {
     display:block;
   }
-  
+
   #currencyPair {
     display:inline-block;
     width:400px;
@@ -489,47 +489,48 @@
 
 
 @media (max-width: 480px) {
-  .markets #priceChart, 
-  .markets .controls,
+  .markets #priceChart,
   .markets #bookChart,
-  .markets #bookTables { 
+  .markets #bookTables,
+  .markets .rangeIntervalWrapper{
     zoom: 0.75;  //zoom 75% for phones
   }
 
-  #chartType {
-    zoom: 1.25;
+  #currencyPair {
+    zoom: .9;
+    margin-left:45px;
   }
-  
+
   #currencyPair select{
     padding: 5px 40px 5px 5px;
     font-size: 16px;
     background-size: 20px;
-  }  
-  
-  #currencyPair .gateway {
-    min-width:200px;  
   }
-  
+
+  #currencyPair .gateway {
+    min-width:200px;
+  }
+
   #interval {margin-left:20px; zoom:1.25}
   #range {margin-left:0px; zoom:1.25}
   #flip {
     font-size:16px;
     margin-right:-5px;
   }
-  
 
-  
+
+
   #toCSV img {
     width:35px;
   }
-  
+
   .markets .col-md-3 .showHelp {
-    margin:10px;  
-  } 
-  
+    margin:10px;
+  }
+
   .markets .wrap .showHelp {
     zoom:1.33;
-    margin:10px;  
+    margin:10px;
   }
 
 
