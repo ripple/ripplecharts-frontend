@@ -40,6 +40,13 @@ angular.module( 'ripplecharts.manage-gateways', [
   if (query === 'trade')  query = 'trade';
   else                    query = 'base';
 
+  //swap it if XRP is the currency
+  //this can happen if base/trade isnt
+  //indicated in the URL
+  if ($scope[query].currency === 'XRP') {
+    query = query === 'trade' ? 'base' : 'trade';
+  }
+
   dropdownA = d3.select('#dropdown').append('div')
     .attr('id', query).attr('class', 'dropdown');
   loadDropdowns(dropdownA);
