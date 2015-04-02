@@ -1,196 +1,141 @@
 (function() {
 
-  var accountsByCurrency,
-    gatewayByName,
-    gatewayByAddress,
-    queue = [];
+  ripple.currencyDropdown = function(gateways) {
+    console.log("Initial.");
+    var event = d3.dispatch("change");
+    var select;
+    var loaded = false;
 
-  ripple.currencyDropdown = function(currencyList) {
-    var event = d3.dispatch("change"), selected;
-	
-    if (!accountsByCurrency) {
-      accountsByCurrency = {};
-      gatewayByName      = {};
-      gatewayByAddress   = {};
-	
-      gateways.forEach(function(gateway) {
-        gatewayByName[gateway.name] = gateway;
-      	var accounts = gateway.accounts,
-          currencies = gateway.currencies = [];
-          		
-      	accounts.forEach(function(account) {
-          gatewayByAddress[account.address] = account.gateway = gateway;
-        	account.currencies.forEach(function(currency) {
-        	  var c = typeof currency === 'string' ? currency : currency.label;
-            (accountsByCurrency.hasOwnProperty(c) ? accountsByCurrency[c] : accountsByCurrency[c] = []).push(account);
-          	currencies.push(currency);
-        	});
-        });
-    	});
-    	
-    	for (var i = 0; i < queue.length; ++i) queue[i]();
-    	queue = null;
-    }
-	
     function dropdown(selection) {
-      if (queue) queue.push(function() { selection.call(loadDropdowns); });
-      else selection.call(loadDropdowns);
+      selection.call(loadDropdowns);
     }
 
+    dropdown.selected = function(_) {
+      return arguments.length ? (select = _, dropdown) : select;
+    };
 
-//  this function is called to display currency then issuer    
     function loadDropdowns(selection) {
-      var currencies       = currencyList || ["XRP"].concat(d3.keys(accountsByCurrency).sort());
-      var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
-      var gateway          = selected && gatewayByAddress[selected.issuer];
-      var selectedCurrency = selected ? selected.currency : null;
-      
-      if (!currencyList) var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
-      
-      //convert intrest currency code back to label
-      if (selectedCurrency && gateway) {   
-        for (i=0; i<gateway.currencies.length; i++) {
-          if (typeof gateway.currencies[i] !== 'string' &&
-            gateway.currencies[i].code === selectedCurrency) {
-              selectedCurrency = gateway.currencies[i].label;
-              break;
-          }
-        }        
-      }
-      
-      var option = currencySelect.selectAll("option")
-        .data(currencies)
-        .enter().append("option")
-        .attr("class", function(d){return d})
-        .property("selected", function(d) { return selectedCurrency && d === selectedCurrency; })
-        .text(function(d){return d});   
-       
-        
-      if (!currencyList) changeCurrency();
-      
-      function changeCurrency() {
-        if (currencyList) {
-          event.change(currencySelect.node().value);  
-        } else {
-          var currency = currencySelect.node().value;
-          var list = currency == 'XRP' ? [""] : 
-            accountsByCurrency[currency].map(function(d){
-              return d.gateway.name;
-            });
-          
-          var option = gatewaySelect.selectAll("option").data(list, String);
-          
-          option.enter().append("option").text(function(d){return d});
-          option.exit().remove();
-          if (currency=="XRP") gatewaySelect.attr("disabled", "true");
-          else gatewaySelect.attr('disabled', null);
-         
-          
-          if (selected) {
-            var name = gateway ? gateway.name : "";
-            option.property("selected", function(d) { return d === name });
-          }
-          changeGateway();
+      console.log("Loading dropdowns.");
+      selection.html("");
+      var theme = store.get("theme") || store.session.get("theme") || "light";
+
+      var selectionId;
+      if (selection.attr("id") === "quote") selectionId = "trade";
+      else selectionId = "base";
+      var currencies     = gateways.getCurrencies();
+      var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
+      var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
+
+      //format currnecies for dropdowns
+      var i = currencies.length;
+      while (i--) {
+        if (!currencies[i].include) {
+          currencies.splice(i, 1);
         }
-      } 
-      
-      function changeGateway() {
-        var gateway = gatewaySelect.node().value,
-          currency  = currencySelect.node().value,
-          accounts  = accountsByCurrency[currency];
-          account   = accounts && accounts.filter(function(d) { return d.gateway.name === gateway; })[0];
-          issuer    = account ? account.address : null;
-          
-          //check account currencies for interest currencies
-          if (account) {
-            for (i=0; i<account.currencies.length; i++) {
-              if (typeof account.currencies[i] !== 'string' &&
-                account.currencies[i].label === currency) {
-                  currency = account.currencies[i].code;
-                  break;
-              }
+        else {
+          currencies[i] = {
+            text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
+            value    : i, 
+            currency : currencies[i].currency,
+            imageSrc : currencies[i].icon
+          };
+          if (select.currency === currencies[i].currency) currencies[i].selected = true;
+        }
+      }
+
+      $("#"+selectionId+"_currency").ddslick({
+        data: currencies,
+        imagePosition: "left",
+        width: "120px",
+        onSelected: function (data) {
+          if (!loaded) {
+            changeCurrency(data.selectedData.currency);
+          } else if (data.selectedData.currency !== select.currency) {
+            changeCurrency(data.selectedData.currency);
+          }
+        }
+      });
+
+      editList(selectionId, 'gateway');
+      editList(selectionId, 'currency');
+
+      function checkThemeLogo(issuer) {
+        if (theme == 'dark') {
+          issuer.imageSrc = issuer.assets['logo.grayscale.svg'];
+        } else if (theme == 'light') {
+          issuer.imageSrc = issuer.assets['logo.svg'];
+        }
+      }
+
+      function changeCurrency(selected){
+        console.log("Change currency.");
+        $("#"+selectionId+"_gateway").ddslick("destroy"); 
+        var issuers;
+        var issuer;
+        var picked  = false;
+        var disable = false;
+
+        issuers = gateways.getIssuers(selected);
+        if (selected === "XRP" || issuers.length === 0) {
+          issuers = [{}];
+          disable = true;
+        }
+
+        var i = issuers.length;
+        while (i--) {
+          issuer = issuers[i];
+          if (disable !== true && !issuers[i].include) {
+            issuers.splice(i, 1);
+          } else {
+            issuer.text = issuer.name;
+            if (disable !== true && !issuer.custom) {
+              checkThemeLogo(issuer);
+            }
+            issuer.value = i;
+            if (select.issuer === issuer.account) {
+              issuer.selected = true;
+            }
+            else issuer.selected = false;
+          }
+        }
+
+        //Special edge case for custom issuer being duplicate of featured
+        for (i=0; i<issuers.length; i++) {
+          if (issuers[i].selected && !picked) picked = true;
+          else if (issuers[i].selected && picked) issuers[i].selected = false;
+        }
+
+        $("#"+selectionId+"_gateway").ddslick({
+          data: issuers,
+          imagePosition: "left",
+          onSelected: function (data) {
+            var different_issuer   = data.selectedData.account !== select.issuer;
+            var different_currency = selected !== select.currency;
+            if (different_currency || different_issuer) {
+              changeGateway(selected, data.selectedData.account, selectionId);
             }
           }
-          
-          event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});  
-      }    
-    } 
-    
-//  the function below would be used in place of loadDropdowns if you wanted 
-//  issuer-currency instead of currency - issuer    
-    function loaded(selection) {
-      //loadDropdowns(selection);
-      var currencies = ["XRP"].concat(d3.keys(accountsByCurrency).sort()),
-        names        = [""].concat(d3.keys(gatewayByName).sort()),
-        gateway      = selected && gatewayByAddress[selected.issuer];
-			
-      var gatewaySelect = selection.append("select").attr("class","gateway").on("change", function() {
-        var gateway = gatewayByName[gatewaySelect.selectAll(":checked").datum()],
-	       option     = currencySelect.selectAll("option").data(gateway ? gateway.currencies : ["XRP"], String);
-	              	
-        option.enter().append("option").text(String);
-        option.exit().remove();
-        change();
-      });
-	        
-      gatewaySelect.selectAll("option")
-        .data(names)
-        .enter().append("option")
-        .property("selected", gateway ? function(d) { return d === gateway.name; } : function(_, i) { return !i; })
-        .text(String);
-    
-      var currencySelect = selection.append("select").attr("class","currency").on("change", change);
-      
-      var option = currencySelect.selectAll("option")
-        .data(gateway ? gateway.currencies : ["XRP"], String)
-        .enter().append("option")
-        .text(String);
-        	
-      if (selected) option.property("selected", function(d) { return d === selected.currency; });
-      change();
-      
-      function change() {
-        var gateway = gatewayByName[gatewaySelect.selectAll(":checked").datum()],
-          currency  = currencySelect.selectAll(":checked").datum(),
-          accounts  = accountsByCurrency[currency],
-          address   = accounts && accounts.filter(function(d) { return d.gateway === gateway; })[0].address;
-          
-        event.change(address ? {currency:currency, issuer:address} : {currency:currency});
+        });
+
+        if (disable === true) {
+          d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
+        }
+
+      }
+
+      function changeGateway(currency, issuer, selectionId) {
+        console.log("Change gateway.");
+        editList(selectionId, 'gateway');
+        event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});
       }
     }
-    
-    dropdown.selected = function(_) {
-      return arguments.length ? (selected = _, dropdown) : selected;
-    };
-    
-    dropdown.getIssuers = function (currency) {
-      var accounts = accountsByCurrency[currency], issuers = []; 
-      if (!accounts || !accounts.length) return issuers;
-      
-      issuers = accounts.map(function(d){
-        var c = currency;
-        
-        //switch code for demmurage currencies
-        for (i=0; i<d.currencies.length; i++) {
-          if (typeof d.currencies[i] !== 'string' &&
-            d.currencies[i].label === currency) {
-              c = d.currencies[i].code;
-              break;
-          }
-        }        
-        return {currency:c, issuer:d.address};
-      });
-      
-      return issuers;
+
+    //append edit list option to dropdowns
+    function editList( selectionId, selectionSuffix ) {
+      $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<a class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><span class="plus">+</span> Edit</li></a>');
     }
-    
-    dropdown.getName = function(issuer) {
-      var gateway = gatewayByAddress[issuer];
-      return gateway ? gateway.name : ""; 
-    }
-    
+
     return d3.rebind(dropdown, event, "on");
   };
-    
-  function gatewayDropdown(selection, accounts) {}
+  
 })();
