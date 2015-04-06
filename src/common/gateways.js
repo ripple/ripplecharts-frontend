@@ -10,7 +10,6 @@ angular.module('gateways', [])
     var currency;
 
     defaultGateways = data;
-    console.log("defaultGateways", defaultGateways);
     custom = store.session.get('userGateways') ||
       store.get('userGateways') || { };
 

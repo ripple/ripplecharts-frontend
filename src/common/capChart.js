@@ -32,7 +32,7 @@ function CapChart(options) {
   dropdowns.select(".dataType select").on('change',function(){
     self.dataType = this.value;
     if (self.dataType=='Transaction Volume') {
-      dropdowns.select(".currency select").insert("option", ":first-child").attr("class", "XRP").text("XRP");
+      dropdowns.select(".currency").insert("option select", ":first-child").attr("class", "XRP").text("XRP");
     } else {
       dropdowns.select(".currency .XRP").remove();
     }
@@ -60,6 +60,7 @@ function CapChart(options) {
     var range = controls.select(".interval .selected").datum();
     loadData(range);
   });
+
 
 //add chart type select
   var type = controls.append("div").attr("class", "chartType selectList").selectAll("a")
@@ -302,6 +303,7 @@ function CapChart(options) {
       if (!tradeDataCache[currency][range.name])
         tradeDataCache[currency][range.name] = {raw:[]};
 
+
       tradeDataCache[currency][range.name]['raw'].push({
         address : base.issuer,
         name    : base.name,
@@ -344,6 +346,7 @@ function CapChart(options) {
     issuers.forEach(function(issuer){
       issuer.currency = self.currency;
       issuer.issuer   = issuer.account;
+      delete issuer.account;
     });
 
     apiHandler.issuerCapitalization({
@@ -465,7 +468,7 @@ function CapChart(options) {
       if (d.values) amount = d.values.length ? commas(d.values[d.values.length-1].y,2) : 0;
       else amount = d.results.length ? commas(d.results[d.results.length-1][1],2) : 0;
       return {
-        name    : options.gateways.getName(currency, address) || d.name,
+        name    : d.name,
         address : address,
         amount  : amount,
         hide    : false
@@ -584,7 +587,6 @@ function CapChart(options) {
       }
 
     } else {
-      console.log("LINES!");
       svg.selectAll('.section').remove();
       if (self.dataType=='Capitalization') {
         lines  = capDataCache[self.currency][self.range].raw;
@@ -598,15 +600,14 @@ function CapChart(options) {
       }
 
 
-      console.log(lines);
-
+      //console.log(lines);
       color.domain(legend.map(function(d){return d.address}));
       lines = filterByLegend(lines, legend);
 
       xScale.domain(getExtents("x", lines));
       yScale.domain(getExtents("y", lines));
 
-      var line = g.selectAll("g.line").data(lines, function(d){return d.address});
+      var line = g.selectAll("g.line").data(lines, function(d){return d.address || d.issuer || d.account});
       line.enter().append("g").attr("class","line");
       line.exit().remove();
 
@@ -736,7 +737,6 @@ function CapChart(options) {
 
 
   function movingInGround(section) {
-    console.log(section);
     var tx, ty;
     var zoom = chart.style("zoom") || 1;
     var date = xScale.invert(d3.mouse(this)[0]/zoom);
@@ -746,6 +746,8 @@ function CapChart(options) {
     var cy  = yScale(section.values[i].y+section.values[i].y0)+options.margin.top;
     var cx  = xScale(section.values[i].date)+options.margin.left;
     var c2y = yScale(section.values[i].y0)+options.margin.top;
+
+
 
 //  determine position of tooltip
     var position = getTooltipPosition(cx, cy);
