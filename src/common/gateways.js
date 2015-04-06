@@ -10,6 +10,7 @@ angular.module('gateways', [])
     var currency;
 
     defaultGateways = data;
+    console.log("defaultGateways", defaultGateways);
     custom = store.session.get('userGateways') ||
       store.get('userGateways') || { };
 
@@ -253,12 +254,19 @@ angular.module('gateways', [])
     store.set('userGateways', custom);
   };
 
+  var getName = function(currency, issuer) {
+    var gateways = custom[currency].issuers;
+    if (gateways) return gateways[issuer].name;
+    else return "";
+  };
+
 
   return {
     promise        : promise,
     getCurrencies  : getCurrencies,
     getIssuers     : getIssuers,
     updateCurrency : updateCurrency,
-    updateIssuer   : updateIssuer
+    updateIssuer   : updateIssuer,
+    getName        : getName
   }
 });

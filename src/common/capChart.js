@@ -206,7 +206,7 @@ function CapChart(options) {
       return;
     }
 
-    var issuers = self.currency=="XRP" ? [{currency:"XRP"}] : options.gateways.getIssuers(self.currency);
+    var issuers = self.currency=="XRP" ? [{currency:"XRP"}] : options.gateways.getIssuers(self.currency, true);
     for (var i=0; i<issuers.length; i++) {
       issuers[i].currency = self.currency;
       loadSendDataHelper(range, issuers[i], issuers.length);
@@ -272,7 +272,7 @@ function CapChart(options) {
       return;
     }
 
-    var issuers = options.gateways.getIssuers(self.currency);
+    var issuers = options.gateways.getIssuers(self.currency, true);
     for (var i=0; i<issuers.length; i++) {
       issuers[i].currency = self.currency;
       loadTradeHelper(range, issuers[i], issuers.length);
@@ -339,7 +339,7 @@ function CapChart(options) {
     }
 
     var end        = moment.utc();
-    var issuers    = options.gateways.getIssuers(currency);
+    var issuers    = options.gateways.getIssuers(currency, true);
 
     issuers.forEach(function(issuer){
       issuer.currency = self.currency;
@@ -465,7 +465,7 @@ function CapChart(options) {
       if (d.values) amount = d.values.length ? commas(d.values[d.values.length-1].y,2) : 0;
       else amount = d.results.length ? commas(d.results[d.results.length-1][1],2) : 0;
       return {
-        name    : d.name,
+        name    : options.gateways.getName(currency, address) || d.name,
         address : address,
         amount  : amount,
         hide    : false
