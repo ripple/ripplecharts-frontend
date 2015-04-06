@@ -90,8 +90,6 @@ angular.module( 'ripplecharts.markets', [
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected($scope.trade);
     dropdownB.selected($scope.base);
-    d3.select("#base").selectAll("select").remove();
-    d3.select("#quote").selectAll("select").remove();
     loaded = false;
     d3.select("#base").call(dropdownA);
     d3.select("#quote").call(dropdownB);
@@ -99,6 +97,7 @@ angular.module( 'ripplecharts.markets', [
     
     swap         = $scope.trade;
     $scope.trade = $scope.base;
+    $scope.base  = swap;
 
     loadPair();
   });

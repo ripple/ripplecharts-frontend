@@ -15,15 +15,15 @@
     };
 
     function loadDropdowns(selection) {
-      console.log("Loading dropdowns.");
+      console.log("Loading dropdowns:", selection);
       selection.html("");
       var theme = store.get("theme") || store.session.get("theme") || "light";
 
       var selectionId;
       if (selection.attr("id") === "quote") selectionId = "trade";
-      else selectionId = "base";
+      else selectionId = selection.attr("id");
       var currencies     = gateways.getCurrencies();
-      var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
+      var currencySelect = selection.append("select").attr("class", "currency").attr("id", selectionId+"_currency");
       var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
 
       //format currnecies for dropdowns
@@ -117,6 +117,8 @@
           }
         });
 
+        d3.select("#"+selectionId+"_gateway").classed("gateway", true);
+
         if (disable === true) {
           d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
         }
@@ -125,8 +127,12 @@
 
       function changeGateway(currency, issuer, selectionId) {
         console.log("Change gateway.");
-        editList(selectionId, 'gateway');
-        event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});
+        console.log("!", $("#"+selectionId+"_gateway").find('li.edit_list.gateway').length);
+        if ($("#"+selectionId+"_gateway").find('li.edit_list.gateway').length !=1) {
+          editList(selectionId, 'gateway');
+        }
+        select = issuer ? {currency: currency, issuer: issuer} : {currency:currency}
+        event.change(select);
       }
     }
 

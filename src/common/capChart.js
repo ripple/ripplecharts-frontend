@@ -32,7 +32,7 @@ function CapChart(options) {
   dropdowns.select(".dataType select").on('change',function(){
     self.dataType = this.value;
     if (self.dataType=='Transaction Volume') {
-      dropdowns.select(".currency").insert("option", ":first-child").attr("class", "XRP").text("XRP");
+      dropdowns.select(".currency select").insert("option", ":first-child").attr("class", "XRP").text("XRP");
     } else {
       dropdowns.select(".currency .XRP").remove();
     }
@@ -44,17 +44,22 @@ function CapChart(options) {
   });
 
 //add currency dropdown
-  var currencyList = ['BTC','USD','CNY','JPY','EUR','GBP','KRW','NZD','BRL','MXN','CAD','ILS','SGD', 'XAG','XAU'];
-  if (self.dataType=='Transaction Volume') currencyList.unshift("XRP");
-  var currencyDropdown = ripple.currencyDropdown(currencyList).selected({currency:self.currency})
-    .on("change", function(currency) {
-      self.currency = currency;
-      var range = controls.select(".interval .selected").datum();
-      loadData(range);
+  var currencyList = options.gateways.getCurrencies();
+  if (self.dataType !== 'Transaction Volume') {
+    currencyList.shift();
+  }
+
+  dropdowns.append("div").attr("class","dropdowns currency").append("select").selectAll("option")
+    .data(currencyList)
+    .enter().append("option")
+    .html(function(d) { return d.currency })
+    .attr("selected", function(d) {if (d.currency == self.currency) return true});
+
+  var selected = dropdowns.select(".currency select").on('change', function(currency){
+    self.currency = selected.node().value;
+    var range = controls.select(".interval .selected").datum();
+    loadData(range);
   });
-
-  dropdowns.append("div").attr("class","dropdowns").call(currencyDropdown);
-
 
 //add chart type select
   var type = controls.append("div").attr("class", "chartType selectList").selectAll("a")
@@ -201,8 +206,9 @@ function CapChart(options) {
       return;
     }
 
-    var issuers = self.currency=="XRP" ? [{currency:"XRP"}] : currencyDropdown.getIssuers(self.currency);
+    var issuers = self.currency=="XRP" ? [{currency:"XRP"}] : options.gateways.getIssuers(self.currency);
     for (var i=0; i<issuers.length; i++) {
+      issuers[i].currency = self.currency;
       loadSendDataHelper(range, issuers[i], issuers.length);
     }
   }
@@ -220,7 +226,7 @@ function CapChart(options) {
       endTime       : end.format(),
       timeIncrement : range.interval,
       currency      : c.currency,
-      issuer        : c.issuer
+      issuer        : c.account
 
     }, function(data){
       if (!sendDataCache[currency])
@@ -232,8 +238,8 @@ function CapChart(options) {
       data.shift(); //remove the first;
 
       sendDataCache[currency][range.name]['raw'].push({
-        address : c.issuer,
-        name    : currencyDropdown.getName(c.issuer),
+        address : c.account,
+        name    : c.name,
         results : data.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]})
       });
 
@@ -266,8 +272,9 @@ function CapChart(options) {
       return;
     }
 
-    var issuers = currencyDropdown.getIssuers(self.currency);
+    var issuers = options.gateways.getIssuers(self.currency);
     for (var i=0; i<issuers.length; i++) {
+      issuers[i].currency = self.currency;
       loadTradeHelper(range, issuers[i], issuers.length);
     }
   }
@@ -279,6 +286,7 @@ function CapChart(options) {
     //could be different that c.currency for demmurage
     var currency = self.currency;
     var end      = moment.utc();
+    base         = {currency: base.currency, issuer: base.account, name: base.name};
 
     apiHandler.offersExercised({
       startTime     : moment.utc(range.offset(end)).format(),
@@ -294,10 +302,9 @@ function CapChart(options) {
       if (!tradeDataCache[currency][range.name])
         tradeDataCache[currency][range.name] = {raw:[]};
 
-
       tradeDataCache[currency][range.name]['raw'].push({
         address : base.issuer,
-        name    : currencyDropdown.getName(base.issuer),
+        name    : base.name,
         results : data.map(function(d){return[d.startTime.unix()*1000,d.baseVolume]})
       });
 
@@ -332,7 +339,12 @@ function CapChart(options) {
     }
 
     var end        = moment.utc();
-    var issuers    = currencyDropdown.getIssuers(currency);
+    var issuers    = options.gateways.getIssuers(currency);
+
+    issuers.forEach(function(issuer){
+      issuer.currency = self.currency;
+      issuer.issuer   = issuer.account;
+    });
 
     apiHandler.issuerCapitalization({
       timeIncrement : range.interval,
@@ -453,7 +465,7 @@ function CapChart(options) {
       if (d.values) amount = d.values.length ? commas(d.values[d.values.length-1].y,2) : 0;
       else amount = d.results.length ? commas(d.results[d.results.length-1][1],2) : 0;
       return {
-        name    : currencyDropdown.getName(address) || d.name,
+        name    : d.name,
         address : address,
         amount  : amount,
         hide    : false
@@ -572,6 +584,7 @@ function CapChart(options) {
       }
 
     } else {
+      console.log("LINES!");
       svg.selectAll('.section').remove();
       if (self.dataType=='Capitalization') {
         lines  = capDataCache[self.currency][self.range].raw;
@@ -585,14 +598,15 @@ function CapChart(options) {
       }
 
 
-      //console.log(lines);
+      console.log(lines);
+
       color.domain(legend.map(function(d){return d.address}));
       lines = filterByLegend(lines, legend);
 
       xScale.domain(getExtents("x", lines));
       yScale.domain(getExtents("y", lines));
 
-      var line = g.selectAll("g.line").data(lines, function(d){return d.address || d.issuer});
+      var line = g.selectAll("g.line").data(lines, function(d){return d.address});
       line.enter().append("g").attr("class","line");
       line.exit().remove();
 
@@ -713,7 +727,7 @@ function CapChart(options) {
       position = getTooltipPosition(cx, cy);
       date     = moment(line.results[j][0]).utc().format(DATEFORMAT);
       amt      = commas(line.results[j][1], 2);
-      var name = currencyDropdown.getName(line.address || line.issuer) || line.name;
+      var name = line.name;
 
       handleTooltip(name, line.address || line.issuer, date, amt, position);
       handleTracer(cx, cy);
@@ -722,6 +736,7 @@ function CapChart(options) {
 
 
   function movingInGround(section) {
+    console.log(section);
     var tx, ty;
     var zoom = chart.style("zoom") || 1;
     var date = xScale.invert(d3.mouse(this)[0]/zoom);
@@ -732,11 +747,9 @@ function CapChart(options) {
     var cx  = xScale(section.values[i].date)+options.margin.left;
     var c2y = yScale(section.values[i].y0)+options.margin.top;
 
-
-
 //  determine position of tooltip
     var position = getTooltipPosition(cx, cy);
-    var name     = currencyDropdown.getName(section.address);
+    var name     = section.name;
     var amount   = commas(section.values[i].y, 2);
     date = section.values[i].date.format(DATEFORMAT);
 
@@ -759,7 +772,7 @@ function CapChart(options) {
 
 //  determine position of tooltip
     var position = getTooltipPosition(cx, cy);
-    var name     = currencyDropdown.getName(line.address);
+    var name     = line.name;
     var amount   = commas(line.results[i][1], 2);
     date = moment(line.results[i][0]).utc().format(DATEFORMAT);
 

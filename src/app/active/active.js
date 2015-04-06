@@ -12,11 +12,16 @@ angular.module( 'ripplecharts.activeAccounts', [
         templateUrl: 'active/active.tpl.html'
       }
     },
-    data:{ pageTitle: 'Active Accounts' }
+    data:{ pageTitle: 'Active Accounts' },
+    resolve : {
+      gateInit : function (gateways) {
+        return gateways.promise;
+      }
+    }
   });
 })
 
-.controller( 'ActiveAccountsCtrl', function ActiveAccountsCtrl( $scope ) {
+.controller( 'ActiveAccountsCtrl', function ActiveAccountsCtrl( $scope, gateways ) {
 
   var base    = store.session.get('traderBase')    || store.get('traderBase')    || {"currency": "USD", "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
   var counter = store.session.get('traderCounter') || store.get('traderCounter') || {"currency": "XRP"};
@@ -33,26 +38,27 @@ angular.module( 'ripplecharts.activeAccounts', [
 
 //set up the currency pair dropdowns
   var loaded  = false, 
-    dropdownB = ripple.currencyDropdown().selected(counter)
+  //$scope.$watch('theme', function(){
+    dropdownB = ripple.currencyDropdown(gateways).selected(counter)
       .on("change", function(d) {
-        if (loaded) {
-          counter = d;
-          loadPair();
-        }}),
-    dropdownA = ripple.currencyDropdown().selected(base)
+        console.log("Event fired:", d);
+        counter = d;
+        loadPair();
+      });
+    dropdownA = ripple.currencyDropdown(gateways).selected(base)
       .on("change", function(d) {
-        if (loaded) {
-          base = d;
-          loadPair();
-        }});
+        console.log("Event fired:", d);
+        base = d;
+        loadPair();
+      });
 
-  d3.select("#base").call(dropdownA);
-  d3.select("#counter").call(dropdownB);
+    d3.select("#base").call(dropdownA);
+    d3.select("#counter").call(dropdownB);
+ // });
+  
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected(counter);
     dropdownB.selected(base);
-    d3.select("#base").selectAll("select").remove();
-    d3.select("#counter").selectAll("select").remove();
     loaded = false;
     d3.select("#base").call(dropdownA);
     d3.select("#counter").call(dropdownB);
@@ -61,6 +67,7 @@ angular.module( 'ripplecharts.activeAccounts', [
     swap    = counter;
     counter = base;
     base    = swap;
+
     loadPair();
   });
 

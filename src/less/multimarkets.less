@@ -193,7 +193,7 @@
   border-right:1px solid #ddd;  
 } 
 
- .chart .dropdowns select {
+ .chart .dropdowns select{
   -webkit-appearance: none;
   border:none;
   background:none;
@@ -219,6 +219,66 @@
   width:96px;
   border:none;
 }
+
+ .dd-select {
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+  border-radius: 0;
+ }
+
+ .gateway .dd-select {
+  border: none;
+ }
+
+ .dd-selected {
+  padding: 2px 10px 2px 5px !important;
+ }
+
+ .dd-selected-image {
+  display: none;
+}
+
+ .dd-option-image {
+  display: none;
+}
+
+ .dd-selected-text {
+  color:#666;
+  line-height: 0 !important;
+  padding: 0;
+  font-size: 16px;
+ }
+
+ .gateway .dd-selected-text {
+  font-size: 11px;
+ }
+
+ .disabledDropdown {
+  padding: 0px;
+ }
+
+ .dd-option {
+  padding: 0px;
+ }
+
+ .dd-options {
+  width: auto !important;
+ }
+
+ .dd-container {
+  border-top: none;
+  margin: 10px;
+ }
+
+ .dd-pointer {
+  top: 70% !important;
+  right: 5px !important;
+ }
+
+ .plus {
+  margin: 0 7px 0 10px !important;
+ }
 
 @-moz-document url-prefix() {
    .chart .dropdowns select {

@@ -79,7 +79,8 @@ angular.module( 'ripplecharts.landing', [
     id             : "topMarkets",
     fixed          : true,
     clickable      : true,
-    updateInterval : 60 //1 minute
+    updateInterval : 60, //1 minute
+    gateways       : gateways
   });
 
 
