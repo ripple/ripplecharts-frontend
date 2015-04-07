@@ -126,16 +126,29 @@ angular.module( 'ripplecharts.manage-gateways', [
     selection.html("");
 
     var selectionId    = selection.attr("id");
-    var currencies     = gateways.getCurrencies();
+    var currencies     = gateways.getCurrencies(true);
     var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
     var picked         = false;
+    var i;
 
     //remove XRP
     currencies.shift();
+
+    //remove currencies without
+    //at least one enabled gateway,
+    //except custom ones
+    i = currencies.length;
+    while(i--) {
+      if (!currencies[i].include && !currencies[i].custom) {
+        delete currencies[i];
+        currencies.splice(i,1);
+      }
+    }
+
     associatedCurrency = $scope[selectionId].currency;
 
     //format currnecies for dropdowns
-    for (var i=0; i<currencies.length; i++) {
+    for (i=0; i<currencies.length; i++) {
       currencies[i] = {
         text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3),
         value    : i,

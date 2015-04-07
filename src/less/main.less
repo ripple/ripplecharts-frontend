@@ -708,7 +708,11 @@ footer .links a:first-child {
     float: none !important; //override default
   }
 
-  #currencyPair a:hover, a:focus {
+  .dd-container {
+    position: inherit !important; //override default
+  }
+
+  #currencyPair a:hover, a:focus, .pairSelect a:hover{
       text-decoration: none;
   }
 
@@ -717,7 +721,7 @@ footer .links a:first-child {
   }
 
   .dd-options {
-    position: fixed !important;
+   //position: fixed !important;
   }
 
   .dd-pointer {
