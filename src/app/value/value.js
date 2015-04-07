@@ -12,11 +12,16 @@ angular.module( 'ripplecharts.value', [
         templateUrl: 'value/value.tpl.html'
       }
     },
-    data:{ pageTitle: 'Network Value' }
+    data:{ pageTitle: 'Network Value' },
+    resolve : {
+      gateInit : function (gateways) {
+        return gateways.promise;
+      }
+    }
   });
 })
 
-.controller( 'ValueCtrl', function ValueCtrl( $scope ) {
+.controller( 'ValueCtrl', function ValueCtrl( $scope, gateways ) {
 
   var dataType = store.session.get('valueChartData')     || store.get('valueChartData')     || "Capitalization";
   var format   = store.session.get('valueChartFormat')   || store.get('valueChartFormat')   || "stacked";
@@ -32,6 +37,7 @@ angular.module( 'ripplecharts.value', [
     format   : format,
     range    : range,
     currency : currency,
+    gateways : gateways,
     onchange : function(params) {
  
       store.session.set('valueChartData',     params.dataType);

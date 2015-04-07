@@ -23,7 +23,7 @@ angular.module( 'ripplecharts.landing', [
 .controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location, gateways ) {
 
   var api   = new ApiHandler(API);
-  var donut = new ValueSummary({id:"metricDetail"});
+  var donut = new ValueSummary({id:"metricDetail", gateways: gateways});
 
   var exchangeRates   = {};
   var valueCurrencies = {
@@ -79,7 +79,8 @@ angular.module( 'ripplecharts.landing', [
     id             : "topMarkets",
     fixed          : true,
     clickable      : true,
-    updateInterval : 60 //1 minute
+    updateInterval : 60, //1 minute
+    gateways       : gateways
   });
 
 
@@ -118,7 +119,7 @@ angular.module( 'ripplecharts.landing', [
 
   //show the helper text the first time we visit the page
   if (!store.get("returning")) setTimeout(function(){
-    d3.select("#helpButton").node().click();
+    d3.select("#helpButton_new").node().click();
   }, 100);
 
   $scope.$watch('metricDetail', function(){
@@ -143,7 +144,7 @@ angular.module( 'ripplecharts.landing', [
 
     if (!store.get("returning") &&
       $scope.showHelp) setTimeout(function(){
-        d3.select("#helpButton").node().click();
+        d3.select("#helpButton_new").node().click();
       }, 50);
 
     store.set("returning", true);
