@@ -32,7 +32,7 @@ function CapChart(options) {
   dropdowns.select(".dataType select").on('change',function(){
     self.dataType = this.value;
     if (self.dataType=='Transaction Volume') {
-      dropdowns.select(".currency").insert("option select", ":first-child").attr("class", "XRP").text("XRP");
+      dropdowns.select(".currency select").insert("option", ":first-child").attr("class", "XRP").text("XRP");
     } else {
       dropdowns.select(".currency .XRP").remove();
     }
@@ -227,7 +227,7 @@ function CapChart(options) {
       endTime       : end.format(),
       timeIncrement : range.interval,
       currency      : c.currency,
-      issuer        : c.account
+      issuer        : c.account || c.issuer
 
     }, function(data){
       if (!sendDataCache[currency])

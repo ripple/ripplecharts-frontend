@@ -70,14 +70,12 @@ angular.module( 'ripplecharts.markets', [
   $scope.$watch('theme', function(){
     dropdownB = ripple.currencyDropdown(gateways).selected($scope.trade)
       .on("change", function(d) {
-        console.log("Event fired:", d);
         $scope.trade = d;
         if ($scope.range.name === "max") updateMaxrange();
         loadPair();
       });
     dropdownA = ripple.currencyDropdown(gateways).selected($scope.base)
       .on("change", function(d) {
-        console.log("Event fired:", d);
         $scope.base = d;
         if ($scope.range.name === "max") updateMaxrange();
         loadPair();

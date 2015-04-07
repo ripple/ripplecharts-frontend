@@ -1,7 +1,6 @@
 (function() {
 
   ripple.currencyDropdown = function(gateways) {
-    console.log("Initial.");
     var event = d3.dispatch("change");
     var select;
     var loaded = false;
@@ -15,7 +14,6 @@
     };
 
     function loadDropdowns(selection) {
-      console.log("Loading dropdowns:", selection);
       selection.html("");
       var theme = store.get("theme") || store.session.get("theme") || "light";
 
@@ -68,7 +66,6 @@
       }
 
       function changeCurrency(selected){
-        console.log("Change currency.");
         $("#"+selectionId+"_gateway").ddslick("destroy"); 
         var issuers;
         var issuer;
@@ -126,8 +123,6 @@
       }
 
       function changeGateway(currency, issuer, selectionId) {
-        console.log("Change gateway.");
-        console.log("!", $("#"+selectionId+"_gateway").find('li.edit_list.gateway').length);
         if ($("#"+selectionId+"_gateway").find('li.edit_list.gateway').length !=1) {
           editList(selectionId, 'gateway');
         }
