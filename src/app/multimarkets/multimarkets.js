@@ -12,11 +12,17 @@ angular.module( 'ripplecharts.multimarkets', [
         templateUrl: 'multimarkets/multimarkets.tpl.html'
       }
     },
-    data:{ pageTitle: 'Multi Markets' }
+    data:{ pageTitle: 'Multi Markets' },
+    resolve : {
+      gateInit : function (gateways) {
+        return gateways.promise;
+      }
+    }
   });
 })
 
-.controller( 'MultimarketsCtrl', function MultimarketsCtrl( $scope, $location ) {
+.controller( 'MultimarketsCtrl', function MultimarketsCtrl( $scope, $location, gateways) {
+
   $scope.markets  = store.session.get('multimarkets') || 
     store.get('multimarkets') || 
     Options.multimarkets || [
@@ -36,7 +42,8 @@ angular.module( 'ripplecharts.multimarkets', [
     url            : API,  
     id             : "multimarkets",
     updateInterval : 60, //5 minutes
-    clickable      : true
+    clickable      : true,
+    gateways       : gateways
   });
   
   
