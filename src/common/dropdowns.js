@@ -114,6 +114,7 @@
           }
         });
 
+        d3.select("#"+selectionId+"currency").classed("currency", true);
         d3.select("#"+selectionId+"_gateway").classed("gateway", true);
 
         if (disable === true) {
@@ -123,7 +124,7 @@
       }
 
       function changeGateway(currency, issuer, selectionId) {
-        if ($("#"+selectionId+"_gateway").find('li.edit_list.gateway').length !=1) {
+        if ($("#"+selectionId+"_gateway").find('li.edit_list.gateway').length < 1) {
           editList(selectionId, 'gateway');
         }
         select = issuer ? {currency: currency, issuer: issuer} : {currency:currency}

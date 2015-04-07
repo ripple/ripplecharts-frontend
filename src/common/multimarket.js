@@ -1,7 +1,5 @@
 var MiniChart = function(base, counter, markets, gateways) {
 
-  console.log("Adding MM:", base, counter);
-
   var self = this,
     header, details, range, showHigh, showLow, change, volume,
     wrap, svg, bg, svgEnter, pointer, gEnter,
@@ -15,8 +13,6 @@ var MiniChart = function(base, counter, markets, gateways) {
   self.index    = markets.charts.push(self)-1;
   self.base     = base;
   self.counter  = counter;
-
-  console.log("Index:", self.index);
 
   var xScale    = d3.time.scale(),
     priceScale  = d3.scale.linear(),
@@ -55,14 +51,12 @@ var MiniChart = function(base, counter, markets, gateways) {
 
   dropdownA = ripple.currencyDropdown(gateways).selected(base);
   dropdownA.on("change", function(d) {
-      console.log("event fired:", d);
       self.base = d;
       if (!flipping && loaded) self.load();
       });
 
   dropdownB = ripple.currencyDropdown(gateways).selected(counter);
   dropdownB.on("change", function(d) {
-      console.log("event fired:", d);
       self.counter = d;
       if (loaded) self.load();
     });
@@ -235,7 +229,6 @@ var MiniChart = function(base, counter, markets, gateways) {
 
     //the close exceeds the interval, reload the chart
     } else if (moment.utc(point.closeTime).unix() > end.unix()) {
-      console.log('reloading chart');
       load(true);
       return;
     }

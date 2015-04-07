@@ -37,31 +37,29 @@ angular.module( 'ripplecharts.activeAccounts', [
   });
 
 //set up the currency pair dropdowns
-  var loaded  = false, 
-  //$scope.$watch('theme', function(){
+  var loaded  = false; 
+  $scope.$watch('theme', function(){
     dropdownB = ripple.currencyDropdown(gateways).selected(counter)
       .on("change", function(d) {
-        console.log("Event fired:", d);
         counter = d;
         loadPair();
       });
     dropdownA = ripple.currencyDropdown(gateways).selected(base)
       .on("change", function(d) {
-        console.log("Event fired:", d);
         base = d;
         loadPair();
       });
 
     d3.select("#base").call(dropdownA);
-    d3.select("#counter").call(dropdownB);
- // });
+    d3.select("#trade").call(dropdownB);
+  });
   
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected(counter);
     dropdownB.selected(base);
     loaded = false;
     d3.select("#base").call(dropdownA);
-    d3.select("#counter").call(dropdownB);
+    d3.select("#trade").call(dropdownB);
     loaded = true;
     
     swap    = counter;
