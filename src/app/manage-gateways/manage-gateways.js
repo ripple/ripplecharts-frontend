@@ -66,19 +66,24 @@ angular.module( 'ripplecharts.manage-gateways', [
     addBox  = d3.select('#txtName');
     newGateway = addBox.property('value');
     description = d3.select('.description').html('Loading...');
-    d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
-      if (err) description.html('Could not load custom gateway.');
-      else {
-        response = JSON.parse(res.response);
-        if (response.exists){
-          addCheckbox(associatedCurrency, response.address, response.username);
-          description.html('');
-        }
+    if (newGateway.length >= 33 && newGateway.length <= 34 && newGateway[0] === "r"){
+      d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
+        if (err) description.html('Could not load custom gateway.');
         else {
-          description.html('Please enter a valid Ripple Address.');
+          response = JSON.parse(res.response);
+          if (response.exists){
+            addCheckbox(associatedCurrency, response.address, response.username);
+            description.html('');
+          }
+          else {
+            addCheckbox(associatedCurrency, newGateway, "");
+          }
         }
-      }
-    });
+      });
+    }
+    else {
+      description.html('Please enter a valid Ripple Address.');
+    }
     addBox.property('value', '');
   }
 
@@ -105,7 +110,7 @@ angular.module( 'ripplecharts.manage-gateways', [
         changeStatus(this, currency, iss, name);
       });
 
-    if (iss !== name)
+    if (iss !== name && name !== "")
       inputWrapper.append('text').text(name+" ("+iss+")");
     else inputWrapper.append('text').text(iss);
 
