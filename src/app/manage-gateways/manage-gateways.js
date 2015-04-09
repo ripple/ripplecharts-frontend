@@ -69,7 +69,7 @@ angular.module( 'ripplecharts.manage-gateways', [
     description = d3.select('.description').html('Loading...');
     d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
       if (!err) {
-        response = JSON.parse(res.response);
+        var response = JSON.parse(res.response);
         if (response.exists) {
           username = response.username;
           addCheckbox(associatedCurrency, newGateway, username);
