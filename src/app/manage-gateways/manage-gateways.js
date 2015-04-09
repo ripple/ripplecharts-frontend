@@ -63,27 +63,29 @@ angular.module( 'ripplecharts.manage-gateways', [
   });
 
   function add(){
+    var username;
     addBox  = d3.select('#txtName');
     newGateway = addBox.property('value');
     description = d3.select('.description').html('Loading...');
-    if (newGateway.length >= 33 && newGateway.length <= 34 && newGateway[0] === "r"){
-      d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
-        if (err) description.html('Could not load custom gateway.');
-        else {
-          response = JSON.parse(res.response);
-          if (response.exists){
-            addCheckbox(associatedCurrency, response.address, response.username);
-            description.html('');
-          }
-          else {
-            addCheckbox(associatedCurrency, newGateway, "");
-          }
+    d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
+      if (!err) {
+        response = JSON.parse(res.response);
+        if (response.exists) {
+          username = response.username;
+          addCheckbox(associatedCurrency, newGateway, username);
+          description.html('');
         }
-      });
-    }
-    else {
-      description.html('Please enter a valid Ripple Address.');
-    }
+      }
+      if (!username) {
+        if (newGateway.length >= 33 && newGateway.length <= 34 && newGateway[0] === "r"){
+          addCheckbox(associatedCurrency, newGateway, "");
+          description.html('');
+        }
+        else {
+          description.html('Please enter a valid Ripple Address.');
+        } 
+      }
+    });
     addBox.property('value', '');
   }
 
