@@ -208,10 +208,14 @@ function CapChart(options) {
     }
 
     var issuers = self.currency=="XRP" ? [{currency:"XRP"}] : options.gateways.getIssuers(self.currency, true);
-    for (var i=0; i<issuers.length; i++) {
-      issuers[i].currency = self.currency;
-      loadSendDataHelper(range, issuers[i], issuers.length);
-    }
+
+    issuers.forEach(function(issuer){
+      issuer = {
+        currency : self.currency,
+        issuer   : issuer.account
+      }
+      loadSendDataHelper(range, issuer, issuers.length);
+    });
   }
 
   function loadSendDataHelper(range, c, count) {
@@ -227,7 +231,7 @@ function CapChart(options) {
       endTime       : end.format(),
       timeIncrement : range.interval,
       currency      : c.currency,
-      issuer        : c.account || c.issuer
+      issuer        : c.issuer
 
     }, function(data){
       if (!sendDataCache[currency])
@@ -239,8 +243,8 @@ function CapChart(options) {
       data.shift(); //remove the first;
 
       sendDataCache[currency][range.name]['raw'].push({
-        address : c.account,
-        name    : c.name,
+        address : c.issuer,
+        name    : options.gateways.getName(c.currency, c.issuer),
         results : data.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]})
       });
 
@@ -274,10 +278,15 @@ function CapChart(options) {
     }
 
     var issuers = options.gateways.getIssuers(self.currency, true);
-    for (var i=0; i<issuers.length; i++) {
-      issuers[i].currency = self.currency;
-      loadTradeHelper(range, issuers[i], issuers.length);
-    }
+    
+    issuers.forEach(function(issuer){
+      issuer = {
+        currency : self.currency,
+        issuer   : issuer.account
+      }
+      loadTradeHelper(range, issuer, issuers.length);
+    });
+
   }
 
   function loadTradeHelper (range, base, count) {
@@ -287,7 +296,7 @@ function CapChart(options) {
     //could be different that c.currency for demmurage
     var currency = self.currency;
     var end      = moment.utc();
-    base         = {currency: base.currency, issuer: base.account, name: base.name};
+    base         = {currency: base.currency, issuer: base.issuer, name: base.name};
 
     apiHandler.offersExercised({
       startTime     : moment.utc(range.offset(end)).format(),
@@ -306,7 +315,7 @@ function CapChart(options) {
 
       tradeDataCache[currency][range.name]['raw'].push({
         address : base.issuer,
-        name    : base.name,
+        name    : options.gateways.getName(base.currency, base.issuer),
         results : data.map(function(d){return[d.startTime.unix()*1000,d.baseVolume]})
       });
 
@@ -340,18 +349,20 @@ function CapChart(options) {
       return;
     }
 
-    var end        = moment.utc();
-    var issuers    = options.gateways.getIssuers(currency, true);
+    var end            = moment.utc();
+    var issuers        = options.gateways.getIssuers(currency, true);
+    var parsed_issuers = []; 
 
     issuers.forEach(function(issuer){
-      issuer.currency = self.currency;
-      issuer.issuer   = issuer.account;
-      delete issuer.account;
+      parsed_issuers.push({
+        currency : self.currency,
+        issuer  : issuer.account
+      });
     });
 
     apiHandler.issuerCapitalization({
       timeIncrement : range.interval,
-      currencies    : issuers,
+      currencies    : parsed_issuers,
       startTime     : moment.utc(range.offset(end)).format(),
       endTime       : end.format()
 
