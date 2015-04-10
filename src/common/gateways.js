@@ -46,20 +46,44 @@ angular.module('gateways', [])
         }
 
         normalized     = gateway.name.toLowerCase().replace(/\W/g, '');
+        gateway.irba   = gateway.assets.length ? true : false;
         gateway.assets = handleAssets(gateway.assets, normalized);
         custom[currency].issuers[gateway.account] = gateway;
       }
     }
 
-    //ensure that non-default currencies
-    //are marked as custom
+
+    function sortIssuers (data) {
+      var issuers = Object.keys(data.issuers)
+        .map(function (issuer) {
+          return data.issuers[issuer]
+        });
+
+      // sort by IRBA, featured
+      issuers.sort(function (a, b) {
+        var first  = (a.irba ? '0' : '1') + (a.featured ? '0' : '1') + a.name;
+        var second = (b.irba ? '0' : '1') + (b.featured ? '0' : '1') + b.name;
+        return (first >= second ? 1 : -1);
+      });
+
+      data.issuers = {};
+      issuers.forEach(function(issuer) {
+        data.issuers[issuer.account] = issuer;
+      });
+    }
+
     for (currency in custom) {
+      sortIssuers(custom[currency]);
+
+
+      // ensure that non-default
+      // currencies are marked as custom
       if (!defaultGateways[currency]) {
         custom[currency].custom = true;
       }
     }
 
-    //save
+    // save
     store.session.set('userGateways', custom);
     store.set('userGateways', custom);
   });
