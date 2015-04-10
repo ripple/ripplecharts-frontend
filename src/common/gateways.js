@@ -254,6 +254,7 @@ angular.module('gateways', [])
   };
 
   var getName = function(currency, issuer) {
+    if (currency === "XRP") return "";
     var gateways = custom[currency].issuers;
     if (gateways) return gateways[issuer].name;
     else return "";
