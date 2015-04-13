@@ -48,6 +48,11 @@ angular.module('gateways', [])
         normalized     = gateway.name.toLowerCase().replace(/\W/g, '');
         gateway.irba   = gateway.assets.length ? true : false;
         gateway.assets = handleAssets(gateway.assets, normalized);
+
+        if (gateway.name === 'Ripple Exchange Tokyo') {
+          gateway.name = "Ripple Exch Tokyo";
+        }
+
         custom[currency].issuers[gateway.account] = gateway;
       }
     }
