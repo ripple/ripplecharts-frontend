@@ -1,12 +1,13 @@
 (function() {
 
-  ripple.currencyDropdown = function(gateways) {
+  ripple.currencyDropdown = function(gateways, old) {
     var event = d3.dispatch("change");
     var select;
     var loaded = false;
 
     function dropdown(selection) {
-      selection.call(loadDropdowns);
+      if (old) selection.call(oldDropdowns);
+      else selection.call(loadDropdowns);
     }
 
     dropdown.selected = function(_) {
@@ -135,6 +136,57 @@
     //append edit list option to dropdowns
     function editList( selectionId, selectionSuffix ) {
       $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<a class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><span class="plus">+</span> Edit</li></a>');
+    }
+
+    function oldDropdowns(selection) {
+      var currencies       = gateways.getCurrencies();
+      var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
+      var gateway          = select;
+      var selectedCurrency = select ? select.currency : null;
+      
+      var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
+
+      var option = currencySelect.selectAll("option")
+        .data(currencies)
+        .enter().append("option")
+        .attr("class", function(d){ return d.currency })
+        .property("selected", function(d) { return selectedCurrency && d.currency === selectedCurrency; })
+        .text(function(d){ return d.currency });   
+       
+      changeCurrency();
+      
+      function changeCurrency() {
+        var currency = currencySelect.node().value;
+        var list = currency == 'XRP' ? [""] : 
+          gateways.getIssuers(currency).map(function(d){
+            return d.name;
+          });
+        
+        var option = gatewaySelect.selectAll("option").data(list, String);
+        
+        option.enter().append("option").text(function(d){return d});
+        option.exit().remove();
+        if (currency=="XRP") gatewaySelect.attr("disabled", "true");
+        else gatewaySelect.attr('disabled', null);
+       
+        
+        if (select) {
+          var name = gateway ? gateway.name : "";
+          option.property("selected", function(d) { return d === name });
+        }
+
+        changeGateway();
+      } 
+      
+      function changeGateway() {
+        var gateway = gatewaySelect.node().value,
+          currency  = currencySelect.node().value,
+          accounts  = gateways.getIssuers(currency),
+          account   = accounts && accounts.filter(function(d) { return d.name === gateway; })[0];
+          issuer    = account ? account.account : null;
+
+          event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});  
+      }    
     }
 
     return d3.rebind(dropdown, event, "on");
