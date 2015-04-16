@@ -61,9 +61,9 @@ var MiniChart = function(base, counter, markets, gateways) {
       if (loaded) self.load();
     });
 
-  dropdowns = self.div.append("div").attr("class", "dropdowns");
-  dropdowns.append("div").attr("class","base").attr("id", "base"+self.index).call(dropdownA);
-  dropdowns.append("div").attr("class","counter").attr("id", "quote"+self.index).call(dropdownB);
+  dropdowns = self.div.append("div");
+  dropdowns.append("div").attr("class","base dropdowns").attr("id", "base"+self.index).call(dropdownA);
+  dropdowns.append("div").attr("class","counter dropdowns").attr("id", "quote"+self.index).call(dropdownB);
 
   if (markets.options.fixed) {
     dropdowns.style("display","none");
