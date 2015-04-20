@@ -1,6 +1,6 @@
 var TotalHistory = function (options) {
+
   var request, basisRequest, ts, cp, filter, last, interval,
-  c = ripple.currencyDropdown(),
   to_export = {},
   issuers = {},
   ctx = $("#canvas").get(0).getContext("2d"),
@@ -147,9 +147,12 @@ var TotalHistory = function (options) {
         }
 
         if (!(issuers.hasOwnProperty(issuer))){
-          var user;
-          user = c.getName(issuer);
-          issuers[issuer] = user;
+          var gateway_list = options.gateways.getIssuers(base_curr, true);
+          gateway_list.forEach(function(gateway, index) {
+            if (gateway.account === issuer) {
+              issuers[issuer] = gateway.name;
+            }
+          });
         }
         key = key + '-' + issuers[issuer];
 

@@ -65,21 +65,25 @@ angular.module( 'ripplecharts.manage-gateways', [
   function add(){
     addBox  = d3.select('#txtName');
     newGateway = addBox.property('value');
+    addBox.property('value', '');
     description = d3.select('.description').html('Loading...');
     d3.xhr('https://id.ripple.com/v1/user/'+newGateway, function(err, res){
-      if (err) description.html('Could not load custom gateway.');
-      else {
-        response = JSON.parse(res.response);
-        if (response.exists){
+      if (!err) {
+        var response = JSON.parse(res.response);
+        if (response.exists) {
           addCheckbox(associatedCurrency, response.address, response.username);
           description.html('');
-        }
-        else {
-          description.html('Please enter a valid Ripple Address.');
+          return;
         }
       }
+      if (newGateway.length >= 30 && newGateway.length <= 40 && newGateway[0] === "r"){
+        addCheckbox(associatedCurrency, newGateway, "");
+        description.html('');
+      }
+      else {
+        description.html('Please enter a valid Ripple Address.');
+      } 
     });
-    addBox.property('value', '');
   }
 
   var saved = d3.select('.saved');
@@ -105,7 +109,7 @@ angular.module( 'ripplecharts.manage-gateways', [
         changeStatus(this, currency, iss, name);
       });
 
-    if (iss !== name)
+    if (iss !== name && name !== "")
       inputWrapper.append('text').text(name+" ("+iss+")");
     else inputWrapper.append('text').text(iss);
 

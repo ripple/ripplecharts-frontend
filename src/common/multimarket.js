@@ -1,8 +1,9 @@
-var MiniChart = function(base, counter, markets) {
+var MiniChart = function(base, counter, markets, gateways) {
+
   var self = this,
     header, details, range, showHigh, showLow, change, volume,
     wrap, svg, bg, svgEnter, pointer, gEnter,
-    flipping, flip,
+    flipping, flip, swap,
     status, horizontal, lastPrice, loader, isLoading,
     dropdownA, dropdownB, dropdowns, loaded, liveFeed;
 
@@ -10,6 +11,8 @@ var MiniChart = function(base, counter, markets) {
   self.div      = markets.el.insert("div",".add").attr("class","chart");
   self.markets  = markets;
   self.index    = markets.charts.push(self)-1;
+  self.base     = base;
+  self.counter  = counter;
 
   var xScale    = d3.time.scale(),
     priceScale  = d3.scale.linear(),
@@ -37,7 +40,6 @@ var MiniChart = function(base, counter, markets) {
     });
   }
 
-
   loaded = false;
 
   details  = self.div.append('div').attr("class", "chartDetails");
@@ -47,28 +49,27 @@ var MiniChart = function(base, counter, markets) {
     .attr("class", "loader")
     .attr("src", "assets/images/rippleThrobber.png");
 
-
-  dropdownA = ripple.currencyDropdown().selected(base);
+  dropdownA = ripple.currencyDropdown(gateways, true).selected(self.base);
   dropdownA.on("change", function(d) {
       self.base = d;
       if (!flipping && loaded) self.load();
       });
 
-  dropdownB = ripple.currencyDropdown().selected(counter);
+  dropdownB = ripple.currencyDropdown(gateways, true).selected(self.counter);
   dropdownB.on("change", function(d) {
       self.counter = d;
       if (loaded) self.load();
     });
 
-  dropdowns = self.div.append("div").attr("class", "dropdowns");
-  dropdowns.append("div").attr("class","base").call(dropdownA);
-  dropdowns.append("div").attr("class","counter").call(dropdownB);
+  dropdowns = self.div.append("div");
+  dropdowns.append("div").attr("class","base dropdowns").attr("id", "base"+self.index).call(dropdownA);
+  dropdowns.append("div").attr("class","counter dropdowns").attr("id", "quote"+self.index).call(dropdownB);
 
   if (markets.options.fixed) {
     dropdowns.style("display","none");
-    header.html("<small>"+self.div.select(".base .gateway").node().value+
+    header.html("<small>"+gateways.getName(self.base.currency, self.base.issuer)+
       "</small>"+baseCurrency+"/"+counterCurrency+"<small>"+
-      self.div.select(".counter .gateway").node().value+"</small>");
+      gateways.getName(self.counter.currency, self.counter.issuer)+"</small>");
   }
 
   status = self.div.append("h4").attr("class", "status");
@@ -228,7 +229,6 @@ var MiniChart = function(base, counter, markets) {
 
     //the close exceeds the interval, reload the chart
     } else if (moment.utc(point.closeTime).unix() > end.unix()) {
-      console.log('reloading chart');
       load(true);
       return;
     }
@@ -300,20 +300,26 @@ var MiniChart = function(base, counter, markets) {
       .attr("width", margin.right)
       .attr("height", margin.bottom)
       .attr("transform", "translate("+(width+margin.left)+","+(height+margin.top)+")")
-      .on("click", function(){
+      .on("click", function() {
         d3.event.stopPropagation();
         flipping = true;
         dropdownA.selected(self.counter);
         dropdownB.selected(self.base);
-        dropdowns.selectAll("select").remove();
-        dropdowns.append("div").attr("class","base").call(dropdownA);
-        dropdowns.append("div").attr("class","counter").call(dropdownB);
+        dropdowns.selectAll("div").remove();
+        dropdowns.append("div").attr("class","base").attr("id", "base"+self.index).call(dropdownA);
+        dropdowns.append("div").attr("class","counter").attr("id", "quote"+self.index).call(dropdownB);
+            
+        swap         = self.counter;
+        self.counter = self.base;
+        self.base    = swap;
+
+        self.load();
         flipping = false;
 
         if (markets.options.fixed) {
-          header.html("<small>"+self.div.select(".base .gateway").node().value+
+          header.html("<small>"+gateways.getName(self.base.currency, self.base.issuer)+
             "</small>"+self.base.currency+"/"+self.counter.currency+"<small>"+
-            self.div.select(".counter .gateway").node().value+"</small>");
+            gateways.getName(self.counter.currency, self.counter.issuer)+"</small>");
         }
       });
 
@@ -537,7 +543,7 @@ var MultiMarket = function (options) {
       .attr("class","add")
       .text("+")
       .on("click", function(d) {
-        self.addChart();
+        self.addChart({currency: 'XRP'}, {currency: 'XRP'});
       });
 
     resizeButton();
@@ -554,7 +560,7 @@ var MultiMarket = function (options) {
 
 //new chart from list initialization or add chart button click
   this.addChart = function (base, counter) {
-    new MiniChart(base, counter, self);
+    new MiniChart(base, counter, self, options.gateways);
   }
 
 //remove chart from list initialization or remove button click

@@ -1,3 +1,7 @@
+ .mmpage{
+  margin-bottom: 300px;
+ }
+ 
  .multiMarket {
 
  .add {
@@ -180,8 +184,8 @@
  .chart svg {display:block}
  .chart .dropdowns {
   border-top:1px solid #bbb;
-  display:table;
-  width:100%;
+  display: inline-block;
+  width: 50%;
 }
  .chart .dropdowns div {
   overflow:hidden;
@@ -193,14 +197,14 @@
   border-right:1px solid #ddd;  
 } 
 
- .chart .dropdowns select {
+ .chart .dropdowns select{
   -webkit-appearance: none;
   border:none;
   background:none;
   width:auto;  
   margin:0;
   height:22px;
-  background:url('images/dropdown.png') no-repeat 97% 100%;
+  background:url('images/dropdown.png') no-repeat 97% 70%;
   background-size:8px 10px;
   padding:0 10px 0 5px;
   border-right:1px solid #ddd;
@@ -212,12 +216,19 @@
  .chart .dropdowns .currency {
   font-size:16px;  
   width:60px;
+  float: left;
 }
 
  .chart .dropdowns .gateway {
   font-size:11px;
-  width:96px;
-  border:none;
+  width: 96px;
+  border-right:1px solid #ddd;
+}
+
+.chart .counter .gateway {
+  border-right: none !important;
+  background-position: 100% 70% !important;
+  width: 110px !important;
 }
 
 @-moz-document url-prefix() {
