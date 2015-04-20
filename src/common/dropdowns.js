@@ -141,7 +141,7 @@
     function oldDropdowns(selection) {
       var currencies       = gateways.getCurrencies();
       var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
-      var gateway          = select;
+      var gateway          = gateways.getName(select.currency, select.issuer);
       var selectedCurrency = select ? select.currency : null;
       
       var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
@@ -171,8 +171,7 @@
        
         
         if (select) {
-          var name = gateway ? gateway.name : "";
-          option.property("selected", function(d) { return d === name });
+          option.property("selected", function(d) { return d === gateway });
         }
 
         changeGateway();
