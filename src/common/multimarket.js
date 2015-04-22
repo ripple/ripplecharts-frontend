@@ -303,17 +303,15 @@ var MiniChart = function(base, counter, markets, gateways) {
       .on("click", function() {
         d3.event.stopPropagation();
         flipping = true;
+
         dropdownA.selected(self.counter);
         dropdownB.selected(self.base);
         dropdowns.selectAll("div").remove();
-        dropdowns.append("div").attr("class","base").attr("id", "base"+self.index).call(dropdownA);
-        dropdowns.append("div").attr("class","counter").attr("id", "quote"+self.index).call(dropdownB);
-            
-        swap         = self.counter;
-        self.counter = self.base;
-        self.base    = swap;
+        dropdowns.append("div").attr("class","base dropdowns").attr("id", "base"+self.index).call(dropdownA);
+        dropdowns.append("div").attr("class","counter dropdowns").attr("id", "quote"+self.index).call(dropdownB);
 
         self.load();
+
         flipping = false;
 
         if (markets.options.fixed) {
