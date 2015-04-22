@@ -16,7 +16,7 @@ var TotalAccounts = function (options) {
       {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"month",  offset: function(d) { return new Date("Dec 31 2012 0:00:00")}}
+      {name: "max",    interval:"week",  offset: function(d) { return new Date("Dec 31 2012 0:00:00")}}
     ])
   .enter().append("a")
     .attr("href", "#")
@@ -120,14 +120,10 @@ var TotalAccounts = function (options) {
   }
 
   function parseDate (date, increment) {
-    var monthNames = [ "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December" ];
-
-
-    if      (increment == "month") return monthNames[date.month()] + " " + date.year();
-    else if (increment == "day")   return monthNames[date.month()] + " " + date.date();
-    else if (increment == "hour")  return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm A");
-    else return monthNames[date.month()] + " " + date.date() + " &middot " + date.format("hh:mm:ss A");
+    if (increment == "week") return date.format('MMMM D, YYYY');
+    else if (increment == "day") return date.format('MMMM D');
+    else if (increment == "hour") return date.format('MMMM D [&middot] hh:mm A');
+    else return date.format('MMMM D [&middot] hh:mm:ss A');
   }
 
   self.div.select(".interval .selected")[0][0].click();
