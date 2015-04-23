@@ -65,147 +65,38 @@ angular.module( 'ripplecharts.markets', [
   $scope.range  = store.session.get('range') || store.get('range') ||
     Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
 
-  function loadDropdowns(selection) {
-    selection.html("");
+  var loaded = false;
 
-    var selectionId;
-    if (selection.attr("id") === "quote") selectionId = "trade";
-    else selectionId = "base";
-    var currencies     = gateways.getCurrencies();
-    var currencySelect = selection.append("div").attr("class", "currency").attr("id", selectionId+"_currency");
-    var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
-
-    //format currnecies for dropdowns
-    var i = currencies.length;
-    while (i--) {
-      currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human(),
-        value    : i,
-        currency : currencies[i].currency,
-        imageSrc : currencies[i].icon
-      };
-      if ($scope[selectionId].currency === currencies[i].currency)
-        currencies[i].selected = true;
-    }
-
-    $scope.$watch('theme', function(){
-      changeCurrency($scope[selectionId].currency);
-      if ($('li.edit_list.gateway').length !=2) {
-        editList(selectionId, 'gateway');
-      }
-    });
-
-    $("#"+selectionId+"_currency").ddslick({
-      data: currencies,
-      imagePosition: "left",
-      width: "120px",
-      onSelected: function (data) {
-        if (!loaded) {
-          changeCurrency(data.selectedData.currency);
-        } else if (data.selectedData.currency !== $scope[selectionId].currency) {
-          changeCurrency(data.selectedData.currency);
-        }
-      }
-    });
-
-    editList(selectionId, 'gateway');
-    editList(selectionId, 'currency');
-
-    function checkThemeLogo(issuer) {
-      if ($scope.theme == 'dark') {
-        issuer.imageSrc = issuer.assets['logo.grayscale.svg'];
-      } else if ($scope.theme == 'light') {
-        issuer.imageSrc = issuer.assets['logo.svg'];
-      }
-    }
-
-    function changeCurrency(selected){
-      $("#"+selectionId+"_gateway").ddslick("destroy");
-      var issuers;
-      var issuer;
-      var picked  = false;
-      var disable = false;
-
-      issuers = gateways.getIssuers(selected);
-      if (selected === "XRP" || issuers.length === 0) {
-        issuers = [{}];
-        disable = true;
-      }
-
-      var i = issuers.length;
-      while (i--) {
-        issuer = issuers[i];
-
-        issuer.text = issuer.name;
-        if (issuer.assets) {
-          checkThemeLogo(issuer);
-        }
-        issuer.value = i;
-        if ($scope[selectionId].issuer === issuer.account) {
-          issuer.selected = true;
-        }
-        else issuer.selected = false;
-      }
-
-      //Special edge case for custom issuer being duplicate of featured
-      //for (i=0; i<issuers.length; i++) {
-      //  if (issuers[i].selected && !picked) picked = true;
-      //  else if (issuers[i].selected && picked) issuers[i].selected = false;
-      //}
-
-      $("#"+selectionId+"_gateway").ddslick({
-        data: issuers,
-        imagePosition: "left",
-        onSelected: function (data) {
-          var different_issuer   = data.selectedData.account !== $scope[selectionId].issuer;
-          var different_currency = selected !== $scope[selectionId].currency;
-          if (loaded && (different_currency || different_issuer)) {
-            changeGateway(selected, data.selectedData.account, selectionId);
-          }
-        }
+  $scope.$watch('theme', function(){
+    dropdownB = ripple.currencyDropdown(gateways).selected($scope.trade)
+      .on("change", function(d) {
+        $scope.trade = d;
+        if ($scope.range.name === "max") updateMaxrange();
+        loadPair();
+      });
+    dropdownA = ripple.currencyDropdown(gateways).selected($scope.base)
+      .on("change", function(d) {
+        $scope.base = d;
+        if ($scope.range.name === "max") updateMaxrange();
+        loadPair();
       });
 
-      if (disable === true) {
-        d3.select("#"+selectionId+"_gateway").classed("disabledDropdown", true);
-      }
-
-    }
-
-    function changeGateway(currency, issuer, selectionId){
-      if (issuer)
-        $scope[selectionId] = {currency: currency, issuer: issuer};
-      else
-        $scope[selectionId] = {currency: currency};
-      if ($scope.range.name === "max") updateMaxrange();
-      loadPair();
-      if ($('li.edit_list.gateway').length !=2) {
-        editList(selectionId, 'gateway');
-      }
-    }
-  }
-
-  var loaded = false;
-  var dropdownA = d3.select("#base");
-  var dropdownB = d3.select("#quote");
-  loadDropdowns(dropdownA);
-  loadDropdowns(dropdownB);
-
-
-  //append edit list option to dropdowns
-  function editList( selectionId, selectionSuffix ) {
-    $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<a class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><span class="plus">+</span> Edit</li></a>');
-  }
-
+    d3.select("#base").call(dropdownA);
+    d3.select("#quote").call(dropdownB);
+  });
+  
   d3.select("#flip").on("click", function(){ //probably better way to do this
+    dropdownA.selected($scope.trade);
+    dropdownB.selected($scope.base);
     loaded = false;
-    var swap     = $scope.trade;
+    d3.select("#base").call(dropdownA);
+    d3.select("#quote").call(dropdownB);
+    loaded = true;
+    
+    swap         = $scope.trade;
     $scope.trade = $scope.base;
     $scope.base  = swap;
 
-    loadDropdowns(dropdownA);
-    loadDropdowns(dropdownB);
-
-    loaded = true;
     loadPair();
   });
 
