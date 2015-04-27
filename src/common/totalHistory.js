@@ -42,7 +42,7 @@ var TotalHistory = function (options) {
       var jump = Math.ceil(interval/20);
       return (index) % jump !== 0;
     },
-    scaleLabel: scale_template, 
+    scaleLabel: scale_template,
     legendTemplate : legend_template
   };
 
@@ -93,11 +93,11 @@ var TotalHistory = function (options) {
     });
 
     //Api call for totalvalue sent data
-    basisRequest = apiHandler.historicalMetrics('totalValueSent', currency, issuer, start, end, inc ,function(err, data) {
+    basisRequest = apiHandler.historicalMetrics('totalPaymentVolume', currency, issuer, start, end, inc ,function(err, data) {
       //Err
       if (err) {console.log("Error:", err);}
       else{
-        pp_data.Sent = process_data('totalValueSent', pp_data.Sent, data);
+        pp_data.Sent = process_data('totalPaymentVolume', pp_data.Sent, data);
         draw(pp_data);
       }
     });
@@ -124,7 +124,7 @@ var TotalHistory = function (options) {
       $.each (value.components, function(j, component) {
         var base_curr, issuer, key;
 
-        if (metric === "totalValueSent"){
+        if (metric === "totalPaymentVolume"){
           base_curr = component.currency;
           issuer = component.issuer;
           if (issuer !== undefined){
@@ -165,7 +165,7 @@ var TotalHistory = function (options) {
         object.currencies[base_curr][i] += component.convertedAmount;
         object.pairs[key][i] += component.convertedAmount;
       });
-  
+
     });
     object.done = true;
     return object;
@@ -311,10 +311,10 @@ var TotalHistory = function (options) {
     if (lineChartData.datasets.length == 1){
       lineChartData.datasets[0].fillColor = color;
     }
-    lineChartData.datasets.sort(compare); 
+    lineChartData.datasets.sort(compare);
     return lineChartData;
   }
-  
+
   function pick_increment(diff){
     switch (true){
       case diff > 0 && diff <= 40:
@@ -378,7 +378,7 @@ var TotalHistory = function (options) {
     yorigin = myLine.scale.endPoint;
     yborder.attr("y2", yorigin);
     xborder.attr("x1", xorigin);
-  } 
+  }
 
   //Compare sum of arrays
   function compare(a,b){
@@ -433,7 +433,7 @@ var TotalHistory = function (options) {
       check_increments('week');
     }
   });
-  
+
   $('.interval').on('click', '.int',  function(e) {
     e.preventDefault();
     if(!$(this).hasClass('clicked')){
@@ -547,11 +547,11 @@ var TotalHistory = function (options) {
     var csv = toCSV(labels, data);
     if (!!Modernizr.prefixed('requestFileSystem', window)) {
         var blob  = new Blob([csv], {'type':'application/octet-stream'});
-        this.href = window.URL.createObjectURL(blob);     
+        this.href = window.URL.createObjectURL(blob);
     } else {
       this.href = "data:text/csv;charset=utf-8," + escape(csv);
     }
-    this.download = $('.crumbs li:last-child').text()+"_"+inc+"_historical.csv";  
+    this.download = $('.crumbs li:last-child').text()+"_"+inc+"_historical.csv";
     this.target   = "_blank";
     return true;
   };
@@ -582,7 +582,7 @@ var TotalHistory = function (options) {
         var title;
         label_color = $('#lineLegend [id="'+closest.label+'"]').css('color');
         csplit = closest.label.split("-")
-        if (csplit[3]){ 
+        if (csplit[3]){
           title = csplit[3]+" "+csplit[0]+"-"+csplit[2];
           $('#tooltip .iss').text(csplit[1]).css('color',label_color);
         }
@@ -601,7 +601,7 @@ var TotalHistory = function (options) {
       }
     }
   });
-  
+
   //Given mouse location, find closest point in point_array
   function closest_point(point_array, c_point){
     var closest = {};

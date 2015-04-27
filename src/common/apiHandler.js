@@ -85,6 +85,15 @@ ApiHandler = function (url) {
     });
   }
 
+  this.paymentVolume = function (params, load, error) {
+
+    var request = apiRequest("payments");
+    return handleRequest(request, params, function (err, response){
+      if (err) error(err);
+      else load(response);
+    });
+  }
+
   this.issuerCapitalization = function (params, load, error) {
 
     var request = apiRequest("issuerCapitalization");
@@ -130,6 +139,11 @@ ApiHandler = function (url) {
 
   this.getVolume24Hours = function (ex, callback) {
     var request = apiRequest("totalValueSent");
+    return handleRequest(request, { exchange : ex }, callback);
+  }
+
+  this.getPaymentVolume = function (ex, callback) {
+    var request = apiRequest("totalPaymentVolume");
     return handleRequest(request, { exchange : ex }, callback);
   }
 

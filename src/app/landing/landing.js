@@ -37,7 +37,7 @@ angular.module( 'ripplecharts.landing', [
 
   var totalAccounts
   var totalNetworkValueXRP;
-  var transactionVolumeXRP;
+  var paymentVolumeXRP;
   var tradeVolumeXRP;
 
   $scope.valueRate;
@@ -52,7 +52,7 @@ angular.module( 'ripplecharts.landing', [
       setValueRate(currency, true, function(err){
         $scope.valueCurrency = currency;
         showValue("totalNetworkValue");
-        showValue("transactionVolume");
+        showValue("paymentVolume");
         showValue("tradeVolume");
       });
     });
@@ -126,12 +126,12 @@ angular.module( 'ripplecharts.landing', [
 
     var ex = {rate:$scope.valueRate, currency:$scope.valueCurrency};
 
-    if      ($scope.metricDetail == 'totalNetworkValue') {
+    if ($scope.metricDetail == 'totalNetworkValue') {
       $scope.metricDetailTitle = "Total Network Value";
       donut.load(totalNetworkValueXRP, ex, true);
-    } else if ($scope.metricDetail == 'transactionVolume') {
-      $scope.metricDetailTitle = "Transaction Volume (last 24 hours)";
-      donut.load(transactionVolumeXRP, ex);
+    } else if ($scope.metricDetail == 'paymentVolume') {
+      $scope.metricDetailTitle = "Payment Volume (last 24 hours)";
+      donut.load(paymentVolumeXRP, ex);
     } else if ($scope.metricDetail == 'tradeVolume') {
       $scope.metricDetailTitle = "Trade Volume (last 24 hours)";
       donut.load(tradeVolumeXRP, ex);
@@ -204,11 +204,10 @@ angular.module( 'ripplecharts.landing', [
       if (metric === $scope.metricDetail) donut.load(totalNetworkValueXRP, ex, true);
       value     = totalNetworkValueXRP.total/$scope.valueRate;
       precision = 0;
-
-    } else if (metric=="transactionVolume") {
-      if (typeof transactionVolumeXRP === 'undefined') return;
-      if (metric === $scope.metricDetail) donut.load(transactionVolumeXRP, ex);
-      value     = transactionVolumeXRP.total/$scope.valueRate;
+    } else if (metric=="paymentVolume") {
+      if (typeof paymentVolumeXRP === 'undefined') return;
+      if (metric === $scope.metricDetail) donut.load(paymentVolumeXRP, ex);
+      value     = paymentVolumeXRP.total/$scope.valueRate;
       precision = 2;
     } else if (metric=="tradeVolume") {
       if (typeof tradeVolumeXRP === 'undefined') return;
@@ -237,7 +236,7 @@ angular.module( 'ripplecharts.landing', [
     setValueRate($scope.valueCurrency, false, function(err){
       //console.log($scope.valueRate);
       showValue("totalNetworkValue");
-      showValue("transactionVolume");
+      showValue("paymentVolume");
       showValue("tradeVolume");
     });
 
@@ -251,14 +250,14 @@ angular.module( 'ripplecharts.landing', [
       showValue("totalNetworkValue");
     });
 
-    api.getVolume24Hours(null, function(err, data){
+    api.getPaymentVolume(null, function(err, data){
       if (err) {
         console.log(err);
         data = {total:0};
       }
 
-      transactionVolumeXRP = data;
-      showValue("transactionVolume");
+      paymentVolumeXRP = data;
+      showValue("paymentVolume");
     });
 
     api.getTopMarkets(null, function(err, data){

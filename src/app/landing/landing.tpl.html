@@ -3,7 +3,7 @@
     <div class="helpbox" ng-class="{showHelp : showHelp}">
       <h3>Welcome to Ripple Charts</h3>
       <p>
-        This charting site was built by Ripple Labs to provide live and historical data about 
+        This charting site was built by Ripple Labs to provide live and historical data about
         the Ripple network. This site is open for anyone to use, alter and embed.  The source
         code is available <a href="https://github.com/ripple/ripplecharts-frontend" target="_blank">here</a>.
       </p>
@@ -14,7 +14,7 @@
           Ripple Network Stats
           <select id="valueCurrency" class="valueCurrencySelect"></select>
           <span class="valueRateDisplay" ng-bind="valueRateDisplay"></span>
-        </h5> 
+        </h5>
         <ul>
           <li>
             <label>Total Network Value:</label>
@@ -28,18 +28,18 @@
             </div>
           </li>
           <li>
-            <label>24 hr Transaction Volume:</label>
+            <label>24hr Payment Volume:</label>
             <div class="stat">
-              <span ng-show="valueRate" ng-bind="transactionVolume"></span>
-              <img  ng-hide="transactionVolume" src="assets/images/rippleThrobber.png" class="loader"/>
-              <span ng-show="transactionVolume && transactionVolume != ' '" ng-click="metricDetail='transactionVolume'" class="details" ng-class="{selected : metricDetail == 'transactionVolume' }">
+              <span ng-show="valueRate" ng-bind="paymentVolume"></span>
+              <img  ng-hide="paymentVolume" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="paymentVolume && paymentVolume != ' '" ng-click="metricDetail='paymentVolume'" class="details" ng-class="{selected : metricDetail == 'paymentVolume' }">
                 Detail
                 <img src="assets/images/triangle.svg"/>
               </span>
             </div>
           </li>
           <li>
-            <label>24 hr Trade Volume:</label>
+            <label>24hr Trade Volume:</label>
             <div class="stat">
               <span ng-show="valueRate" ng-bind="tradeVolume"></span>
               <img  ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
@@ -48,7 +48,7 @@
                 <img src="assets/images/triangle.svg"/>
               </span>
             </div>
-          </li>          
+          </li>
           <li>
             <label>Total XRP:</label>
             <div class="stat">
@@ -63,14 +63,14 @@
               <span ng-bind="ledgerIndex"></span>
               <img ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
-          </li> 
+          </li>
           <li>
             <label># of Ripple accounts:</label>
             <div class="stat">
               <span ng-bind="totalAccounts"></span>
               <img ng-hide="totalAccounts" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
-          </li>  
+          </li>
         </ul>
       </div>
       <div class="col-md-6">
@@ -78,7 +78,7 @@
         <div id="metricDetail"></div>
       </div>
     </div>
-    <h5>Top Markets</h5> 
-    <div id="topMarkets"></div> 
+    <h5>Top Markets</h5>
+    <div id="topMarkets"></div>
   </div>
 </div>

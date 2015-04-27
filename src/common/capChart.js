@@ -24,14 +24,14 @@ function CapChart(options) {
 
 //add data type dropdown
   dropdowns.append("div").attr("class","dropdowns dataType").append("select").selectAll("option")
-    .data(['Capitalization', 'Transaction Volume', 'Trade Volume'])
+    .data(['Capitalization', 'Payment Volume', 'Trade Volume'])
     .enter().append("option")
     .html(function(d){return d})
     .attr("selected", function(d) {if (d == self.dataType) return true});
 
   dropdowns.select(".dataType select").on('change',function(){
     self.dataType = this.value;
-    if (self.dataType=='Transaction Volume') {
+    if (self.dataType=='Payment Volume') {
       dropdowns.select(".currency select").insert("option", ":first-child").attr("class", "XRP").text("XRP");
     } else {
       dropdowns.select(".currency .XRP").remove();
@@ -45,7 +45,7 @@ function CapChart(options) {
 
 //add currency dropdown
   var currencyList = options.gateways.getCurrencies();
-  if (self.dataType !== 'Transaction Volume') {
+  if (self.dataType !== 'Payment Volume') {
     currencyList.shift();
   }
 
@@ -90,11 +90,11 @@ function CapChart(options) {
   list.append("label").html("Range:");
   var interval = list.selectAll("a")
     .data([
-      {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
-      {name: "month",  interval:"day",   offset: function(d) { return d3.time.month.offset(d, -1); }},
-      {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
-      {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"month", offset: function(d) { return moment.utc('2013-01-01'); }}
+      {name: "week",   interval:"hour", offset: function(d) { return d3.time.day.offset(d, -7); }},
+      {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
+      {name: "quarter",interval:"day",  offset: function(d) { return d3.time.month.offset(d, -3); }},
+      {name: "year",   interval:"day", offset: function(d) { return d3.time.year.offset(d, -1); }},
+      {name: "max",    interval:"week", offset: function(d) { return moment.utc('2013-01-01'); }}
     ])
     .enter().append("a")
     .attr("href", "#")
@@ -189,15 +189,15 @@ function CapChart(options) {
 
     if (self.dataType=="Capitalization") {
       loadCapitalizationData(range);
-    } else if (self.dataType==="Transaction Volume") {
-      loadSendData(range);
+    } else if (self.dataType==="Payment Volume") {
+      loadPaymentData(range);
     } else {
       loadTradeData(range);
     }
   }
 
 
-  function loadSendData(range) {
+  function loadPaymentData(range) {
     if (sendDataCache[self.currency] &&
         sendDataCache[self.currency][self.range]) {
 
@@ -214,11 +214,11 @@ function CapChart(options) {
         currency : self.currency,
         issuer   : issuer.account
       }
-      loadSendDataHelper(range, issuer, issuers.length);
+      loadPaymentDataHelper(range, issuer, issuers.length);
     });
   }
 
-  function loadSendDataHelper(range, c, count) {
+  function loadPaymentDataHelper(range, c, count) {
 
     //save a scope version of the current currency,
     //as it may change before its loaded.  Also it
@@ -226,12 +226,13 @@ function CapChart(options) {
     var currency = self.currency;
     var end      = moment.utc();
 
-    apiHandler.valueSent({
+    apiHandler.paymentVolume({
       startTime     : moment.utc(range.offset(end)).format(),
       endTime       : end.format(),
       timeIncrement : range.interval,
       currency      : c.currency,
-      issuer        : c.issuer
+      issuer        : c.issuer,
+      limit         : 500
 
     }, function(data){
       if (!sendDataCache[currency])
@@ -248,16 +249,20 @@ function CapChart(options) {
         results : data.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]})
       });
 
-      prepareStackedData(currency, range);
-      prepareLegend(currency, range);
+      if (sendDataCache[currency][range.name]['raw'].length === count) {
 
-      if (self.dataType=="Transaction Volume" &&
-        self.currency==currency &&
-        self.range==range.name) {
+        isLoading = false;
 
-        if (sendDataCache[currency][range.name]['raw'].length == count) isLoading = false;
-        drawData(); //may have been changed after loading started
-        drawLegend();
+        prepareData(currency, range);
+        prepareLegend(currency, range);
+
+        // may have been changed after loading started
+        if (self.dataType === "Payment Volume" &&
+        self.currency === currency &&
+        self.range === range.name) {
+          drawData();
+          drawLegend();
+        }
       }
 
     }, function (error){
@@ -278,7 +283,7 @@ function CapChart(options) {
     }
 
     var issuers = options.gateways.getIssuers(self.currency, true);
-    
+
     issuers.forEach(function(issuer){
       issuer = {
         currency : self.currency,
@@ -319,16 +324,20 @@ function CapChart(options) {
         results : data.map(function(d){return[d.startTime.unix()*1000,d.baseVolume]})
       });
 
-      prepareStackedData(currency, range);
-      prepareLegend(currency, range);
+      if (tradeDataCache[currency][range.name]['raw'].length == count) {
+        isLoading = false;
 
-      if ((self.dataType=="Trade Volume" || self.dataType=="# of Trades") &&
-        self.currency==currency &&
-        self.range==range.name) {
+        prepareData(currency, range);
+        prepareLegend(currency, range);
 
-        if (tradeDataCache[currency][range.name]['raw'].length == count) isLoading = false;
-        drawData(); //may have been changed after loading started
-        drawLegend();
+        // may have been changed after loading started
+        if ((self.dataType=="Trade Volume" || self.dataType=="# of Trades") &&
+          self.currency==currency &&
+          self.range==range.name) {
+
+          drawData();
+          drawLegend();
+        }
       }
     }, function (error){
       setStatus(error.text ? error.text : "Unable to load data");
@@ -351,7 +360,7 @@ function CapChart(options) {
 
     var end            = moment.utc();
     var issuers        = options.gateways.getIssuers(currency, true);
-    var parsed_issuers = []; 
+    var parsed_issuers = [];
 
     issuers.forEach(function(issuer){
       parsed_issuers.push({
@@ -373,13 +382,12 @@ function CapChart(options) {
 
       //convert the time to a timestamp
       data.forEach(function(d, index){
+       d.name = options.gateways.getName(d.currency, d.issuer);
        d.results = d.results.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]});
       });
 
-      prepareStackedData(currency, range);
+      prepareData(currency, range);
       prepareLegend(currency, range);
-
-      //prepareLineData();
 
       if (self.dataType=="Capitalization" &&
         self.currency==currency &&
@@ -397,7 +405,11 @@ function CapChart(options) {
 
   function sortTime(a,b){return a[0]-b[0]}
 
-  function prepareStackedData(currency, range) {
+  /**
+   * prepareData
+   */
+
+  function prepareData(currency, range) {
 
     var timestamps = [];
     var stacked = [];
@@ -406,7 +418,7 @@ function CapChart(options) {
     if (self.dataType=='Capitalization') {
       raw = capDataCache[currency][range.name].raw;
 
-    } else if (self.dataType=="Transaction Volume") {
+    } else if (self.dataType=="Payment Volume") {
       raw = sendDataCache[currency][range.name].raw;
 
     } else {
@@ -444,18 +456,20 @@ function CapChart(options) {
           y    : data[timestamps[m]] || last
         });
 
-        last = data[timestamps[m]] || last;
+        if (self.dataType=='Capitalization') {
+          last = data[timestamps[m]] || last;
+        }
       }
     }
 
     if (self.dataType=='Capitalization') {
-      capDataCache[currency][range.name].stacked = stacked;
+      capDataCache[currency][range.name].data = stacked;
 
-    } else if (self.dataType=="Transaction Volume") {
-      sendDataCache[currency][range.name].stacked = stacked;
+    } else if (self.dataType=="Payment Volume") {
+      sendDataCache[currency][range.name].data = stacked;
 
     } else {
-      tradeDataCache[currency][range.name].stacked = stacked;
+      tradeDataCache[currency][range.name].data = stacked;
     }
   }
 
@@ -466,7 +480,7 @@ function CapChart(options) {
     if (self.dataType=='Capitalization') {
       raw = capDataCache[currency][range.name].raw;
 
-    } else if (self.dataType=="Transaction Volume") {
+    } else if (self.dataType=="Payment Volume") {
       raw = sendDataCache[currency][range.name].raw;
 
     } else {
@@ -489,7 +503,7 @@ function CapChart(options) {
     if (self.dataType=='Capitalization') {
       capDataCache[currency][range.name].legend = legend;
 
-    } else if (self.dataType=="Transaction Volume") {
+    } else if (self.dataType=="Payment Volume") {
       sendDataCache[currency][range.name].legend = legend;
 
     } else {
@@ -502,6 +516,8 @@ function CapChart(options) {
       svg = chart.append('svg');
       g   = svg.append('g');
       bg  = g.append('rect').attr('class', 'background');
+
+      bg.on("mousemove", movingInSky);
 
       timeAxis    = svg.append("g").attr("class", "x axis");
       amountAxis  = svg.append("g").attr("class", "y axis");
@@ -527,8 +543,11 @@ function CapChart(options) {
     g.attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
 
     g.attr("width", options.width)
-    .attr("height", options.height)
-    .on("mousemove", movingInSky);
+    .attr("height", options.height);
+
+    bg.attr("width", options.width)
+    .attr("height", options.height);
+
 
     timeAxis.attr("transform", "translate("+options.margin.left+","+(options.height+options.margin.top)+")");
 
@@ -553,13 +572,13 @@ function CapChart(options) {
 
 
       if (self.dataType=='Capitalization') {
-        data   = capDataCache[self.currency][self.range].stacked;
+        data   = capDataCache[self.currency][self.range].data;
         legend = capDataCache[self.currency][self.range].legend;
-      } else if (self.dataType=='Transaction Volume') {
-        data   = sendDataCache[self.currency][self.range].stacked;
+      } else if (self.dataType=='Payment Volume') {
+        data   = sendDataCache[self.currency][self.range].data;
         legend = sendDataCache[self.currency][self.range].legend;
       } else if (self.dataType=='Trade Volume') {
-        data   = tradeDataCache[self.currency][self.range].stacked;
+        data   = tradeDataCache[self.currency][self.range].data;
         legend = tradeDataCache[self.currency][self.range].legend;
       }
 
@@ -600,13 +619,13 @@ function CapChart(options) {
     } else {
       svg.selectAll('.section').remove();
       if (self.dataType=='Capitalization') {
-        lines  = capDataCache[self.currency][self.range].raw;
+        lines  = capDataCache[self.currency][self.range].data;
         legend = capDataCache[self.currency][self.range].legend;
-      } else if (self.dataType=='Transaction Volume')   {
-        lines  = sendDataCache[self.currency][self.range].raw;
+      } else if (self.dataType=='Payment Volume') {
+        lines  = sendDataCache[self.currency][self.range].data;
         legend = sendDataCache[self.currency][self.range].legend;
-      } else if (self.dataType=='Trade Volume')   {
-        lines  = tradeDataCache[self.currency][self.range].raw;
+      } else if (self.dataType=='Trade Volume') {
+        lines  = tradeDataCache[self.currency][self.range].data;
         legend = tradeDataCache[self.currency][self.range].legend;
       }
 
@@ -628,9 +647,9 @@ function CapChart(options) {
 
       p.transition().attr("d", function(d) {
          var l = d3.svg.line()
-          .x(function(d) { return xScale(d[0]); })
-          .y(function(d) { return yScale(d[1]); });
-          return l(d.results);
+          .x(function(d) { return xScale(d.date); })
+          .y(function(d) { return yScale(d.y); });
+          return l(d.values);
       }).style("stroke", function(d) { return color(d.address || d.issuer); });
 
       p.exit().remove();
@@ -640,10 +659,10 @@ function CapChart(options) {
 
       a.transition().attr("d", function (d){
         var area = d3.svg.area()
-          .x(function(d) { return xScale(d[0]); })
+          .x(function(d) { return xScale(d.date); })
           .y0(options.height)
-          .y1(function(d) { return yScale(d[1]); });
-          return area(d.results);
+          .y1(function(d) { return yScale(d.y); });
+          return area(d.values);
       }).style("fill", function(d) { return color(d.address || d.issuer); });
     }
 
@@ -659,7 +678,7 @@ function CapChart(options) {
     var data;
     if (self.dataType=='Capitalization')
       data = capDataCache[self.currency][self.range].legend;
-    else if (self.dataType=='Transaction Volume')
+    else if (self.dataType=='Payment Volume')
       data = sendDataCache[self.currency][self.range].legend;
     else if (self.dataType=='Trade Volume')
       data = tradeDataCache[self.currency][self.range].legend;
@@ -691,9 +710,10 @@ function CapChart(options) {
   }
 
   function movingInSky() {
+
     var top, date, i, j, cx, cy, position, zoom = chart.style("zoom") || 1;
 
-    if (self.format=="stacked") {
+    if (self.format === "stacked") {
       if (!sections || !sections.length) return;
 
       top  = sections[sections.length-1].values;
@@ -721,8 +741,8 @@ function CapChart(options) {
       amt  = yScale.invert(d3.mouse(this)[1]/zoom);
 
       rows = lines.map(function(d,i){
-        j = d3.bisectLeft(d.results.map(function(d){return d[0]}), date);
-        return [i,j,d.results[j]?d.results[j][1]:0]});
+        j = d3.bisectLeft(d.values.map(function(d){return d.date}), date);
+        return [i,j,d.values[j]?d.values[j].y:0]});
 
       rows.sort(function(a,b){return a[2]-b[2]});
       for (i=0;i<rows.length;i++) {if (rows[i][2]>amt) break;}
@@ -731,14 +751,13 @@ function CapChart(options) {
       line = lines[rows[i][0]];
       j    = rows[i][1];
 
-
-      cy = yScale(line.results[j][1])+options.margin.top;
-      cx = xScale(line.results[j][0])+options.margin.left;
+      cy = yScale(line.values[j].y)+options.margin.top;
+      cx = xScale(line.values[j].date)+options.margin.left;
 
 //    determine position of tooltip
       position = getTooltipPosition(cx, cy);
-      date     = moment(line.results[j][0]).utc().format(DATEFORMAT);
-      amt      = commas(line.results[j][1], 2);
+      date     = moment(line.values[j].date).utc().format(DATEFORMAT);
+      amt      = commas(line.values[j].y, 2);
       var name = line.name;
 
       handleTooltip(name, line.address || line.issuer, date, amt, position);
@@ -748,6 +767,7 @@ function CapChart(options) {
 
 
   function movingInGround(section) {
+
     var tx, ty;
     var zoom = chart.style("zoom") || 1;
     var date = xScale.invert(d3.mouse(this)[0]/zoom);
@@ -758,7 +778,7 @@ function CapChart(options) {
     var cx  = xScale(section.values[i].date)+options.margin.left;
     var c2y = yScale(section.values[i].y0)+options.margin.top;
 
-
+    d3.event.stopPropagation();
 
 //  determine position of tooltip
     var position = getTooltipPosition(cx, cy);
@@ -775,23 +795,22 @@ function CapChart(options) {
     var tx, ty;
     var zoom = chart.style("zoom") || 1;
     var date = xScale.invert(d3.mouse(this)[0]/zoom);
-    var i    = d3.bisect(line.results.map(function(d){return d[0]}), date);
+    var i    = d3.bisect(line.values.map(function(d){return d.date}), date);
 
-    if (i && date<(line.results[i][0]+line.results[i-1][0])/2) i--;
-    var cy  = yScale(line.results[i][1])+options.margin.top;
-    var cx  = xScale(line.results[i][0])+options.margin.left;
+    if (i && date<(line.values[i].date.unix()+line.values[i-1].date.unix())/2) i--;
+    var cy  = yScale(line.values[i].y)+options.margin.top;
+    var cx  = xScale(line.values[i].date)+options.margin.left;
 
 
 
 //  determine position of tooltip
     var position = getTooltipPosition(cx, cy);
     var name     = line.name;
-    var amount   = commas(line.results[i][1], 2);
-    date = moment(line.results[i][0]).utc().format(DATEFORMAT);
+    var amount   = commas(line.values[i].y, 2);
+    date = line.values[i].date.format(DATEFORMAT);
 
     handleTooltip(name, line.address, date, amount, position);
     handleTracer(cx, cy);
-
   }
 
 
@@ -876,7 +895,7 @@ function CapChart(options) {
   function getExtents(axis, data) {
 
     var max, min, rows = data.map(function(d){
-        return d3.extent(d.results, function(d){ return axis=="x" ? d[0]:d[1]; });
+        return d3.extent(d.values, function(d){ return axis=="x" ? d.date:d.y; });
     });
 
     min = d3.min(rows, function(d){return d[0]});
