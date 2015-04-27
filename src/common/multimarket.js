@@ -49,13 +49,13 @@ var MiniChart = function(base, counter, markets, gateways) {
     .attr("class", "loader")
     .attr("src", "assets/images/rippleThrobber.png");
 
-  dropdownA = ripple.currencyDropdown(gateways, true).selected(self.base);
+  dropdownA = ripple.currencyDropdown(gateways, true, markets.options.fixed).selected(self.base);
   dropdownA.on("change", function(d) {
       self.base = d;
       if (!flipping && loaded) self.load();
       });
 
-  dropdownB = ripple.currencyDropdown(gateways, true).selected(self.counter);
+  dropdownB = ripple.currencyDropdown(gateways, true, markets.options.fixed).selected(self.counter);
   dropdownB.on("change", function(d) {
       self.counter = d;
       if (loaded) self.load();

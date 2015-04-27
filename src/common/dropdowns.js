@@ -1,12 +1,12 @@
 (function() {
 
-  ripple.currencyDropdown = function(gateways, old) {
+  ripple.currencyDropdown = function(gateways, old, fixed) {
     var event = d3.dispatch("change");
     var select;
     var loaded = false;
 
     function dropdown(selection) {
-      if (old) selection.call(oldDropdowns);
+      if (old) selection.call(oldDropdowns, fixed);
       else selection.call(loadDropdowns);
     }
 
@@ -138,8 +138,8 @@
       $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append('<a class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><span class="plus">+</span> Edit</li></a>');
     }
 
-    function oldDropdowns(selection) {
-      var currencies       = gateways.getCurrencies();
+    function oldDropdowns(selection, fixed) {
+      var currencies       = gateways.getCurrencies(fixed);
       var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
       var gateway          = gateways.getName(select.currency, select.issuer);
       var selectedCurrency = select ? select.currency : null;
@@ -158,7 +158,7 @@
       function changeCurrency() {
         var currency = currencySelect.node().value;
         var list = currency == 'XRP' ? [""] : 
-          gateways.getIssuers(currency).map(function(d){
+          gateways.getIssuers(currency, fixed).map(function(d){
             return d.name;
           });
         
@@ -180,7 +180,7 @@
       function changeGateway() {
         var gateway = gatewaySelect.node().value,
           currency  = currencySelect.node().value,
-          accounts  = gateways.getIssuers(currency),
+          accounts  = gateways.getIssuers(currency, fixed),
           account   = accounts && accounts.filter(function(d) { return d.name === gateway; })[0];
           issuer    = account ? account.account : null;
 

@@ -116,7 +116,7 @@ angular.module('gateways', [])
     var currencies = [];
     var include;
 
-    //add currencies from cusom list
+    //add currencies from custom list
     for (var currency in custom) {
       if (currency === '0158415500000000C1F76FF6ECB0BAC600000000') {
         continue;
