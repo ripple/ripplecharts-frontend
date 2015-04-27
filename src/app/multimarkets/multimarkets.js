@@ -43,7 +43,8 @@ angular.module( 'ripplecharts.multimarkets', [
     id             : "multimarkets",
     updateInterval : 60, //5 minutes
     clickable      : true,
-    gateways       : gateways
+    gateways       : gateways,
+    fixed          : false
   });
   
   
