@@ -22,16 +22,19 @@
               <span ng-show="valueRate" ng-bind="xrpCapitalization"></span>
               <img  ng-hide="xrpCapitalization" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
+            <div class="details"></div>
           </li>
           <li>
             <label>Issued Value:</label>
             <div class="stat">
               <span ng-show="valueRate" ng-bind="issuedValue"></span>
               <img  ng-hide="issuedValue" src="assets/images/rippleThrobber.png" class="loader"/>
-              <span ng-show="issuedValue && issuedValue != ' '" ng-click="metricDetail='issuedValue'" class="details" ng-class="{selected : metricDetail == 'issuedValue' }">
+            </div>
+            <div class="details">
+              <div ng-show="issuedValue && issuedValue != ' '" ng-click="metricDetail='issuedValue'" ng-class="{selected : metricDetail == 'issuedValue' }">
                 Detail
                 <img src="assets/images/triangle.svg"/>
-              </span>
+              </div>
             </div>
           </li>
           <li>
@@ -39,10 +42,12 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="paymentVolume"></span>
               <img  ng-hide="paymentVolume" src="assets/images/rippleThrobber.png" class="loader"/>
-              <span ng-show="paymentVolume && paymentVolume != ' '" ng-click="metricDetail='paymentVolume'" class="details" ng-class="{selected : metricDetail == 'paymentVolume' }">
+            </div>
+            <div class="details">
+              <div ng-show="paymentVolume && paymentVolume != ' '" ng-click="metricDetail='paymentVolume'" ng-class="{selected : metricDetail == 'paymentVolume' }">
                 Detail
                 <img src="assets/images/triangle.svg"/>
-              </span>
+              </div>
             </div>
           </li>
           <li>
@@ -50,19 +55,21 @@
             <div class="stat">
               <span ng-show="valueRate" ng-bind="tradeVolume"></span>
               <img  ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
-              <span ng-show="tradeVolume && tradeVolume != ' '" ng-click="metricDetail='tradeVolume'" class="details" ng-class="{selected : metricDetail == 'tradeVolume' }">
+            </div>
+            <div class="details">
+              <div ng-show="tradeVolume && tradeVolume != ' '" ng-click="metricDetail='tradeVolume'" ng-class="{selected : metricDetail == 'tradeVolume' }">
                 Detail
                 <img src="assets/images/triangle.svg"/>
-              </span>
+              </div>
             </div>
           </li>
           <li>
             <label>Total XRP:</label>
             <div class="stat">
               <span ng-bind="totalCoins"></span>
-              <small ng-show="totalCoins">XRP</small>
               <img ng-hide="totalCoins" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
+            <div class="details"></div>
           </li>
           <li>
             <label>Ledger #:</label>
@@ -70,6 +77,7 @@
               <span ng-bind="ledgerIndex"></span>
               <img ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
+            <div class="details"></div>
           </li>
           <li>
             <label># of Ripple accounts:</label>
@@ -77,6 +85,7 @@
               <span ng-bind="totalAccounts"></span>
               <img ng-hide="totalAccounts" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
+            <div class="details"></div>
           </li>
         </ul>
       </div>

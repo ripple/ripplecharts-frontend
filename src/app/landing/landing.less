@@ -9,20 +9,20 @@
   color: #aaa;
   padding-top: 5px;
   line-height: 15px;
-  margin-right: 10px;
+  margin-right: 5px;
 }
 
 .landing .valueCurrencySelect {
   float:right;
   width: auto;
-  height: 20px;
+  height: 22px;
   padding: 2px 20px 2px 5px;
   margin: 0 0 0 5px;
   font-size: 15px;
-  line-height: 20px;
+  line-height: 17px;
   background: none;
   background-image: url('images/dropdown.png');
-  background-position: 95% 80%;
+  background-position: 95% 65%;
   background-repeat: no-repeat;
   background-size: 13px;
   border: none;
@@ -30,7 +30,6 @@
   -moz-appearance:none!important;
   -o-appearance:none;
   appearance: none;
-  vertical-align: bottom;
   text-indent: 0.01px; /* needed to hide arrow in moz */
   text-overflow: "";   /* needed to hide arrow in moz */
 }
@@ -65,9 +64,10 @@
   display:table;
   width:100%;
   height:250px;
-  border:1px solid rgba(150,150,150,.3);
-  background:rgba(150,155,160,.2);
+  border:1px solid #eee;
+  background:#f8f8f8;
   border-radius:2px;
+  color:#555;
 }
 
 .landing .stats li {
@@ -85,8 +85,7 @@
   text-align:left;
   color:#888;
   padding:5px 10px 5px 20px;
-  border-top:1px solid #f5f5f5;
-  border-bottom:1px solid #ccc;
+  border-bottom:1px solid #e5e5e5;
 }
 
 .landing .stats label small {
@@ -95,50 +94,53 @@
 }
 
 .landing .stat {
+  vertical-align: middle;
+  display: table-cell;
+  width: 55%;
+  font-size: 18px;
+  text-align: right;
+  padding: 5px;
+  border-bottom: 1px solid #e5e5e5;
+  font-weight: bold;
+}
+
+.landing .details {
   vertical-align:middle;
   display:table-cell;
-  width:55%;
-  font-size: 18px;
-  font-weight: bold;
-  text-align:left;
-  padding:5px 10px;
-  border-top:1px solid #f5f5f5;
-  border-bottom:1px solid #ccc;
+  font-size:10px;
+  cursor:pointer;
+  color:#ccc;
+  min-width: 65px;
+  border-bottom:1px solid #e5e5e5;
+  font-weight:bold;
 
-  .details {
-    float:right;
-    font-size:10px;
-    cursor:pointer;
-    color:#ccc;
-
-    img {
-      width:21px;
-      margin-bottom:2px;
-      opacity:.15;
-      padding: 3px;
-      border-radius: 20px;
-      background:#aaa;
-    }
+  img {
+    width:21px;
+    margin-bottom:2px;
+    opacity:.15;
+    padding: 3px;
+    border-radius: 20px;
+    background:#aaa;
   }
+}
 
-  .details:hover {
-    text-decoration:underline;
-    color:#999;
+.landing .details:hover {
+  text-decoration:underline;
+  color:#999;
 
-    img {
-      width: 21px;
-      opacity: .4;
-      background: #aaa;
-    }
+  img {
+    width: 21px;
+    opacity: .4;
+    background: #aaa;
   }
+}
 
-  .details.selected {
-    color:#666;
+.landing .details .selected {
+  color:#666;
 
-    img {
-      opacity:1;
-      background:#ccc;
-    }
+  img {
+    opacity:1;
+    background:#ccc;
   }
 }
 
@@ -153,7 +155,9 @@
   opacity:.35;
 }
 
-.landing .stats li:last-child .stat, .landing .stats li:last-child label {
+.landing .stats li:last-child .stat,
+.landing .stats li:last-child label,
+.landing .stats li:last-child .details {
   border-bottom:none;
 }
 
@@ -193,12 +197,18 @@
   background-image: url('images/dropdownLight.png');
 }
 
-.dark .landing .stat, .dark .stats label {
-  border-top-color:#303030;
-  border-bottom-color:#111;
+.dark .landing ul {
+  background:#1a1a1a;
+  border-color:#252525;
 }
 
-.dark .landing .stat {
+.dark .landing .stat,
+.dark .stats label,
+.dark .stats .details {
+  border-bottom-color:#2a2a2a;
+}
+
+.dark .landing {
 
   .details {
     color:#444;
@@ -216,7 +226,7 @@
     }
   }
 
-  .details.selected {
+  .details .selected {
     color:#ccc;
 
     img {
