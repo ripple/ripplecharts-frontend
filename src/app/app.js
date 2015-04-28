@@ -87,7 +87,8 @@ angular.element(document).ready(function() {
             totalCoinsXrp = [commas(parseInt(totalCoins.slice(0, -6), 10)), totalCoins.slice(-6)].join(".");
         $scope.ledgerLabel = "Ledger #:";
         $scope.ledgerIndex = commas(parseInt(obj.ledger.ledger_index, 10));
-        $scope.totalCoins  = totalCoinsXrp;
+        $scope.totalCoins = totalCoinsXrp;
+        $scope.totalXRP = parseFloat(totalCoins)/ 1000000.0;
         $scope.$apply();
       }
     }

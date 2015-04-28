@@ -17,11 +17,18 @@
         </h5>
         <ul>
           <li>
-            <label>Total Network Value:</label>
+            <label>XRP Capitalization:</label>
             <div class="stat">
-              <span ng-show="valueRate" ng-bind="totalNetworkValue"></span>
-              <img  ng-hide="totalNetworkValue" src="assets/images/rippleThrobber.png" class="loader"/>
-              <span ng-show="totalNetworkValue && totalNetworkValue != ' '" ng-click="metricDetail='totalNetworkValue'" class="details" ng-class="{selected : metricDetail == 'totalNetworkValue' }">
+              <span ng-show="valueRate" ng-bind="xrpCapitalization"></span>
+              <img  ng-hide="xrpCapitalization" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+          <li>
+            <label>Issued Value:</label>
+            <div class="stat">
+              <span ng-show="valueRate" ng-bind="issuedValue"></span>
+              <img  ng-hide="issuedValue" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="issuedValue && issuedValue != ' '" ng-click="metricDetail='issuedValue'" class="details" ng-class="{selected : metricDetail == 'issuedValue' }">
                 Detail
                 <img src="assets/images/triangle.svg"/>
               </span>

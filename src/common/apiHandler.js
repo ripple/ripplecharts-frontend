@@ -205,12 +205,15 @@ ApiHandler = function (url) {
       }, callback);
   }
 
-
   this.getNetworkValue = function (ex, callback) {
       var request = apiRequest("totalNetworkValue");
       return handleRequest(request, { exchange : ex }, callback);
   }
 
+  this.getIssuedValue = function (ex, callback) {
+      var request = apiRequest("totalIssued");
+      return handleRequest(request, { exchange : ex }, callback);
+  }
 
   this.exchangeRates = function (params, callback) {
       var request = apiRequest("exchangeRates");
@@ -226,12 +229,11 @@ ApiHandler = function (url) {
 
       request.post(JSON.stringify(params))
       .on('load', function(xhr){
-          var response = JSON.parse(xhr.response);
-          callback (null, response);
-
-      }).on('error', function(xhr){
-
-          callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
+        var response = xhr.response ? JSON.parse(xhr.response) : undefined;
+        callback (null, response);
+      })
+      .on('error', function(xhr){
+        callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
       });
 
       return request;
