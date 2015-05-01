@@ -94,8 +94,19 @@ var OrderBook = function (options) {
     r._books = {};
     r._events.prepare_subscribe = [];
 
-    asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
-    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);
+    asks = r.book({
+      currency_pays: options.trade.currency,
+      issuer_pays: options.trade.issuer,
+      currency_gets: options.base.currency,
+      issuer_gets: options.base.issuer
+    });
+
+    bids = r.book({
+      currency_pays: options.base.currency,
+      issuer_pays: options.base.issuer,
+      currency_gets: options.trade.currency,
+      issuer_gets: options.trade.issuer
+    });
 
     asks.offersSync();
     bids.offersSync();
@@ -180,7 +191,7 @@ var OrderBook = function (options) {
       }
 
       offer = {
-        account: data[i].Account,
+        account: data[i].Account || 'AUTOBRIDGED',
         pays: {},
         gets: {}
       };
@@ -353,7 +364,7 @@ var OrderBook = function (options) {
   function drawData (update) {
     if (!self.offers.bids || !self.offers.asks) return; //wait for both to load
     if (!self.offers.bids.length || !self.offers.asks.length) {
-      setStatus("No Orders");
+      setStatus('&nbsp');
       return;
     }
 
@@ -477,7 +488,7 @@ var OrderBook = function (options) {
     row.select('.sum').html(function(d){return formatAmount(d.displaySum)});
     row.select('.size').html(function(d){return formatAmount(d.displaySize)});
     row.select('.price').html(function(d){return formatAmount(d.displayPrice)});
-    row.attr('title', function(d){return d.accounts.join('\n')});
+    row.attr('title', function(d){return d.accounts ? d.accounts.join('\n') : null});
     row.exit().remove();
 
     emitSpread();
