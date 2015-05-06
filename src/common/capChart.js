@@ -90,7 +90,6 @@ function CapChart(options) {
   list.append("label").html("Range:");
   var interval = list.selectAll("a")
     .data([
-      {name: "week",   interval:"hour", offset: function(d) { return d3.time.day.offset(d, -7); }},
       {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",  offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day", offset: function(d) { return d3.time.year.offset(d, -1); }},

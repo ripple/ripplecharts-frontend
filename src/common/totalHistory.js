@@ -5,7 +5,7 @@ var TotalHistory = function (options) {
   issuers = {},
   ctx = $("#canvas").get(0).getContext("2d"),
   apiHandler  = new ApiHandler(options.url);
-
+/*
   $('.interval .range').each(function(){
       $(this).width($(this).width() + 4);
   });
@@ -15,24 +15,20 @@ var TotalHistory = function (options) {
   $('.interval #custom').each(function(){
       $(this).width($(this).width() + 4);
   });
-
+*/
   //Defining SVG elements on overlayed canvas.
   var svgContainer = d3.select(".chart_wrapper").append("svg").attr("id", "canvas2"),
       line = svgContainer.append("line").attr("stroke-width", 0).attr("class", "line"),
       line2 = svgContainer.append("line").attr("stroke-width", 0).attr("class", "line"),
-      circle = svgContainer.append("circle").attr("r", 0).attr("class", "circle"),
-      xborder = svgContainer.append("line").attr("x1",0).attr("y1",9).attr("x2", "100%").attr("y2",9)
-                                           .attr("stroke-width", 0).attr("class", "border"),
-      yborder = svgContainer.append("line").attr("x1","100%").attr("y1",9).attr("x2", "100%")
-                                           .attr("y2","100%").attr("stroke-width", 0).attr("class", "border");
+      circle = svgContainer.append("circle").attr("r", 0).attr("class", "circle");
 
   //Set chart options
   var chart_options = {
     responsive: true,
     pointHitDetectionRadius : 1,
     scaleFontFamily: "Open Sans Light",
-    scaleLineColor: "#404040;",
-    scaleShowGridLines : false,
+    scaleLineColor: "rgba(100,100,100,.2)",
+    scaleShowGridLines: false,
     pointDot : false,
     animationSteps: 20,
     bezierCurve : true,
@@ -66,38 +62,38 @@ var TotalHistory = function (options) {
     $("#tooltip").hide();
     //pre-processed data
     var pp_data = {};
-    pp_data.Traded = {};
-    pp_data.Sent = {};
+    pp_data['Trade Volume'] = {};
+    pp_data['Payment Volume'] = {};
 
     //Currencies and pairs objects
-    pp_data.Traded.currencies = {};
-    pp_data.Traded.pairs = {};
-    pp_data.Sent.currencies = {};
-    pp_data.Sent.pairs = {};
+    pp_data['Trade Volume'].currencies = {};
+    pp_data['Trade Volume'].pairs = {};
+    pp_data['Payment Volume'].currencies = {};
+    pp_data['Payment Volume'].pairs = {};
 
     interval = diff(inc, start, end);
     issuer = currencies[currency];
 
     //Totals
-    pp_data.Traded.total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
-    pp_data.Sent.total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
+    pp_data['Trade Volume'].total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
+    pp_data['Payment Volume'].total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
 
     //Api call for topmarkets data
     basisRequest = apiHandler.historicalMetrics('topMarkets', currency, issuer, start, end, inc ,function(err, data) {
       //Err
       if (err) {console.log("Error:", err);}
       else{
-        pp_data.Traded = process_data('topMarkets', pp_data.Traded, data);
+        pp_data['Trade Volume'] = process_data('topMarkets', pp_data['Trade Volume'], data);
         draw(pp_data);
       }
     });
 
-    //Api call for totalvalue sent data
+    //Api call for totalvalue paymentVolume data
     basisRequest = apiHandler.historicalMetrics('totalPaymentVolume', currency, issuer, start, end, inc ,function(err, data) {
       //Err
       if (err) {console.log("Error:", err);}
       else{
-        pp_data.Sent = process_data('totalPaymentVolume', pp_data.Sent, data);
+        pp_data['Payment Volume'] = process_data('totalPaymentVolume', pp_data['Payment Volume'], data);
         draw(pp_data);
       }
     });
@@ -127,12 +123,7 @@ var TotalHistory = function (options) {
         if (metric === "totalPaymentVolume"){
           base_curr = component.currency;
           issuer = component.issuer;
-          if (issuer !== undefined){
-            key = base_curr + '-' + issuer;
-          }
-          else{
-            key = base_curr;
-          }
+          key = base_curr + (issuer ? '-' + issuer : '');
         }
         else if (metric === "topMarkets"){
           base_curr = component.base.currency;
@@ -146,15 +137,18 @@ var TotalHistory = function (options) {
           object.currencies[counter_curr][i] += component.convertedAmount;
         }
 
-        if (!(issuers.hasOwnProperty(issuer))){
-          var gateway_list = options.gateways.getIssuers(base_curr, true);
-          gateway_list.forEach(function(gateway, index) {
-            if (gateway.account === issuer) {
-              issuers[issuer] = gateway.name;
-            }
-          });
+        if (issuer) {
+          if (!(issuers.hasOwnProperty(issuer))){
+            var gateway_list = options.gateways.getIssuers(base_curr, true);
+            gateway_list.forEach(function(gateway, index) {
+              if (gateway.account === issuer) {
+                issuers[issuer] = gateway.name;
+              }
+            });
+          }
+
+          key = key + '-' + issuers[issuer];
         }
-        key = key + '-' + issuers[issuer];
 
         if(!(object.currencies.hasOwnProperty(base_curr))){
           object.currencies[base_curr] = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
@@ -194,36 +188,27 @@ var TotalHistory = function (options) {
   //Draw
   function draw(data){
     //Initial draw
-    //Only draw if both Traded and Sent data is preSent
-    if (data.Sent.done === true && data.Traded.done === true){
+    //Only draw if both Traded and paymentVolume data is preSent
+    if (data['Payment Volume'].done === true && data['Trade Volume'].done === true){
       console.log("Data:", data);
-      labels = data.Sent.dateData;
+      labels = data['Payment Volume'].dateData;
       if (labels.length < 1){
-        labels = data.Traded.dateData;
+        labels = data['Trade Volume'].dateData;
       }
       data.totals = {};
-      data.totals.Traded = data.Traded.total;
-      data.totals.Sent = data.Sent.total;
-      delete data.Sent.total;
-      delete data.Traded.total;
+      data.totals['Trade Volume'] = data['Trade Volume'].total;
+      data.totals['Payment Volume'] = data['Payment Volume'].total;
+      delete data['Payment Volume'].total;
+      delete data['Trade Volume'].total;
       var lcd = chartify(data.totals, labels, "", "");
       to_export = lcd;
       window.myLine = new Chart(ctx).Line(lcd, chart_options);
 
-      var xorigin = myLine.scale.xScalePaddingLeft;
-      var yorigin = myLine.scale.endPoint;
-      yborder.attr("y2", yorigin);
-      xborder.attr("x1", xorigin);
-
       var legend = myLine.generateLegend();
       $('#lineLegend').html(legend);
       var last = $('.crumb').last()[0];
-      if ($(last).attr('id') !== "total"){
+      if ($(last).data('metric')){
         go_to(last, data, labels);
-      }
-      else{
-        xborder.attr("stroke-width", 1);
-        yborder.attr("stroke-width", 1);
       }
       $(".loading").hide();
     }
@@ -233,26 +218,25 @@ var TotalHistory = function (options) {
       if ($(".legend > div").length > 1){
         e.preventDefault();
         var label_color = $(this).css('color');
-        var id = $(this).attr('id');
         var filter = "";
-        var text = id.split("-");
-        if (id === "Sent" || id === "Traded"){
-          ts = id;
+        var metric = $(this).attr('title');
+
+        if (metric === "Payment Volume" || metric === "Trade Volume"){
+          ts = metric;
           cp = 'currencies';
-          new_lcd = chartify(data[id].currencies, labels, filter, "");
+          new_lcd = chartify(data[ts].currencies, labels, filter, "");
         }
         else{
           cp = 'pairs';
-          filter = id;
+          filter = metric;
           new_lcd = chartify(data[ts].pairs, labels, filter, label_color);
         }
-        if (text[3]) text = text[3];
-        else if(text[2]) text = text[2]
-        else text = text[0]
+
         //Add breadcrumb with data needed to reach that point again
+        var crumb = $('<li class="crumb" title="'+metric+'">'+metric+'</li>');
+        crumb.data({ts: ts, cp: cp, filter: filter, color: label_color});
         $('.crumbs').append('<li> > </li>');
-        $('.crumbs').append('<li class="crumb" id="'+id+'">'+text+'</li>');
-        $('#'+id).data({ts: ts, cp: cp, filter: filter, color: label_color});
+        $('.crumbs').append(crumb);
         update_chart(myLine, new_lcd);
       }
     });
@@ -267,10 +251,10 @@ var TotalHistory = function (options) {
   }
 
   function go_to(breadcrumb, data, lables){
-    id = $(breadcrumb).attr('id');
+    var title = $(breadcrumb).attr('title');
     var new_lcd;
     $(breadcrumb).nextAll('li').remove();
-    if ( id === 'totals'){
+    if (!title) {
       new_lcd = chartify(data.totals, labels, "", "");
     }
     else{
@@ -279,6 +263,7 @@ var TotalHistory = function (options) {
       cp = bc_data.cp;
       filter = bc_data.filter;
       color = bc_data.color;
+      console.log(data, bc_data);
       new_lcd = chartify(data[ts][cp], labels, filter, color);
     }
     update_chart(myLine, new_lcd);
@@ -290,6 +275,7 @@ var TotalHistory = function (options) {
       labels : labels,
       datasets : []
     };
+
     //Create an object to be passed ot chart.js
     $.each(data, function( key, value ) {
       if (key.indexOf(filter) >= 0){
@@ -371,13 +357,6 @@ var TotalHistory = function (options) {
     var legend = myLine.generateLegend();
     $('#lineLegend').html(legend);
     $(".loading").hide();
-    xborder.attr("stroke-width", 1);
-    yborder.attr("stroke-width", 1);
-
-    xorigin = myLine.scale.xScalePaddingLeft;
-    yorigin = myLine.scale.endPoint;
-    yborder.attr("y2", yorigin);
-    xborder.attr("x1", xorigin);
   }
 
   //Compare sum of arrays
@@ -635,8 +614,6 @@ var TotalHistory = function (options) {
 
   //Turn of svg borders during loading
   function borders_off(){
-    xborder.attr("stroke-width", 0);
-    yborder.attr("stroke-width", 0);
     line.attr("stroke-width", 0);
     line2.attr("stroke-width", 0);
     circle.attr("r", 0);
