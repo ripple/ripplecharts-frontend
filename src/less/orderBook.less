@@ -16,7 +16,7 @@
       width: 40px;
       position: absolute;
       top: 50%;
-      left: 50%; 
+      left: 50%;
       margin-top: -35px;
       margin-left: -20px;
   }
@@ -86,14 +86,14 @@
     stroke:#cde
   }
 
-  .chartDetails {   
-    position: absolute;     
-    text-align: right;      
-    font-size:14px;   
-    color:#333; 
+  .chartDetails {
+    position: absolute;
+    text-align: right;
+    font-size:14px;
+    color:#333;
     padding:1px 5px;
     background:rgba(255,255,255,.5);
-    border-bottom:1px solid rgba(150,150,150,.2);     
+    border-bottom:1px solid rgba(150,150,150,.2);
   }
 
   .chartDetails span {
@@ -110,7 +110,7 @@
   overflow:hidden;
   font-size:13px;
   font-family:"Open Sans";
-  color:#556;
+  color:#223;
   margin:5px 60px 20px;
   opacity: .5;
 
@@ -122,61 +122,46 @@
 
     th {
       font-size:15px;
-      color:#333;  
+      color:#333;
       font-weight:normal;
-      padding: 5px;
-      text-align:center;
-      
+      padding: 5px 15px;
+      text-align:right;
+
       span {
         display:block;
         font-size:12px;
         font-weight:bold;
         color:#ccc;
-      }      
+      }
     }
-    
+
     th.type {
       text-align:center;
       font-size:16px;
-      background:#eee;  
+      background:#eee;
       text-transform:uppercase;
-    }    
+    }
 
     td {
-      padding: 2px 0;
+      padding: 2px 15px;
       min-width:20px;
       border-top: 1px solid #f6f6f6;
-    }
-    
-    td:first-child {
-      padding-left: 10px;
-    }    
-
-    td.dot {
-      text-align:center;
-      min-width:0;
     }
 
     td.price, td.sum, td.size {
       text-align: right;
     }
-    
+
     td.sum {
       color: #555;
     }
-    
-    td.sum-decimal {
-      color: #999;
-      text-align: left;
+
+    td .decimal {
+      color: #777;
     }
 
-    td.price-decimal, td.size-decimal {
-      text-align: left;
-      color:#99a;
-    }
-
-    .insig {
-      color:#ccc;
+    td .insig {
+      color:#ddd;
     }
 
 
@@ -195,7 +180,7 @@
 }
 
 /*
- *  dark theme 
+ *  dark theme
  */
 
 .dark .orderbookChart {
@@ -212,7 +197,7 @@
   }
 
   .axis text {
-    fill : #666; 
+    fill : #666;
     stroke: #666;
   }
 
@@ -226,19 +211,19 @@
 }
 
 .dark .bookTables {
-  color:#a0a0aa;  
+  color:#a0a0aa;
 
   table {
     border-color:#222;
-    
+
     th span {
       color:#555;
-    }    
-    
+    }
+
     th {
       color:#bbb;
     }
-    
+
     th.type {
       background:#222;
       color:#777;
@@ -248,31 +233,27 @@
     tr:nth-child(odd) {
       background:#151515
     }
-    
+
     td {
       border-top: 1px solid #222;
     }
-    
+
     td.sum {
       color: #aaa;
     }
-    
-    td.sum-decimal {
+
+    td .decimal {
       color: #777;
     }
 
-    td.price-decimal, td.size-decimal {
-      color:#6c6c77;
-    }
-
     .insig {
-      color:#444;
-    }    
+      color:#333;
+    }
   }
 }
 
 @media (max-width: 767px) {
-  
+
   .bookTables table {
     width:100%;
     float:none !important;

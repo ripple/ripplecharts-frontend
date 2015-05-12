@@ -35,14 +35,13 @@ var OrderBook = function (options) {
     .data(["Bids"])
     .enter().append("th")
     .attr("class","type")
-    .attr("colspan",9)
+    .attr("colspan",3)
     .text(function(d) {return d;});
 
   //append second header
   bidsHead.append("tr").attr("class","headerRow").selectAll("th")
     .data(["Total","Size","Bid Price"])
     .enter().append("th")
-    .attr('colspan', 3)
     .text(function(d) {return d;})
     .append("span");
 
@@ -55,14 +54,13 @@ var OrderBook = function (options) {
     .data(["Asks"])
     .enter().append("th")
     .attr("class","type")
-    .attr("colspan",9)
+    .attr("colspan",3)
     .text(function(d) {return d;});
 
   //append second header
   asksHead.append("tr").attr("class","headerRow").selectAll("th")
     .data(["Ask Price","Size","Total"])
     .enter().append("th")
-    .attr('colspan', 3)
     .text(function(d) {return d;})
     .append("span");
 
@@ -96,8 +94,19 @@ var OrderBook = function (options) {
     r._books = {};
     r._events.prepare_subscribe = [];
 
-    asks = r.book(options.base.currency, options.base.issuer, options.trade.currency, options.trade.issuer)
-    bids = r.book(options.trade.currency, options.trade.issuer, options.base.currency, options.base.issuer);
+    asks = r.book({
+      currency_pays: options.trade.currency,
+      issuer_pays: options.trade.issuer,
+      currency_gets: options.base.currency,
+      issuer_gets: options.base.issuer
+    });
+
+    bids = r.book({
+      currency_pays: options.base.currency,
+      issuer_pays: options.base.issuer,
+      currency_gets: options.trade.currency,
+      issuer_gets: options.trade.issuer
+    });
 
     asks.offersSync();
     bids.offersSync();
@@ -121,73 +130,174 @@ var OrderBook = function (options) {
   }
 
 //handle data returned from ripple-lib
-  function handleBook (data,action) {
+  function handleBook (data, action) {
     var max_rows = options.max_rows || 100;
     var rowCount = 0;
-    var offers   = [];
-    var newData  = jQuery.extend(true, [], data);
+    var type = action === "asks" ? "gets" : "pays";
+    var offers = [];
+    var priceBook = { };
+    var offer;
+    var price;
+    var sig = 4; //significant digits for price
+    var exponent;
+    var precision;
+    var amount;
+    var sum;
+    var i;
 
+    function decimalAdjust(type, value, exp) {
+      // If the exp is undefined or zero...
+      if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
+      }
+      value = +value;
+      exp = +exp;
+      // If the value is not a number or the exp is not an integer...
+      if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
+      }
+      // Shift
+      value = value.toString().split('e');
+      value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+      // Shift back
+      value = value.toString().split('e');
+      return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+    }
 
-    newData.forEach(function(d) {
-      if (rowCount++ > max_rows) return;
-
-      // rippled has a bug where it shows some unfunded offers
-      // We're ignoring them
-      if (d.taker_gets_funded === "0" || d.taker_pays_funded === "0") {
-        return;
+    function formatAmount(price, opts) {
+      if (typeof price === 'object') {
+        price = Number(price.to_human({group_sep: false}));
       }
 
-      if (d.TakerGets.value) {
-        d.TakerGets.value = d.taker_gets_funded;
+      if (!opts) opts = {};
+
+      if (opts.ask) {
+        price = decimalAdjust('ceil', price, exponent);
+        return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
+      } else if (opts.bid) {
+        price = decimalAdjust('floor', price, exponent);
+        return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
+      }
+
+      return price.toFixed(precision);
+    }
+
+    for(i=0; i<data.length; i++) {
+      if (data[i].taker_gets_funded === "0" ||
+          data[i].taker_pays_funded === "0") {
+        continue;
+      }
+
+      offer = {
+        account: data[i].Account || 'AUTOBRIDGED',
+        pays: {},
+        gets: {}
+      };
+
+      if (data[i].TakerGets.value) {
+        offer.gets = {
+          value: data[i].taker_gets_funded,
+          currency: data[i].TakerGets.currency,
+          issuer: data[i].TakerGets.issuer
+        }
       } else {
-        d.TakerGets = parseInt(Number(d.taker_gets_funded), 10);
+        offer.gets = Number(data[i].taker_gets_funded);
       }
 
-      if (d.TakerPays.value) {
-        d.TakerPays.value = d.taker_pays_funded;
+      if (data[i].TakerPays.value) {
+        offer.pays = {
+          value: data[i].taker_pays_funded,
+          currency: data[i].TakerPays.currency,
+          issuer: data[i].TakerPays.issuer
+        }
       } else {
-        d.TakerPays = parseInt(Number(d.taker_pays_funded), 10);
+        offer.pays = Number(data[i].taker_pays_funded);
       }
 
-      d.TakerGets = Amount.from_json(d.TakerGets);
-      d.TakerPays = Amount.from_json(d.TakerPays);
+      offer.gets = Amount.from_json(offer.gets);
+      offer.pays = Amount.from_json(offer.pays);
 
       if (action === "asks") {
-        d.price = Amount.from_quality(d.BookDirectory,
-                                      d.TakerPays.currency(),
-                                      d.TakerPays.issuer(), {
-          base_currency: d.TakerGets.currency(),
+        offer.price = Amount.from_quality(data[i].BookDirectory,
+                                      offer.pays.currency(),
+                                      offer.pays.issuer(), {
+          base_currency: offer.gets.currency(),
           reference_date: new Date()
         });
       } else {
 
-        d.price = Amount.from_quality(d.BookDirectory,
-                                      d.TakerGets.currency(),
-                                      d.TakerGets.issuer(), {
+        offer.price = Amount.from_quality(data[i].BookDirectory,
+                                      offer.gets.currency(),
+                                      offer.pays.issuer(), {
           inverse: true,
-          base_currency: d.TakerPays.currency(),
+          base_currency: offer.pays.currency(),
           reference_date: new Date()
         });
       }
 
-      offers.push(d);
+      // exponent determines the number
+      // of decimals in the price
+      // precision determines the number
+      // of decimals in the size and sum
+      // not less than 0 and 4 orders of
+      // magintude greater than the price
+      if (!exponent) {
+        price = offer.price.to_human({group_sep: false});
+        exponent = Math.floor(Math.log(Number(price))/Math.log(10)) - sig + 1;
+        precision = exponent > -4 ? exponent + 4 : 0;
+      }
+
+      offers.push(offer);
+    }
+
+    for (i=0; i<offers.length; i++) {
+      if (rowCount >= max_rows) break;
+
+      amount = offers[i][type];
+      price = formatAmount(offers[i].price, {
+        bid : action === 'bids' ? true : false,
+        ask : action === 'asks' ? true : false
+      });
+
+      if (!sum) {
+        sum = amount;
+      } else {
+        sum = sum.add(amount);
+      }
+
+      if (!priceBook[price]) {
+        priceBook[price] = { };
+        priceBook[price].accounts = [];
+        priceBook[price].size = amount;
+        priceBook[price].price = Number(price);
+        priceBook[price].displayPrice = price;
+
+        rowCount++;
+
+      } else {
+        priceBook[price].size = priceBook[price].size.add(amount);
+      }
+
+      priceBook[price].sum = sum;
+      priceBook[price].accounts.push(offers[i].account);
+    }
+
+    var prices = Object.keys(priceBook);
+    prices.sort(function(a, b) {
+      if (action === 'asks') {
+        return Number(a) - Number(b);
+      } else {
+        return Number(b) - Number(a);
+      }
     });
 
-    var type = action === "asks" ? "TakerGets" : "TakerPays";
-    var sum;
-
-    offers.forEach(function(offer,index) {
-      if (sum) sum = offer.sum = sum.add(offer[type]);
-      else sum = offer.sum = offer[type];
-      offer.showSum   = valueFilter(offer.sum);
-      offer.showPrice = valueFilter(offer.price);
-
-      var showValue = action === 'bids' ? 'TakerPays' : 'TakerGets';
-      offer['show' + showValue] = valueFilter(offer[showValue]);
-      //console.log(offer.showPrice, offer.showSum, offer['show' + showValue]);
+    return prices.map(function(price) {
+      priceBook[price].displaySize = formatAmount(priceBook[price].size);
+      priceBook[price].displaySum = formatAmount(priceBook[price].sum);
+      priceBook[price].size = Number(priceBook[price].size.to_human({group_sep: false}));
+      priceBook[price].sum = Number(priceBook[price].sum.to_human({group_sep: false}));
+      return priceBook[price];
     });
-
-    return offers;
   }
 
 
@@ -252,21 +362,20 @@ var OrderBook = function (options) {
   function drawData (update) {
     if (!self.offers.bids || !self.offers.asks) return; //wait for both to load
     if (!self.offers.bids.length || !self.offers.asks.length) {
-      setStatus("No Orders");
+      setStatus('&nbsp');
       return;
     }
 
     var duration = update ? 0 : 250;
-
-    var bestBid = self.offers.bids[0].showPrice,
-      bestAsk   = self.offers.asks[0].showPrice;
+    var bestBid = self.offers.bids[0].price;
+    var bestAsk   = self.offers.asks[0].price;
 
     midpoint = (bestBid+bestAsk)/2;
 
     //add 0 size at best bid and ask
     lineData = self.offers.bids.slice(0).reverse();
-    lineData.push({showPrice:bestBid,showSum:0});
-    lineData.push({showPrice:bestAsk,showSum:0});
+    lineData.push({price: bestBid, sum: 0});
+    lineData.push({price: bestAsk, sum: 0});
     lineData = lineData.concat(self.offers.asks);
 
     if (lineData.length<3) {
@@ -275,27 +384,32 @@ var OrderBook = function (options) {
       return;
     }
 
-    setStatus("");
+    setStatus('');
     isLoading = false;
 
     //get rid of outliers, anything greater than 5 times the best price
-    var min = Math.max(d3.min(lineData, function(d) { return d.showPrice; }), bestBid/5),
-      max   = Math.min(d3.max(lineData, function(d) { return d.showPrice; }), bestAsk*5);
+    var min = Math.max(d3.min(lineData, function(d) { return d.price; }), bestBid/5);
+    var max = Math.min(d3.max(lineData, function(d) { return d.price; }), bestAsk*5);
 
-    for (var i=0; i<lineData.length; i++) {
-      if (lineData[i].showPrice<min || lineData[i].showPrice>max) lineData.splice(i--,1);
+    var i = lineData.length;
+
+    while (i--) {
+      if (lineData[i].price < min ||
+          lineData[i].price > max) {
+        lineData.splice(i, 1);
+      }
     }
 
-    xScale.domain(d3.extent(lineData, function(d) { return d.showPrice; })).range([0, options.width]);
-    yScale.domain([0, d3.max(lineData, function(d) { return d.showSum; })*1.1]).range([options.height, 0]);
+    xScale.domain(d3.extent(lineData, function(d) {return d.price;})).range([0, options.width]);
+    yScale.domain([0, d3.max(lineData, function(d) { return d.sum;})*1.1]).range([options.height, 0]);
 
     var center = xScale(midpoint);
 
     path.datum(lineData)
         .transition().duration(duration)
         .attr("d", d3.svg.line()
-          .x(function(d) { return xScale(d.showPrice); })
-          .y(function(d) { return yScale(d.showSum); }));
+          .x(function(d) { return xScale(d.price); })
+          .y(function(d) { return yScale(d.sum); }));
 
 
     xAxis.attr("transform", "translate(0," + yScale.range()[0] + ")").call(d3.svg.axis().scale(xScale))
@@ -311,27 +425,27 @@ var OrderBook = function (options) {
     path.style("opacity",1);
     depth.transition().duration(duration).style("opacity",1);
     loader.transition().duration(duration).style("opacity",0);
-
   }
 
 //show details on mouseover
   function mousemove () {
     var z = chart.style("zoom") || 1,
       tx  = Math.max(0, Math.min(options.width+options.margin.left, d3.mouse(this)[0])/z),
-      i   = d3.bisect(lineData.map(function(d) { return d.showPrice; }), xScale.invert(tx-options.margin.left));
+      i   = d3.bisect(lineData.map(function(d) { return d.price; }), xScale.invert(tx-options.margin.left));
       d   = lineData[i];
 
         //prevent 0 sum numbers at best bid/ask from displaying
-        if (d && !d.showSum) d = d.showPrice<midpoint ? lineData[i-1] : lineData[i+1];
+        if (d && !d.sum) d = d.price < midpoint ? lineData[i-1] : lineData[i+1];
 
     if (d) {
-      var quantity = d.showTakerPays ? d.showTakerPays : d.showTakerGets;
-      hover.attr("transform", "translate(" + xScale(d.showPrice) + ")").style("opacity",1);
-      focus.attr("transform", "translate(" + xScale(d.showPrice) + "," + yScale(d.showSum) + ")").style("opacity",1);
-      details.html("<span>Quantity:<b> " + quantity +
-        "</b></span><span>Total:<b> " +d.showSum + " " + baseCurrency + "</b></span>" +
-        "<span> @ <b>" + d.showPrice + " " + counterCurrency + "</b></span>")
-        .style("opacity",1);
+      hover.attr("transform", "translate(" + xScale(d.price) + ")")
+        .style("opacity", 1);
+      focus.attr("transform", "translate(" + xScale(d.price) + "," + yScale(d.sum) + ")")
+        .style("opacity", 1);
+      details.html("<span>Quantity:<b> " + d.displaySize +
+        "</b></span><span>Total:<b> " +d.displaySum + " " + baseCurrency + "</b></span>" +
+        "<span> @ <b>" + d.displayPrice + " " + counterCurrency + "</b></span>")
+        .style("opacity", 1);
     }
   }
 
@@ -356,14 +470,8 @@ var OrderBook = function (options) {
       rowEnter = row.enter().append("tr");
 
       rowEnter.append('td').attr('class','sum');
-      rowEnter.append('td').attr('class','dot');
-      rowEnter.append('td').attr('class','sum-decimal');
       rowEnter.append('td').attr('class','size');
-      rowEnter.append('td').attr('class','dot');
-      rowEnter.append('td').attr('class','size-decimal');
       rowEnter.append('td').attr('class','price');
-      rowEnter.append('td').attr('class','dot');
-      rowEnter.append('td').attr('class','price-decimal');
 
     } else {
 
@@ -371,74 +479,40 @@ var OrderBook = function (options) {
       rowEnter = row.enter().append("tr");
 
       rowEnter.append('td').attr('class','price');
-      rowEnter.append('td').attr('class','dot');
-      rowEnter.append('td').attr('class','price-decimal');
       rowEnter.append('td').attr('class','size');
-      rowEnter.append('td').attr('class','dot');
-      rowEnter.append('td').attr('class','size-decimal');
       rowEnter.append('td').attr('class','sum');
-      rowEnter.append('td').attr('class','dot');
-      rowEnter.append('td').attr('class','sum-decimal');
     }
 
-    row.select('.sum').html(function(d){return d[0]});
-    row.select('.sum-decimal').html(function(d){return d[1]});
-    row.select('.size').html(function(d){return d[2]});
-    row.select('.size-decimal').html(function(d){return d[3]});
-    row.select('.price').html(function(d){return d[4]});
-    row.select('.price-decimal').html(function(d){return d[5]});
-    row.selectAll('.dot').data(function (d) {
-      return d.length ? [true,true,true] : [false,false,false]})
-    .html(function(d) {return d ? '.' : '&nbsp'});
-    row.attr("title", function (d){ return d[6]; });
+    row.select('.sum').html(function(d){return formatAmount(d.displaySum)});
+    row.select('.size').html(function(d){return formatAmount(d.displaySize)});
+    row.select('.price').html(function(d){return formatAmount(d.displayPrice)});
+    row.attr('title', function(d){return d.accounts ? d.accounts.join('\n') : null});
     row.exit().remove();
 
     emitSpread();
     return;
 
-    function splitValue (d, opts) {
-
-      var parts;
-      var decimalPart;
-      var length;
-      var pad;
-
-      if (!d) return [];
-      if (!opts) {
-        opts = {
-          precision      : 8,
-          min_precision  : 4,
-          max_sig_digits : 10
-        };
+    function formatAmount (amount) {
+      if (!amount) {
+        return '&nbsp';
       }
 
-      value = d.to_human(opts);
-      parts = value.split(".");
-      parts[1] = parts[1] ? parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
-      return parts;
+      parts = amount.split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+      if (parts[1]) {
+        parts[1] = parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>');
+        parts[1] = '<span class="decimal">.' + parts[1] + '</span>';
+      }
+
+      return parts[1] ? parts[0] + parts[1] : parts[0];
     }
 
     function extractData(type) {
       var length = 30;
       var offers = self.offers[type].slice(0,length);
-      var data   = [];
-      offers.forEach(function(offer) {
-        var sum   = splitValue(offer.sum);
-        var size  = splitValue(type === 'asks' ? offer.TakerGets : offer.TakerPays);
-        var price = splitValue(offer.price);
 
-        data.push([
-          sum[0],
-          sum[1],
-          size[0],
-          size[1],
-          price[0],
-          price[1],
-          offer.Account
-        ]);
-      });
-
-      return pad(data, length);
+      return pad(offers, length);
     }
   }
 
@@ -493,16 +567,6 @@ var OrderBook = function (options) {
     }
   }
 
-  function valueFilter (amount, opts) {
-    return parseFloat(amount.to_human(
-      opts ? opts : {
-        precision      : 8,
-        min_precision  : 0,
-        max_sig_digits : 8,
-        group_sep      : false
-    }));
-  }
-
   function pad(data, length) {
     length -= data.length;
     if (length<1) return data;
@@ -513,19 +577,10 @@ var OrderBook = function (options) {
   }
 
   function emitSpread () {
-
     if (!self.offers.bids || !self.offers.asks) return;
-    if (options.emit) {
-      var opts = {
-        precision      : 4,
-        min_precision  : 4,
-        max_sig_digits : 10
-      }
-
-      options.emit('spread', {
-        bid : self.offers.bids[0] ? self.offers.bids[0].price.to_human(opts) : "0.0",
-        ask : self.offers.asks[0] ? self.offers.asks[0].price.to_human(opts) : "0.0"
-      });
-    }
+    options.emit('spread', {
+      bid : self.offers.bids[0] ? self.offers.bids[0].displayPrice : "0.0",
+      ask : self.offers.asks[0] ? self.offers.asks[0].displayPrice : "0.0"
+    });
   }
 }
