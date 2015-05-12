@@ -175,7 +175,7 @@ var OrderBook = function (options) {
         price = decimalAdjust('ceil', price, exponent);
         return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
       } else if (opts.bid) {
-        price = decimalAdjust('floor', price, exponent - sig + 1);
+        price = decimalAdjust('floor', price, exponent);
         return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
       }
 
