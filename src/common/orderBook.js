@@ -138,34 +138,30 @@ var OrderBook = function (options) {
     var priceBook = { };
     var offer;
     var price;
+    var sig = 4; //significant digits for price
+    var exponent;
     var precision;
-    var sizePrecision;
     var amount;
     var sum;
     var i;
 
-    function setPrecision(price) {
-      var exponent;
-      var sizeExponent;
-
-      exponent = Math.floor(Math.log(Number(price))/Math.log(10));
-      if (exponent < 0) {
-        precision = 3 - exponent;
-      } else if (exponent < 4) {
-        precision = 5 - exponent
-      } else {
-        precision = 2;
+    function decimalAdjust(type, value, exp) {
+      // If the exp is undefined or zero...
+      if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
       }
-
-      // invert for size
-      exponent = 0 - exponent + 2;
-      if (exponent < 0) {
-        sizePrecision = 3 - exponent;
-      } else if (exponent < 4) {
-        sizePrecision = 5 - exponent
-      } else {
-        sizePrecision = 2;
+      value = +value;
+      exp = +exp;
+      // If the value is not a number or the exp is not an integer...
+      if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
       }
+      // Shift
+      value = value.toString().split('e');
+      value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+      // Shift back
+      value = value.toString().split('e');
+      return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
     }
 
     function formatAmount(price, opts) {
@@ -173,15 +169,17 @@ var OrderBook = function (options) {
         price = Number(price.to_human({group_sep: false}));
       }
 
-      if (opts.max_sig_digits) {
-        price = price.toPrecision(opts.max_sig_digits);
+      if (!opts) opts = {};
+
+      if (opts.ask) {
+        price = decimalAdjust('ceil', price, exponent);
+        return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
+      } else if (opts.bid) {
+        price = decimalAdjust('floor', price, exponent - sig + 1);
+        return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
       }
 
-      if (opts.precision) {
-        price = Number(price).toFixed(opts.precision);
-      }
-
-      return price;
+      return price.toFixed(precision);
     }
 
     for(i=0; i<data.length; i++) {
@@ -237,8 +235,16 @@ var OrderBook = function (options) {
         });
       }
 
-      if (!precision) {
-        setPrecision(offer.price.to_human({group_sep: false}));
+      // exponent determines the number
+      // of decimals in the price
+      // precision determines the number
+      // of decimals in the size and sum
+      // not less than 0 and 4 orders of
+      // magintude greater than the price
+      if (!exponent) {
+        price = offer.price.to_human({group_sep: false});
+        exponent = Math.floor(Math.log(Number(price))/Math.log(10)) - sig + 1;
+        precision = exponent > -4 ? exponent + 4 : 0;
       }
 
       offers.push(offer);
@@ -249,8 +255,8 @@ var OrderBook = function (options) {
 
       amount = offers[i][type];
       price = formatAmount(offers[i].price, {
-        max_sig_digits: 4,
-        precision: precision
+        bid : action === 'bids' ? true : false,
+        ask : action === 'asks' ? true : false
       });
 
       if (!sum) {
@@ -286,16 +292,8 @@ var OrderBook = function (options) {
     });
 
     return prices.map(function(price) {
-      priceBook[price].displaySize = formatAmount(priceBook[price].size, {
-        precision: sizePrecision,
-        max_sig_digits: 6
-      });
-
-      priceBook[price].displaySum = formatAmount(priceBook[price].sum, {
-        precision: sizePrecision,
-        max_sig_digits: 6
-      });
-
+      priceBook[price].displaySize = formatAmount(priceBook[price].size);
+      priceBook[price].displaySum = formatAmount(priceBook[price].sum);
       priceBook[price].size = Number(priceBook[price].size.to_human({group_sep: false}));
       priceBook[price].sum = Number(priceBook[price].sum.to_human({group_sep: false}));
       return priceBook[price];
@@ -500,7 +498,7 @@ var OrderBook = function (options) {
       }
 
       parts = amount.split(".");
-      parts[0] = Number(parts[0]).toLocaleString();
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
       if (parts[1]) {
         parts[1] = parts[1].replace(/0(0+)$/, '0<span class="insig">$1</span>');
