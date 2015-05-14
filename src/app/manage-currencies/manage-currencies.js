@@ -107,7 +107,7 @@ angular.module( 'ripplecharts.manage-currencies', [
       description.html('Please enter a valid currency code.');
     } else {
       addCheckbox(newCurr);
-      description.html('');
+      description.html('Please select or add a gateway in the <a href="#/manage-gateway">"Manage Gateways"</a> tab.');
       flashSaved();
       currencies = gateways.getCurrencies(true);
     }
