@@ -109,14 +109,12 @@ ApiHandler = function (url) {
     time = time || moment.utc().format();
 
     request.post(JSON.stringify({
-      startTime     : time,
-      endTime       : moment.utc('2013-01-01').format(),
+      startTime     : moment.utc('2013-01-01').format(),
       timeIncrement : "all"
 
     })).on('load', function(xhr){
       data  = JSON.parse(xhr.response);
-      num   = data[1] && data[1][1] ? data[1][1] : 0;
-      callback (null, num);
+      callback (null, data || 0);
 
     }).on('error', function(xhr){
       callback({status:xhr.status,text:xhr.statusText,message:xhr.response});

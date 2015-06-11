@@ -71,7 +71,7 @@ angular.module( 'ripplecharts.landing', [
     getTotalAccounts();  //we want to retreive this number every time we reconnect
   });
 
-  if (remote._connected) getTotalAccounts();
+  getTotalAccounts();
 
 
   //get "fixed" multimarket charts for the most important markets
