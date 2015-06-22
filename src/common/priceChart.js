@@ -416,7 +416,7 @@ PriceChart = function (options) {
 
     // Update the x-scale.
     xScale
-      .domain([startTime, endTime])
+      .domain([startTime, moment.utc(endTime).add(num/35*intervalSeconds, 'seconds')])
       .range([0, options.width]);
 
     // Update the volume scale.
