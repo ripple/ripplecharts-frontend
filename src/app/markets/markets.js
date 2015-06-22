@@ -84,7 +84,7 @@ angular.module( 'ripplecharts.markets', [
     d3.select("#base").call(dropdownA);
     d3.select("#quote").call(dropdownB);
   });
-  
+
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected($scope.trade);
     dropdownB.selected($scope.base);
@@ -92,7 +92,7 @@ angular.module( 'ripplecharts.markets', [
     d3.select("#base").call(dropdownA);
     d3.select("#quote").call(dropdownB);
     loaded = true;
-    
+
     swap         = $scope.trade;
     $scope.trade = $scope.base;
     $scope.base  = swap;
@@ -108,7 +108,8 @@ angular.module( 'ripplecharts.markets', [
       //{name: "5s",  interval:"second", multiple:5,  offset: function(d) { return d3.time.hour.offset(d, -1); }},//disableding purposes only
       {name: "12h",  interval:"minute", multiple:5,   offset: function(d) { return d3.time.hour.offset(d, -12); }},
       {name: "1d",  interval:"minute",  multiple:15,  offset: function(d) { return d3.time.day.offset(d, -1); }},
-      {name: "3d",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -3); }},
+      {name: "3d",  interval:"minute",  multiple:30,  offset: function(d) { return d3.time.day.offset(d, -3); }},
+      {name: "1w",  interval:"hour",    multiple:1,   offset: function(d) { return d3.time.day.offset(d, -7); }},
       {name: "2w",  interval:"hour",    multiple:2,   offset: function(d) { return d3.time.day.offset(d, -14); }},
       {name: "1m",  interval:"hour",    multiple:4,   offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "3m",  interval:"day",     multiple:1,   offset: function(d) { return d3.time.month.offset(d, -3); }},
@@ -256,6 +257,7 @@ angular.module( 'ripplecharts.markets', [
     .data([
       {name: "5m",  interval:"minute",  multiple:5 },
       {name: "15m", interval:"minute",  multiple:15 },
+      {name: "30m", interval:"minute",  multiple:30 },
       {name: "1h",  interval:"hour",    multiple:1 },
       {name: "2h",  interval:"hour",    multiple:2 },
       {name: "4h",  interval:"hour",    multiple:4 },
@@ -376,6 +378,9 @@ angular.module( 'ripplecharts.markets', [
         break;
       case "15m":
         num = diff/(900);
+        break;
+      case "30m":
+        num = diff/(1800);
         break;
       case "1h":
         num = diff/(3600);
