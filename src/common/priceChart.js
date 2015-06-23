@@ -76,15 +76,6 @@ PriceChart = function (options) {
       .attr("width", options.width)
       .attr("height", options.height);
 
-    gEnter.append("g")
-      .attr("class", "volumeBars")
-      .attr("clip-path", "url(#clip)");
-
-    gEnter.append("g")
-      .attr("class", "candlesticks")
-      .attr("clip-path", "url(#clip)");
-
-    gEnter.append("path").attr("class", "line");
     gEnter.append("g").attr("class", "x axis");
 
     gEnter.append("g").attr("class", "volume axis")
@@ -99,6 +90,16 @@ PriceChart = function (options) {
         .attr("class", "title")
         .attr("transform", "rotate(-90)")
         .attr("y",-10).attr("x",-100);
+
+    gEnter.append("path").attr("class", "line");
+
+    gEnter.append("g")
+      .attr("class", "volumeBars")
+      .attr("clip-path", "url(#clip)");
+
+    gEnter.append("g")
+      .attr("class", "candlesticks")
+      .attr("clip-path", "url(#clip)");
 
 //  gradient for volume bars
     gradient = svg.append("svg:defs")
