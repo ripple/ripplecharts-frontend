@@ -109,9 +109,9 @@ ApiHandler = function (url) {
     time = time || moment.utc().format();
 
     request.post(JSON.stringify({
-      startTime     : moment.utc('2013-01-01').format(),
-      timeIncrement : "all"
-
+      startTime: moment.utc('2013-01-01').format(),
+      endTime: time,
+      timeIncrement: "all"
     })).on('load', function(xhr){
       data  = JSON.parse(xhr.response);
       callback (null, data || 0);
