@@ -109,10 +109,11 @@ var TotalHistory = function (options) {
 
     $.each(resultsArray, function(i, value) {
       //Processing dates for x-axis labels
-      var startTime = value.startTime.split('T')[0];
-      splitDate = startTime.split("-");
-      year = splitDate[0].slice(-2)
-      object.dateData.push(splitDate[1]+"-"+splitDate[2]+"-"+year);
+
+      //var startTime = value.startTime.split('T')[0];
+      //splitDate = startTime.split("-");
+      //year = splitDate[0].slice(-2)
+      object.dateData.push(moment.utc(value.startTime).format('MM-DD-YYYY'));
 
       //Add to total
       object.total[i] += value.total;
