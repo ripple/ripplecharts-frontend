@@ -786,6 +786,11 @@ function ($window, matrixFactory, rippleName) {
         height = width;
       }
 
+      if (Number(svg.attr('width')) === width &&
+          Number(svg.attr('height')) === height) {
+        return;
+      }
+
       dims[0] = width - marg[1] - marg[3]; // WIDTH
       dims[1] = height - marg[0] - marg[2]; // HEIGHT
 
@@ -815,7 +820,7 @@ function ($window, matrixFactory, rippleName) {
     }
 
     resize();
-    addResizeListener($el[0], resize);
+    addResizeListener(div.node(), resize);
   }; // END LINK FUNCTION
 
   return {
