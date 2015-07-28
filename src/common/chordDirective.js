@@ -190,6 +190,15 @@ function ($window, matrixFactory, rippleName) {
       rate: 1
     }]);
 
+    $scope.update = function (resize) {
+      $scope.drawChords($scope.chordData || []);
+      if (!resize) {
+        //update sidebars
+        setTimeout(updateSidebars, 1000);
+        setTimeout(updateFilters, 1000);
+      }
+    };
+
     /**
      * drawChords
      */
@@ -354,10 +363,6 @@ function ($window, matrixFactory, rippleName) {
       .duration(1000)
       .style("opacity", 0)
       .remove();
-
-      //update sidebars
-      setTimeout(updateSidebars, 2000);
-      setTimeout(updateFilters, 2000);
 
 /*
       //disable transitions
@@ -772,7 +777,7 @@ function ($window, matrixFactory, rippleName) {
     }
 
     function resize () {
-      height = window.innerHeight * 0.9;
+      height = window.innerHeight - 160;
       width = $el[0].clientWidth;
 
       if (height < 320 || width < 320) {
@@ -785,7 +790,7 @@ function ($window, matrixFactory, rippleName) {
       dims[1] = height - marg[0] - marg[2]; // HEIGHT
 
       smallest = dims[0] < dims[1] ? dims[0] : dims[1];
-      innerRadius = (smallest * 1/3);
+      innerRadius = (smallest * 0.38);
       outerRadius = innerRadius + innerRadius * 1/20;
 
       x = (dims[0] / 2) + marg[3];
@@ -806,7 +811,7 @@ function ($window, matrixFactory, rippleName) {
 
       div.attr('height', height);
       container.attr("transform", "translate(" + x + "," + y + ")");
-      $scope.update();
+      $scope.update(true);
     }
 
     resize();

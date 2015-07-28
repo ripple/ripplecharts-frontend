@@ -22,9 +22,8 @@ angular.module( 'ripplecharts.trade-volume', [
 
 .controller( 'TradeVolumeCtrl', function TradeVolumeCtrl( $scope, $location, rippleName ) {
 
-  $scope.update = function () {
-    $scope.drawChords($scope.chordData || []);
-  };
+  var api = new ApiHandler(API);
+
 /*
   $scope.$watch(function () {
     return $location.path();
@@ -46,37 +45,43 @@ angular.module( 'ripplecharts.trade-volume', [
   //loadWallet('rBRXcf7BYs2CN7GfAAXjLQPEh7d46BP9RE');
   loadTopMarkets();
 
-  var url ='http://52.6.25.253:7111/v2/exchange_rates/';
-  var currencies = [
-    'USD.rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B',
-    'JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN',
-    'CNY.rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y',
-    'BTC.rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q',
-    'EUR.rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'
-  ];
-
-  var rates = [];
-  var count = currencies.length;
-
-  currencies.forEach(function(currency) {
-    d3.json(url + 'XRP/'+currency)
-    .get(function(err, resp) {
-      if (err) {
-        console.log(err);
+  api.exchangeRates({
+    pairs:[
+      {
+        counter : {currency : 'USD', issuer : 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B'},
+        base    : {currency:'XRP'}
+      },
+      {
+        counter : {currency : 'JPY', issuer : 'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN'},
+        base    : {currency:'XRP'}
+      },
+      {
+        counter : {currency : 'CNY', issuer : 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y'},
+        base    : {currency:'XRP'}
+      },
+      {
+        counter : {currency : 'BTC', issuer : 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
+        base    : {currency:'XRP'}
+      },
+      {
+        counter : {currency : 'EUR', issuer : 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
+        base    : {currency:'XRP'}
       }
+    ]
 
-      if (resp) {
+  }, function(err, data) {
+    var rates = [];
+    if (data) {
+      data.forEach(function(d) {
         rates.push({
-          currency: currency.split('.')[0],
-          issuer: currency.split('.')[1],
-          rate: resp.rate
+          currency: d.counter.currency,
+          issuer: d.counter.issuer,
+          rate: d.rate
         });
-      }
+      });
 
-      if (!--count) {
-        $scope.setNormalizationRates(rates, 'USD');
-      }
-    });
+      $scope.setNormalizationRates(rates, 'USD');
+    }
   });
 
   function loadTopMarkets() {
