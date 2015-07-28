@@ -27,7 +27,7 @@ angular.module( 'ripplecharts.activeAccounts', [
   var counter = store.session.get('traderCounter') || store.get('traderCounter') || {"currency": "XRP"};
   var period  = store.session.get('traderPeriod')  || store.get('traderPeriod')  || "24h";
   var metric  = store.session.get('traderMetric')  || store.get('traderMetric')  || "volume";
-   
+
   var map = new ActiveAccounts({
     url    : API,
     id     : 'activeAccounts',
@@ -37,7 +37,7 @@ angular.module( 'ripplecharts.activeAccounts', [
   });
 
 //set up the currency pair dropdowns
-  var loaded  = false; 
+  var loaded  = false;
   $scope.$watch('theme', function(){
     dropdownB = ripple.currencyDropdown(gateways).selected(counter)
       .on("change", function(d) {
@@ -53,7 +53,7 @@ angular.module( 'ripplecharts.activeAccounts', [
     d3.select("#base").call(dropdownA);
     d3.select("#trade").call(dropdownB);
   });
-  
+
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected(counter);
     dropdownB.selected(base);
@@ -61,7 +61,7 @@ angular.module( 'ripplecharts.activeAccounts', [
     d3.select("#base").call(dropdownA);
     d3.select("#trade").call(dropdownB);
     loaded = true;
-    
+
     swap    = counter;
     counter = base;
     base    = swap;
@@ -73,14 +73,14 @@ angular.module( 'ripplecharts.activeAccounts', [
   loadPair();
   function loadPair() {
     store.set('traderBase',    base);
-    store.set('traderCounter', counter); 
+    store.set('traderCounter', counter);
     store.session.set('traderBase',    base);
     store.session.set('traderCounter', counter);
-    
+
     map.load(base, counter);
   }
-  
+
   $scope.$on("$destroy", function(){
-    
+
   });
 });

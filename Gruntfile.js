@@ -335,7 +335,8 @@ module.exports = function ( grunt ) {
           "asi"      : true,
           "sub"      : true,
           "evil"     : true,
-          "-W099"    : true
+          "-W099"    : true,
+          "-W083"    : true
       },
       globals: {}
     },

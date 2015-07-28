@@ -9,6 +9,7 @@ angular.element(document).ready(function() {
     'ripplecharts.manage-gateways',
     'ripplecharts.multimarkets',
     'ripplecharts.activeAccounts',
+    'ripplecharts.trade-volume',
     'ripplecharts.graph',
     'ripplecharts.accounts',
     'ripplecharts.value',
@@ -16,7 +17,10 @@ angular.element(document).ready(function() {
     'ui.state',
     'ui.route',
     'snap',
-    'gateways'
+    'gateways',
+    'rippleName',
+    'matrixFactory',
+    'chordDiagram'
   ])
 
   .config( function myAppConfig ( $stateProvider, $urlRouterProvider ) {
@@ -111,25 +115,9 @@ angular.element(document).ready(function() {
       //setTimeout(function(){remote.disconnect()},5000);
       //setTimeout(function(){remote.connect()},10000);
     });
-
   });
 
-  //load gateways file before starting the app
-  d3.json("assets/gateways.json", function(error, data) {
-    gateways = data;
-    angular.bootstrap(document, ['ripplecharts']);
-
-/*
-    api = new ApiHandler("http://localhost:5993/api");
-    api.networkValue({
-
-    }, function(data){
-      console.log(data);
-    }, function(data){
-      console.log(data);
-    });
-*/
-  });
+  angular.bootstrap(document, ['ripplecharts']);
 });
 
 function commas (number, precision) {
