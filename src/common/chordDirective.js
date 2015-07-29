@@ -764,7 +764,6 @@ function ($window, matrixFactory, rippleName) {
               (d.counter_issuer ? ':' + d.counter_issuer : '');
           }
 
-          console.log(market);
           $window.location.href = '#markets/' + market;
         })
 
@@ -808,7 +807,7 @@ function ($window, matrixFactory, rippleName) {
     function resize () {
       var min = 380;
 
-      height = window.innerHeight - 160;
+      height = window.innerHeight - 220;
       width = $el[0].clientWidth - 300;
 
       if (width > min + 400) {
