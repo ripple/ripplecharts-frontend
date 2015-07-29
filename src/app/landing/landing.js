@@ -31,7 +31,6 @@ angular.module( 'ripplecharts.landing', [
     "EUR" : "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q", //snapswap
     "JPY" : "r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN", //tokoyo jpy
     "CNY" : "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA", //rippleChina
-    "KRW" : "rUkMKjQitpgAM5WTGk79xpjT38DEJY283d", //pax moneta
     "XRP" : ""
   }
 

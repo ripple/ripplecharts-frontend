@@ -24,6 +24,7 @@ function ($window, matrixFactory, rippleName) {
     var y;
     var arc;
     var path;
+    var textScale;
 
     /**
      * currencyColor
@@ -46,8 +47,8 @@ function ($window, matrixFactory, rippleName) {
 
       if (typeof c !== 'string') {
         c[0] -= Math.floor(c[0] * (rank%3*0.1));
-        c[1] -= Math.floor(c[1] * (rank%3*0.25));
-        c[2] -= Math.floor(c[2] * (rank%3*0.3));
+        c[1] -= Math.floor(c[1] * (rank%3*0.1));
+        c[2] -= Math.floor(c[2] * (rank%3*0.1));
 
          c = 'rgb('+c[0]+','+c[1]+','+c[2]+')';
       }
@@ -280,8 +281,16 @@ function ($window, matrixFactory, rippleName) {
       .on("click", groupClick)
       .on("mouseover", groupMouseover)
       .on("mouseout", groupMouseout)
-      .attr("transform", 'scale(3), translate(-100,-100)')
-      .style('opacity', 0)
+      .attr("transform", function (d) {
+        d.angle = (d.startAngle + d.endAngle) / 2;
+        var r = "rotate(" + (d.angle * 180 / Math.PI - 90) + ")";
+        var t = " translate(" + (outerRadius*3) + ")";
+        var s = " scale(" + textScale(smallest) + ")";
+        return r + t + s + (d.angle > Math.PI ? " rotate(180)" : " rotate(0)");
+      })
+      .attr("text-anchor", function (d) {
+        return d.angle > Math.PI ? "end" : "begin";
+      });
 
       textBox.append('tspan')
       .attr('class', 'currency')
@@ -308,7 +317,7 @@ function ($window, matrixFactory, rippleName) {
       groups.select("path")
       .transition()
       .duration(function(d,i) {
-        return 1200 + i*100;
+        return i*80;
       })
       .attrTween("d", matrix.groupTween(arc))
       .style('opacity', 1);
@@ -337,12 +346,11 @@ function ($window, matrixFactory, rippleName) {
       .delay(function(d,i) {
         return i*100;
       })
-      .duration(1200)
-      .style('opacity', 1)
+      .duration(800)
       .attr("transform", function (d) {
         var r = "rotate(" + (d.angle * 180 / Math.PI - 90) + ")";
         var t = " translate(" + (outerRadius + (outerRadius - innerRadius)/2) + ")";
-        var s = " scale(" + smallest/1000 + ")";
+        var s = " scale(" + textScale(smallest)  + ")";
         return r + t + s + (d.angle > Math.PI ? " rotate(180)" : " rotate(0)");
       })
       .attr("text-anchor", function (d) {
@@ -360,7 +368,7 @@ function ($window, matrixFactory, rippleName) {
 
       groups.exit()
       .transition()
-      .duration(1000)
+      .duration(200)
       .style("opacity", 0)
       .remove();
 
@@ -553,9 +561,9 @@ function ($window, matrixFactory, rippleName) {
         el.append('div').attr('class','amount')
         .html(nFormat(chord.amount) + ' <span>' + chord.base_currency + '</span>');
         el.append('div').attr('class','percent')
-        .html('<span>percent of total volume:</span> ' + (chord.volume/total*100).toFixed(2) + '%');
+        .html((chord.volume/total*100).toFixed(2) + '% <span>of Total Volume</span>');
         el.append('div').attr('class','count')
-        .html('<span># of exchanges:</span> ' + commas(chord.count));
+        .html('<span># of Exchanges:</span> ' + commas(chord.count));
 
 
       // currency group
@@ -691,7 +699,7 @@ function ($window, matrixFactory, rippleName) {
 
       groups.select('.groupVolume').html(function(d) {
         return nFormat(normalize(d.volume)) + ' <b>' + exCurrency + '</b>' +
-          '<span class="right percent">(' + (d.volume/total*100).toFixed(2) + '%)</span>';
+          '<span class="right percent">' + (d.volume/total*100).toFixed(2) + '%</span>';
       });
 
       groups.select('.groupAmount').html(function(d) {
@@ -739,6 +747,27 @@ function ($window, matrixFactory, rippleName) {
         .html('<td></td><td></td>' +
           '<td class="percent-group"></td><td class="percent-total"></td>');
 
+        cEnter.on('click', function(d) {
+          var co1 = currencyOrder.indexOf(d.base_currency);
+          var co2 = currencyOrder.indexOf(d.counter_currency);
+          var market;
+
+          if (co2 < co1) {
+            market = d.counter_currency +
+              (d.counter_issuer ? ':' + d.counter_issuer : '') + '/' +
+              d.base_currency +
+              (d.base_issuer ? ':' + d.base_issuer : '');
+          } else {
+            market = d.base_currency +
+              (d.base_issuer ? ':' + d.base_issuer : '') + '/' +
+              d.counter_currency +
+              (d.counter_issuer ? ':' + d.counter_issuer : '');
+          }
+
+          console.log(market);
+          $window.location.href = '#markets/' + market;
+        })
+
         components.select('td:nth-child(1)').html(function(d) {
           var co1 = currencyOrder.indexOf(d.base_currency);
           var co2 = currencyOrder.indexOf(d.counter_currency);
@@ -777,11 +806,17 @@ function ($window, matrixFactory, rippleName) {
     }
 
     function resize () {
-      height = window.innerHeight - 160;
-      width = $el[0].clientWidth;
+      var min = 380;
 
-      if (height < 320 || width < 320) {
-        width = height = 320;
+      height = window.innerHeight - 160;
+      width = $el[0].clientWidth - 300;
+
+      if (width > min + 400) {
+        width -= 400;
+      }
+
+      if (height < min || width < min) {
+        width = height = min;
       } else if (width < height) {
         height = width;
       }
@@ -795,7 +830,7 @@ function ($window, matrixFactory, rippleName) {
       dims[1] = height - marg[0] - marg[2]; // HEIGHT
 
       smallest = dims[0] < dims[1] ? dims[0] : dims[1];
-      innerRadius = (smallest * 0.38);
+      innerRadius = (smallest * 1/3);
       outerRadius = innerRadius + innerRadius * 1/20;
 
       x = (dims[0] / 2) + marg[3];
@@ -807,6 +842,10 @@ function ($window, matrixFactory, rippleName) {
 
       path = d3.svg.chord()
       .radius(innerRadius);
+
+      textScale = d3.scale.log()
+      .domain([1000, 350])
+      .range([1, 0.45]);
 
       svg.attr({
         width: width,
