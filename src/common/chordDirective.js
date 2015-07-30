@@ -91,6 +91,8 @@ function ($window, matrixFactory, rippleName) {
     var container = svg.append("g")
     .attr("class", "container")
 
+    var defs = svg.append("defs");
+
     var sidebarLeft = div.append('div')
     .attr('class','sidebar left');
 
@@ -231,23 +233,75 @@ function ($window, matrixFactory, rippleName) {
           ++tracker[c.currency] : 1;
       });
 
+      //create gradients
+      var gradients = defs.selectAll(".grad")
+      .data(list, function(d) {
+        return d._id;
+      });
+
+      var gradientEnter = gradients.enter()
+      .append("radialGradient")
+      .attr('class','grad')
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("id", function(d) {
+        return "grad-" + d._id;
+      });
+
+      gradientEnter.append('stop')
+      .attr('class', 'stop1');
+
+      gradientEnter.append('stop')
+      .attr('class', 'stop2');
+
+      gradients.attr("cx", function(d) {
+        var angle = (d.target.startAngle + d.target.endAngle) / 2;
+        return Math.sin(angle) * innerRadius;
+      })
+      .attr("cy", function(d) {
+        var angle = (d.target.startAngle + d.target.endAngle) / 2;
+        return 0 - Math.cos(angle) * innerRadius;
+      })
+      .attr("r", function(d) {
+        var angle = (d.target.startAngle - d.source.startAngle) / 4;
+        return innerRadius / angle;
+      })
+
+      gradients.select('.stop1')
+      .attr("offset", "20%")
+      .style("stop-color", function(d) {
+        var c1 = d.target._id.split('.')[0];
+        return currencyColor(c1, d.target.index);
+      });
+
+      gradients.select('.stop2')
+      .attr("offset", "100%")
+      .style("stop-color", function(d) {
+        var c2 = d.source._id.split('.')[0];
+        return currencyColor(c2, d.source.index);
+      });
+
+      gradients.exit().remove();
+
       //handle chords
       var chords = container.selectAll("path.chord")
       .data(list, function (d) { return d._id; });
 
       chords.enter().append("path")
       .attr("class", "chord")
-      .style("fill", function (d) {
-        return currencyColor(d.currency, d.index);
+      .attr("fill", function(d) {
+        return "url(#grad-" + d._id + ")";
       })
-      .style("stroke", function (d) {
-        return currencyColor(d.currency, d.index);
+      .attr("stroke", function(d) {
+        return "url(#grad-" + d._id + ")";
       })
       .attr("d", path)
       .on("mouseover", chordMouseover)
       .on("mouseout", chordMouseout)
+      .style('opacity', 0)
+      .on('click', chordClick);
 
       chords
+      .style('opacity', 1)
       .transition()
       .duration(2000)
       .attrTween("d", matrix.chordTween(path))
@@ -303,17 +357,7 @@ function ($window, matrixFactory, rippleName) {
       .text(function(d) {
         return d._id.split('.')[1] || '';
       });
-/*
-        var c = d._id.split('.');
-        var currency;
-        var issuer;
 
-        currency = '<text class="currency">' + c[0] + '</text>';
-        issuer = c[1] ? '<text class="issuer">' + c[1] + '</text>' : '';
-        console.log(currency + issuer);
-        return currency + issuer;
-      });
-*/
       groups.select("path")
       .transition()
       .duration(function(d,i) {
@@ -381,66 +425,92 @@ function ($window, matrixFactory, rippleName) {
         Date.now = now;
       }
 */
-      function groupClick(d) {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        addFilter(d._id);
-        resetChords();
-      }
-
-      function chordMouseover(d) {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        dimChords(d);
-        updateSidebars(d);
-      }
-
-      function chordMouseout() {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        resetChords();
-      }
-
-      function groupMouseover(d) {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        dimChords(d);
-        updateSidebars(d);
-      }
-
-      function groupMouseout() {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        resetChords();
-      }
-
-      function resetChords() {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        container.selectAll("path.chord").classed('faded', false);
-        container.selectAll("path.chord").classed('highlight', false);
-        updateSidebars();
-      }
-
-      function dimChords(d) {
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
-        container.selectAll("path.chord").classed('faded', function (p) {
-          if (d.source) { // COMPARE CHORD IDS
-            return (p._id === d._id) ? false : true;
-          } else { // COMPARE GROUP IDS
-            return (p.source._id === d._id || p.target._id === d._id) ? false : true;
-          }
-        });
-        container.selectAll("path.chord").classed('highlight', function (p) {
-          if (d.source) { // COMPARE CHORD IDS
-            return (p._id === d._id) ? true : false;
-          } else { // COMPARE GROUP IDS
-            return (p.source._id === d._id || p.target._id === d._id) ? true : false;
-          }
-        });
-      }
     }; // END DRAWCHORDS FUNCTION
+
+
+    function chordClick(d) {
+      if (d.source) {
+        d = d.source.value.data[0];
+      }
+
+      var co1 = currencyOrder.indexOf(d.base_currency);
+      var co2 = currencyOrder.indexOf(d.counter_currency);
+      var market;
+
+      if (co2 < co1) {
+        market = d.counter_currency +
+          (d.counter_issuer ? ':' + d.counter_issuer : '') + '/' +
+          d.base_currency +
+          (d.base_issuer ? ':' + d.base_issuer : '');
+      } else {
+        market = d.base_currency +
+          (d.base_issuer ? ':' + d.base_issuer : '') + '/' +
+          d.counter_currency +
+          (d.counter_issuer ? ':' + d.counter_issuer : '');
+      }
+
+      $window.location.href = '#markets/' + market;
+    }
+
+    function groupClick(d) {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      addFilter(d._id);
+      resetChords();
+    }
+
+    function chordMouseover(d) {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      dimChords(d);
+      updateSidebars(d);
+    }
+
+    function chordMouseout() {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      resetChords();
+    }
+
+    function groupMouseover(d) {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      dimChords(d);
+      updateSidebars(d);
+    }
+
+    function groupMouseout() {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      resetChords();
+    }
+
+    function resetChords() {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      container.selectAll("path.chord").classed('faded', false);
+      container.selectAll("path.chord").classed('highlight', false);
+      updateSidebars();
+    }
+
+    function dimChords(d) {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+      container.selectAll("path.chord").classed('faded', function (p) {
+        if (d.source) { // COMPARE CHORD IDS
+          return (p._id === d._id) ? false : true;
+        } else { // COMPARE GROUP IDS
+          return (p.source._id === d._id || p.target._id === d._id) ? false : true;
+        }
+      });
+      container.selectAll("path.chord").classed('highlight', function (p) {
+        if (d.source) { // COMPARE CHORD IDS
+          return (p._id === d._id) ? true : false;
+        } else { // COMPARE GROUP IDS
+          return (p.source._id === d._id || p.target._id === d._id) ? true : false;
+        }
+      });
+    }
 
     function normalize(amount) {
       return amount * (exRate || 1);
@@ -741,31 +811,12 @@ function ($window, matrixFactory, rippleName) {
           return d.base + d.counter;
         });
 
-        var cEnter = components.enter()
+        components.enter()
         .append('tr')
         .attr('class', 'component')
         .html('<td></td><td></td>' +
-          '<td class="percent-group"></td><td class="percent-total"></td>');
-
-        cEnter.on('click', function(d) {
-          var co1 = currencyOrder.indexOf(d.base_currency);
-          var co2 = currencyOrder.indexOf(d.counter_currency);
-          var market;
-
-          if (co2 < co1) {
-            market = d.counter_currency +
-              (d.counter_issuer ? ':' + d.counter_issuer : '') + '/' +
-              d.base_currency +
-              (d.base_issuer ? ':' + d.base_issuer : '');
-          } else {
-            market = d.base_currency +
-              (d.base_issuer ? ':' + d.base_issuer : '') + '/' +
-              d.counter_currency +
-              (d.counter_issuer ? ':' + d.counter_issuer : '');
-          }
-
-          $window.location.href = '#markets/' + market;
-        })
+          '<td class="percent-group"></td><td class="percent-total"></td>')
+        .on('click', chordClick)
 
         components.select('td:nth-child(1)').html(function(d) {
           var co1 = currencyOrder.indexOf(d.base_currency);
