@@ -7,15 +7,12 @@ function ($window, matrixFactory, rippleName) {
     var div  = d3.select($el[0]).attr('class', 'chord-chart');
     var height;
     var width;
-    var marg = [10, 10, 10, 10]; // TOP, RIGHT, BOTTOM, LEFT
     var dims = []; // USABLE DIMENSIONS
     var currencyOrder = ['XAU', 'XAG', 'BTC', 'LTC', 'XRP', 'EUR', 'USD', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'CNY'];
     var xrpRates = {
       XRP : 1
     };
     var filters = {};
-    var exCurrency = 'XRP';
-    var exRate = 1;
     var chordData;
     var smallest;
     var innerRadius;
@@ -25,6 +22,36 @@ function ($window, matrixFactory, rippleName) {
     var arc;
     var path;
     var textScale;
+
+    var exch = (function () {
+
+      var exCurrency = 'USD';
+      var exRates = {};
+      var obj = {};
+
+      obj.currency = function(currency) {
+        if (currency) {
+          exCurrency = currency;
+        } else if (exRates[exCurrency]) {
+          return exCurrency;
+        } else {
+          return 'XRP';
+        }
+      };
+
+      obj.setRates = function (rates) {
+        exRates = {};
+        rates.forEach(function(r) {
+          exRates[r.currency] = r.rate;
+        });
+      }
+
+      obj.rate = function() {
+        return exRates[exCurrency] || 1
+      };
+
+      return obj;
+    })();
 
     /**
      * currencyColor
@@ -136,26 +163,24 @@ function ($window, matrixFactory, rippleName) {
     sidebarRight.append('div')
     .attr('class','chord');
 
-    $scope.setNormalizationRates = function(rates, selected) {
+    $scope.setNormalizationRates = function(rates) {
       rates.push({
         currency: 'XRP',
         rate: 1
       });
 
+      exch.setRates(rates);
+
       var select = sidebarLeft.select('.normalization select');
       var options = select.selectAll('option')
       .data(rates, function(d) { return d.currency });
-
-      if (selected) {
-        exCurrency = selected;
-      }
 
       options.enter().append('option').html(function(d) {
         return d.currency;
       });
 
       options.property('selected', function(d) {
-        return d.currency === exCurrency;
+        return d.currency === exch.currency();
       });
 
       options.exit().remove();
@@ -165,26 +190,16 @@ function ($window, matrixFactory, rippleName) {
         updateSidebars();
       });
 
-      setExchangeCurrency(select.node().value);
+      setExchangeCurrency();
 
       function setExchangeCurrency(currency) {
         var html;
 
-        rates.every(function(rate) {
-          if (rate.currency === currency) {
-
-            exRate = rate.rate;
-            exCurrency = currency;
-
-            html = currency === 'XRP' ?
-              '' : rate.rate.toPrecision(4) + ' <small>XRP/' + currency + '</small>';
-            sidebarLeft.select('.normalization-rate')
-            .html(html);
-            return false;
-          }
-
-          return true;
-        });
+        exch.currency(currency);
+        html = exch.currency() === 'XRP' ?
+          '' : exch.rate().toPrecision(4) + ' <small>XRP/' + exch.currency() + '</small>';
+        sidebarLeft.select('.normalization-rate')
+        .html(html);
       }
     };
 
@@ -344,7 +359,7 @@ function ($window, matrixFactory, rippleName) {
       })
       .attr("text-anchor", function (d) {
         return d.angle > Math.PI ? "end" : "begin";
-      });
+      }).style('opacity', 0);
 
       textBox.append('tspan')
       .attr('class', 'currency')
@@ -399,7 +414,7 @@ function ($window, matrixFactory, rippleName) {
       })
       .attr("text-anchor", function (d) {
         return d.angle > Math.PI ? "end" : "begin";
-      });
+      }).style('opacity', 1);
 
 
       groups.exit()
@@ -513,7 +528,7 @@ function ($window, matrixFactory, rippleName) {
     }
 
     function normalize(amount) {
-      return amount * (exRate || 1);
+      return amount * exch.rate();
     }
 
     function addFilter(id) {
@@ -627,7 +642,7 @@ function ($window, matrixFactory, rippleName) {
         });
 
         el.append('div').attr('class','volume')
-        .html(nFormat(normalize(chord.volume)) + ' <span>'+ exCurrency +'</span>');
+        .html(nFormat(normalize(chord.volume)) + ' <span>'+ exch.currency() +'</span>');
         el.append('div').attr('class','amount')
         .html(nFormat(chord.amount) + ' <span>' + chord.base_currency + '</span>');
         el.append('div').attr('class','percent')
@@ -716,7 +731,7 @@ function ($window, matrixFactory, rippleName) {
       sidebarLeft.select('.totals').html('<table>' +
         '<tr><th>Total Volume:</th> ' +
         '<td>' + nFormat(normalize(total)) +
-        ' ' + exCurrency + '</td></tr>' +
+        ' ' + exch.currency() + '</td></tr>' +
         '<tr><th># of Exchanges:</th> ' +
         '<td>' + commas(count) + '</td></tr>')
       .transition()
@@ -768,14 +783,14 @@ function ($window, matrixFactory, rippleName) {
       });
 
       groups.select('.groupVolume').html(function(d) {
-        return nFormat(normalize(d.volume)) + ' <b>' + exCurrency + '</b>' +
+        return nFormat(normalize(d.volume)) + ' <b>' + exch.currency() + '</b>' +
           '<span class="right percent">' + (d.volume/total*100).toFixed(2) + '%</span>';
       });
 
       groups.select('.groupAmount').html(function(d) {
         var currency = d.currency.split('.');
         var amount = '';
-        if (currency[0] !== exCurrency) {
+        if (currency[0] !== exch.currency()) {
           amount = nFormat(d.amount) + ' <b>' + currency[0] + '</b>';
         }
         return amount + '<span class="right"><b>count:</b> ' + commas(d.count) + '</span>';
@@ -840,7 +855,7 @@ function ($window, matrixFactory, rippleName) {
 
 
         components.select('td:nth-child(2)').html(function(d) {
-          return nFormat(normalize(d.volume)) + ' <b>' + exCurrency + '</b>';
+          return nFormat(normalize(d.volume)) + ' <b>' + exch.currency() + '</b>';
         });
 
         components.select('.percent-total').html(function(d) {
@@ -856,35 +871,39 @@ function ($window, matrixFactory, rippleName) {
     }
 
     function resize () {
-      var min = 380;
+      var min = 320;
+      var svgWidth;
+      var svgHeight;
+      var rightMargin = 0;
 
-      height = window.innerHeight - 220;
-      width = $el[0].clientWidth - 300;
+      svgHeight = height = window.innerHeight - 180;
+      svgWidth = width = div.node().clientWidth;
 
-      if (width > min + 400) {
-        width -= 400;
+      //for break point
+      if (width > 1100) {
+        width -= 580;
+        rightMargin = 40;
       }
 
-      if (height < min || width < min) {
-        width = height = min;
-      } else if (width < height) {
-        height = width;
+      if (width < min) {
+        svgWidth = width = min;
+      } else if (height < min) {
+        svgHeight = height = min;
+      } else if (svgWidth < height && svgWidth < 1100) {
+        svgHeight = height = width;
       }
 
-      if (Number(svg.attr('width')) === width &&
-          Number(svg.attr('height')) === height) {
+      if (Number(svg.attr('width')) === svgWidth &&
+          Number(svg.attr('height')) === svgHeight) {
         return;
       }
 
-      dims[0] = width - marg[1] - marg[3]; // WIDTH
-      dims[1] = height - marg[0] - marg[2]; // HEIGHT
+      x = (svgWidth - rightMargin) / 2;
+      y = svgHeight / 2;
 
-      smallest = dims[0] < dims[1] ? dims[0] : dims[1];
+      smallest = width < height ? width : height;
       innerRadius = (smallest * 1/3);
       outerRadius = innerRadius + innerRadius * 1/20;
-
-      x = (dims[0] / 2) + marg[3];
-      y = (dims[1] / 2) + marg[0];
 
       arc = d3.svg.arc()
       .innerRadius(innerRadius)
@@ -898,9 +917,8 @@ function ($window, matrixFactory, rippleName) {
       .range([1, 0.45]);
 
       svg.attr({
-        width: width,
-        height: height,
-        viewBox: "0 0 " + width + " " + height
+        width: div.node().clientWidth,
+        height: height
       });
 
       div.attr('height', height);

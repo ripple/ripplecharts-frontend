@@ -1,7 +1,17 @@
 <div class="trade-volume">
   <div class="helpbox" ng-class="{showHelp : showHelp}">
   </div>
-  <input id="datepicker"/>
+  <div class="source">
+    <div class="live">
+      <input type="radio" ng-model="source.type" class="source-select" value="live"/>
+      <label>Live (Last 24 hours)</label>
+    </div>
+    <div class="history">
+      <input type="radio" ng-model="source.type" class="source-select" value="history"/>
+      <label>Historical</label>
+      <input id="datepicker"/>
+    </div>
+  </div>
   <chord-diagram></chord-diagram>
 </div>
 

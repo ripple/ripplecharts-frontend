@@ -11,29 +11,48 @@ angular.module( 'ripplecharts.trade-volume', [
         templateUrl: 'trade-volume/trade-volume.tpl.html'
       }
     },
-    data:{ },
-    resolve : {
-      gateInit : function (gateways) {
-        return gateways.promise;
-      }
-    }
+    data:{ }
   });
 })
 
-.controller( 'TradeVolumeCtrl', function TradeVolumeCtrl( $scope, $location, rippleName ) {
+.controller( 'TradeVolumeCtrl', function TradeVolumeCtrl( $scope, $location, $interval) {
 
   var api = new ApiHandler(API);
 
+  //source radio
+  $scope.source = {
+    type: 'live'
+  };
+
+  //historical dates
   $('#datepicker').datepicker({
-    maxDate: '+0d',
+    maxDate: '-1d',
     minDate: new Date(2013, 1, 31),
     dateFormat: "yy-mm-dd",
     onSelect: function(date) {
-      loadTopMarkets(date);
+      $scope.$apply(function() {
+        if ($scope.source.type === 'history') {
+          $scope.loadTopMarkets(date);
+        } else {
+          $scope.source.type = 'history';
+        }
+      });
     }
   }).datepicker('setDate', new Date());
 
-  function loadTopMarkets(date) {
+  //reload when source changes
+  $scope.$watch('source.type', function() {
+    var date;
+
+    if ($scope.source.type === 'history') {
+      date = moment($('#datepicker').datepicker('getDate')).format('YYYY-MM-DD');
+    }
+
+    $scope.loadTopMarkets(date);
+  });
+
+  //load the data
+  $scope.loadTopMarkets = function (date) {
     api.exchangeRates({
       time: date,
       pairs:[
@@ -107,5 +126,11 @@ angular.module( 'ripplecharts.trade-volume', [
     });
   }
 
-  setTimeout(loadTopMarkets);
+  //if live, reload every 5 minutes
+  $interval(function() {
+    if ($scope.source.type === 'live') {
+      $scope.loadTopMarkets();
+    }
+
+  }, 300 * 1000);
 });
