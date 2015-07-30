@@ -13,7 +13,12 @@ angular.module( 'ripplecharts.markets', [
         templateUrl: 'markets/markets.tpl.html'
       }
     },
-    data:{ pageTitle: 'Live Chart' }
+    data:{ pageTitle: 'Live Chart' },
+    resolve : {
+      gateInit : function (gateways) {
+        return gateways.promise;
+      }
+    }
   })
   .state( 'markets', {
     url: '/markets',
@@ -35,26 +40,28 @@ angular.module( 'ripplecharts.markets', [
 .controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
 
   if ($state.params.base && $state.params.trade) {
+    $scope.base = $state.params.base.split(":");
+    $scope.base = {
+      currency: $scope.base[0],
+      issuer: $scope.base[1] ? $scope.base[1]:""
+    };
+    $scope.trade = $state.params.trade.split(":");
+    $scope.trade = {
+      currency: $scope.trade[0],
+      issuer: $scope.trade[1] ? $scope.trade[1]:""
+    };
 
-    var base = $state.params.base.split(":");
-    base = {currency:base[0],issuer:base[1] ? base[1]:""};
-    var trade = $state.params.trade.split(":");
-    trade = {currency:trade[0],issuer:trade[1] ? trade[1]:""};
+  } else {
+    //load settings from session, local storage, options, or defaults
+    $scope.base  = store.session.get('base') || store.get('base') ||
+      Options.base || {currency:"XRP", issuer:""};
 
-    store.set('base',  base);
-    store.set('trade', trade);
-    store.session.set('base',  base);
-    store.session.set('trade', trade);
-    $location.path("/markets").replace(); //to remove the data from the URL
+    $scope.trade = store.session.get('trade') || store.get('trade') ||
+      Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
+
+    updatePair();
     return;
   }
-
-//load settings from session, local storage, options, or defaults
-  $scope.base  = store.session.get('base') || store.get('base') ||
-    Options.base || {currency:"XRP", issuer:""};
-
-  $scope.trade = store.session.get('trade') || store.get('trade') ||
-    Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
 
   $scope.chartType = store.session.get('chartType') || store.get('chartType') ||
     Options.chartType || "line";
@@ -72,18 +79,35 @@ angular.module( 'ripplecharts.markets', [
       .on("change", function(d) {
         $scope.trade = d;
         if ($scope.range.name === "max") updateMaxrange();
-        loadPair();
+        updatePair();
       });
     dropdownA = ripple.currencyDropdown(gateways).selected($scope.base)
       .on("change", function(d) {
         $scope.base = d;
         if ($scope.range.name === "max") updateMaxrange();
-        loadPair();
+        updatePair();
       });
 
     d3.select("#base").call(dropdownA);
     d3.select("#quote").call(dropdownB);
   });
+
+  function updatePair() {
+    store.set('base',  $scope.base);
+    store.set('trade', $scope.trade);
+
+    store.session.set('base',  $scope.base);
+    store.session.set('trade', $scope.trade);
+
+    var hash = '#/markets/' + $scope.base.currency +
+      ($scope.base.issuer ? ':' + $scope.base.issuer : '') +
+      '/' + $scope.trade.currency +
+      ($scope.trade.issuer ? ':' + $scope.trade.issuer : '');
+    if (hash !== window.location.hash) {
+      console.log(hash, window.location.hash);
+      window.location.hash = hash;
+    }
+  }
 
   d3.select("#flip").on("click", function(){ //probably better way to do this
     dropdownA.selected($scope.trade);
@@ -96,8 +120,7 @@ angular.module( 'ripplecharts.markets', [
     swap         = $scope.trade;
     $scope.trade = $scope.base;
     $scope.base  = swap;
-
-    loadPair();
+    updatePair();
   });
 
   //set up the range selector
@@ -503,12 +526,6 @@ angular.module( 'ripplecharts.markets', [
       interval.live = true;
       interval.offset = range.offset;
     }
-
-    store.set('base',  $scope.base);
-    store.set('trade', $scope.trade);
-
-    store.session.set('base',  $scope.base);
-    store.session.set('trade', $scope.trade);
 
     priceChart.load($scope.base, $scope.trade, interval);
     book.getMarket($scope.base, $scope.trade);
