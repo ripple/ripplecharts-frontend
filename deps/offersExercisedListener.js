@@ -32,7 +32,7 @@ if (typeof require != 'undefined') {
  *  Load it in Node.js or on a webpage after loading its dependencies.
  *  Then, initialize an OffersExercisedListener with (pretty much) the
  *  same options you use to query the offersExercised API route.
- *  
+ *
  *  If you query the API route again with different options and want the
  *  OffersExercisedListener to be updated accordingly, simply call
  *  the instance's updateViewOpts() method with the new options.
@@ -40,7 +40,7 @@ if (typeof require != 'undefined') {
  *  To use multiple OffersExercisedListeners on a single page, simply
  *  initialize one instance per option set, save a reference to each,
  *  and call the stopListener() function for any that you wish to remove.
- *  
+ *
  *  To create an OffersExercisedListener that listens for all offers exercised,
  *  intitialize one with no view options and it will call the display function
  *  each time it hears an offer exercised with an object of the form:
@@ -58,13 +58,13 @@ if (typeof require != 'undefined') {
  *  {
  *    base: {currency: "XRP"},
  *    trade: {currency: "USD", issuer: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
- *    
+ *
  *    reduce: true/false, // optional, defaults to false if timeIncrement is not set
  *    timeIncrement: (any of the following: "all", "none", "year", "month", "day", "hour", "minute", "second") // optional
  *    timeMultiple: positive integer // optional, defaults to 1
- *    
+ *
  *    openTime: a momentjs-readable value // optional, defaults to now
- *    incompleteApiRow: if the last timeIncrement returned by the API is 
+ *    incompleteApiRow: if the last timeIncrement returned by the API is
  *      incomplete, that row can be passed in here to be completed by the live feed listener
  *  }
  */
@@ -86,7 +86,7 @@ function OffersExercisedListener(opts, displayFn) {
     });
     remote.connect();
   }
-  
+
   if (typeof opts === 'function') {
     displayFn = opts;
     opts      = {};
@@ -97,14 +97,14 @@ function OffersExercisedListener(opts, displayFn) {
   this.interval;
 
   // Wrapper to call the displayFn and update the openTime and closeTime
-  this.finishedInterval = function() {      
-    
+  this.finishedInterval = function() {
+
     //send to display
     this.displayFn(formatReduceResult(this.storedResults), true);
-    
+
     //reset the stored results
     var startTime = moment.utc(this.storedResults.startTime)
-      .add(this.viewOpts.timeIncrement, this.viewOpts.timeMultiple);
+      .add(this.viewOpts.timeMultiple, this.viewOpts.timeIncrement);
     this.resetStored([startTime.format()]);
   };
 
@@ -115,7 +115,7 @@ function OffersExercisedListener(opts, displayFn) {
 
 OffersExercisedListener.prototype.resetStored = function (row) {
   if (!row) row = [];
-  
+
   this.storedResults = {
     startTime   : moment.utc(row.startTime || row.time || row[0]).format(),
     curr1Volume : row.baseVolume    || row[1]  || 0.0,
@@ -128,10 +128,10 @@ OffersExercisedListener.prototype.resetStored = function (row) {
     volumeWeightedAvg: row.vwap     || row[8]  || 0.0,
     openTime    : row.openTime      || row[9]  || 0,
     closeTime   : row.closeTime     || row[10] || 0,
-  }; 
-  
+  };
+
   this.storedResults.curr1VwavNumerator = this.storedResults.volumeWeightedAvg * this.storedResults.curr1Volume;
- 
+
 }
 
 
@@ -143,7 +143,7 @@ OffersExercisedListener.prototype.stopListener = function() {
   var listener = this;
   listener.storedResults = {};
 
-  if (listener.interval) clearInterval(listener.interval);  
+  if (listener.interval) clearInterval(listener.interval);
   if (listener.timeout)  clearTimeout(listener.timeout);
   if (listener.check)    clearInterval(listener.check);
 
@@ -163,32 +163,32 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
   listener.stopListener();
   listener.viewOpts = parseViewOpts(newOpts);
-  
+
   // If timeIncrement is set, setup an interval to call the displayFn,
   // otherwise, pass the displayFn directly to createTransactionProcessor()
   if (!listener.viewOpts.timeIncrement) {
     listener.txProcessor = createTransactionProcessor(listener.viewOpts, listener.displayFn);
 
   } else {
-    
+
     //if there isnt a row, start time will be set to now
     listener.resetStored(listener.viewOpts.incompleteApiRow || []);
-         
+
     // create regular listener
     listener.txProcessor = createTransactionProcessor(listener.viewOpts, function(reducedTrade){
-      
+
       listener.storedResults = offersExercisedReduce([listener.storedResults, reducedTrade], true);
-      
+
       // Call displayFn every time a new trade comes in, as well as after the interval
       listener.displayFn(formatReduceResult(listener.storedResults));
-      
+
     });
 
 
     // handle first interval
 
     var endTime   = moment.utc(listener.storedResults.startTime)
-      .add(listener.viewOpts.timeIncrement, listener.viewOpts.timeMultiple);
+      .add(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement);
     var remainder = endTime.diff(moment.utc());
 
     //if its more than 24 days, it will overflow
@@ -196,16 +196,16 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
     //will keep the browser open that long
     if (remainder > 2073600000) return;
 
-    // If there is time left in the first timeIncrement, wait until that 
+    // If there is time left in the first timeIncrement, wait until that
     // is finished to start the interval
     if (remainder > 0) {
-      
+
       listener.timeout = setTimeout(function(){
         listener.finishedInterval();
         setNext(listener);
 
       }, remainder);
-      
+
     } else {
       listener.finishedInterval();
       setNext(listener);
@@ -216,9 +216,9 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
   function setNext(listener) {
     listener.interval = setInterval(function(){
       listener.finishedInterval();
-    }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());    
+    }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());
   }
-  
+
   remote.on('transaction_all', listener.txProcessor);
 
 }
@@ -243,7 +243,7 @@ function parseViewOpts(opts) {
   if (!opts.base || !opts.counter) opts.reduce = false;
   else if (opts.base    && opts.base.issuer == '')    delete opts.base.issuer;
   else if (opts.counter && opts.counter.issuer == '') delete opts.counter.issuer;
- 
+
   return opts;
 }
 
@@ -253,7 +253,7 @@ function parseViewOpts(opts) {
  *  and parses it according to the viewOpts
  */
 function createTransactionProcessor(viewOpts, resultHandler) {
- 
+
   function txProcessor (txData){
 
     var txContainer = {
@@ -264,7 +264,7 @@ function createTransactionProcessor(viewOpts, resultHandler) {
 
     // use the map function to parse txContainer data
     offersExercisedMap(txContainer, function(key, value){
-      
+
       if (viewOpts.counter) {
         // return if trade doesn't match either currency in the pair
         if ((viewOpts.counter.currency !== key[0][0] || viewOpts.counter.issuer !== key[0][1])
@@ -290,7 +290,7 @@ function createTransactionProcessor(viewOpts, resultHandler) {
       //console.log(value);
       if (!viewOpts.reduce) resultHandler({key: key, value: value});
       else resultHandler(offersExercisedReduce([value], false));
-       
+
     });
   }
 
@@ -312,10 +312,10 @@ function offersExercisedMap(doc, emit) {
 
     var time = new Date(doc.close_time_timestamp),
       unix   = Math.round(time.getTime());
-      
+
     doc.transactions.forEach(function(tx) {
-        
-      
+
+
         if (tx.metaData.TransactionResult !== 'tesSUCCESS') {
             return;
         }
@@ -368,15 +368,15 @@ function offersExercisedMap(doc, emit) {
                 exchangeRate = exchangeRate * 1000000.0;
             }
 
-            emit([payCurr, getCurr], [payAmnt, getAmnt, 1/exchangeRate, counterparty, tx.Account, unix, tx.hash]);            
+            emit([payCurr, getCurr], [payAmnt, getAmnt, 1/exchangeRate, counterparty, tx.Account, unix, tx.hash]);
         });
-        
-        
+
+
     });
 }
 
 /**
- *  offersExercisedReduce is the same reduce function used by the 
+ *  offersExercisedReduce is the same reduce function used by the
  *  offersExercised view in CouchDB
  *  (note the difference between the 'reduce' and 'rereduce' modes)
  */
@@ -403,12 +403,12 @@ function offersExercisedReduce(values, rereduce) {
       curr2Volume : 0,
       numTrades   : 0
     };
-    
+
     values.forEach( function( trade, index ) {
 
       var time = trade[5], //unix timestamp
         price  = trade[2]; //exchange rate
-      
+
       if (time<stats.openTime) {
         stats.openTime = time;
         stats.open     = price;
@@ -421,7 +421,7 @@ function offersExercisedReduce(values, rereduce) {
 
       if (price>stats.high) stats.high = price;
       if (price<stats.low)  stats.low  = price;
-      
+
       stats.curr1Volume += trade[0];
       stats.curr2Volume += trade[1];
       stats.numTrades++;
@@ -433,21 +433,21 @@ function offersExercisedReduce(values, rereduce) {
   } else {
 
     stats = values[0];
-    if (typeof stats.openTime === 'string') 
+    if (typeof stats.openTime === 'string')
       stats.openTime  = moment.utc(stats.openTime).unix();
-    if (typeof stats.closeTime === 'string') 
+    if (typeof stats.closeTime === 'string')
       stats.closeTime = moment.utc(stats.closeTime).unix();
-    
+
     values.forEach( function( segment, index ) {
-      
+
       // skip values[0]
       if (index === 0) return;
-      
-      if (typeof segment.openTime === 'string') 
+
+      if (typeof segment.openTime === 'string')
         segment.openTime  = moment.utc(segment.openTime).unix();
-      if (typeof segment.closeTime === 'string') 
+      if (typeof segment.closeTime === 'string')
         segment.closeTime = moment.utc(segment.closeTime).unix();
-      
+
 
       if (!stats.open || segment.openTime<stats.openTime) {
         stats.openTime = segment.openTime;
@@ -463,7 +463,7 @@ function offersExercisedReduce(values, rereduce) {
 
       stats.curr1Volume += segment.curr1Volume;
       stats.curr2Volume += segment.curr2Volume;
-      stats.numTrades   += segment.numTrades;      
+      stats.numTrades   += segment.numTrades;
     });
 
     stats.volumeWeightedAvg = stats.curr2Volume / stats.curr1Volume;

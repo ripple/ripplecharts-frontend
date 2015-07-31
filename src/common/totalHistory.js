@@ -383,7 +383,7 @@ var TotalHistory = function (options) {
     onSelect: function(dateText) {
       borders_off();
       var limit;
-      limit = moment(dateText).subtract(2, 'd');
+      limit = moment(dateText).subtract(2, 'day');
       f_limit = moment(limit).format("MM/DD/YYYY");
       start = moment(dateText).format("YYYY-MM-DD");
       $( "#datepicker_from" ).datepicker( "option", "maxDate", f_limit );
@@ -401,7 +401,7 @@ var TotalHistory = function (options) {
     onSelect: function(dateText) {
       borders_off();
       var limit;
-      limit = moment(dateText).add(2, 'd');
+      limit = moment(dateText).add(2, 'day');
       f_limit = moment(limit).format("MM/DD/YYYY");
       end = moment(dateText).format("YYYY-MM-DD");
       $( "#datepicker_to" ).datepicker( "option", "minDate", f_limit );

@@ -234,7 +234,7 @@ PriceChart = function (options) {
 
     intervalSeconds *= multiple;
     lastCandle       = getAlignedCandle(d.end ? moment.utc(d.end) : null);
-    endTime          = moment.utc(lastCandle).add('seconds', intervalSeconds);
+    endTime          = moment.utc(lastCandle).add(intervalSeconds, 'seconds');
     startTime        = d.start ? getAlignedCandle(moment.utc(d.start)) : moment.utc(d.offset(endTime));
 
     if (liveFeed) liveFeed.stopListener();
@@ -613,10 +613,10 @@ PriceChart = function (options) {
     var aligned;
 
     if (!time) time = moment().utc();
-    time.subtract("milliseconds", time.milliseconds());
+    time.subtract(time.milliseconds(), 'milliseconds');
 
     if (chartInterval=='se') {
-      aligned = time.subtract("seconds", time.seconds()%multiple);
+      aligned = time.subtract(time.seconds()%multiple, 'seconds');
 
     } else if (chartInterval=='mi') {
       aligned = time.subtract({
