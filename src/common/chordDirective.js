@@ -128,7 +128,7 @@ function ($window, matrixFactory, rippleName) {
 
     sidebarLeft.append('div')
     .attr('class','normalization')
-    .html('<label>Normalization Currency:</label>' +
+    .html('<label>Display Currency:</label>' +
       '<select class="valueCurrencySelect"></select>' +
       '<div class="normalization-rate"></div>');
 
@@ -731,7 +731,7 @@ function ($window, matrixFactory, rippleName) {
       sidebarLeft.select('.totals').html('<table>' +
         '<tr><th>Total Volume:</th> ' +
         '<td>' + nFormat(normalize(total)) +
-        ' ' + exch.currency() + '</td></tr>' +
+        ' <small>' + exch.currency() + '</small></td></tr>' +
         '<tr><th># of Exchanges:</th> ' +
         '<td>' + commas(count) + '</td></tr>')
       .transition()

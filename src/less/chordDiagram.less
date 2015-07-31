@@ -43,10 +43,14 @@
 
 .chord-chart .sidebar.left .normalization {
   margin-bottom: 30px;
+  color: #444;
 }
 
 .chord-chart .sidebar.left .normalization select {
   float: right;
+  font-weight: bold;
+  color: #777;
+  font-size: 14px;
 }
 
 .chord-chart .sidebar.left .normalization-rate {
@@ -55,6 +59,7 @@
   opacity: .7;
   font-size: .9em;
   clear: both;
+  color: #57a;
 }
 
 .chord-chart .sidebar.left .totals {
@@ -66,6 +71,12 @@
   font-size: 12px;
   text-align: left;
   font-weight: normal;
+  opacity: .5;
+}
+
+.chord-chart .sidebar.left .totals small {
+  font-weight: normal;
+  opacity: .5;
 }
 
 .chord-chart .sidebar.left .filters {
@@ -421,7 +432,8 @@
   background: rgba(0,0,0,.9);
 }
 
-.dark .chord-chart .sidebar.left .filters .title {
+.dark .chord-chart .sidebar.left .filters .title,
+.dark .chord-chart .sidebar.left .normalization label {
   border-color: #222;
   font-weight:bold;
 }

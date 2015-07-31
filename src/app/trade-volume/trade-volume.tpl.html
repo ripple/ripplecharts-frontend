@@ -3,12 +3,12 @@
   </div>
   <div class="source">
     <div class="live">
-      <input type="radio" ng-model="source.type" class="source-select" value="live"/>
-      <label>Live (Last 24 hours)</label>
+      <input type="radio" id="live-source" ng-model="source.type" class="source-select" value="live"/>
+      <label for="live-source">Live (Last 24 hours)</label>
     </div>
     <div class="history">
-      <input type="radio" ng-model="source.type" class="source-select" value="history"/>
-      <label>Historical</label>
+      <input type="radio" id="history-source" ng-model="source.type" class="source-select" value="history"/>
+      <label for="history-source">Historical</label>
       <input id="datepicker"/>
     </div>
   </div>
