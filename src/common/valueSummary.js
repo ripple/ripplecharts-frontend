@@ -187,9 +187,7 @@ var ValueSummary = function (options) {
             (d.data.counter.issuer ? ':' + d.data.counter.issuer : '');
         }
 
-        console.log(market);
-
-        window.location.href = '#markets/' + market;
+        window.location.hash = '#/markets/' + market;
       }
     })
 
@@ -270,7 +268,7 @@ var ValueSummary = function (options) {
     //show or hide explore button
     if ((/trade_volume/g).test(z.rowkey)) {
       explore.style('opacity', 1).on('click', function() {
-        window.location.hash = '#/trade-volume';
+        window.location = '#/trade-volume';
       });
     } else {
       explore.style('opacity', 0);

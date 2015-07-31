@@ -59,7 +59,7 @@ angular.module( 'ripplecharts.markets', [
     $scope.trade = store.session.get('trade') || store.get('trade') ||
       Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
 
-    updatePair();
+    updatePair(); //this will update the URI;
     return;
   }
 
@@ -70,7 +70,7 @@ angular.module( 'ripplecharts.markets', [
     Options.interval  || "15m";
 
   $scope.range  = store.session.get('range') || store.get('range') ||
-    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'd')._d, end: moment.utc()._d };
+    Options.range  || {name: "1d", start: moment.utc().subtract(1, 'day')._d, end: moment.utc()._d };
 
   var loaded = false;
 
@@ -99,12 +99,15 @@ angular.module( 'ripplecharts.markets', [
     store.session.set('base',  $scope.base);
     store.session.set('trade', $scope.trade);
 
-    var hash = '#/markets/' + $scope.base.currency +
+    var current = window.location.hash;
+    var hash = 'markets/' + $scope.base.currency +
       ($scope.base.issuer ? ':' + $scope.base.issuer : '') +
       '/' + $scope.trade.currency +
       ($scope.trade.issuer ? ':' + $scope.trade.issuer : '');
-    if (hash !== window.location.hash) {
-      console.log(hash, window.location.hash);
+
+    current = current.substr(current.indexOf('markets'));
+
+    if (hash !== current) {
       window.location.hash = hash;
     }
   }
@@ -160,7 +163,7 @@ angular.module( 'ripplecharts.markets', [
       updateScopeStore("range", {name: d.name});
       range.classed("selected", function() { return this === that; });
       $("#start")
-        .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
+        .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'day')))
         .datepicker('setDate', d.offset(now))
         .hide();
       $("#end")
@@ -231,14 +234,14 @@ angular.module( 'ripplecharts.markets', [
         end.setFullYear(end.getFullYear() + 100);
       }
 
-      $("#start").datepicker('option', 'maxDate', new Date(moment(end).subtract(1,"d")));
+      $("#start").datepicker('option', 'maxDate', new Date(moment(end).subtract(1,"day")));
       dateChange(start, end);
     }
   }).datepicker('setDate', new Date($scope.range.end));
 
   $("#start" ).datepicker({
     minDate: new Date("1/1/2013"),
-    maxDate: new Date(moment($scope.range.end).subtract(1,"d")),
+    maxDate: new Date(moment($scope.range.end).subtract(1,"day")),
     defaultDate: $scope.range.start,
     dateFormat: 'mm/dd/y',
     onSelect: function(dateText) {
@@ -249,7 +252,7 @@ angular.module( 'ripplecharts.markets', [
         start.setFullYear(start.getFullYear() + 100);
       }
 
-      $("#end").datepicker('option', 'minDate', new Date(moment(start).add(1,"d")));
+      $("#end").datepicker('option', 'minDate', new Date(moment(start).add(1,"day")));
       dateChange(start, end);
     }
   }).datepicker('setDate', new Date($scope.range.start));
@@ -475,7 +478,7 @@ angular.module( 'ripplecharts.markets', [
     var start = getStartdate($scope.base, $scope.trade);
     var now = moment.utc();
     $("#start")
-      .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'d')))
+      .datepicker('option', 'maxDate', new Date(moment(now).subtract(1,'day')))
       .datepicker('setDate', start)
     $("#end")
       .datepicker('option', 'minDate', start)

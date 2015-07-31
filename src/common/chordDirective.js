@@ -468,7 +468,7 @@ function ($window, matrixFactory, rippleName) {
           (d.counter_issuer ? ':' + d.counter_issuer : '');
       }
 
-      $window.location.href = '#markets/' + market;
+      $window.location.hash = '#/markets/' + market;
     }
 
     function groupClick(d) {
