@@ -263,10 +263,12 @@ function ($window, matrixFactory, rippleName) {
       });
 
       gradientEnter.append('stop')
-      .attr('class', 'stop1');
+      .attr('class', 'stop1')
+      .attr("offset", "20%");
 
       gradientEnter.append('stop')
-      .attr('class', 'stop2');
+      .attr('class', 'stop2')
+      .attr("offset", "100%");
 
       gradients.attr("cx", function(d) {
         var angle = (d.target.startAngle + d.target.endAngle) / 2;
@@ -277,19 +279,21 @@ function ($window, matrixFactory, rippleName) {
         return 0 - Math.cos(angle) * innerRadius;
       })
       .attr("r", function(d) {
-        var angle = (d.target.startAngle - d.source.startAngle) / 4;
-        return innerRadius / angle;
+        var angle = d.target.startAngle - d.source.startAngle;
+
+        //if its over half the circumference,
+        //use the remainder of the circumference
+        angle = angle > Math.PI ? 2 * Math.PI - angle : angle;
+        return innerRadius * angle * 2/3;
       })
 
       gradients.select('.stop1')
-      .attr("offset", "20%")
       .style("stop-color", function(d) {
         var c1 = d.target._id.split('.')[0];
         return currencyColor(c1, d.target.index);
       });
 
       gradients.select('.stop2')
-      .attr("offset", "100%")
       .style("stop-color", function(d) {
         var c2 = d.source._id.split('.')[0];
         return currencyColor(c2, d.source.index);
@@ -872,6 +876,7 @@ function ($window, matrixFactory, rippleName) {
 
     function resize () {
       var min = 320;
+      var breakPoint = 1085;
       var svgWidth;
       var svgHeight;
       var rightMargin = 0;
@@ -880,7 +885,7 @@ function ($window, matrixFactory, rippleName) {
       svgWidth = width = div.node().clientWidth;
 
       //for break point
-      if (width > 1100) {
+      if (width > breakPoint) {
         width -= 580;
         rightMargin = 40;
       }
@@ -889,7 +894,7 @@ function ($window, matrixFactory, rippleName) {
         svgWidth = width = min;
       } else if (height < min) {
         svgHeight = height = min;
-      } else if (svgWidth < height && svgWidth < 1100) {
+      } else if (svgWidth < height && svgWidth < breakPoint) {
         svgHeight = height = width;
       }
 
