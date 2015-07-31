@@ -90,7 +90,10 @@
         </ul>
       </div>
       <div class="col-md-6">
-        <h5  ng-bind="metricDetailTitle"></h5>
+        <h5>
+          <span ng-bind="metricDetailTitle"></span>
+          <a class="explore" href="#/trade-volume" ng-show="metricDetail === 'tradeVolume'">Explore</a>
+        </h5>
         <div id="metricDetail"></div>
       </div>
     </div>

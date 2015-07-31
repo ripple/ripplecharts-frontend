@@ -21,11 +21,6 @@ var ValueSummary = function (options) {
     .append("g")
     .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
 
-  var explore = outer.append('a')
-    .attr('class','explore')
-    .style('opacity', 0)
-    .html('Explore');
-
   var toggle = outer.append("label").attr("class","xrpToggle");
   var hideXRP = true;
   var currencyOrder = ['XAU', 'XAG', 'BTC', 'LTC', 'XRP', 'EUR', 'USD', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'CNY'];
@@ -264,15 +259,6 @@ var ValueSummary = function (options) {
     label.exit().remove();
 
     toggle.style("display", xrpToggle ? "block" : "none");
-
-    //show or hide explore button
-    if ((/trade_volume/g).test(z.rowkey)) {
-      explore.style('opacity', 1).on('click', function() {
-        window.location = '#/trade-volume';
-      });
-    } else {
-      explore.style('opacity', 0);
-    }
   }
 
 
