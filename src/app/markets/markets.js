@@ -59,7 +59,14 @@ angular.module( 'ripplecharts.markets', [
     $scope.trade = store.session.get('trade') || store.get('trade') ||
       Options.trade || {currency:"USD", issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"};
 
-    updatePair(); //this will update the URI;
+    var hash = 'markets/' + $scope.base.currency +
+      ($scope.base.issuer ? ':' + $scope.base.issuer : '') +
+      '/' + $scope.trade.currency +
+      ($scope.trade.issuer ? ':' + $scope.trade.issuer : '');
+
+    //use replace so that the
+    //back button works properly
+    $location.path(hash).replace();
     return;
   }
 
@@ -108,7 +115,7 @@ angular.module( 'ripplecharts.markets', [
     current = current.substr(current.indexOf('markets'));
 
     if (hash !== current) {
-      window.location.hash = hash;
+      window.location.hash = '/' + hash;
     }
   }
 
