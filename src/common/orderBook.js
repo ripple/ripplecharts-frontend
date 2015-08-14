@@ -466,7 +466,12 @@ var OrderBook = function (options) {
     bookTables.transition().style("opacity",1);
 
     if (type === 'bids') {
-      row = bidsBody.selectAll("tr").data(extractData('bids'));
+      row = bidsBody.selectAll("tr")
+      .property('_size', function(d) {return d.size})
+      .data(extractData('bids'), function(d) {
+        return d.displayPrice;
+      });
+
       rowEnter = row.enter().append("tr");
 
       rowEnter.append('td').attr('class','sum');
@@ -475,7 +480,11 @@ var OrderBook = function (options) {
 
     } else {
 
-      row = asksBody.selectAll("tr").data(extractData('asks'));
+      row = asksBody.selectAll("tr")
+      .property('_size', function(d) {return d.size})
+      .data(extractData('asks'), function(d) {
+        return d.displayPrice;
+      });
       rowEnter = row.enter().append("tr");
 
       rowEnter.append('td').attr('class','price');
@@ -487,7 +496,42 @@ var OrderBook = function (options) {
     row.select('.size').html(function(d){return formatAmount(d.displaySize)});
     row.select('.price').html(function(d){return formatAmount(d.displayPrice)});
     row.attr('title', function(d){return d.accounts ? d.accounts.join('\n') : null});
-    row.exit().remove();
+    row.order();
+
+    row.each(function(d) {
+      var tr = this;
+      var row = d3.select(tr);
+      row.attr('class', '');
+
+      if (tr._timeout) {
+        clearTimeout(tr._timeout);
+      }
+
+      tr._timeout = setTimeout(function() {
+        if (!tr._size) {
+          row.classed('new', true);
+        } else if (tr._size < d.size) {
+          row.classed('more', true);
+        } else if (tr._size > d.size) {
+          row.classed('less', true);
+        }
+      }, 10);
+    });
+
+    row.exit().style({
+      "background-color": "rgba(60,0,0,.4)",
+      color: 'red',
+      opacity: 0.5
+    })
+    .transition()
+    .duration(500)
+    .style({
+      "font-size": '1px',
+      "opacity": 0
+    })
+    .remove();
+
+
 
     emitSpread();
     return;
