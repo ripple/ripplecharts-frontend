@@ -2,80 +2,103 @@ angular.module('rippleName', [])
 .factory('rippleName', function($http) {
   var names = { };
   var reversed = { };
-  var url = 'https://id.ripple.com/v1/user/';
+  var URL = 'https://id.ripple.com/.well-known/webfinger?resource=';
+  var addressRel = 'https://ripple.com/rel/ripple-address';
+  var nameRel = 'https://ripple.com/rel/ripple-name';
 
-  var getUser = function (text, callback) {
+  /**
+   * getRef
+   * get value for relational
+   */
+
+  var getRef = function (rel, links) {
+    var ref;
+    links.every(function(link) {
+      if (link.rel !== rel) {
+        return true;
+      }
+
+      ref = link.href;
+      return false;
+    });
+
+    return ref;
+  };
+
+  var lookupRequest = function (url, callback) {
+    $http.get(url)
+    .success(function(resp) {
+      var data;
+
+      if (resp.links && resp.links.length) {
+        data = {
+          name: getRef(nameRel, resp.links),
+          address: getRef(addressRel, resp.links)
+        };
+      }
+
+      callback(data);
+    }).error(function(err) {
+      console.log(err);
+      callback();
+    });
+  }
+
+  /**
+   * lookup
+   * lookup name/address
+   */
+
+  var lookup = function (text, callback) {
+    var type;
     var name;
     var address;
 
-    //lookup by address
-    if (text.length > 20) {
-      address = text;
-      if (names[address] && names[address] === '#pending') {
-
-        setTimeout(function() {
-          getUser(address, callback);
-        }, 50);
-
-      } else if (names[address] && names[address] === '#unknown') {
-        callback();
-
-      } else if (names[address]) {
-        callback(names[address]);
-
-      } else {
-        names[address] = '#pending';
-        $http.get(url + address)
-        .success(function(resp) {
-          if (resp.exists) {
-            names[resp.address] = resp.username;
-            reversed[resp.username] = resp.address;
-            callback(resp.username);
-          } else {
-            names[address] = '#unknown';
-            callback();
-          }
-        }).error(function(err) {
-          names[address] = '#unknown';
-          callback();
-        });
-      }
-
-    //lookup by name
+    // by address NOTE: should validate ripple address
+    if (text && text.length > 20) {
+      lookupHelper(text, names, callback);
     } else if (text) {
-      name = text;
-      if (reversed[name] && reversed[name] === '#pending') {
+      lookupHelper(text, reversed, callback, true);
+    }
+
+    // handle lookup
+    function lookupHelper (comp, cache, cb, isName) {
+      if (cache[comp] && cache[comp] === '#pending') {
+
         setTimeout(function() {
-          getUser(name, callback);
+          lookup(comp, cb);
         }, 50);
 
-      } else if (reversed[name] === '#unknown') {
-        callback();
+      } else if (cache[comp] && cache[comp] === '#unknown') {
+        cb();
 
-      } else if (reversed[name]) {
-        callback(reversed[name]);
+      } else if (cache[comp]) {
+        cb(cache[comp]);
 
       } else {
-        $http.get(url + name)
-        .success(function(resp) {
-          if (resp.address) {
-            names[resp.address] = resp.username;
-            reversed[resp.username] = resp.address;
-            callback(resp.address);
-          } else {
-            reversed[resp.username] = '#unknown';
-            callback();
-          }
+        cache[comp] = '#pending';
+        lookupRequest(URL + comp, function(resp) {
+          if (resp) {
+            names[resp.address] = resp.name;
+            reversed[resp.name] = resp.address;
 
-        }).error(function(err) {
-          console.log(err);
+            // include a link
+            // for the name as it
+            // originally came as well
+            if (isName) {
+              reversed[comp] = resp.address;
+            }
+
+            cb(resp.name, resp.address);
+
+          } else {
+            cache[comp] = '#unknown';
+            cb();
+          }
         });
       }
-
-    } else {
-      callback();
     }
   }
 
-  return getUser;
+  return lookup;
 });
