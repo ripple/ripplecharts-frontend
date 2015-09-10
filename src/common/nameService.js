@@ -1,5 +1,6 @@
 angular.module('rippleName', [])
 .factory('rippleName', function($http) {
+
   var names = { };
   var reversed = { };
   var URL = 'https://id.ripple.com/.well-known/webfinger?resource=';
@@ -27,22 +28,27 @@ angular.module('rippleName', [])
 
   var lookupRequest = function (url, callback) {
     $http.get(url)
-    .success(function(resp) {
+    .then(function(resp) {
       var data;
 
-      if (resp.links && resp.links.length) {
+      if (resp.data &&
+          resp.data.links &&
+          resp.data.links.length) {
         data = {
-          name: getRef(nameRel, resp.links),
-          address: getRef(addressRel, resp.links)
+          name: getRef(nameRel, resp.data.links),
+          address: getRef(addressRel, resp.data.links)
         };
       }
 
       callback(data);
-    }).error(function(err) {
-      console.log(err);
+    },
+    function(resp) {
+      if (resp.data && resp.status !== 404) {
+        console.log(resp.data);
+      }
       callback();
     });
-  }
+  };
 
   /**
    * lookup
@@ -73,20 +79,20 @@ angular.module('rippleName', [])
         cb();
 
       } else if (cache[comp]) {
-        cb(cache[comp]);
+        cb(cache[comp].name, cache[comp].address);
 
       } else {
         cache[comp] = '#pending';
         lookupRequest(URL + comp, function(resp) {
           if (resp) {
-            names[resp.address] = resp.name;
-            reversed[resp.name] = resp.address;
+            names[resp.address] = resp;
+            reversed[resp.name] = resp;
 
             // include a link
             // for the name as it
             // originally came as well
             if (isName) {
-              reversed[comp] = resp.address;
+              reversed[comp] = resp;
             }
 
             cb(resp.name, resp.address);
