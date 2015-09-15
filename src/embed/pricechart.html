@@ -2,15 +2,15 @@
 <html>
   <head>
     <title>Ripple Charts Embedded Chart</title>
-    
+
     <!-- D3 needs this -->
     <meta charset="utf-8">
-    
+
     <script>
-      API    = "<%= api %>";  
-      DOMAIN = "<%= domain %>"; 
+      API    = "<%= api %>";
+      DOMAIN = "<%= domain %>";
     </script>
-    
+
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
@@ -19,36 +19,37 @@
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
-  
+
     <style>
       body {
         font-family:Arial, Helvetica, sans-serif;
-        text-align:center;  
+        text-align:center;
         margin:0;
         background:#fff;
         height:100%;
         position:absolute;
         width:100%;
+        overflow: hidden;
       }
-      
+
       #priceChart {
         height:100%;
       }
-      
+
     </style>
   </head>
   <body>
     <div id="priceChart"></div>
     <script>
       var margin = {top: 30, right: 60, bottom: 50, left: 60};
-      
-      PriceChartWidget({ 
-        id        : "priceChart", 
-        bodyTheme : true, 
-        margin    : margin, 
+
+      PriceChartWidget({
+        id        : "priceChart",
+        bodyTheme : true,
+        margin    : margin,
         resize    : true
-      }).loadFromQS();  
-           
+      }).loadFromQS();
+
     </script>
   </body>
-</html>    
+</html>
