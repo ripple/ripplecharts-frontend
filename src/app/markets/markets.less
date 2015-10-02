@@ -324,6 +324,20 @@
   margin-right:60px;
 }
 
+@media (max-width: 1500px) {
+  .rangeIntervalWrapper #range,
+  .rangeIntervalWrapper #interval {
+    float: none;
+  }
+}
+
+@media (max-width: 1175px) {
+
+  #toCSV {
+    display: none;
+  }
+}
+
 
 @media (max-width:1100px) {
   .markets .dropdowns, .markets #flip, .markets #toCSV {
@@ -337,6 +351,9 @@
 
 @media (max-width: 979px) {
 
+  .rippleStatus {
+    display: none;
+  }
 
   .markets .col-md-3, .markets .col-md-9 {
     width:100% !important;
@@ -378,41 +395,19 @@
   .markets .dropdowns, .markets #flip, .markets #toCSV {
     float:none;
   }
-}
-@media (max-width: 1500px) {
-  .rangeIntervalWrapper #range,
-  .rangeIntervalWrapper #interval {
-    float: none;
-  }
-}
 
-@media (max-width: 1175px) {
-
-  #toCSV {
+  .markets #bookTables tr:nth-child(n + 16) {
     display: none;
-  }
-}
-
-@media (max-width: 980px) {
-  .rippleStatus {
-    display: none;
-  }
-}
-
-@media (max-width: 840px) {
-
-  .rippleStatus {
-    float:none;
-    text-align:center;
-  }
-
-  .rippleStatus .items {
-    display:inline-table;
-    margin:0 10px 10px;
   }
 }
 
 @media (max-width: 600px) {
+
+  .bookTables table {
+    width:100%;
+    float:none !important;
+  }
+
   .rangeIntervalWrapper {
     text-align: center;
     margin: auto;
