@@ -108,11 +108,19 @@ var OrderBook = function (options) {
       issuer_gets: options.trade.issuer
     });
 
-    asks.offersSync();
-    bids.offersSync();
+    asks._shouldSubscribe = true;
+    bids._shouldSubscribe = true;
 
-    asks.on('model', handleAskModel);
-    bids.on('model', handleBidModel);
+    function addListeners() {
+      asks.on('model', handleAskModel);
+      bids.on('model', handleBidModel);
+    }
+
+    if (remote.isConnected()) {
+      addListeners();
+    } else {
+      remote.once('connect', addListeners);
+    }
 
     prepareBook();
   }
