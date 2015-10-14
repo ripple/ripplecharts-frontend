@@ -6,7 +6,7 @@
     width:40px;
     position:absolute;
     top:50%;
-    left:50%; 
+    left:50%;
     margin-top:-20px;
     margin-left:-20px;
   }
@@ -35,7 +35,7 @@
 
   .axis .title {
     fill : #ccc;
-    stroke :none;  
+    stroke :none;
   }
 
   .axis.y text {
@@ -45,12 +45,12 @@
   path {
     fill: none;
     stroke: @rippleBlue;
-    stroke-width:2;
+    stroke-width:1.5;
   }
 
   path.line2 {
     stroke:#bcd;
-    stroke-width:1.5;
+    stroke-width:1.2;
   }
 
   .status {
@@ -71,19 +71,18 @@
     stroke: #999;
   }
 
-  .details {   
-    position: absolute;           
-    text-align: center;           
-    width: 180px;                  
-    height: 85px;                 
-    padding: 10px;             
-    font-size:14px;   
-    background: rgba(255,255,255,.9);   
-    border: 1px solid #ccc;               
-    pointer-events: none; 
-    color:#333; 
-    z-index:1000; 
-    border-radius:2px;      
+  .details {
+    position: absolute;
+    text-align: center;
+    padding: 10px;
+    font-size:14px;
+    background: rgba(255,255,255,.9);
+    border: 1px solid #ccc;
+    pointer-events: none;
+    color:#333;
+    z-index:1000;
+    border-radius:2px;
+    min-width: 160px;
   }
 
   .details span {
@@ -94,8 +93,9 @@
 }
 
 /*
- * Dark theme 
+ * Dark theme
  */
+
 .dark .lineChart {
 
   .status {
@@ -115,7 +115,7 @@
     stroke:#444;
   }
 
-  .details { 
+  .details {
     background: rgba(40,40,40,.9);
     border-color: #444;
     color: #eee;
@@ -124,7 +124,7 @@
   .details span {
     font-weight:bold;
   }
-  
+
   path.line2 {
     stroke:#253040;
   }

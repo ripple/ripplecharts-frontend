@@ -103,8 +103,8 @@ var LineChart = function (options){
       .append("text")
       .text(options.leftTitle ? options.leftTitle : "")
       .attr("class", "title")
-      .attr("transform", "rotate(-90)")
-      .attr("y",15).attr("x",-110);
+      .attr("transform", "rotate(90)")
+      .attr("y",-5).attr("x",5);
     gEnter.append("g")
       .attr("class", "y axis right")
       .attr("transform", "translate(" + x.range()[1] + ")")
@@ -112,7 +112,8 @@ var LineChart = function (options){
       .text(options.rightTitle ? options.rightTitle : "")
       .attr("class", "title")
       .attr("transform", "rotate(-90)")
-      .attr("y",-5).attr("x",-45);
+      .attr('text-anchor', 'end')
+      .attr("y",-5).attr("x",-5);
 
     gEnter.append("path").attr("class", "line2");
     gEnter.append("path").attr("class", "line");
@@ -141,9 +142,10 @@ var LineChart = function (options){
     }
 
     function mousemove(e) {
-      var tx = Math.max(options.margin.left, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
-        i    = d3.bisect(self.lineData.map(function(d) { return d.x; }), x.invert(tx-options.margin.left));
-        d    = self.lineData[i-1];
+      var tx = Math.max(options.margin.left, Math.min(options.width+options.margin.left, d3.mouse(this)[0]));
+      var i = d3.bisect(self.lineData.map(function(d) { return d.x; }), x.invert(tx-options.margin.left));
+      var d = self.lineData[i-1];
+      var rect;
 
       //console.log(i);
       //console.log(x.invert(tx-options.margin.left));
@@ -167,9 +169,12 @@ var LineChart = function (options){
         tx = x(d.x)+options.margin.left;
         ty = y(d.y)+options.margin.top;
 
-        details.html(options.tooltip(d, self.interval))
-          .style("left", (tx-100) + "px")
-          .style("top", (ty-100) + "px")
+        details.html(options.tooltip(d, self.interval));
+
+        rect = details.node().getBoundingClientRect();
+
+        details.style("left", (tx - rect.width/2) + "px")
+          .style("top", (ty - rect.height - 10) + "px")
           .style("opacity",1);
 
         hover.attr("transform", "translate(" + tx + ")");
