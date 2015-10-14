@@ -729,6 +729,6 @@ PriceChart = function (options) {
       return currency;
     }
 
-    return ripple.Currency.from_json(base.currency).to_human();
+    return ripple.Currency.from_json(currency).to_human();
   }
 }
