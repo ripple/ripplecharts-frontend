@@ -24,6 +24,7 @@
       var currencies     = gateways.getCurrencies();
       var currencySelect = selection.append("select").attr("class", "currency").attr("id", selectionId+"_currency");
       var gatewaySelect  = selection.append("select").attr("class","gateway").attr("id", selectionId+"_gateway");
+      var found = false;
 
       //format currnecies for dropdowns
       var i = currencies.length;
@@ -33,13 +34,28 @@
         }
         else {
           currencies[i] = {
-            text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3), 
-            value    : i, 
+            text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3),
+            value    : i,
             currency : currencies[i].currency,
             imageSrc : currencies[i].icon
           };
-          if (select.currency === currencies[i].currency) currencies[i].selected = true;
+          if (select.currency === currencies[i].currency) {
+            currencies[i].selected = true;
+            found = true;
+          }
         }
+      }
+
+      if (select && !found) {
+        currencies.push({
+          text: ripple.Currency.from_json(select.currency)
+            .to_human().substring(0,3),
+          value: i,
+          currency: select.currency,
+          imageSrc: 'https://api.ripplecharts.com/api/currencies/' +
+            select.currency + '.svg',
+          selected: true
+        });
       }
 
       $("#"+selectionId+"_currency").ddslick({
@@ -67,11 +83,12 @@
       }
 
       function changeCurrency(selected){
-        $("#"+selectionId+"_gateway").ddslick("destroy"); 
+        $("#"+selectionId+"_gateway").ddslick("destroy");
         var issuers;
         var issuer;
         var picked  = false;
         var disable = false;
+        var found = false;
 
         issuers = gateways.getIssuers(selected);
         if (selected === "XRP" || issuers.length === 0) {
@@ -92,9 +109,20 @@
             issuer.value = i;
             if (select.issuer === issuer.account) {
               issuer.selected = true;
+              found = true;
             }
             else issuer.selected = false;
           }
+        }
+
+        if (select && select.currency !== 'XRP' && !found) {
+          disable = false;
+          issuers.push({
+            text: select.issuer,
+            value: issuers.length,
+            account: select.issuer,
+            selected: true
+          });
         }
 
         //Special edge case for custom issuer being duplicate of featured
@@ -115,7 +143,7 @@
           }
         });
 
-        d3.select("#"+selectionId+"currency").classed("currency", true);
+        d3.select("#"+selectionId+"_currency").classed("currency", true);
         d3.select("#"+selectionId+"_gateway").classed("gateway", true);
 
         if (disable === true) {
@@ -143,7 +171,7 @@
       var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
       var gateway          = gateways.getName(select.currency, select.issuer);
       var selectedCurrency = select ? select.currency : null;
-      
+
       var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
 
       var option = currencySelect.selectAll("option")
@@ -151,32 +179,32 @@
         .enter().append("option")
         .attr("class", function(d){ return d.currency })
         .property("selected", function(d) { return selectedCurrency && d.currency === selectedCurrency; })
-        .text(function(d){ return d.currency });   
-       
+        .text(function(d){ return d.currency });
+
       changeCurrency();
-      
+
       function changeCurrency() {
         var currency = currencySelect.node().value;
-        var list = currency == 'XRP' ? [""] : 
+        var list = currency == 'XRP' ? [""] :
           gateways.getIssuers(currency, fixed).map(function(d){
             return d.name;
           });
-        
+
         var option = gatewaySelect.selectAll("option").data(list, String);
-        
+
         option.enter().append("option").text(function(d){return d});
         option.exit().remove();
         if (currency=="XRP") gatewaySelect.attr("disabled", "true");
         else gatewaySelect.attr('disabled', null);
-       
-        
+
+
         if (select) {
           option.property("selected", function(d) { return d === gateway });
         }
 
         changeGateway();
-      } 
-      
+      }
+
       function changeGateway() {
         var gateway = gatewaySelect.node().value,
           currency  = currencySelect.node().value,
@@ -184,11 +212,11 @@
           account   = accounts && accounts.filter(function(d) { return d.name === gateway; })[0];
           issuer    = account ? account.account : null;
 
-          event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});  
-      }    
+          event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});
+      }
     }
 
     return d3.rebind(dropdown, event, "on");
   };
-  
+
 })();

@@ -721,34 +721,48 @@ footer .links a:first-child {
  * DDslick dropdown styles
  */
 
- //dropdown currency images
-  #base_currency .dd-option-image, #trade_currency .dd-option-image  {
-    max-width: 14px !important;
-    margin: -2px -4px 0 10px;
-    height: auto;
-  }
-
-  .dd-option-image, .dd-selected-image {
-    height: 28px;
-  }
-
   ul.dd-options li:hover {
     background: #fafafa;
   }
 
-  //selected currency images
-  #base_currency img.dd-selected-image, #trade_currency img.dd-selected-image {
-    max-width: 14px;
-    margin: -2px 7px 0 -2px;
-    height: auto;
-  }
-
-  .dd-option-image, .dd-selected-image {
-    float: none !important; //override default
+  .dd-option-image,
+  .dd-selected-image {
+    float: none !important;
+    height: 28px;
+    margin: 0 10px 0 0 !important;
   }
 
   .dd-container {
     position: inherit !important; //override default
+  }
+
+  .dd-container li {
+    border-bottom: solid 1px #ddd;
+  }
+
+  .dd-container .dd-option,
+  .dd-container {
+    border: none;
+  }
+
+  .dd-container.currency .dd-option-image,
+  .dd-container.currency .dd-selected-image {
+    width: 14px !important;
+  }
+
+  .dd-container.gateway .dd-option-image,
+  .dd-container.gateway .dd-selected-image {
+    max-width: 64px;
+  }
+
+  .dd-container.gateway .dd-option label,
+  .dd-container.gateway .dd-selected label {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: middle;
   }
 
   #currencyPair a:hover, a:focus, .pairSelect a:hover{
@@ -773,16 +787,11 @@ footer .links a:first-child {
 
   .dd-option-text, .dd-selected-text {
     line-height: 40px !important;
-    padding-left: 15px;
     margin-bottom: 0;
   }
 
-  #base_gateway, #trade_gateway {
-    margin-left: 5px;
-  }
-
   //currency specific
-  #base_currency, #trade_currency {
+  .dd-container.currency {
 
     max-width: 95px;
 
@@ -793,31 +802,24 @@ footer .links a:first-child {
     .dd-option-text, .dd-selected-text {
       padding-left: 0;
     }
-
-    .dd-option, .dd-selected {
-      padding: 0 3px;
-    }
-
   }
 
   //gateway specific
-  #base_gateway, #trade_gateway {
+  .dd-container.gateway {
+    margin-left: 5px;
     max-width: 250px;
 
     .dd-select, .dd-options {
       max-width: 250px;
     }
 
-  .dd-option {
-    padding: 0 15px !important;
   }
 
-  }
-
+  .dd-option,
   .dd-selected {
     color: #000;
     font-family: "Open Sans";
-    padding: 0 15px !important;
+    padding: 0 10px !important;
 
     &:hover {
       color: #000;
@@ -827,7 +829,6 @@ footer .links a:first-child {
   .dd-option-text {
     color: #000;
     font-family: "Open Sans";
-    padding: 0 10px !important;
 
     &:hover {
       color: #000;
