@@ -106,6 +106,52 @@ h1, h2, h3, h4 {
   height:55px;
 }
 
+.header status-check {
+  float: right;
+  position: relative;
+}
+
+.header status-check marker {
+  border-color: #555 #555 transparent transparent;
+  border-width: 7px;
+  border-style: solid;
+  opacity: .5;
+  display: block;
+  position: relative;
+  width: 14px;
+}
+
+.header status-check marker.active {
+  border-color: #393 #393 transparent transparent;
+  opacity: 1;
+}
+
+.header status-check marker.warning {
+  border-color: #c90 #c90 transparent transparent;
+  opacity: 1;
+}
+
+.header status-check marker.inactive {
+  border-color: #c00 #c00 transparent transparent;
+  opacity: 1;
+}
+
+.header status-check tooltip {
+  display: block;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0,0,0,.7);
+  z-index: 10;
+  padding: 10px;
+  width: 160px;
+  text-align: center;
+  font-size: 11px;
+  border-radius: 3px;
+  border: 1px solid #222;
+  color: #fff;
+}
+
 /**
  * Navigation
  */
@@ -151,9 +197,7 @@ h1, h2, h3, h4 {
 
 .nav .category img {
   height:18px;
-  width:auto;
-  margin:1px 5px;
-  //float:left;
+  width:30px;
 }
 
 .nav .page {
@@ -229,7 +273,7 @@ h1, h2, h3, h4 {
   width:175px;
   height:30px;
   background-image:url('images/logo.png');
-  margin: 12px 0 8px 15px !important;
+  margin: 15px 0 15px 15px !important;
 
 // Pixel ratio: 2
   @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
@@ -621,12 +665,11 @@ footer .links a:first-child {
   display: none;
 }
 
-.main_menu {
+.navbar {
   font-family: 'Open Sans';
+  margin-top: 5px;
+  float: right;
 
-  li.color_picker {
-    margin-top: 7px !important;
-  }
 
   li.category:hover > .sub_wrapper > ul.subnav {
     display: block;
@@ -674,7 +717,6 @@ footer .links a:first-child {
   }
 
   .nav {
-    float: right;
     border-bottom: none;
 
   & .top, .category {
@@ -682,12 +724,20 @@ footer .links a:first-child {
       border-right: none;
       border-bottom: none;
       border-top: none;
+
+      a {
+        display: inline-block;
+      }
     }
 
-  }
+    li.category.help,
+    li.category.color_picker {
+      text-align: center;
 
-  #helpButton_new {
-    padding-right: 10px;
+      a {
+        padding: 14px 5px;
+      }
+    }
   }
 }
 
@@ -703,17 +753,13 @@ footer .links a:first-child {
 
 @media (max-width: 768px) {
 
-   .main_menu .nav {
+   .header .nav {
      display: none;
    }
 
   .mobile_only {
     display: block !important;
 
-  }
-
-  .nav .category img {
-    float:left;
   }
 }
 
@@ -858,5 +904,5 @@ footer .links a:first-child {
     li {
       display: none;
     }
-
   }
+

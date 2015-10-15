@@ -20,7 +20,8 @@ angular.element(document).ready(function() {
     'gateways',
     'rippleName',
     'matrixFactory',
-    'chordDiagram'
+    'chordDiagram',
+    'statusCheck'
   ])
 
   .config( function myAppConfig ( $stateProvider, $urlRouterProvider ) {
