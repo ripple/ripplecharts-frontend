@@ -116,7 +116,9 @@
         }
 
         //issuer is not in the list for this currency
-        if (select.currency === selected && !found) {
+        if (selected === select.currency &&
+            selected !== 'XRP' &&
+            !found) {
           disable = false;
           issuers.push({
             text: select.issuer,
