@@ -121,6 +121,26 @@ h1, h2, h3, h4 {
   width: 14px;
 }
 
+.header status-check svg {
+  margin: 20px 12px 12px;
+}
+
+.header status-check circle {
+  fill: rgba(100,100,100,.5);
+}
+
+.header status-check circle.active {
+  fill: #393;
+}
+
+.header status-check circle.warning {
+  fill: #c90;
+}
+
+.header status-check circle.inactive {
+  fill: #c00;
+}
+
 .header status-check marker.active {
   border-color: #393 #393 transparent transparent;
   opacity: 1;
@@ -139,8 +159,8 @@ h1, h2, h3, h4 {
 .header status-check tooltip {
   display: block;
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 50px;
+  right: 5px;
   background: rgba(0,0,0,.7);
   z-index: 10;
   padding: 10px;
