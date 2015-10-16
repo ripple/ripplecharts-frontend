@@ -14,6 +14,7 @@ angular.element(document).ready(function() {
     'ripplecharts.accounts',
     'ripplecharts.value',
     'ripplecharts.history',
+    'ripplecharts.metrics',
     'ui.state',
     'ui.route',
     'snap',

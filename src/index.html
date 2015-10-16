@@ -74,14 +74,17 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
               </div>
             </li>
             <li class="category">
-              <a href="#/value" snap-close>Value  <span class="caret"></span></a>
+              <a href="#/value" snap-close>Network  <span class="caret"></span></a>
               <div class="sub_wrapper">
               <ul class="subnav">
                 <li ui-route="/value" ng-class="{active:$uiRoute !== false}">
                   <a href="#/value" snap-close>Value Trends</a>
                 </li>
                 <li ui-route="/history" ng-class="{active:$uiRoute !== false}">
-                  <a href="#/history" snap-close>Historical Metrics</a>
+                  <a href="#/history" snap-close>Historical Volume</a>
+                </li>
+                <li ui-route="/metrics" ng-class="{active:$uiRoute !== false}">
+                  <a href="#/metrics" snap-close>Metrics</a>
                 </li>
               </ul>
             </div>
@@ -147,7 +150,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
           </ul>
         </li>
         <li class="category">
-          <a href="#/value" snap-close><img src="assets/icons/999_value.svg">Value</a>
+          <a href="#/value" snap-close><img src="assets/icons/999_network.svg">Network</a>
         </li>
         <li class="page">
           <ul>
@@ -155,7 +158,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
               <a href="#/value" snap-close>Value Trends</a>
             </li>
             <li ui-route="/history" ng-class="{active:$uiRoute !== false}">
-              <a href="#/history" snap-close>Historical Metrics</a>
+              <a href="#/history" snap-close>Historical Volume</a>
+            </li>
+            <li ui-route="/metrics" ng-class="{active:$uiRoute !== false}">
+              <a href="#/metrics" snap-close>Metrics</a>
             </li>
           </ul>
         </li>

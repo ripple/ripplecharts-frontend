@@ -65,19 +65,32 @@ var LineChart = function (options){
       return;
     }
 
-    var x    = d3.time.scale().range([0, options.width]).domain(d3.extent(self.lineData, function(d) { return d.x; })),
-      y      = d3.scale.linear().range([options.height, 0]).domain(d3.extent(self.lineData, function(d) { return d.y; })).nice(),
-      y2     = d3.scale.pow().exponent(0.4).range([options.height, 0]).domain(d3.extent(self.lineData, function(d) { return d.y2; })).nice(),
-      xAxis  = d3.svg.axis().scale(x),
-      yAxis  = d3.svg.axis().scale(y),
-      y2Axis = d3.svg.axis().scale(y2),
+    var x = d3.time.scale()
+    .range([0, options.width])
+    .domain(d3.extent(self.lineData, function(d) { return d.x; }));
 
-      line   = d3.svg.line()
-        .x(function(d) { return x(d.x); })
-        .y(function(d) { return y(d.y); });
-      line2  = d3.svg.line()
-        .x(function(d) { return x(d.x); })
-        .y(function(d) { return y2(d.y2); });
+    var y = d3.scale.linear()
+    .range([options.height, 0])
+    .domain(d3.extent(self.lineData, function(d) { return d.y; }))
+    .nice();
+
+    var y2 = d3.scale.pow()
+    .exponent(0.4)
+    .range([options.height, 0])
+    .domain(d3.extent(self.lineData, function(d) { return d.y2; }))
+    .nice();
+
+    var xAxis = d3.svg.axis().scale(x);
+    var yAxis = d3.svg.axis().scale(y);
+    var y2Axis = d3.svg.axis().scale(y2);
+
+    var line = d3.svg.line()
+    .x(function(d) { return x(d.x); })
+    .y(function(d) { return y(d.y); });
+
+    var line2 = d3.svg.line()
+    .x(function(d) { return x(d.x); })
+    .y(function(d) { return y2(d.y2) || 0 });
 
     var gEnter = svgEnter.append("g")
       .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
@@ -90,8 +103,8 @@ var LineChart = function (options){
       .append("text")
       .text(options.leftTitle ? options.leftTitle : "")
       .attr("class", "title")
-      .attr("transform", "rotate(-90)")
-      .attr("y",15).attr("x",-110);
+      .attr("transform", "rotate(90)")
+      .attr("y",-5).attr("x",5);
     gEnter.append("g")
       .attr("class", "y axis right")
       .attr("transform", "translate(" + x.range()[1] + ")")
@@ -99,7 +112,8 @@ var LineChart = function (options){
       .text(options.rightTitle ? options.rightTitle : "")
       .attr("class", "title")
       .attr("transform", "rotate(-90)")
-      .attr("y",-5).attr("x",-45);
+      .attr('text-anchor', 'end')
+      .attr("y",-5).attr("x",-5);
 
     gEnter.append("path").attr("class", "line2");
     gEnter.append("path").attr("class", "line");
@@ -128,9 +142,10 @@ var LineChart = function (options){
     }
 
     function mousemove(e) {
-      var tx = Math.max(options.margin.left, Math.min(options.width+options.margin.left, d3.mouse(this)[0])),
-        i    = d3.bisect(self.lineData.map(function(d) { return d.x; }), x.invert(tx-options.margin.left));
-        d    = self.lineData[i-1];
+      var tx = Math.max(options.margin.left, Math.min(options.width+options.margin.left, d3.mouse(this)[0]));
+      var i = d3.bisect(self.lineData.map(function(d) { return d.x; }), x.invert(tx-options.margin.left));
+      var d = self.lineData[i-1];
+      var rect;
 
       //console.log(i);
       //console.log(x.invert(tx-options.margin.left));
@@ -154,9 +169,12 @@ var LineChart = function (options){
         tx = x(d.x)+options.margin.left;
         ty = y(d.y)+options.margin.top;
 
-        details.html(options.tooltip(d, self.interval))
-          .style("left", (tx-100) + "px")
-          .style("top", (ty-100) + "px")
+        details.html(options.tooltip(d, self.interval));
+
+        rect = details.node().getBoundingClientRect();
+
+        details.style("left", (tx - rect.width/2) + "px")
+          .style("top", (ty - rect.height - 10) + "px")
           .style("opacity",1);
 
         hover.attr("transform", "translate(" + tx + ")");
