@@ -21,7 +21,7 @@ angular.module( 'ripplecharts.metrics', [
   var timeFormat = 'YYYY-MM-DD';
   var commas = d3.format(',');
   var intervalFormat = d3.format(',.2f');
-  var base = 'https://data.ripple.com/v2/stats/';
+  var base = API + '/stats/';
   var end = moment.utc().subtract(1, 'day');
   var start = moment(end).subtract(1000, 'days');
   var range = '&start=' + start.format(timeFormat) +

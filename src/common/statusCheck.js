@@ -5,7 +5,7 @@ angular.module('statusCheck', [])
     template: '<svg width="20" height="20">' +
       '<circle r=7 cx="10" cy="10"></svg><tooltip></tooltip>',
     link: function(scope, element, attr) {
-      var url = 'https://data.ripple.com/v2/health/importer?verbose=true';
+      var url = API + '/health/importer?verbose=true';
       var marker = element.find('circle');
       var tooltip = element.find('tooltip');
 
