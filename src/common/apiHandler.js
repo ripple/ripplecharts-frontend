@@ -1,6 +1,12 @@
 ApiHandler = function (url) {
   var self = this;
+  var timeFormat = 'YYYY-MM-DDTHH:mm:ss';
+
   self.url = url;
+
+  function formatTime(time) {
+    return moment.utc(time).format(timeFormat);
+  }
 
   function apiRequest (route) {
     var request = d3.xhr(self.url+"/"+route);
@@ -10,70 +16,73 @@ ApiHandler = function (url) {
 
 
   this.offersExercised = function (params, load, error) {
-    var request = apiRequest("offersExercised");
+    console.log(params);
+    var url = self.url + '/exchanges/';
+    var base = params.base.currency +
+      (params.base.issuer ? '+' + params.base.issuer : '');
+    var counter = params.counter.currency +
+      (params.counter.issuer ? '+' + params.counter.issuer : '');
+    var limit = params.limit || 1000;
+    var interval = params.timeIncrement && params.timeMultiple ?
+      '&interval=' + params.timeMultiple + params.timeIncrement : '';
+    var start = params.startTime ?
+      '&start=' + formatTime(params.startTime) : '';
+    var end = params.endTime ?
+      '&end=' + formatTime(params.endTime) : '';
+    var descending = params.descending ? '&descending=true' : '';
+    var reduce = params.reduce === false || interval ? '' : '&reduce=true';
 
-    request.post(JSON.stringify(params))
-      .on('load', function(xhr){
-        var response = JSON.parse(xhr.response), data = [];
+    url += base + '/' + counter + '?limit=' + limit +
+      interval + start + end + descending + reduce;
 
-        if (response.length>1) {
-          if (params.reduce===false) {
-
-            response.shift(); //remove header row
-            data = response.map(function(d) {
-
-              return {
-                time    : moment.utc(d[0]),
-                price   : d[1],
-                amount  : d[2],
-                amount2 : d[3],
-                tx      : d[4],
-                id      : d[5],
-                type    : ''
-              }
-            });
-
-            var prev = null;
-            for (var i=data.length; i>-1; i--) {
-              if (prev && prev.price>data[i].price)      data[i].type = 'bid';
-              else if (prev && prev.price<data[i].price) data[i].type = 'ask';
-            //else if (prev)                             data[i].type = prev.type;
-              prev = data[i];
-            }
-
-
-          } else {
-            response.splice(0,1); //remove first
-
-            //remove null row, if we get one
-            if (response.length==1 && !response[0][1]) response.shift();
-
-            data = response.map(function(d) {
-              return {
-                startTime     : moment.utc(d[0]),
-                baseVolume    : d[1],
-                counterVolume : d[2],
-                count         : d[3],
-                open          : d[4],
-                high          : d[5],
-                low           : d[6],
-                close         : d[7],
-                vwap          : d[8],
-                openTime      : d[9],
-                closeTime     : d[10],
-                partial       : d[11]
-              };
-            });
+    d3.json(url, function(err, resp) {
+      if (err) {
+        error({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+      } else if (params.reduce===false) {
+        var data = resp.exchanges.map(function(d) {
+          return {
+            time    : moment.utc(d.executed_time),
+            price   : d.rate,
+            amount  : d.base_amount,
+            amount2 : d.counter_amount,
+            tx      : d.tx_hash,
+            type    : ''
           }
+        });
+
+        var prev = null;
+        var index = data.length;
+        var d;
+        while(index--) {
+          d = data[index];
+          if (prev && prev.price>d.price)      d.type = 'bid';
+          else if (prev && prev.price<d.price) d.type = 'ask';
+          prev = d;
         }
 
         load(data);
-      })
-      .on('error', function(xhr){
-        if (error) error({status:xhr.status,text:xhr.statusText,message:xhr.response})
-      });
-
-    return request;
+      } else {
+          load(resp.exchanges.map(function(d) {
+            return {
+              startTime     : moment.utc(d.start),
+              baseVolume    : d.base_volume,
+              counterVolume : d.counter_volume,
+              count         : d.count,
+              open          : d.open,
+              high          : d.high,
+              low           : d.low,
+              close         : d.close,
+              vwap          : d.vwap,
+              openTime      : d.open_time,
+              closeTime     : d.close_time
+            };
+          }));
+      }
+    });
   }
 
   this.valueSent = function (params, load, error) {
