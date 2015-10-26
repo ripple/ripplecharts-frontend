@@ -16,7 +16,7 @@ ApiHandler = function (url) {
 
 
   this.offersExercised = function (params, load, error) {
-    console.log(params);
+
     var url = self.url + '/exchanges/';
     var base = params.base.currency +
       (params.base.issuer ? '+' + params.base.issuer : '');
@@ -105,10 +105,32 @@ ApiHandler = function (url) {
 
   this.issuerCapitalization = function (params, load, error) {
 
-    var request = apiRequest("issuerCapitalization");
-    return handleRequest(request, params, function (err, response){
-      if (err) error(err);
-      else load(response);
+    var url = self.url + '/capitalization/' + params.currency +
+     '/' + params.issuer;
+    var limit = params.limit || 1000;
+    var interval = params.interval ?
+      '&interval=' + params.interval : '';
+    var start = params.start ?
+      '&start=' + formatTime(params.start) : '';
+    var end = params.endTime ?
+      '&end=' + formatTime(params.endTime) : '';
+    var descending = params.descending ? '&descending=true' : '';
+    var adjusted = params.adjusted ? '&adjusted=true' : '';
+
+    url += '?limit=' + limit + interval +
+      start + end + descending + adjusted;
+
+    d3.json(url, function(err, resp) {
+      if (err) {
+        error({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        load(resp);
+      }
     });
   }
 

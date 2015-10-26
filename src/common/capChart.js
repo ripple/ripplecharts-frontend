@@ -357,49 +357,75 @@ function CapChart(options) {
       return;
     }
 
-    var end            = moment.utc();
-    var issuers        = options.gateways.getIssuers(currency, true);
-    var parsed_issuers = [];
+    if (!capDataCache[currency]) {
+      capDataCache[currency] = {};
+    }
 
-    issuers.forEach(function(issuer){
-      parsed_issuers.push({
-        currency : self.currency,
-        issuer  : issuer.account
-      });
-    });
+    if (!capDataCache[currency][range.name]) {
+      capDataCache[self.currency][range.name] = {
+        raw:[]
+      };
+    }
 
-    apiHandler.issuerCapitalization({
-      timeIncrement : range.interval,
-      currencies    : parsed_issuers,
-      startTime     : moment.utc(range.offset(end)).format(),
-      endTime       : end.format()
+    var issuers = options.gateways.getIssuers(currency, true);
+    var end = moment.utc();
+    var params;
 
-    }, function(data){
-
-      if (!capDataCache[self.currency]) capDataCache[self.currency] = {};
-      capDataCache[self.currency][self.range] = {raw : data};
-
-      //convert the time to a timestamp
-      data.forEach(function(d, index){
-       d.name = options.gateways.getName(d.currency, d.issuer);
-       d.results = d.results.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]});
-      });
-
-      prepareData(currency, range);
-      prepareLegend(currency, range);
-
-      if (self.dataType=="Capitalization" &&
-        self.currency==currency &&
-        self.range==range.name) {
-
-        isLoading = false;
-        drawData(); //may have been changed after loading started
-        drawLegend();
+    issuers.forEach(function(issuer) {
+      params = {
+        currency: self.currency,
+        issuer: issuer.account,
+        interval: range.interval,
+        start: moment.utc(range.offset(end)).format(),
+        end: end.format(),
+        adjusted: true,
+        descending: true,
+        limit: 1000
       }
 
-    }, function (error){
-      setStatus(error.text ? error.text : "Unable to load data");
+      capDataHelper(params, range, issuers.length);
     });
+  }
+
+  function capDataHelper(params, range, count) {
+    var currency = self.currency;
+
+    apiHandler.issuerCapitalization(params,
+      successResponse, errorResponse);
+
+    function errorResponse(err) {
+      setStatus(err.text ? err.text : 'Unable to load data');
+    }
+
+    function successResponse(data) {
+
+      capDataCache[currency][range.name]['raw'].push({
+        address: data.issuer,
+        name: options.gateways.getName(data.currency, data.issuer),
+        results: data.rows.map(function(d) {
+          return [
+            moment.utc(d.date).unix()*1000,
+            Number(d.amount)
+          ]
+        })
+      });
+
+      if (capDataCache[currency][range.name]['raw'].length === count) {
+        isLoading = false;
+
+        prepareData(currency, range);
+        prepareLegend(currency, range);
+
+        if (self.dataType=="Capitalization" &&
+          self.currency==currency &&
+          self.range==range.name) {
+
+          isLoading = false;
+          drawData(); //may have been changed after loading started
+          drawLegend();
+        }
+      }
+    }
   }
 
   function sortTime(a,b){return a[0]-b[0]}
@@ -629,7 +655,10 @@ function CapChart(options) {
       }
 
 
-      //console.log(lines);
+      if (!lines || !legend) {
+        return;
+      }
+
       color.domain(legend.map(function(d){return d.address}));
       lines = filterByLegend(lines, legend);
 
