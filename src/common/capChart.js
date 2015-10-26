@@ -281,6 +281,11 @@ function CapChart(options) {
       return;
     }
 
+    if (!tradeDataCache[self.currency])
+      tradeDataCache[self.currency] = {};
+    if (!tradeDataCache[self.currency][range.name])
+      tradeDataCache[self.currency][range.name] = {raw:[]};
+
     var issuers = options.gateways.getIssuers(self.currency, true);
 
     issuers.forEach(function(issuer){
@@ -300,22 +305,19 @@ function CapChart(options) {
     //could be different that c.currency for demmurage
     var currency = self.currency;
     var end      = moment.utc();
-    base         = {currency: base.currency, issuer: base.issuer, name: base.name};
+    var interval = range.interval === 'week' ? 'day' : range.interval;
+    var multiple = range.interval === 'week' ? 7 : 1;
 
     apiHandler.offersExercised({
       startTime     : moment.utc(range.offset(end)).format(),
       endTime       : end.format(),
-      timeIncrement : range.interval,
+      timeIncrement : interval,
+      timeMultiple  : multiple,
       descending    : false,
       base          : base,
       counter       : {currency:"XRP"}
 
     }, function(data){
-      if (!tradeDataCache[currency])
-        tradeDataCache[currency] = {};
-      if (!tradeDataCache[currency][range.name])
-        tradeDataCache[currency][range.name] = {raw:[]};
-
 
       tradeDataCache[currency][range.name]['raw'].push({
         address : base.issuer,

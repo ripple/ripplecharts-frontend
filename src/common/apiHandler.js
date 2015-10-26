@@ -23,8 +23,8 @@ ApiHandler = function (url) {
     var counter = params.counter.currency +
       (params.counter.issuer ? '+' + params.counter.issuer : '');
     var limit = params.limit || 1000;
-    var interval = params.timeIncrement && params.timeMultiple ?
-      '&interval=' + params.timeMultiple + params.timeIncrement : '';
+    var interval = params.timeIncrement ?
+      '&interval=' + (params.timeMultiple || 1) + params.timeIncrement : '';
     var start = params.startTime ?
       '&start=' + formatTime(params.startTime) : '';
     var end = params.endTime ?
