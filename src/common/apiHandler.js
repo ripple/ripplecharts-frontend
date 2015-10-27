@@ -1,8 +1,8 @@
-ApiHandler = function (url) {
+ApiHandler = function (baseURL) {
   var self = this;
   var timeFormat = 'YYYY-MM-DDTHH:mm:ss';
 
-  self.url = url;
+  self.url = baseURL;
 
   function formatTime(time) {
     return moment.utc(time).format(timeFormat);
@@ -36,7 +36,7 @@ ApiHandler = function (url) {
     url += base + '/' + counter + '?' + limit +
       interval + start + end + descending + reduce;
 
-    d3.json(url, function(err, resp) {
+    return d3.json(url, function(err, resp) {
       if (err) {
         error({
           status: err.status,
@@ -111,7 +111,7 @@ ApiHandler = function (url) {
     url += '?limit=' + limit + interval +
       start + end + descending + adjusted;
 
-    d3.json(url, function(err, resp) {
+    return d3.json(url, function(err, resp) {
       if (err) {
         error({
           status: err.status,
@@ -123,32 +123,55 @@ ApiHandler = function (url) {
         load(resp);
       }
     });
-  }
+  };
 
 
-  this.getTotalAccounts = function(time, callback){
-    var request = apiRequest("accountsCreated");
-    time = time || moment.utc().format();
+  this.getTotalAccounts = function(time, callback) {
+    var url = self.url + '/accounts?reduce=true&start=2013-01-01';
 
-    request.post(JSON.stringify({
-      startTime: moment.utc('2013-01-01').format(),
-      endTime: time,
-      timeIncrement: "all"
-    })).on('load', function(xhr){
-      data  = JSON.parse(xhr.response);
-      callback (null, data || 0);
+    if (time) {
+     url += '&end=' + formatTime(time);
+    }
 
-    }).on('error', function(xhr){
-      callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        callback({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        callback(null, resp ? (resp.count || 0) : 0);
+      }
     });
-
-    return request;
-  }
+  };
 
 
   this.accountsCreated = function (params, callback) {
-    var request = apiRequest("accountsCreated");
-    return handleRequest(request, params, callback);
+    var url = self.url + '/accounts?';
+    var start = params.startTime ?
+      '&start=' + formatTime(params.startTime) : '';
+    var end = params.endTime ?
+      '&end=' + formatTime(params.endTime) : '';
+    var interval = params.timeIncrement ?
+      '&interval=' + params.timeIncrement : '';
+    var limit = '&limit=' + (params.limit || 1000);
+
+    url += start + end + interval + limit;
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        callback({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        callback(null, resp);
+      }
+    });
   }
 
 
@@ -198,13 +221,6 @@ ApiHandler = function (url) {
 
       return request;
   }
-
-
-  this.accountsCreated = function (params, callback) {
-      var request = apiRequest("accountsCreated");
-      return handleRequest(request, params, callback);
-  }
-
 
   this.getTopMarkets = function (ex, callback) {
       var request = apiRequest("topMarkets");

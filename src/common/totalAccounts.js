@@ -100,18 +100,15 @@ var TotalAccounts = function (options) {
         return;
       }
 
-      var total  = chart.basis,
-        lineData = [];
+      var total = chart.basis,
 
-      data.splice(0,1);
-      data.reverse(); //descending option doesnt work
-
-      lineData = data.map(function(d){
-        total += d[1];
+      lineData = data.accounts.map(function(d) {
+        total += d.count;
         return {
-          x  : moment.utc(d[0]),
-          y  : total,
-          y2 : d[1]}
+          x: moment.utc(d.date),
+          y: total,
+          y2: d.count
+        };
       });
 
       chart.loading = false;
