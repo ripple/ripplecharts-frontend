@@ -174,31 +174,6 @@ ApiHandler = function (baseURL) {
     });
   }
 
-
-  this.getTopMarkets = function (ex, callback) {
-    var request = apiRequest("topMarkets");
-    return handleRequest(request, { exchange : ex }, callback);
-  }
-
-  this.getVolume24Hours = function (ex, callback) {
-    var request = apiRequest("totalValueSent");
-    return handleRequest(request, { exchange : ex }, callback);
-  }
-
-  this.getPaymentVolume = function (ex, callback) {
-    var request = apiRequest("totalPaymentVolume");
-    return handleRequest(request, { exchange : ex }, callback);
-  }
-
-  this.getVolume30Days = function (ex, callback) {
-    var request = apiRequest("totalValueSent");
-    return handleRequest(request, {
-      endTime   : moment.utc(),
-      startTime : moment.utc().subtract(30, "days"),
-      exchange  : ex
-    }, callback);
-  }
-
   this.historicalMetrics = function(metric, currency, issuer, start, end, inc, callback){
       var request = apiRequest("historicalMetrics");
       start = start || new Date();
@@ -223,27 +198,13 @@ ApiHandler = function (baseURL) {
   }
 
   this.getTopMarkets = function (ex, callback) {
-      var request = apiRequest("topMarkets");
-      return handleRequest(request, { exchange : ex }, callback);
+    var request = apiRequest("topMarkets");
+    return handleRequest(request, { exchange : ex }, callback);
   }
 
-  this.getVolume24Hours = function (ex, callback) {
-      var request = apiRequest("totalValueSent");
-      return handleRequest(request, { exchange : ex }, callback);
-  }
-
-  this.getVolume30Days = function (ex, callback) {
-      var request = apiRequest("totalValueSent");
-      return handleRequest(request, {
-          endTime   : moment.utc(),
-          startTime : moment.utc().subtract(30, "days"),
-          exchange  : ex
-      }, callback);
-  }
-
-  this.getNetworkValue = function (ex, callback) {
-      var request = apiRequest("totalNetworkValue");
-      return handleRequest(request, { exchange : ex }, callback);
+  this.getPaymentVolume = function (ex, callback) {
+    var request = apiRequest("totalPaymentVolume");
+    return handleRequest(request, { exchange : ex }, callback);
   }
 
   this.getIssuedValue = function (ex, callback) {
@@ -251,10 +212,29 @@ ApiHandler = function (baseURL) {
       return handleRequest(request, { exchange : ex }, callback);
   }
 
-  this.exchangeRates = function (params, callback) {
-      var request = apiRequest("exchangeRates");
-      return handleRequest(request, params, callback);
-  }
+  this.exchangeRate = function (params, callback) {
+    var url = self.url + '/exchange_rates';
+    var base = '/' + params.base.currency +
+      (params.base.issuer ? '+' + params.base.issuer : '');
+    var counter = '/' + params.counter.currency +
+      (params.counter.issuer ? '+' + params.counter.issuer : '');
+    var date = params.date ?
+      '?date=' + formatTime(params.date) : '';
+    url += base + counter + date;
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        callback({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        callback(null, resp.rate || 0);
+      }
+    });
+  };
 
   this.marketTraders = function (params, callback) {
       var request = apiRequest("marketTraders");

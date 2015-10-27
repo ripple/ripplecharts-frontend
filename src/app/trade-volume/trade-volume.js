@@ -18,6 +18,28 @@ angular.module( 'ripplecharts.trade-volume', [
 .controller( 'TradeVolumeCtrl', function TradeVolumeCtrl( $scope, $location, $interval) {
 
   var api = new ApiHandler(API);
+  var pairs = [
+    {
+      counter : {currency : 'USD', issuer : 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B'},
+      base    : {currency:'XRP'}
+    },
+    {
+      counter : {currency : 'JPY', issuer : 'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN'},
+      base    : {currency:'XRP'}
+    },
+    {
+      counter : {currency : 'CNY', issuer : 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y'},
+      base    : {currency:'XRP'}
+    },
+    {
+      counter : {currency : 'BTC', issuer : 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
+      base    : {currency:'XRP'}
+    },
+    {
+      counter : {currency : 'EUR', issuer : 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
+      base    : {currency:'XRP'}
+    }
+  ];
 
   //source radio
   $scope.source = {
@@ -53,46 +75,27 @@ angular.module( 'ripplecharts.trade-volume', [
 
   //load the data
   $scope.loadTopMarkets = function (date) {
-    api.exchangeRates({
-      time: date,
-      pairs:[
-        {
-          counter : {currency : 'USD', issuer : 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B'},
-          base    : {currency:'XRP'}
-        },
-        {
-          counter : {currency : 'JPY', issuer : 'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN'},
-          base    : {currency:'XRP'}
-        },
-        {
-          counter : {currency : 'CNY', issuer : 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y'},
-          base    : {currency:'XRP'}
-        },
-        {
-          counter : {currency : 'BTC', issuer : 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
-          base    : {currency:'XRP'}
-        },
-        {
-          counter : {currency : 'EUR', issuer : 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'},
-          base    : {currency:'XRP'}
+    var rates = [];
+    pairs.forEach(function(c) {
+      api.exchangeRate({
+        date: date,
+        base: c.base,
+        counter: c.counter
+      },
+      function(err, rate) {
+        if (err) {
+          console.log(err);
+          return;
         }
-      ]
 
-    }, function(err, data) {
-      var rates = [];
-      if (data) {
-        data.forEach(function(d) {
-          if (d.rate) {
-            rates.push({
-              currency: d.counter.currency,
-              issuer: d.counter.issuer,
-              rate: d.rate
-            });
-          }
+        rates.push({
+          currency: c.counter.currency,
+          issuer: c.counter.issuer,
+          rate: rate
         });
 
         $scope.setNormalizationRates(rates);
-      }
+      });
     });
 
     d3.json(API + '/topMarkets')
@@ -101,6 +104,12 @@ angular.module( 'ripplecharts.trade-volume', [
       startTime: date,
       interval: 'day'
     }), function(err, resp) {
+
+      if (err) {
+        console.log(err);
+        return;
+      }
+
       var data = [];
       resp.components.forEach(function(c) {
         if (!c.convertedAmount) {

@@ -322,22 +322,16 @@ angular.module( 'ripplecharts.landing', [
 
   //get the exchange rate from the API
   function getExchangeRate (c, callback) {
-
-    api.exchangeRates({
-      pairs:[{
-        base    : {currency : c.currency, issuer : c.issuer},
-        counter : {currency:"XRP"}
-      }]
-
-    }, function(err, data){
+    api.exchangeRate({
+      base:    { currency : c.currency, issuer : c.issuer },
+      counter: { currency: 'XRP' }
+    }, function(err, rate){
       if (err) return callback(err);
 
       //cache for future reference
-      data.forEach(function(d){
-        exchangeRates[d.base.currency+"."+d.base.issuer] = d.rate;
-      });
+      exchangeRates[c.currency + '.' + c.issuer] = rate;
 
-      callback(null, data);
+      callback(null, rate);
     });
   }
 
