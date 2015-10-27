@@ -13,7 +13,7 @@ PriceChart = function (options) {
   var priceAxis   = d3.svg.axis().scale(priceScale).orient("right");
   var apiHandler  = new ApiHandler(options.url);
   var liveFeed;
-  var isLoading;
+  var isLoading = true;
 
 //this can be a function that will return whenever the state changes,
 //such as when we start loading historical data, or stop
@@ -171,8 +171,9 @@ PriceChart = function (options) {
       .attr("width", options.width)
       .attr("height", options.height);
 
-      //drawChart();
-      drawData(true);
+      if (base && counter) {
+        drawData(true);
+      }
     }
   }
 

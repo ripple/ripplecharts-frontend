@@ -284,7 +284,17 @@ function createTransactionProcessor(viewOpts, resultHandler) {
       // Flip the currencies if necessary
       if (viewOpts.base.currency === key[1][0] && viewOpts.base.issuer === key[1][1]) {
         key      = [key[1], key[0]]
-        value    = [value[1], value[0], 1/value[2], value[3], value[4], value[5], value[6]];
+        value    = [
+          value[1], // base amount
+          value[0], // counter amount
+          1/value[2], // rate
+          value[3], // taker
+          value[4], // provider
+          value[6], // buyer
+          value[5], // seller
+          value[7], // time
+          value[8]  // hash
+        ];
       }
 
       //console.log(value);
@@ -368,7 +378,17 @@ function offersExercisedMap(doc, emit) {
                 exchangeRate = exchangeRate * 1000000.0;
             }
 
-            emit([payCurr, getCurr], [payAmnt, getAmnt, 1/exchangeRate, counterparty, tx.Account, unix, tx.hash]);
+            emit([payCurr, getCurr], [
+              payAmnt, // base amount
+              getAmnt, // counter amount
+              1/exchangeRate, // rate
+              tx.Account, // taker
+              counterparty, // provider
+              counterparty, // buyer
+              tx.account, // seller
+              unix, //time
+              tx.hash
+            ]);
         });
 
 

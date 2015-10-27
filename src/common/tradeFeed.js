@@ -54,25 +54,7 @@ var TradeFeed = function (options) {
 
     header.selectAll('.amount').html('Amount <small>'+b+'</small>');
     header.selectAll('.price').html('Price <small>'+c+'</small>');
-/*
-    //mock data
-    transactions = [
-      {time:moment(new Date()), amount:100, price:50, type:""},
-      {time:moment(new Date()), amount:110, price:200, type:"bid"},
-      {time:moment(new Date()), amount:120, price:300, type:"ask"},
-      {time:moment(new Date()), amount:130, price:400, type:"ask"},
-      {time:moment(new Date()), amount:140, price:500, type:"ask"},
-      {time:moment(new Date()), amount:150, price:600, type:"bid"},
-      {time:moment(new Date()), amount:100, price:50, type:"bid"},
-      {time:moment(new Date()), amount:110, price:200, type:"bid"},
-      {time:moment(new Date()), amount:120, price:300, type:"ask"},
-      {time:moment(new Date()), amount:130, price:400, type:"ask"},
-      {time:moment(new Date()), amount:140, price:500, type:"ask"},
-      {time:moment(new Date()), amount:150, price:600, type:"bid"},
-      {time:moment(new Date()), amount:100, price:50, type:"bid"},
-      {time:moment(new Date()), amount:110, price:200, type:"bid"}
-    ];
-*/
+
     transactions = [];
     updateTrades();     //reset the last trade list
     updateDailyStats(); //reset the daily stats
@@ -85,21 +67,18 @@ var TradeFeed = function (options) {
     var last = transactions[0];
 
     var trade = {
-      time   : moment.utc(data.value[5]),
+      time   : moment.utc(data.value[7]),
       amount : valueFilter(data.value[0], self.base.currency),
       price  : valueFilter(data.value[2], self.counter.currency),
-      type   : ''
+      type   : data.value[3] === data.value[5] ? 'buy' : 'sell'
     }
-
-    if (last && last.price<trade.price)      trade.type = 'ask';
-    else if (last && last.price>trade.price) trade.type = 'bid';
-    //else if (last)                         trade.type = last.type;
 
     transactions.unshift(trade);  //prepend trade
     transactions = transactions.slice(0,60);  //keep last 60
 
     if (trade.price>high) high = trade.price;
     if (trade.price<low)  low  = trade.price;
+
     close   = data.value[2];
     volume += data.value[0]; //should be adjusted for demmurage
 

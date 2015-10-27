@@ -42,45 +42,35 @@ ApiHandler = function (url) {
           text: err.statusText,
           message: err.response
         });
-      } else if (params.reduce===false) {
-        var data = resp.exchanges.map(function(d) {
+
+      } else if (params.reduce === false) {
+        load(resp.exchanges.map(function(d) {
           return {
             time    : moment.utc(d.executed_time),
             price   : d.rate,
             amount  : d.base_amount,
             amount2 : d.counter_amount,
             tx      : d.tx_hash,
-            type    : ''
+            type    : d.taker === d.buyer ? 'buy' : 'sell'
           }
-        });
+        }));
 
-        var prev = null;
-        var index = data.length;
-        var d;
-        while(index--) {
-          d = data[index];
-          if (prev && prev.price>d.price)      d.type = 'bid';
-          else if (prev && prev.price<d.price) d.type = 'ask';
-          prev = d;
-        }
-
-        load(data);
       } else {
-          load(resp.exchanges.map(function(d) {
-            return {
-              startTime     : moment.utc(d.start),
-              baseVolume    : d.base_volume,
-              counterVolume : d.counter_volume,
-              count         : d.count,
-              open          : d.open,
-              high          : d.high,
-              low           : d.low,
-              close         : d.close,
-              vwap          : d.vwap,
-              openTime      : d.open_time,
-              closeTime     : d.close_time
-            };
-          }));
+        load(resp.exchanges.map(function(d) {
+          return {
+            startTime     : moment.utc(d.start),
+            baseVolume    : d.base_volume,
+            counterVolume : d.counter_volume,
+            count         : d.count,
+            open          : d.open,
+            high          : d.high,
+            low           : d.low,
+            close         : d.close,
+            vwap          : d.vwap,
+            openTime      : d.open_time,
+            closeTime     : d.close_time
+          };
+        }));
       }
     });
   }
