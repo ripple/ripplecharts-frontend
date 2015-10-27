@@ -22,7 +22,7 @@ ApiHandler = function (url) {
       (params.base.issuer ? '+' + params.base.issuer : '');
     var counter = params.counter.currency +
       (params.counter.issuer ? '+' + params.counter.issuer : '');
-    var limit = params.limit || 1000;
+    var limit = params.timeIncrement === 'all' ? '' : 'limit=' + (params.limit || 1000);
     var interval = params.timeIncrement && params.timeIncrement !== 'all' ?
       '&interval=' + (params.timeMultiple || 1) + params.timeIncrement : '';
     var start = params.startTime ?
@@ -30,9 +30,10 @@ ApiHandler = function (url) {
     var end = params.endTime ?
       '&end=' + formatTime(params.endTime) : '';
     var descending = params.descending ? '&descending=true' : '';
-    var reduce = params.reduce === false || interval ? '' : '&reduce=true';
+    var reduce = params.reduce === true || params.timeIncrement === 'all' ?
+      '&reduce=true' : '';
 
-    url += base + '/' + counter + '?limit=' + limit +
+    url += base + '/' + counter + '?' + limit +
       interval + start + end + descending + reduce;
 
     d3.json(url, function(err, resp) {

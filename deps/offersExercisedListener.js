@@ -263,7 +263,7 @@ function createTransactionProcessor(viewOpts, resultHandler) {
     txContainer.transactions[0].metaData = txData.meta;
 
     // use the map function to parse txContainer data
-    offersExercisedMap(txContainer, function(key, value){
+    offersExercisedMap(txContainer, function(key, value) {
 
       if (viewOpts.counter) {
         // return if trade doesn't match either currency in the pair
@@ -283,8 +283,8 @@ function createTransactionProcessor(viewOpts, resultHandler) {
 
       // Flip the currencies if necessary
       if (viewOpts.base.currency === key[1][0] && viewOpts.base.issuer === key[1][1]) {
-        key      = [key[1], key[0]]
-        value    = [
+        key = [key[1], key[0]]
+        value = [
           value[1], // base amount
           value[0], // counter amount
           1/value[2], // rate
@@ -298,8 +298,11 @@ function createTransactionProcessor(viewOpts, resultHandler) {
       }
 
       //console.log(value);
-      if (!viewOpts.reduce) resultHandler({key: key, value: value});
-      else resultHandler(offersExercisedReduce([value], false));
+      if (!viewOpts.reduce) {
+        resultHandler({key: key, value: value});
+      } else {
+        resultHandler(offersExercisedReduce([value], false));
+      }
 
     });
   }
@@ -385,13 +388,11 @@ function offersExercisedMap(doc, emit) {
               tx.Account, // taker
               counterparty, // provider
               counterparty, // buyer
-              tx.account, // seller
+              tx.Account, // seller
               unix, //time
               tx.hash
             ]);
         });
-
-
     });
 }
 
@@ -406,7 +407,7 @@ function offersExercisedReduce(values, rereduce) {
 
   if ( !rereduce ) {
 
-    var firstTime = values[0][5], //unix timestamp
+    var firstTime = values[0][7], //unix timestamp
       firstPrice  = values[0][2]; //exchange rate
 
     // initial values
@@ -426,7 +427,7 @@ function offersExercisedReduce(values, rereduce) {
 
     values.forEach( function( trade, index ) {
 
-      var time = trade[5], //unix timestamp
+      var time = trade[7], //unix timestamp
         price  = trade[2]; //exchange rate
 
       if (time<stats.openTime) {
