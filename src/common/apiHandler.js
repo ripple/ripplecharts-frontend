@@ -197,19 +197,19 @@ ApiHandler = function (baseURL) {
       return request;
   }
 
-  this.getTopMarkets = function (ex, callback) {
-    var request = apiRequest("topMarkets");
-    return handleRequest(request, { exchange : ex }, callback);
+  this.getExchangeVolume = function (params, callback) {
+    params.type = 'exchange_volume';
+    getMetric(params, callback);
   }
 
-  this.getPaymentVolume = function (ex, callback) {
-    var request = apiRequest("totalPaymentVolume");
-    return handleRequest(request, { exchange : ex }, callback);
+  this.getPaymentVolume = function (params, callback) {
+    params.type = 'payment_volume';
+    getMetric(params, callback);
   }
 
-  this.getIssuedValue = function (ex, callback) {
-      var request = apiRequest("totalIssued");
-      return handleRequest(request, { exchange : ex }, callback);
+  this.getIssuedValue = function (params, callback) {
+    params.type = 'issued_value';
+    getMetric(params, callback);
   }
 
   this.exchangeRate = function (params, callback) {
@@ -240,6 +240,37 @@ ApiHandler = function (baseURL) {
       var request = apiRequest("marketTraders");
       return handleRequest(request, params, callback);
   }
+
+  function getMetric (params, callback) {
+    var url = self.url + '/network/' + params.type + '?';
+
+    var start = params.start ?
+      '&start=' + formatTime(params.start) : '';
+    var end = params.end ?
+      '&end=' + formatTime(params.end) : '';
+    var interval = params.interval ?
+      '&interval=' + params.interval : '';
+    var currency = params.currency ?
+      '&exchange_currency=' + params.currency : '';
+    var issuer = params.issuer ?
+      '&exchange_issuer=' + params.issuer : '';
+    var limit = '&limit=' + (params.limit || 1000);
+
+    url += start + end + interval + limit + currency + issuer;
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        callback({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        callback(null, resp);
+      }
+    });
+  }
+
 
   function handleRequest(request, params, callback) {
 

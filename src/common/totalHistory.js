@@ -44,12 +44,12 @@ var TotalHistory = function (options) {
 
   //Initial parameters
   var inc = 'day',
-      end = moment().subtract(1, 'month').subtract(1, 'day').format("MM/DD/YYYY"),
+      start = moment().subtract(1, 'month').subtract(1, 'day').format("MM/DD/YYYY"),
       min = moment().subtract(1, 'month').format("MM/DD/YYYY"),
-      start = moment().format("MM/DD/YYYY"),
+      end = moment().format("MM/DD/YYYY"),
       curr = "USD";
-  $('#datepicker_to').val(moment(start).format("MM/DD/YYYY"));
-  $('#datepicker_from').val(moment(end).format("MM/DD/YYYY"));
+  $('#datepicker_to').val(end);
+  $('#datepicker_from').val(start);
   check_increments('month');
   check_increments('week');
 
@@ -73,27 +73,40 @@ var TotalHistory = function (options) {
 
     interval = diff(inc, start, end);
     issuer = currencies[currency];
+    console.log(interval, inc, end, start);
 
     //Totals
     pp_data['Trade Volume'].total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
     pp_data['Payment Volume'].total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
 
     //Api call for topmarkets data
-    basisRequest = apiHandler.historicalMetrics('topMarkets', currency, issuer, start, end, inc ,function(err, data) {
+    basisRequest = apiHandler.getExchangeVolume({
+      currency: currency,
+      issuer: issuer,
+      start: start,
+      end: end,
+      interval: inc
+    },function(err, data) {
       //Err
       if (err) {console.log("Error:", err);}
       else{
-        pp_data['Trade Volume'] = process_data('topMarkets', pp_data['Trade Volume'], data);
+        pp_data['Trade Volume'] = process_data('topMarkets', pp_data['Trade Volume'], data.rows);
         draw(pp_data);
       }
     });
 
     //Api call for totalvalue paymentVolume data
-    basisRequest = apiHandler.historicalMetrics('totalPaymentVolume', currency, issuer, start, end, inc ,function(err, data) {
+    basisRequest = apiHandler.getPaymentVolume({
+      currency: currency,
+      issuer: issuer,
+      start: start,
+      end: end,
+      interval: inc
+    }, function(err, data) {
       //Err
       if (err) {console.log("Error:", err);}
       else{
-        pp_data['Payment Volume'] = process_data('totalPaymentVolume', pp_data['Payment Volume'], data);
+        pp_data['Payment Volume'] = process_data('totalPaymentVolume', pp_data['Payment Volume'], data.rows);
         draw(pp_data);
       }
     });
@@ -171,7 +184,7 @@ var TotalHistory = function (options) {
     var date1, date2, sow1, sow2;
     date1 = moment(start);
     date2 = moment(end);
-    difference = date1.diff(date2, inc, true);
+    difference = date2.diff(date1, inc, true);
     if (inc === "week"){
       sow1 = moment(start).startOf('week');
       sow2 = moment(end).startOf('week');
@@ -322,30 +335,30 @@ var TotalHistory = function (options) {
   }
 
   function pick_range(id){
-    start = moment().format("YYYY-MM-DD");
+    end = moment().format("MM/DD/YYYY");
     switch (true){
       case id === "1m":
-        end = moment().subtract(1, 'month').format('YYYY-MM-DD');
+        start = moment().subtract(1, 'month').format('MM/DD/YYYY');
         break;
       case id === "3m":
-        end = moment().subtract(3, 'month').format('YYYY-MM-DD');
+        start = moment().subtract(3, 'month').format('MM/DD/YYYY');
         break;
       case id === "6m":
-        end = moment().subtract(6, 'month').format('YYYY-MM-DD');
+        start = moment().subtract(6, 'month').format('MM/DD/YYYY');
         break;
       case id === "1y":
-        end = moment().subtract(1, 'year').format('YYYY-MM-DD');
+        start = moment().subtract(1, 'year').format('MM/DD/YYYY');
         break;
       case id === "max":
         //ADD full date
-        end = moment('2013/7/1').format('YYYY-MM-DD');
+        start = moment('2013/7/1').format('MM/DD/YYYY');
         break
       default:
         break;
     }
     //ADD set datepicker
-    $('#datepicker_to').val(moment(start).format("MM/DD/YYYY"));
-    $('#datepicker_from').val(moment(end).format("MM/DD/YYYY"));
+    $('#datepicker_to').val(moment(end).format("MM/DD/YYYY"));
+    $('#datepicker_from').val(moment(start).format("MM/DD/YYYY"));
   }
 
   function update_chart(chart, lcd){
@@ -385,7 +398,7 @@ var TotalHistory = function (options) {
       var limit;
       limit = moment(dateText).subtract(2, 'day');
       f_limit = moment(limit).format("MM/DD/YYYY");
-      start = moment(dateText).format("YYYY-MM-DD");
+      end = moment(dateText).format("MM/DD/YYYY");
       $( "#datepicker_from" ).datepicker( "option", "maxDate", f_limit );
       difference = diff('day', start, end)
       pick_increment(difference);
@@ -403,7 +416,7 @@ var TotalHistory = function (options) {
       var limit;
       limit = moment(dateText).add(2, 'day');
       f_limit = moment(limit).format("MM/DD/YYYY");
-      end = moment(dateText).format("YYYY-MM-DD");
+      start = moment(dateText).format("MM/DD/YYYY");
       $( "#datepicker_to" ).datepicker( "option", "minDate", f_limit );
       difference = diff('day', start, end)
       pick_increment(difference);

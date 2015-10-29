@@ -253,30 +253,39 @@ angular.module( 'ripplecharts.landing', [
       showValue("xrpCapitalization");
     });
 
-    api.getIssuedValue (null, function(err, data){
-      if (err) {
+    api.getIssuedValue ({}, function(err, resp){
+      var data;
+      if (err || !resp || !resp.rows) {
         console.log(err);
         data = {total:0};
+      } else {
+        data = resp.rows[0]
       }
 
       issuedValueXRP = data;
       showValue("issuedValue");
     });
 
-    api.getPaymentVolume(null, function(err, data){
-      if (err) {
+    api.getPaymentVolume({}, function(err, resp){
+      var data;
+      if (err || !resp || !resp.rows) {
         console.log(err);
         data = {total:0};
+      } else {
+        data = resp.rows[0]
       }
 
       paymentVolumeXRP = data;
       showValue("paymentVolume");
     });
 
-    api.getTopMarkets(null, function(err, data){
-      if (err) {
+    api.getExchangeVolume({}, function(err, resp){
+      var data;
+      if (err || !resp || !resp.rows) {
         console.log(err);
         data = {total:0};
+      } else {
+        data = resp.rows[0]
       }
 
       tradeVolumeXRP = data;
