@@ -236,9 +236,30 @@ ApiHandler = function (baseURL) {
     });
   };
 
-  this.marketTraders = function (params, callback) {
-      var request = apiRequest("marketTraders");
-      return handleRequest(request, params, callback);
+  this.activeAccounts = function (params, callback) {
+    var url = self.url + '/active_accounts/';
+    var base = params.base.currency +
+      (params.base.issuer ? '+' + params.base.issuer : '');
+    var counter = params.counter.currency +
+      (params.counter.issuer ? '+' + params.counter.issuer : '');
+    var period = params.period ?
+      '&period=' + params.period : '';
+    var tx = params.transactions ?
+      '&include_exchanges=true' : '';
+    url += base + '/' + counter + '?' + period + tx;
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        callback({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        callback(null, resp);
+      }
+    });
   }
 
   function getMetric (params, callback) {
