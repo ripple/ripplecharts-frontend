@@ -86,8 +86,8 @@ angular.module( 'ripplecharts.landing', [
 
   markets.list([
     {
-      base    : {currency:'JPY', issuer:'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN'},
-      counter : {currency:'CNY', issuer:'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y'}
+      base    : {currency:'XRP'},
+      counter : {currency:'USD', issuer:'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq'}
     }, {
       base    : {currency:'XRP'},
       counter : {currency:'JPY', issuer: 'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN'}
