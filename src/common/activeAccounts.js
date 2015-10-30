@@ -212,9 +212,6 @@ var ActiveAccounts = function (options){
     map.transition().style('opacity',1);
     loader.transition().style('opacity',0);
 
-    if (accounts.count) setStatus('');
-    else return setStatus('No exchanges for this period.');
-
     treemap = d3.layout.treemap()
     .size([width, height])
     .value(function(d) {
@@ -228,6 +225,9 @@ var ActiveAccounts = function (options){
     var node = map.datum(accounts)
     .selectAll('.node')
     .data(treemap.nodes);
+
+    if (accounts.count) setStatus('');
+    else return setStatus('No exchanges for this period.');
 
     var nodeEnter = node.enter().append('div')
     .attr('class', 'node')
@@ -343,7 +343,9 @@ var ActiveAccounts = function (options){
     accountsHeader.style('display','none');
     transactionsHeader.style('display',undefined);
 
-    var row = table.selectAll('.transaction').data(map.datum().children);
+    var row = table.selectAll('.transaction')
+    .data(map.datum().children || []);
+
     var rowEnter = row.enter()
     .append('div')
     .attr('class', 'transaction')
@@ -409,7 +411,8 @@ var ActiveAccounts = function (options){
     transactionsHeader.style('display','none');
     accountsHeader.style('display',undefined);
 
-    var row = table.selectAll('.account').data(map.datum().children);
+    var row = table.selectAll('.account')
+    .data(map.datum().children || []);
 
     var rowEnter = row.enter()
     .append('div')
