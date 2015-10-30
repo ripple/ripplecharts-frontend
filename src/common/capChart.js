@@ -230,22 +230,23 @@ function CapChart(options) {
       endTime       : end.format(),
       timeIncrement : range.interval,
       currency      : c.currency,
-      issuer        : c.issuer,
-      limit         : 500
+      issuer        : c.issuer
 
     }, function(data){
+
       if (!sendDataCache[currency])
         sendDataCache[currency] = {};
       if (!sendDataCache[currency][range.name])
         sendDataCache[currency][range.name] = {raw:[]};
 
-
-      data.shift(); //remove the first;
-
       sendDataCache[currency][range.name]['raw'].push({
         address : c.issuer,
         name    : options.gateways.getName(c.currency, c.issuer),
-        results : data.map(function(d){return[moment.utc(d[0]).unix()*1000,d[1]]})
+        results : data.payments.map(function(d) {
+          return [
+            moment.utc(d.start).unix()*1000,
+            d.total_amount
+          ]})
       });
 
       if (sendDataCache[currency][range.name]['raw'].length === count) {

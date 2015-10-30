@@ -8,13 +8,6 @@ ApiHandler = function (baseURL) {
     return moment.utc(time).format(timeFormat);
   }
 
-  function apiRequest (route) {
-    var request = d3.xhr(self.url+"/"+route);
-    request.header('Content-Type', 'application/json');
-    return request;
-  }
-
-
   this.offersExercised = function (params, load, error) {
 
     var url = self.url + '/exchanges/';
@@ -76,21 +69,36 @@ ApiHandler = function (baseURL) {
     });
   }
 
-  this.valueSent = function (params, load, error) {
-
-    var request = apiRequest("valueSent");
-    return handleRequest(request, params, function (err, response){
-      if (err) error(err);
-      else load(response);
-    });
-  }
 
   this.paymentVolume = function (params, load, error) {
+    var url = self.url + '/payments/';
 
-    var request = apiRequest("payments");
-    return handleRequest(request, params, function (err, response){
-      if (err) error(err);
-      else load(response);
+    var currency = params.currency ?
+      params.currency +
+      (params.issuer ? '+' + params.issuer : '') : '';
+    var limit = params.limit || 1000;
+    var interval = params.timeIncrement ?
+      '&interval=' + params.timeIncrement : '';
+    var start = params.startTime ?
+      '&start=' + formatTime(params.startTime) : '';
+    var end = params.endTime ?
+      '&end=' + formatTime(params.endTime) : '';
+    var descending = params.descending ? '&descending=true' : '';
+
+    url += currency + '?limit=' + limit + interval +
+      start + end + descending;
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        error({
+          status: err.status,
+          text: err.statusText,
+          message: err.response
+        });
+
+      } else {
+        load(resp);
+      }
     });
   }
 
@@ -103,8 +111,8 @@ ApiHandler = function (baseURL) {
       '&interval=' + params.interval : '';
     var start = params.start ?
       '&start=' + formatTime(params.start) : '';
-    var end = params.endTime ?
-      '&end=' + formatTime(params.endTime) : '';
+    var end = params.end ?
+      '&end=' + formatTime(params.end) : '';
     var descending = params.descending ? '&descending=true' : '';
     var adjusted = params.adjusted ? '&adjusted=true' : '';
 
@@ -172,29 +180,6 @@ ApiHandler = function (baseURL) {
         callback(null, resp);
       }
     });
-  }
-
-  this.historicalMetrics = function(metric, currency, issuer, start, end, inc, callback){
-      var request = apiRequest("historicalMetrics");
-      start = start || new Date();
-      json = {
-          startTime     : start,
-          endTime       : end,
-          timeIncrement : inc,
-          metric: metric
-      };
-      if (currency !== "XRP"){
-          json.exchange = {currency: currency, issuer: issuer}
-      }
-      request.post(JSON.stringify(json)).on('load', function(xhr){
-          data  = JSON.parse(xhr.response);
-          callback (null, data);
-
-      }).on('error', function(xhr){
-          callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-      });
-
-      return request;
   }
 
   this.getExchangeVolume = function (params, callback) {

@@ -73,7 +73,6 @@ var TotalHistory = function (options) {
 
     interval = diff(inc, start, end);
     issuer = currencies[currency];
-    console.log(interval, inc, end, start);
 
     //Totals
     pp_data['Trade Volume'].total = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
@@ -185,7 +184,7 @@ var TotalHistory = function (options) {
     date1 = moment(start);
     date2 = moment(end);
     difference = date2.diff(date1, inc, true);
-    if (inc === "week"){
+    if (inc === "week") {
       sow1 = moment(start).startOf('week');
       sow2 = moment(end).startOf('week');
       sow1 = moment(sow1._d).format("MM/DD/YYYY");
@@ -203,10 +202,9 @@ var TotalHistory = function (options) {
   function draw(data){
     //Initial draw
     //Only draw if both Traded and paymentVolume data is preSent
-    if (data['Payment Volume'].done === true && data['Trade Volume'].done === true){
-      console.log("Data:", data);
+    if (data['Payment Volume'].done === true && data['Trade Volume'].done === true) {
       labels = data['Payment Volume'].dateData;
-      if (labels.length < 1){
+      if (labels.length < 1) {
         labels = data['Trade Volume'].dateData;
       }
       data.totals = {};
@@ -560,7 +558,7 @@ var TotalHistory = function (options) {
           x: evt.clientX - rect.left,
           y: evt.clientY - rect.top
         };
-      if (activeBars === undefined) console.log("yo");
+
       closest = closest_point(activeBars, c_point);
       if(activeBars.length !== 0){
         line.attr("stroke-width", 1);
