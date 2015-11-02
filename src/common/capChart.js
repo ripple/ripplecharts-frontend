@@ -382,7 +382,6 @@ function CapChart(options) {
         start: moment.utc(range.offset(end)).format(),
         end: end.format(),
         adjusted: true,
-        descending: true,
         limit: 1000
       }
 
