@@ -98,12 +98,11 @@ angular.module( 'ripplecharts.trade-volume', [
       });
     });
 
-    d3.json(API + '/topMarkets')
-    .header("Content-Type", "application/json")
-    .post(JSON.stringify({
-      startTime: date,
-      interval: 'day'
-    }), function(err, resp) {
+    api.getExchangeVolume({
+      interval: 'day',
+      start: date,
+      end: date
+    }, function(err, resp) {
 
       if (err) {
         console.log(err);
@@ -111,7 +110,7 @@ angular.module( 'ripplecharts.trade-volume', [
       }
 
       var data = [];
-      resp.components.forEach(function(c) {
+      resp.rows[0].components.forEach(function(c) {
         if (!c.convertedAmount) {
           return;
         }

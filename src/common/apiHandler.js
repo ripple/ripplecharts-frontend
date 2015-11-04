@@ -105,7 +105,7 @@ ApiHandler = function (baseURL) {
   this.issuerCapitalization = function (params, load, error) {
 
     var url = self.url + '/capitalization/' + params.currency +
-     '/' + params.issuer;
+     '+' + params.issuer;
     var limit = params.limit || 1000;
     var interval = params.interval ?
       '&interval=' + params.interval : '';
