@@ -8,6 +8,22 @@ ApiHandler = function (baseURL) {
     return moment.utc(time).format(timeFormat);
   }
 
+  this.getTx = function (hash, callback) {
+    var url = self.url + '/transactions/' + hash;
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        callback(e);
+
+      } else {
+        callback(null, resp);
+      }
+    });
+  }
+
   this.offersExercised = function (params, load, error) {
 
     var url = self.url + '/exchanges/';
@@ -31,11 +47,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        error({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        error(e);
 
       } else if (params.reduce === false) {
         load(resp.exchanges.map(function(d) {
@@ -90,11 +105,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        error({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        error(e);
 
       } else {
         load(resp);
@@ -121,11 +135,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        error({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        error(e);
 
       } else {
         load(resp);
@@ -143,11 +156,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        callback({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        error(e);
 
       } else {
         callback(null, resp ? (resp.count || 0) : 0);
@@ -170,11 +182,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        callback({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        callback(e);
 
       } else {
         callback(null, resp);
@@ -209,11 +220,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        callback({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        callback(e);
 
       } else {
         callback(null, resp.rate || 0);
@@ -235,11 +245,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        callback({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        callback(e);
 
       } else {
         callback(null, resp);
@@ -265,30 +274,14 @@ ApiHandler = function (baseURL) {
     url += start + end + interval + limit + currency + issuer;
     return d3.json(url, function(err, resp) {
       if (err) {
-        callback({
-          status: err.status,
-          text: err.statusText,
-          message: err.response
-        });
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        callback(e);
 
       } else {
         callback(null, resp);
       }
     });
-  }
-
-
-  function handleRequest(request, params, callback) {
-
-      request.post(JSON.stringify(params))
-      .on('load', function(xhr){
-        var response = xhr.response ? JSON.parse(xhr.response) : undefined;
-        callback (null, response);
-      })
-      .on('error', function(xhr){
-        callback({status:xhr.status,text:xhr.statusText,message:xhr.response});
-      });
-
-      return request;
   }
 }
