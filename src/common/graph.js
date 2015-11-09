@@ -247,7 +247,6 @@ networkGraph = function (nameService) {
 
     if (!isConnected) remote.connect();
 
-    //console.log("serverGetInfo", address);
     if (nodes[nodeMap[address]] && nodes[nodeMap[address]].account.index) {
       // Don't do anything if we already have information about this account.
       // TODO: Why does this never happen?
@@ -269,6 +268,14 @@ networkGraph = function (nameService) {
 
   function getNextTransactionPage() {
 
+    api.getAccountTx({
+      account: focalNode,
+      limit: TRANSACTION_PAGE_LENGTH,
+      marker: nodes[nodeMap[focalNode]].marker,
+      descending: true
+    }, handleAccountTransactions);
+
+/**
     if (!isConnected) remote.connect();
 
     //request transactions for the current account, with offset = nodes[nodeMap[address]].transactions.length
@@ -293,11 +300,11 @@ networkGraph = function (nameService) {
     //if so, update WITH THE NEW INFO ONLY (i.e., don't clear the whole table, only do
     //$("#transactionThrobber").remove();
     //and add the new stuff.
+*/
   }
 
 
   //Handlers
-
   function handleLines(err, obj) {
 
     delete pendingRequests[obj.message.id];
@@ -316,7 +323,7 @@ networkGraph = function (nameService) {
     obj.tx = obj.transaction;
     obj.date = moment((UNIX_RIPPLE_TIME + obj.tx.date)*1000).format();
 
-    //$("#transactionFeedTable").prepend(renderTransaction(obj));
+    $("#transactionFeedTable").prepend(renderTransaction(obj));
     if (obj.transaction.TransactionType == "Payment") {
       animateTransaction(obj);
     }
@@ -360,36 +367,27 @@ networkGraph = function (nameService) {
   }
 
   function handleAccountTransactions(err, obj) {
-    delete pendingRequests[this.message.id];
 
     if (err) {
       console.log('Account TX error:', err);
       return;
     }
 
-    var n = nodes[nodeMap[obj.account]];
-    var noMoreTransactions = true;
-    if (n.transactions) { //XXXX Uncaught TypeError: Cannot read property 'transactions' of undefined
-      //You don't want to add the same set of transactions more than once.
-      //So, only add the transactions if one of the following is true:
-      //1. We have no marker stored locally.
-      //2. The message had no marker, and we are not yet finished with the list.
-      //3. The message did have a marker, but its ledger number is less than that of the locally stored marker.
-      if (!n.marker || (!obj.marker && !n.transactionsFinished) || (obj.marker && n.marker.ledger>obj.marker.ledger)) {
-        n.transactions.push.apply(n.transactions, obj.transactions);
-      }
+    var n = nodes[nodeMap[focalNode]];
+
+    if (n.transactions) {
+      n.transactions.push.apply(n.transactions, obj.transactions);
     } else {
       n.transactions = obj.transactions;
     }
 
     if (obj.marker) {
-      n.transactionMarker = obj.marker;
+      n.marker = obj.marker;
     } else {
       n.transactionsFinished = true;
     }
-    if (obj.account == focalNode) {
-      updateTransactions(focalNode, true); //appending=true
-    }
+
+    updateTransactions(focalNode); //appending=true
   }
 
   function handleIndividualTransaction(err, resp) {
@@ -841,7 +839,7 @@ networkGraph = function (nameService) {
           // to the counterparty of this trust line,
           // or if it's not on the list yet,
           // create one and add it to the list.
-          if (!nodeMap[account]) {
+          if (nodeMap[account] === undefined) {
             if (!transactionMode &&
               (parseFloat(trustLine.limit) !== 0 ||
                parseFloat(trustLine.limit_peer) !== 0) ) {
@@ -1094,7 +1092,7 @@ networkGraph = function (nameService) {
     lastFocalNode = focalNode;
     focalNode = address;
 
-    if (!nodeMap[address]) {
+    if (nodeMap[address] === undefined) {
       refocus(address, false);
     } else {
       if (!nodes[nodeMap[address]].transactions ||
@@ -1738,15 +1736,14 @@ function showTransactionWithHash(hash) {
 
 var transactionMap = {};
 
-function updateTransactions(address, appending) {
-  if (!appending) {
-    $('#transactionTable').html("");
-  }
+function updateTransactions(address) {
+  $('#transactionTable').html("");
   $("#transactionThrobber").remove();
+
   if (nodes[nodeMap[address]].transactions) {
-    for (var i=$('#transactionTable tr').length; i<nodes[nodeMap[address]].transactions.length; i++) {
-      var tx = nodes[nodeMap[address]].transactions[i].tx;
-      var meta = nodes[nodeMap[address]].transactions[i].meta;
+    nodes[nodeMap[address]].transactions.forEach(function(obj) {
+      var tx = obj.tx;
+      var meta = obj.meta;
       var transactionType;
       var counterparty = "";
       var amount = null;
@@ -1758,17 +1755,17 @@ function updateTransactions(address, appending) {
 
       if (tx.TransactionType == "Payment") {
         amount = meta.DeliveredAmount || tx.Amount;
-        if (tx.Account == address) {
+        if (tx.Account === address) {
           transactionType = "send";
           counterparty = tx.Destination;
         }
-        else if (tx.Destination == address) {
+        else if (tx.Destination === address) {
           transactionType = "receive";
           counterparty = tx.Account;
         } else {
           transactionType = "intermediate";
         }
-      } else if (tx.TransactionType == "TrustSet") {
+      } else if (tx.TransactionType === "TrustSet") {
         amount = tx.LimitAmount;
         if (tx.Account == address) {
           transactionType = "trustout";
@@ -1779,10 +1776,10 @@ function updateTransactions(address, appending) {
           counterparty = tx.Account;
         } else {
           console.log("Could not interpret transaction TrustSet!");
-          continue;
+          return;
         }
       } else if (tx.TransactionType == "OfferCreate") {
-        if (tx.Account == address) {
+        if (tx.Account === address) {
           transactionType = "offerout";
           amount = tx.TakerGets;
           secondAmount = tx.TakerPays;
@@ -1837,7 +1834,7 @@ function updateTransactions(address, appending) {
             var negative = affectedBalances[affectedKeys[negKey]];
             if (positive * negative > 0) {
               console.log("Could not interpret as offerin.");
-              continue;
+              return;
             } else {
               transactionType = "offerin";
               amount = affectedKeys[posKey]=="XRP" ? positive : {value: positive, currency: affectedKeys[posKey]};
@@ -1845,7 +1842,7 @@ function updateTransactions(address, appending) {
             }
           } else {
             console.log("Could not interpret as offerin.", affectedBalances);
-            continue;
+            return;
           }
         }
       } else if (tx.TransactionType == "OfferCancel") {
@@ -1876,11 +1873,10 @@ function updateTransactions(address, appending) {
         }
       }
 
-      transactionMap[tx.hash] = tx;
-      transactionMap[tx.hash].meta = meta;
+      transactionMap[obj.hash] = obj;
       var success = meta.TransactionResult == "tesSUCCESS" ? "" : "failed";
       var result =  meta.TransactionResult == "tesSUCCESS" ? "" : "["+meta.TransactionResult+"] ";
-      var tr = $('<tr hash="'+tx.hash+'"/>');
+      var tr = $('<tr hash="'+obj.hash+'"/>');
       var td = $('<td style="width:10%;"/>');
       var div = $('<div class="'+transactionType+success+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div>');
 
@@ -1888,7 +1884,7 @@ function updateTransactions(address, appending) {
           transactionType=='receive' ||
           transactionType=='intermediate') {
 
-        div.on('contextmenu', makeMenuClick(tx)).on('click', makeClick(tx));
+        div.on('contextmenu', makeMenuClick(obj)).on('click', makeClick(obj));
 
       } else {
         div.css('cursor', "default");
@@ -1903,9 +1899,8 @@ function updateTransactions(address, appending) {
 
       if (amount) span.append('<span class="bold amount small" >'+commas(amount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+currency+'</span></span>');
       if (secondAmount) span.append(' <i class="light small darkgray" style="margin-right:5px">for</i> <span '+(secondAissuer&&!(transactionType=='trustin'||transactionType=='trustout')?'title="'+secondAissuer+'"':'')+'><span class="bold amount small">'+commas(secondAmount)+'</span> <span class="light small darkgray" style="margin-right:5px">'+secondCurrency+'</span>');
-      span.append(agoDate(tx.date));
+      span.append(agoDate(obj.date));
       td.append(span);
-
 
       if (counterparty) td.append(clickableAccountSpan(counterparty).css({
         display         : "block",
@@ -1916,12 +1911,11 @@ function updateTransactions(address, appending) {
 
       tr.append(td);
       $('#transactionTable').append(tr);
-    }
+    });
 
     if (!nodes[nodeMap[address]].transactionsFinished) { //Are there more?
       $('#transactionTable').append('<tr id="transactionThrobber"><td colspan=3 style="text-align:center; padding:10px"><img class="loader" src="assets/images/rippleThrobber.png" width=30 height=30 /></td></tr>');
       $('#transactionThrobber').bind('inview', function (event, visible) {
-        console.log('in');
         if (visible === true) {
           getNextTransactionPage();
         }
@@ -1955,75 +1949,12 @@ function animateInPlaceWithHash(hash) {
 }
 
 
-function agoDate(secondsSince2000) {
-  var currentTime = new Date().getTime() / 1000 - UNIX_RIPPLE_TIME;
-  var secondsAgo = currentTime-parseInt(secondsSince2000,10);
-  var number;
-  var unit;
-  if (secondsAgo < 1) {
-    number = 0;
-    unit = "moment";
-  } else if (secondsAgo < 60) {
-    number = Math.floor(secondsAgo);
-    unit = "second";
-  } else if (secondsAgo < 3600) {
-    number = Math.floor(secondsAgo/60);
-    unit = "minute";
-  } else if (secondsAgo < 86400) {
-    number = Math.floor(secondsAgo/3600);
-    unit = "hour";
-  } else if (secondsAgo < 604800) {
-    number = Math.floor(secondsAgo/86400);
-    unit = "day";
-  } else if (secondsAgo < 2629746) {
-    number = Math.floor(secondsAgo/604800);
-    unit = "week";
-  } else if (secondsAgo < 31556952) {
-    number = Math.floor(secondsAgo/2629746);
-    unit = "month";
-  } else {
-    number = Math.floor(secondsAgo/31556952);
-    unit = "year";
-  }
-  if (number != 1) {
-    unit += "s"
-  }
-  if (number === 0) {
-    number = "";
-  }
-
-  var d = new Date(0);
-  d.setUTCSeconds(secondsSince2000+UNIX_RIPPLE_TIME);
-  return '<span style="margin-right:5px" class="light small mediumgray date" title="'+d.toUTCString()+'">'+number+" "+unit+' ago</span>';
+function agoDate(date) {
+  return '<span style="margin-right:5px" ' +
+    'class="light small mediumgray date" title="' +
+    moment(date).format('lll') + '">' +
+    moment(date).fromNow() + '</span>';
 }
-
-function absoluteDateOnly(secondsSince2000) {
-  var d = new Date(0);
-  d.setUTCSeconds(secondsSince2000+UNIX_RIPPLE_TIME);
-  return d.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]+' '+d.getUTCFullYear()
-}
-
-function absoluteTimeOnly(secondsSince2000) {
-  var d = new Date(0);
-  d.setUTCSeconds(secondsSince2000+UNIX_RIPPLE_TIME);
-  return d.getUTCHours()+':'+(d.getUTCMinutes()<10 ? '0'+d.getUTCMinutes() : d.getUTCMinutes())+':'+(d.getUTCSeconds()<10 ? '0'+d.getUTCSeconds() : d.getUTCSeconds());
-}
-
-
-
-function absoluteDate(secondsSince2000) {
-  var d = new Date(0);
-  d.setUTCSeconds(secondsSince2000+UNIX_RIPPLE_TIME);
-  return '<span class="light small mediumgray date" title="'+absoluteTimeOnly(secondsSince2000)+'">'+absoluteDateOnly(secondsSince2000)+'</span>';
-}
-function absoluteTime(secondsSince2000) {
-  var d = new Date(0);
-  d.setUTCSeconds(secondsSince2000+UNIX_RIPPLE_TIME);
-  return '<span class="light small mediumgray date" title="'+absoluteDateOnly(secondsSince2000)+'">'+absoluteTimeOnly(secondsSince2000)+'</span>';
-}
-
-
-
 
 function getBalances(address) {
   var balances = {};

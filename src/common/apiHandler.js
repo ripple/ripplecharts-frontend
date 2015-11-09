@@ -24,6 +24,29 @@ ApiHandler = function (baseURL) {
     });
   }
 
+  this.getAccountTx = function (params, callback) {
+    var url = self.url + '/accounts/' + params.account + '/transactions';
+    var limit = params.limit ? '&limit=' + params.limit : ''
+    var marker = params.marker ?
+      '&marker=' + params.marker : '';
+    var descending = params.descending ?
+      '&descending=true' : '';
+
+    url += '?' + limit + marker + descending;
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = JSON.parse(err.response);
+        e.status = err.status;
+        e.text = err.statusText;
+        callback(e);
+
+      } else {
+        callback(null, resp);
+      }
+    });
+  }
+
+
   this.offersExercised = function (params, load, error) {
 
     var url = self.url + '/exchanges/';
