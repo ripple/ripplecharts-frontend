@@ -141,7 +141,7 @@ networkGraph = function (nameService) {
   var currentCurrency = "XRP";
   var currentLedger = {ledger_current_index: 2011754};
   var w = 935;  //Width
-  var h = 1035; //Height
+  var h = 1100; //Height
   var hh = 710; //Height above the bottom bar
 
   var nodes = [];
@@ -311,6 +311,7 @@ networkGraph = function (nameService) {
   function handleTransaction(obj) {
     obj.tx = obj.transaction;
     obj.date = moment((UNIX_RIPPLE_TIME + obj.tx.date)*1000).format();
+    obj.hash = obj.tx.hash;
 
     prependFeed(obj);
     if (obj.transaction.TransactionType == "Payment") {
@@ -433,9 +434,17 @@ networkGraph = function (nameService) {
       //$("#focalAddress").show();
       $("#balanceTable").show();
       $("#transactionTable").show();
-      $("#transactionInformationContainer").css("display","none"); //This is here because it is used by both feed and transaction modes.
-      $("#feedTab").addClass("unselectedTab").removeClass("selectedTab").css("visibility","visible");
-      $("#individualTab").removeClass("unselectedTab").addClass("selectedTab").css("visibility","visible");
+      $("#transactionInformationContainer").css("display","none");
+      $("#transactionFeed").css("display",'none');
+      $("#feedTab")
+        .addClass("unselectedTab")
+        .removeClass("selectedTab")
+        .css("visibility","visible");
+      $("#individualTab")
+        .removeClass("unselectedTab")
+        .addClass("selectedTab")
+        .css("visibility","visible");
+
       if (data) {
         expandNode(data);
         senderAddress = false;
@@ -469,12 +478,27 @@ networkGraph = function (nameService) {
   }
 
   function enterTransactionMode(tx) {
-    var amount = tx.meta.DeliveredAmount || tx.tx.Amount || tx.tx.LimitAmount;
-    var currency = amount.currency || 'XRP';
+    $("#transactionFeed").css("display",'none');
+    $("#feedTab")
+      .addClass("unselectedTab")
+      .removeClass("selectedTab")
+      .css("visibility","visible");
+    $("#individualTab")
+      .removeClass("unselectedTab")
+      .addClass("selectedTab")
+      .css("visibility","visible");
 
     if (mode === "transaction") {
       return;
     }
+
+    if (tx.tx.TransactionType !== 'Payment') {
+      $('#loading').html('Transaction type: <b>' + tx.tx.TransactionType + '</b>');
+      return;
+    }
+
+    var amount = tx.meta.DeliveredAmount || tx.tx.Amount || tx.tx.LimitAmount;
+    var currency = amount.currency || 'XRP';
 
     eraseGraph();
     txx = tx;
@@ -650,12 +674,15 @@ networkGraph = function (nameService) {
 
     var td  = $('<td style="width:40px;">');
     var div = $('<div class="'+transactionType+' icon" title="'+txAltText[transactionType]+'">&nbsp;</div>');
-    if (transactionType=='send') div.on('contextmenu', function(){
-      animateInPlaceWithHash(tx.hash);
-      return false;
-    }).on('click', function(){
-      showTransactionWithHash(tx.hash);
-    });
+    if (transactionType === 'send') {
+      div.on('contextmenu', function() {
+        animateInPlaceWithHash(tx.hash);
+        return false;
+      }).on('click', function(){
+        mode = "";
+        enterTransactionMode(tx);
+      });
+    }
 
    td.append(div);
    tr.append(td);
@@ -1856,7 +1883,9 @@ function updateTransactions(address) {
         transactionType = "canceloffer";
       } else if (tx.TransactionType == "AccountSet") {
         transactionType = "accountset";
-      } else {console.log("Could not interpret transaction: "+tx.transactionType);}
+      } else {
+        console.log("Could not interpret transaction: "+tx.transactionType);
+      }
 
       if (amount) {
         if (amount.currency) {
