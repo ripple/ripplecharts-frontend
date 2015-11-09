@@ -226,18 +226,7 @@ networkGraph = function (nameService) {
 
 
     if ($.isEmptyObject(nodes[nodeMap[address]].trustLines)) {
-
-      var rral = (function() {return function() {
-        //var x = remote.requestAccountLines(address, null, handleLines);
-        var x = getLines({account:address}, handleLines);
-        return x.message.id;
-      }})();
-      var reqID = rral();
-      //pendingRequests[reqID] = {
-      //  func:rral,
-      //  timestamp:(new Date().getTime())
-      //}
-
+      getLines({account:address}, handleLines);
     } else {
       addConnections(address, nodes[nodeMap[address]].trustLines);
     }
@@ -323,10 +312,15 @@ networkGraph = function (nameService) {
     obj.tx = obj.transaction;
     obj.date = moment((UNIX_RIPPLE_TIME + obj.tx.date)*1000).format();
 
-    $("#transactionFeedTable").prepend(renderTransaction(obj));
+    prependFeed(obj);
     if (obj.transaction.TransactionType == "Payment") {
       animateTransaction(obj);
     }
+  }
+
+  function prependFeed(obj) {
+    $('#transactionFeedTable').prepend(renderTransaction(obj));
+    $('#transactionFeedTable tr').slice(50).remove();
   }
 
   function handleLedger(err, obj) {
@@ -686,9 +680,17 @@ networkGraph = function (nameService) {
 
   function clickableAccountSpan(address) {
     var o = $("<span class='light address' style='cursor:pointer;'/>");
-    o.on('mouseover', function(){lightenAddress(address)});
-    o.on('mouseout',  function(){darkenAddress(address)});
-    o.on('click',     function(){expandNode(address)});
+    o.on('mouseover', function(){
+      lightenAddress(address)
+    });
+    o.on('mouseout', function(){
+      darkenAddress(address);
+    });
+    o.on('click', function(){
+      $('#focus').val(address);
+      expandNode(address);
+    });
+
     o.html(address);
 
     return o;
@@ -786,6 +788,11 @@ networkGraph = function (nameService) {
   function addConnections(origin, trustLines) {
     var transactionMode = (mode=="transaction") || displayingTransactionInPlace;
     $("#loading").css("display","none");
+
+    if (!nodes[nodeMap[origin]]) {
+      console.log(origin, "node not added");
+      return;
+    }
 
     nodes[nodeMap[origin]].trustLines = trustLines;
     nodes[nodeMap[origin]].balances = getBalances(origin);
@@ -1421,6 +1428,7 @@ var lastNodeTouched = "";
 
 function stopExpandResume(d) {
   force.stop();
+  $('#focus').val(d.account.Account);
   expandNode(d.account.Account);
   setTimeout(force.resume,500);
 }
@@ -1616,7 +1624,6 @@ function roundNumber(number) {
 }
 
 function updateInformation(address) {
-  $('#focus').val(address);
   $('#focalAddress').text(address);
 
   var currencies = [];
@@ -2136,6 +2143,7 @@ window.onhashchange = function(){
           api.getTx(transaction_id, handleIndividualTransaction);
 
         } else if (rippleName) {
+          $('#focus').val(rippleName);
           nameService(rippleName, function(name, address){
             if (address) {
               focalNode = address;
@@ -2150,6 +2158,7 @@ window.onhashchange = function(){
           });
 
         } else {
+          $('#focus').val(focalNode);
           lastFocalNode = REFERENCE_NODE;
           expandNode(focalNode);
           addNodes(0);

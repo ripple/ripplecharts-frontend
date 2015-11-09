@@ -1,13 +1,13 @@
 .graph {
-  position:relative; 
-  margin-left: auto; 
+  position:relative;
+  margin-left: auto;
   margin-right: auto;
-  position:relative;  
+  position:relative;
   pointer-events:none;
 }
 
-.graph.fullwidth { 
-  width: 100%; 
+.graph.fullwidth {
+  width: 100%;
   overflow:hidden;
 }
 
@@ -20,19 +20,19 @@
 }
 
 .graph .helpbox {
-  width:80%; 
+  width:80%;
   display:inline-block;
-  background: rgba(250,250,250,.9); 
+  background: rgba(250,250,250,.9);
   padding-top:20px;
 }
 
 .graph .topbar {
-  position:absolute; 
-  top:15px; 
+  position:absolute;
+  top:15px;
   pointer-events:auto;
   color:#333;
   width:100%;
-  text-align:center;  
+  text-align:center;
   z-index: 1;
 }
 
@@ -40,9 +40,9 @@
   display:inline-block;
   margin:0 10px;
 }
-  
+
 .graph #focus {
-  
+
   width: 420px;
   height: 36px;
   font-size: 18px;
@@ -55,7 +55,7 @@
   float:left;
   margin:5px;
   box-shadow:none;
-  
+
 }
 
 .graph .sbHolder {
@@ -103,23 +103,23 @@
 }
 
 .graph .zoom {
-  position:absolute; 
-  right:15px; 
-  top:20px; 
-  opacity:.8; 
+  position:absolute;
+  right:15px;
+  top:20px;
+  opacity:.8;
   z-index:2;
-  
+
 }
 .graph .zoom input {
-  width:30px; 
-  height:25px; 
-  font-size:12pt; 
-  pointer-events:auto;  
+  width:30px;
+  height:25px;
+  font-size:12pt;
+  pointer-events:auto;
   background:none;
   border:1px solid #ddd;
   background:rgba(240,240,240,.8);
   display:inline-block;
-  margin:1px; 
+  margin:1px;
   border-radius:4px;
   font-weight:bold;
 }
@@ -129,24 +129,24 @@
 }
 
 .graph .visual {
-  width:100%;    
-} 
-  
+  width:100%;
+}
+
 /*
  * jscrollpane
  */
 .graph .jspVerticalBar {
   width:8px;
-  background:none;  
+  background:none;
 }
 
 .graph .jspHorizontalBar {
   height:8px;
-  background:none; 
+  background:none;
 }
 
 .graph .jspTrack {
-  background:none;  
+  background:none;
 }
 
 .graph .jspDrag {
@@ -206,15 +206,15 @@
 
 
 /* Borders, alignment, and spacing */
-.graph .rightbordered { border-right: 1px solid #c8c8c8; } 
+.graph .rightbordered { border-right: 1px solid #c8c8c8; }
 
 .graph .topbordered { border-top: 1px solid #c8c8c8; }
 
 .graph .bottombordered  {border-bottom: 1px solid #c8c8c8;}
 
 .graph .rounded {
-  border-radius: 4px; 
-  -moz-border-radius: 4px; 
+  border-radius: 4px;
+  -moz-border-radius: 4px;
   -webkit-border-radius: 4px;
   border:2px solid #eee;}
 
@@ -225,7 +225,7 @@
 .graph .horizontalrule { height:10px; }
 
 .graph .clearboth { clear:both; }
-  
+
 .graph .bottomlist { height:293px; }
 
 .graph #otherCurrency {
@@ -251,7 +251,7 @@
     Arial,
     "Lucida Grande",
     sans-serif;}
- 
+
 
 /* Tables and cells */
 .graph table { border-collapse: collapse; }
@@ -332,29 +332,29 @@
 .graph .icon {
   background-repeat:no-repeat;
   background-position:center;}
-  
-  
-  
+
+
+
 .graph div#transactionInformationContainer {
-  z-index:1; 
+  z-index:1;
   display:none;
   background:rgba(255,255,255,.8);
   height:288px;
-}  
-  
+}
+
 .graph div#transactionInformation div.bigString {
   font-family: monospace;
   margin-left:20px;
   word-break: break-all;
 }
- 
+
 .graph div#transactionInformation ul {
   margin-top: 0px;
   margin-bottom: 0px;
   padding-top: 0px;
   padding-bottom: 0px;
   }
-  
+
 .graph #transactionTable span.date {
   /*margin-left:12px;
     margin-right:12px;*/
@@ -410,24 +410,18 @@
   line-height:35px;
 }
 
-.graph #individualTab, 
-.graph #feedTab, 
-.graph #focalAddress {
-  display:none;
-}
-
 .graph .topbordered {
   border:none;
 }
 
 
 .graph #information {
-  background-color:rgba(255,255,255,.9); 
-  position:absolute; 
-  top:704px; 
-  width:100%; 
-  border: 1px solid #c8c8c8; 
-  margin-left:-1px; 
+  background-color:rgba(255,255,255,.9);
+  position:absolute;
+  top:704px;
+  width:100%;
+  border: 1px solid #c8c8c8;
+  margin-left:-1px;
   pointer-events:auto;
 }
 
@@ -445,12 +439,12 @@
 
 .graph circle.halo {
   stroke: #ccc;
-  stroke-width:1.5; 
-  fill:none; 
+  stroke-width:1.5;
+  fill:none;
 }
 
 /*
- * Dark Theme 
+ * Dark Theme
  */
 .dark .graph #visualization {
   color: @darkText;
@@ -470,13 +464,13 @@
 }
 
 .dark .graph #information {
-  background-color:rgba(30,30,30,.9); 
-} 
+  background-color:rgba(30,30,30,.9);
+}
 
 .dark .graph div#transactionInformationContainer {
   background:rgba(30,30,30,.8);
-} 
- 
+}
+
 .dark .graph .amount {
   color:@darkTextBright
 }
@@ -527,81 +521,87 @@
   }
 }
 
-@media (max-width: 767px) {  
+@media (max-width: 767px) {
   .graph .topbar .centered {
     display:block;
   }
-  
+
   .graph #focus {
     float:none;
     display:block;
   }
-  
+
   .graph #information {
     top: 618px;
   }
-  
+
   .graph .visual {
     height:950px;
-  }  
+  }
 }
 
-@media (max-width: 600px) {  
+@media (max-width: 600px) {
+  .graph #individualTab,
+  .graph #feedTab,
+  .graph #focalAddress {
+    display:none;
+  }
+
   .graph #information {
     top: 0px;
     border: none;
-    padding-top: 110px; 
+    padding-top: 110px;
   }
-  
+
   .graph #rightHeading, .graph #leftHeading {
     display:none;
   }
-  
+
   .graph .bottomlist {
     width:100% !important;
     border: none;
     border-bottom: 10px solid #eee;
   }
-  
+
   .graph .visual {
     height:735px;
-  }  
+  }
 }
-   
+
 @media (max-width:480px) {
   .graph .topbar {
     zoom:.7;
   }
-  
+
   .graph #focus {
     width: 90%;
     padding: 10px 5%;
     margin: 5px 0;
   }
-  
+
   .graph #currencySelect {
     margin-left:0;
   }
-  
+
   .graph .zoom {
     top: 48px;
     right: 5px;
   }
-  
+
   .graph .zoom input {
     height:30px;
   }
-  
+
   .graph #information {
-    padding-top: 80px; 
+    padding-top: 80px;
   }
-  
+
   .graph tr.innertablecontainer td {
     padding:0;
   }
-  
+
   .graph .visual {
     height:705px;
-  }  
+  }
 }
 
