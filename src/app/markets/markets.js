@@ -455,8 +455,8 @@ angular.module( 'ripplecharts.markets', [
     if (base.issuer) {
       gatewayList = gateways.getIssuers(base.currency);
       gatewayList.forEach(function(gateway){
-        if (base.issuer === gateway.account && gateway.startDate) {
-          candidate = new Date(gateway.startDate);
+        if (base.issuer === gateway.account && gateway.start_date) {
+          candidate = new Date(gateway.start_date);
           if (candidate < minDate) {
             minDate = candidate;
             changed = true;
@@ -467,8 +467,8 @@ angular.module( 'ripplecharts.markets', [
     if (counter.issuer) {
       gatewayList = gateways.getIssuers(counter.currency);
       gatewayList.forEach(function(gateway){
-        if (counter.issuer === gateway.account && gateway.startDate) {
-          candidate = new Date(gateway.startDate);
+        if (counter.issuer === gateway.account && gateway.start_date) {
+          candidate = new Date(gateway.start_date);
           if (candidate < minDate) {
             minDate = candidate;
             changed = true;

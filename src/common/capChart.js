@@ -245,7 +245,7 @@ function CapChart(options) {
         results : data.payments.map(function(d) {
           return [
             moment.utc(d.start).unix()*1000,
-            d.total_amount
+            Number(d.total_amount)
           ]})
       });
 

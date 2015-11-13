@@ -285,6 +285,9 @@ var ActiveAccounts = function (options){
 
     treemap = d3.layout.treemap()
     .size([width, height])
+    .sort(function(a,b){
+      return moment(b.executed_time).unix() - moment(a.executed_time).unix();
+    })
     .value(function(d) {
       return d.base_amount
     });

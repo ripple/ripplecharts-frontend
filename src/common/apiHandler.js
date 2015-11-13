@@ -13,9 +13,9 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         callback(e);
 
       } else {
@@ -35,9 +35,9 @@ ApiHandler = function (baseURL) {
     url += '?' + limit + marker + descending;
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         callback(e);
 
       } else {
@@ -70,18 +70,18 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         error(e);
 
       } else if (params.reduce === false) {
         load(resp.exchanges.map(function(d) {
           return {
             time    : moment.utc(d.executed_time),
-            price   : d.rate,
-            amount  : d.base_amount,
-            amount2 : d.counter_amount,
+            price   : Number(d.rate),
+            amount  : Number(d.base_amount),
+            amount2 : Number(d.counter_amount),
             tx      : d.tx_hash,
             type    : d.taker === d.buyer ? 'buy' : 'sell'
           }
@@ -91,14 +91,14 @@ ApiHandler = function (baseURL) {
         load(resp.exchanges.map(function(d) {
           return {
             startTime     : moment.utc(d.start),
-            baseVolume    : d.base_volume,
-            counterVolume : d.counter_volume,
+            baseVolume    : Number(d.base_volume),
+            counterVolume : Number(d.counter_volume),
             count         : d.count,
-            open          : d.open,
-            high          : d.high,
-            low           : d.low,
-            close         : d.close,
-            vwap          : d.vwap,
+            open          : Number(d.open),
+            high          : Number(d.high),
+            low           : Number(d.low),
+            close         : Number(d.close),
+            vwap          : Number(d.vwap),
             openTime      : d.open_time,
             closeTime     : d.close_time
           };
@@ -128,9 +128,9 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         error(e);
 
       } else {
@@ -158,9 +158,9 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         error(e);
 
       } else {
@@ -179,10 +179,10 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
-        error(e);
+        e.text = err.statusText || 'Unable to load data';
+        callback(e);
 
       } else {
         callback(null, resp ? (resp.count || 0) : 0);
@@ -205,9 +205,9 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         callback(e);
 
       } else {
@@ -243,9 +243,9 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         callback(e);
 
       } else {
@@ -268,12 +268,20 @@ ApiHandler = function (baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         callback(e);
 
       } else {
+        resp.accounts.forEach(function(a){
+          a.base_volume = Number(a.base_volume);
+          a.counter_volume = Number(a.counter_volume);
+          a.exchanges.forEach(function(ex){
+            ex.base_amount = Number(ex.base_amount);
+            ex.counter_amount = Number(ex.counter_amount);
+          });
+        });
         callback(null, resp);
       }
     });
@@ -297,12 +305,22 @@ ApiHandler = function (baseURL) {
     url += start + end + interval + limit + currency + issuer;
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = JSON.parse(err.response);
+        var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
-        e.text = err.statusText;
+        e.text = err.statusText || 'Unable to load data';
         callback(e);
 
       } else {
+        resp.rows.forEach(function(row) {
+          row.total = Number(row.total);
+          row.exchange_rate = Number(row.exchange_rate);
+
+          row.components.forEach(function(c){
+            c.rate = Number(c.rate);
+            c.amount = Number(c.amount);
+            c.converted_amount = Number(c.converted_amount);
+          });
+        });
         callback(null, resp);
       }
     });

@@ -111,12 +111,12 @@ angular.module( 'ripplecharts.trade-volume', [
 
       var data = [];
       resp.rows[0].components.forEach(function(c) {
-        if (!c.convertedAmount) {
+        if (!c.converted_amount) {
           return;
         }
 
         data.push({
-          volume: c.convertedAmount,
+          volume: c.converted_amount,
           amount: c.amount,
           count: c.count,
           base_rate: c.rate,

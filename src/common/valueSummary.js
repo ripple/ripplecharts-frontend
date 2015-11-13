@@ -90,7 +90,7 @@ var ValueSummary = function (options) {
       total = z.total || 0;
       data  = [];
       z.components.forEach(function(d){
-        if (d.convertedAmount) data.push(JSON.parse(JSON.stringify(d)));
+        if (d.converted_amount) data.push(JSON.parse(JSON.stringify(d)));
       });
     } else if (!data) return;
 
@@ -110,11 +110,11 @@ var ValueSummary = function (options) {
     data.forEach(function(d) {
       if (d.currency=='XRP') XRPObj = d;
 
-      d.percent = total ? d.convertedAmount/total*100 : 0.00;
+      d.percent = total ? d.converted_amount/total*100 : 0.00;
     });
 
     //XRP wont be present for trade volume, so add it at 0
-    if (!XRPObj) data.push({currency:'XRP', convertedAmount:0.0});
+    if (!XRPObj) data.push({currency:'XRP', converted_amount:0.0});
 
     //if the XRP toggle is active and XRP should be hidden
     //adjust the total, set the XRP amount to 0, and
@@ -122,13 +122,13 @@ var ValueSummary = function (options) {
     else if (xrpToggle && hideXRP) {
       var adjusted = total - XRPObj.amount;
       data.forEach(function(d){
-        if (d.currency=='XRP') d.convertedAmount = 0;
-        d.percent = adjusted ? d.convertedAmount/adjusted*100 : 0.00;
+        if (d.currency=='XRP') d.converted_amount = 0;
+        d.percent = adjusted ? d.converted_amount/adjusted*100 : 0.00;
       });
 
     //otherwise, reset the converted amount and set percentage
     } else {
-      XRPObj.convertedAmount = XRPObj.amount || 0.0;
+      XRPObj.converted_amount = XRPObj.amount || 0.0;
       XRPObj.percent = total ? XRPObj.amount/total*100 : 0.00;
     }
 
@@ -153,7 +153,7 @@ var ValueSummary = function (options) {
         .sort(null)
         .startAngle(1.1*Math.PI)
         .endAngle(3.1*Math.PI)
-        .value(function(d) { return d.convertedAmount; });
+        .value(function(d) { return d.converted_amount; });
 
     //add arcs
     path = path.data(pie(data));
@@ -205,7 +205,7 @@ var ValueSummary = function (options) {
     current = null;
     var i = 0;
     var d = path.data()[i];
-    while (d && !d.data.convertedAmount) {
+    while (d && !d.data.converted_amount) {
       i++;
       d = path.data()[i];
     }
@@ -221,7 +221,7 @@ var ValueSummary = function (options) {
 
     label.html(function(d){
         if (!d.data.currency && !d.data.base) return "";
-        if (!d.data.convertedAmount) return "";
+        if (!d.data.converted_amount) return "";
         if (d.data.percent<2) return "";
 
         var label;

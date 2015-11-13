@@ -147,7 +147,7 @@ var TotalHistory = function (options) {
           if(!(object.currencies.hasOwnProperty(counter_curr))){
             object.currencies[counter_curr] = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
           }
-          object.currencies[counter_curr][i] += component.convertedAmount;
+          object.currencies[counter_curr][i] += component.converted_amount;
         }
 
         if (issuer) {
@@ -169,8 +169,8 @@ var TotalHistory = function (options) {
         if(!(object.pairs.hasOwnProperty(key))){
           object.pairs[key] = Array.apply(null, new Array(interval+1)).map(Number.prototype.valueOf,0);
         }
-        object.currencies[base_curr][i] += component.convertedAmount;
-        object.pairs[key][i] += component.convertedAmount;
+        object.currencies[base_curr][i] += component.converted_amount;
+        object.pairs[key][i] += component.converted_amount;
       });
 
     });
