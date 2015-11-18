@@ -44,7 +44,18 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
 
   </head>
   <body ng-class="theme">
+    <div id="loading">
+      <img class="loader" src="assets/images/rippleThrobber.png"/>
+    </div>
+    <div id="maintenance">
+      <div class="logo"></div>
+      <h3>This site is under maintenance.</h3>
+      <div class="message"></div>
+    </div>
     <div class="header">
+      <div class="banner-wrap">
+        <div class="banner"></div>
+      </div>
       <div class="wrapper">
         <i class="nav-toggle mobile_only" snap-toggle>
           <img src="assets/images/menu.svg"/>
@@ -114,12 +125,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
           </ul>
         </div><!--/.nav-collapse -->
       </div>
-
     </nav>
     </div>
-
-
     <div snap-drawer>
+      <div class="banner-pad"></div>
       <ul class="nav">
         <li class="top">
         </li>
@@ -183,10 +192,10 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
         </li>
         <li class="category"><div id="helpButton_new_mobile" ng-click="showHelp = !showHelp"><span><img src="assets/icons/icn_info.svg" title="More info"></span> Info</div></li>
       </ul>
-    </div snap-drawer>
+    </div>
 
     <div snap-content class="snap-content" snap-options="snapOptions">
-
+      <div class="banner-pad"></div>
       <div class="headerPad"></div>
       <div ui-view="main"></div>
       <div class="footerPad"></div>
@@ -215,6 +224,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
           <small><a style="display:none" href="">v<%= version %></a></small>
         </div>
       </footer>
+    </div>
     </div>
   </body>
   <script>

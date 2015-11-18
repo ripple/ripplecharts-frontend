@@ -45,7 +45,8 @@ angular.element(document).ready(function() {
     }
   })
 
-  .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
+  .controller( 'AppCtrl', function AppCtrl ( $scope, $location, gateways ) {
+
     $scope.theme = store.get('theme') || Options.theme || 'dark';
     $scope.$watch('theme', function(){store.set('theme', $scope.theme)});
 
@@ -117,9 +118,120 @@ angular.element(document).ready(function() {
       //setTimeout(function(){remote.disconnect()},5000);
       //setTimeout(function(){remote.connect()},10000);
     });
+
+    // remove loader after gateways resolves
+    gateways.promise.then(function(){
+      var loading = d3.select('#loading');
+      loading.transition()
+      .duration(600)
+      .style('opacity', 0)
+      .each('end', function() {
+        loading.style('display', 'none');
+      });
+    });
   });
 
-  angular.bootstrap(document, ['ripplecharts']);
+  var api;
+  var banner;
+  var wrap;
+  var maintenance;
+  var bannerPads;
+  var started = false;
+
+  setTimeout(function() {
+    api = new ApiHandler(API);
+    wrap = d3.select('.banner-wrap');
+    banner = wrap.select('.banner');
+    maintenance = d3.select('#maintenance');
+    bannerPads = d3.selectAll('.banner-pad');
+    checkStatus();
+  });
+
+  setInterval(checkStatus, 5 * 60 * 1000);
+
+  function checkStatus() {
+    api.getMaintenanceStatus(function(err, resp) {
+      var mode;
+      var height;
+
+      if (err) {
+        console.log(err);
+      }
+
+      mode = resp && resp.mode ? resp.mode : 'normal';
+
+      // start the app
+      if (!started && mode !== 'maintenance') {
+        angular.bootstrap(document, ['ripplecharts']);
+        started = true;
+      }
+
+      // show maintenance
+      if (mode === 'maintenance') {
+        maintenance.select('.message')
+        .html(resp.html);
+
+        maintenance
+        .style('display','block')
+        .transition()
+        .duration(1000)
+        .style('opacity', 1);
+
+      // hide maintenance
+      } else {
+        maintenance
+        .transition()
+        .duration(1000)
+        .style('opacity', 0)
+        .each('end', function() {
+          maintenance.style('display','none');
+        });
+      }
+
+      // show banner
+      if (mode === 'banner') {
+        height = banner.style('height');
+
+        banner.html(resp.html)
+        .style(resp.style)
+
+        wrap.style('height', height)
+        .transition()
+        .delay(2000)
+        .duration(1000)
+        .style('height', banner.style('height'));
+
+        banner
+        .transition()
+        .delay(2000)
+        .duration(1000)
+        .style('opacity', 1);
+
+        bannerPads
+        .transition()
+        .delay(2000)
+        .duration(1000)
+        .style('height', banner.style('height'));
+
+      // hide banner
+      } else {
+        wrap.transition()
+        .duration(1000)
+        .style('height', '0px');
+
+        bannerPads.transition()
+        .duration(1000)
+        .style('height', '0px');
+
+        banner.transition()
+        .duration(1000)
+        .style('opacity', 0)
+        .each('end', function() {
+          banner.html('');
+        });
+      }
+    });
+  }
 });
 
 function commas (number, precision) {

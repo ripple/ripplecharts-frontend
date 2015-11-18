@@ -287,6 +287,22 @@ ApiHandler = function (baseURL) {
     });
   }
 
+
+  this.getMaintenanceStatus = function(callback) {
+    var url = self.url + '/maintenance/ripplecharts';
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = err.response ? JSON.parse(err.response) : err;
+        e.status = err.status;
+        e.text = err.statusText || 'Unable to load data';
+        callback(e);
+      } else {
+        callback(null, resp);
+      }
+    });
+  };
+
   function getMetric (params, callback) {
     var url = self.url + '/network/' + params.type + '?';
 
