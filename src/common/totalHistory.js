@@ -125,7 +125,7 @@ var TotalHistory = function (options) {
       //var startTime = value.startTime.split('T')[0];
       //splitDate = startTime.split("-");
       //year = splitDate[0].slice(-2)
-      object.dateData.push(moment.utc(value.startTime).format('MM-DD-YYYY'));
+      object.dateData.push(moment.utc(value.start_time).format('MM-DD-YYYY'));
 
       //Add to total
       object.total[i] += value.total;
@@ -549,7 +549,7 @@ var TotalHistory = function (options) {
 
   //Add tooltip on mouse move
   $('#canvas').mousemove(function(evt){
-    if($('#loading').css('display') === 'none'){
+    if($('.loading').css('display') === 'none'){
       var scroll = $(window).scrollTop();
       var rect = this.getBoundingClientRect();
       var activeBars = myLine.getPointsAtEvent(evt),
