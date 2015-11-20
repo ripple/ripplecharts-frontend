@@ -46,7 +46,19 @@
     svg {
 
       path {
-        opacity:.8;
+        opacity:.9;
+        transform: scale(1);
+        transition: all .3s ease;
+      }
+
+      path:hover {
+        opacity: 1;
+        transform: scale(1.1);
+        transition: all .3s ease;
+      }
+
+      path.fade {
+        opacity: .4;
       }
 
       path.pair {
@@ -63,8 +75,9 @@
       line-height:12px;
       color:#333;
       font-family:Arial;
-      b {
+      transition: opacity .3s ease;
 
+      b {
         display:block;
         margin-left:5px;
         color:#888;
@@ -76,6 +89,10 @@
     label:hover {
       //background:rgba(255,255,255,.9);
       z-index:10;
+    }
+
+    label.fade {
+      opacity: .4;
     }
   }
 
@@ -133,11 +150,6 @@
     }
 
     .inner {
-      svg {
-        path {
-          opacity:.75;
-        }
-      }
 
       label {
         color:#bbb;

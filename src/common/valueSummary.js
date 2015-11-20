@@ -1,19 +1,18 @@
 var ValueSummary = function (options) {
 
-  var self = this,
-    outer  = options.id ?
+  var self = this;
+  var outer  = options.id ?
       d3.select("#"+options.id).attr("class","valueSummary") :
       d3.select("body").append("div").attr("class","valueSummary");
 
-  var inner  = outer.append("div").attr("class","inner");
+  var inner = outer.append("div").attr("class","inner");
+  var width = parseInt(outer.style("width"),  10);
+  var height = parseInt(outer.style("height"), 10) || width;
+  var radius = (Math.min(width, height)) / 2;
+  var margin = {top:radius/10, bottom:radius/10, left:radius/10, right:radius/10};
 
-  var width  = parseInt(outer.style("width"),  10),
-    height   = parseInt(outer.style("height"), 10) || width;
-    radius   = (Math.min(width, height)) / 2;
-    margin   = {top:radius/10, bottom:radius/10, left:radius/10, right:radius/10};
-
-    inner.style({width:(radius*2)+"px", height:(radius*2)+"px"});
-    radius -= margin.top;
+  inner.style({width:(radius*2)+"px", height:(radius*2)+"px"});
+  radius -= margin.top;
 
   var chart = inner.append('svg')
     .attr("width",  radius*2.3)
@@ -67,21 +66,24 @@ var ValueSummary = function (options) {
     return c;
   }
 
-  var arc    = d3.svg.arc()
+  var arc = d3.svg.arc()
       .outerRadius(radius*0.9)
-      .innerRadius(radius*0.4);
+      .innerRadius(radius*0.55);
 
   var labelArc = d3.svg.arc()
       .outerRadius(radius*1.15)
       .innerRadius(radius);
 
   //arc paths
-  var path          = chart.selectAll("path");
-  var tooltip       = outer.append("div").attr("class","tooltip");
+  var path = chart.selectAll("path");
+  var label = inner.selectAll("label");
+  var tooltip = outer.append("div").attr("class","tooltip");
   var transitioning = false;
-  var gateways      = options.gateways;
-  var exchange, current, total;
+  var gateways = options.gateways;
   var data = [];
+  var exchange;
+  var current;
+  var total;
 
   //load a specific metric
   this.load = function (z, ex, xrpToggle) {
@@ -157,14 +159,13 @@ var ValueSummary = function (options) {
 
     //add arcs
     path = path.data(pie(data));
-    path.enter().append("path").on('mousemove',function(d, i){
-      if (transitioning) return;
-      d3.select(this).transition().duration(100).style("opacity",1);
-      showTooltip(d, i);
-    }).on('mouseout', function(d){
-      if (transitioning) return;
-      d3.select(this).transition().duration(100).style("opacity", "");
-    }).on('click', function(d) {
+    path.enter().append("path")
+    .on('mouseover',showTooltip)
+    .on('mouseout', function(){
+      path.classed('fade', false);
+      label.classed('fade', false);
+    })
+    .on('click', function(d) {
       if (d.data.base) {
         var co1 = currencyOrder.indexOf(d.data.base.currency);
         var co2 = currencyOrder.indexOf(d.data.counter.currency);
@@ -211,11 +212,11 @@ var ValueSummary = function (options) {
     }
 
     if (d) {
-      showTooltip(d, i);
+      showTooltip(d, i, true);
     }
 
     //add labels
-    label = inner.selectAll("label").data(path.data());
+    label = label.data(path.data());
 
     label.enter().append("label");
 
@@ -224,7 +225,7 @@ var ValueSummary = function (options) {
         if (!d.data.converted_amount) return "";
         if (d.data.percent<2) return "";
 
-        var label;
+        var l;
         var co1;
         var co2;
         if (d.data.base) {
@@ -232,15 +233,15 @@ var ValueSummary = function (options) {
           co2 = currencyOrder.indexOf(d.data.counter.currency);
 
           if (co1 < co2) {
-            label = d.data.base.currency+"/"+d.data.counter.currency;
+            l = d.data.base.currency+"/"+d.data.counter.currency;
           } else {
-            label = d.data.counter.currency+"/"+d.data.base.currency;
+            l = d.data.counter.currency+"/"+d.data.base.currency;
           }
         } else {
-          label = d.data.currency;
+          l = d.data.currency;
         }
 
-        return label+"<b>"+commas(d.data.percent,0)+"%</b>";
+        return l+"<b>"+commas(d.data.percent,0)+"%</b>";
       })
       .style("margin-top", function(d){
         return ((0 - parseInt(d3.select(this).style("height"), 10))/2)+"px";
@@ -280,12 +281,22 @@ var ValueSummary = function (options) {
   }
 
 
-  function showTooltip(d, i) {
+  function showTooltip(d, i, init) {
+
+    if (!init) {
+      path.classed('fade', function(row) {
+        return row !== d;
+      });
+
+      label.classed('fade', function(row) {
+        return row !== d;
+      });
+    }
 
     if (current===i) return;
     current = i;
 
-    var label;
+    var l;
     var co1;
     var co2;
 
@@ -294,12 +305,12 @@ var ValueSummary = function (options) {
         co2 = currencyOrder.indexOf(d.data.counter.currency);
 
       if (co1 < co2) {
-        label = d.data.base.currency+"/"+d.data.counter.currency;
+        l = d.data.base.currency+"/"+d.data.counter.currency;
       } else {
-        label = d.data.counter.currency+"/"+d.data.base.currency;
+        l = d.data.counter.currency+"/"+d.data.base.currency;
       }
     } else {
-      label = d.data.currency;
+      l = d.data.currency;
     }
 
     var currency = d.data.base ? d.data.base.currency : d.data.currency;
@@ -310,7 +321,7 @@ var ValueSummary = function (options) {
     var count    = d.data.count;
 
     tooltip.html("");
-    tooltip.append("div").attr("class","title").html(label+(gateway ? " &middot <small>"+gateway+"</small>" : ""));
+    tooltip.append("div").attr("class","title").html(l+(gateway ? " &middot <small>"+gateway+"</small>" : ""));
     if (value) tooltip.append("div").attr("class","value")
       .html("<label>Value:</label> "+value+" <small>"+exchange.currency+"</small>");
     tooltip.append("div").attr("class","amount")
