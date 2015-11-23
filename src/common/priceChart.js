@@ -435,7 +435,7 @@ PriceChart = function (options) {
         .domain([
           d3.min(lineData, function(d) { return Math.min(d.close) })*0.975,
           d3.max(lineData, function(d) { return Math.max(d.close) })*1.025])
-        .range([options.height, 0]);
+        .range([options.height - 20, 0]);
 
     } else {
       gEnter.select(".line").style("opacity",0);
@@ -445,7 +445,7 @@ PriceChart = function (options) {
         .domain([
           d3.min(lineData, function(d) { return Math.min(d.open, d.close, d.high, d.low) })*0.975,
           d3.max(lineData, function(d) { return Math.max(d.open, d.close, d.high, d.low) })*1.025])
-        .range([options.height, 0]);
+        .range([options.height - 20, 0]);
 
     }
 
@@ -534,7 +534,7 @@ PriceChart = function (options) {
 
     // Update the x-axis.
     gEnter.select(".x.axis")
-      .attr("transform", "translate(0," + priceScale.range()[0] + ")")
+      .attr("transform", "translate(0," + volumeScale.range()[0] + ")")
       .transition().duration(duration)
       .call(xAxis);
 

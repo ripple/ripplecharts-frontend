@@ -151,7 +151,7 @@ var ActiveAccounts = function (options){
     periodSelect.style('display','');
     metricSelect.style('display','');
 
-    switch (p) {
+    switch (period) {
       case '3d':
         selectedPeriod = '3day';
         break;
