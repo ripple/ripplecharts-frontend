@@ -119,7 +119,7 @@ networkGraph = function (nameService) {
           changeMode('individual');
           refocus(address, true);
         } else {
-          $("#loading")
+          $(".loading")
             .text('No Address Found.')
             .css("color","#a00");
         }
@@ -193,7 +193,7 @@ networkGraph = function (nameService) {
 
     request = remote.requestAccountLines(options);
     request.once('error', function(err) {
-      $("#loading")
+      $(".loading")
         .text(err.remote ? err.remote.error_message : err)
         .css("color","#a00");
     });
@@ -298,7 +298,7 @@ networkGraph = function (nameService) {
 
     delete pendingRequests[obj.message.id];
     if (err && err.remote) {
-      $("#loading")
+      $(".loading")
         .text(err.remote.error_message)
         .css("color","#a00");
     } else if (err) {
@@ -335,7 +335,7 @@ networkGraph = function (nameService) {
     if (err &&
         err.remote) {
       console.log(err);
-      $("#loading")
+      $(".loading")
         .text(err.remote.error_message)
         .css("color","#a00");
     } else if (err) {
@@ -388,7 +388,7 @@ networkGraph = function (nameService) {
   function handleIndividualTransaction(err, resp) {
     if (err) {
       console.log(err);
-      $("#loading")
+      $(".loading")
         .text(err.message || 'server error')
         .css("color","#a00");
     } else {
@@ -493,7 +493,7 @@ networkGraph = function (nameService) {
     }
 
     if (tx.tx.TransactionType !== 'Payment') {
-      $('#loading').html('Transaction type: <b>' + tx.tx.TransactionType + '</b>');
+      $('.loading').html('Transaction type: <b>' + tx.tx.TransactionType + '</b>');
       return;
     }
 
@@ -619,8 +619,8 @@ networkGraph = function (nameService) {
     expandedNodes = {};
     provisionallyExpandedNodes = {};
     animatorLinks = [];
-    $("#loading").css("display","block").css("color","#aaa");
-    $("#loading").html('<img class="loader" src="assets/images/rippleThrobber.png" style="vertical-align: middle;" /> Loading...');
+    $(".loading").css("display","block").css("color","#aaa");
+    $(".loading").html('<img class="loader" src="assets/images/rippleThrobber.png" style="vertical-align: middle;" /> Loading...');
   }
 
 
@@ -814,7 +814,7 @@ networkGraph = function (nameService) {
 
   function addConnections(origin, trustLines) {
     var transactionMode = (mode=="transaction") || displayingTransactionInPlace;
-    $("#loading").css("display","none");
+    $(".loading").css("display","none");
 
     if (!nodes[nodeMap[origin]]) {
       console.log(origin, "node not added");
@@ -2180,7 +2180,7 @@ window.onhashchange = function(){
               addNodes(0);
               serverGetInfo(focalNode);
             } else {
-              $("#loading")
+              $(".loading")
                 .text('No Address Found.')
                 .css("color","#a00");
             }

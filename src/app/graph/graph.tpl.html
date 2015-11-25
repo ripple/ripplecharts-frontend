@@ -5,17 +5,17 @@
       <p>
         The visualization shows the current account being queried and
         each account that it is connected to via trust lines.  The arrows
-        at the node indicate the direction of the trust line, and the width 
+        at the node indicate the direction of the trust line, and the width
         of the line indicates the relative size of the trust line balance.
-  
+
         Clicking on a node will set it as the current node, and its additional
-        connections will be added to the chart. Live transactions will appear 
-        as colored lines moving between nodes on the visualization. The color 
+        connections will be added to the chart. Live transactions will appear
+        as colored lines moving between nodes on the visualization. The color
         of the line corresponds to the type of asset sent.
-        
-        Selecting a currency from the dropdown will show 3 colors of nodes - 
-        red nodes have a negative balance and usually represent a gateway's wallet, 
-        gray nodes have no balance in the currency selected, and 
+
+        Selecting a currency from the dropdown will show 3 colors of nodes -
+        red nodes have a negative balance and usually represent a gateway's wallet,
+        gray nodes have no balance in the currency selected, and
         colored nodes have positive balances.
       </p>
       <p>
@@ -26,7 +26,7 @@
         for the selected account.
       </p>
 
-    </div>    
+    </div>
   </div>
 
 <!-- top bar -->
@@ -45,7 +45,7 @@
       </select>
       <input type="text" id="otherCurrency" value="other" class="sbSelector sbHolder" />
     </div>
-    <input id="searchButton" type="button" value="Go"/>    
+    <input id="searchButton" type="button" value="Go"/>
   </div>
 </div>
 
@@ -54,7 +54,7 @@
   <input type="button" id="zoomInButton"  value="+" disabled="disabled"/>
 </div>
 
-<div id="loading" class="light large" style="color:#aaa; position:absolute; width:100%; top:300px; line-height:50px; text-align:center;">
+<div class="light large loading" style="color:#aaa; position:absolute; width:100%; top:300px; line-height:50px; text-align:center;">
   <img class="loader" src="assets/images/rippleThrobber.png" style="vertical-align: middle;"/>
 </div>
 
@@ -78,7 +78,7 @@
     <div style="width:100%; overflow-x:hidden;">
       <div id="transactionInformation" class="light midsize mediumgray" style="width:100%%; padding:20px; display:none;"></div>
       <div id="transactionFeed" class="light midsize mediumgray" style="width:100%; padding:20px; display:none;">
-        <table id="transactionFeedTable"></table> 
+        <table id="transactionFeedTable"></table>
       </div>
     </div>
   </div>
