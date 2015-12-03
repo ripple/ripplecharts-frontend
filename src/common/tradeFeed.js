@@ -67,7 +67,7 @@ var TradeFeed = function (options) {
     var last = transactions[0];
 
     var trade = {
-      time   : moment.utc(data.value[7]),
+      time   : moment.unix(data.value[7]),
       amount : valueFilter(data.value[0], self.base.currency),
       price  : valueFilter(data.value[2], self.counter.currency),
       type   : data.value[3] === data.value[5] ? 'buy' : 'sell'

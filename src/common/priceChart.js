@@ -273,7 +273,7 @@ PriceChart = function (options) {
       //merge the last candle with the updater candle - if
       //its not the same time interval it will be discarded
       if (options.live && d.live) {
-        liveFeed.resetStored(data[data.length-1]);
+        liveFeed.resetStored(data[data.length-1], true);
       }
 
       lineData  = data.concat(lineData);
@@ -300,7 +300,7 @@ PriceChart = function (options) {
 //enable the live feed via ripple-lib
   function setLiveFeed () {
     var candle = {
-        startTime     : lastCandle,
+        startTime     : moment.utc(lastCandle),
         baseVolume    : 0.0,
         counterVolume : 0.0,
         count         : 0,
@@ -309,8 +309,8 @@ PriceChart = function (options) {
         low           : 0.0,
         close         : 0.0,
         vwap          : 0.0,
-        openTime      : null,
-        closeTime     : null
+        openTime      : Infinity,
+        closeTime     : 0
       };
 
     var interval;
@@ -358,20 +358,10 @@ PriceChart = function (options) {
 
     if (last && last.startTime.unix()===candle.startTime.unix()) {
       //console.log("update");
-/*
-      if (!last.live) {  //historical data
-        var volume = candle.volume + last.volume;
-        if (candle.high<last.high) candle.high = last.high;
-        if (candle.low>last.low)   candle.low  = last.low;
-        candle.vwap   = (candle.vwap*candle.volume+last.vwap*last.volume)/volume;
-        candle.volume = volume;
-        candle.open   = last.open;
-        //close will be from live data
-      }
-*/
+
       lineData[lineData.length-1] = candle;
     } else {
-      //console.log("new");
+      //console.log("append");
 
       //new candle, only add it if something happened
       if (candle.baseVolume) {

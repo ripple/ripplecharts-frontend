@@ -112,23 +112,53 @@ function OffersExercisedListener(opts, displayFn) {
   this.updateViewOpts(opts);
 }
 
+OffersExercisedListener.prototype.resetStored = function (row, merge) {
+  var formattedRow = formatRow(row || []);
+  var start = this.storedResults ? moment.utc(this.storedResults.startTime) : null;
 
-OffersExercisedListener.prototype.resetStored = function (row) {
-  if (!row) row = [];
+  if (merge &&
+      this.storedResults &&
+      !start.diff(formattedRow.startTime)) {
+    this.storedResults = offersExercisedReduce([this.storedResults, formattedRow], true);
+    //console.log('merged');
 
-  this.storedResults = {
-    startTime   : moment.utc(row.startTime || row.time || row[0]).format(),
-    curr1Volume : row.baseVolume    || row[1]  || 0.0,
-    curr2Volume : row.counterVolume || row[2]  || 0.0,
-    numTrades   : row.count         || row[3]  || 0,
-    open        : row.open          || row[4]  || 0.0,
-    high        : row.high          || row[5]  || 0.0,
-    low         : row.low           || row[6]  || 0.0,
-    close       : row.close         || row[7]  || 0.0,
-    volumeWeightedAvg: row.vwap     || row[8]  || 0.0,
-    openTime    : row.openTime      || row[9]  || 0,
-    closeTime   : row.closeTime     || row[10] || 0,
-  };
+  } else if (merge &&
+             this.storedResults &&
+             start.diff(formattedRow.startTime) > 0) {
+    //console.log('older');
+
+  } else {
+    this.storedResults = formattedRow;
+  }
+
+
+
+  function formatRow (row) {
+    var open = row.openTime || row[9];
+    var close = row.closeTime || row[10];
+
+    if (typeof open === 'string') {
+      open = moment.utc(open).unix();
+    }
+
+    if (typeof close === 'string') {
+      close = moment.utc(close).unix();
+    }
+
+    return {
+      startTime   : moment.utc(row.startTime || row.time || row[0]).format(),
+      curr1Volume : row.baseVolume    || row[1]  || 0.0,
+      curr2Volume : row.counterVolume || row[2]  || 0.0,
+      numTrades   : row.count         || row[3]  || 0,
+      open        : row.open          || row[4]  || 0.0,
+      high        : row.high          || row[5]  || 0.0,
+      low         : row.low           || row[6]  || 0.0,
+      close       : row.close         || row[7]  || 0.0,
+      volumeWeightedAvg: row.vwap     || row[8]  || 0.0,
+      openTime    : open || Infinity,
+      closeTime   : close || 0
+    };
+  }
 
   this.storedResults.curr1VwavNumerator = this.storedResults.volumeWeightedAvg * this.storedResults.curr1Volume;
 
@@ -323,8 +353,7 @@ function createTransactionProcessor(viewOpts, resultHandler) {
 
 function offersExercisedMap(doc, emit) {
 
-    var time = new Date(doc.close_time_timestamp),
-      unix   = Math.round(time.getTime());
+    var unix = moment.utc(doc.close_time_timestamp).unix();
 
     doc.transactions.forEach(function(tx) {
 
@@ -497,8 +526,8 @@ function formatReduceResult (result) {
 
   return {
     startTime     : result.startTime,
-    openTime      : moment.utc(result.openTime).format(),
-    closeTime     : moment.utc(result.closeTime).format(),
+    openTime      : result.openTime === Infinity ? null : moment.unix(result.openTime).format(),
+    closeTime     : result.closeTime ? moment.unix(result.closeTime).format() : null,
     baseVolume    : result.curr1Volume,
     counterVolume : result.curr2Volume,
     count         : result.numTrades,
