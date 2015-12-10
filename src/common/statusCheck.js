@@ -29,16 +29,15 @@ angular.module('statusCheck', [])
 
           if (!resp || !resp.data) {
             marker.attr('class', '');
-            tooltip.html('Unable to check status.');
+            tooltip.html('Unable to check status');
 
           } else if (!resp.data.score) {
             marker.attr('class', 'active');
             tooltip.html('Network data is up to date');
 
           } else if (resp.data.score === 1) {
-            marker.attr('class', 'warning');
-            tooltip.html('Network data is importing - ' +
-                         'however some ledgers may have failed.');
+            marker.attr('class', 'active');
+            tooltip.html('Verification for imported ledgers is currently paused');
 
           } else {
             date = moment();
