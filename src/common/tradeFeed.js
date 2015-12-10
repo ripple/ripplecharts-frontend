@@ -20,11 +20,16 @@ var TradeFeed = function (options) {
   daily.append('span').attr('class','high').html('H: --');
   daily.append('span').attr('class','low').html('L: --');
   daily.append('span').attr('class','volume').html('VOL: --');
-  daily.append('label').html('(Last 24 hours)');
+  daily.append('label').attr('class','date').html('--');
 
-  var tableWrap = div.append('div').attr('class','table').append("div").attr("class","tableWrap");
-  var table     = tableWrap.append('table');
-  var header    = table.append('thead').append('tr').attr('class', 'trade-table-header');
+  var tableWrap = div.append('div').attr('class','table')
+    .append("div")
+    .attr("class","tableWrap");
+
+  var table  = tableWrap.append('table');
+  var header = table.append('thead')
+    .append('tr')
+    .attr('class', 'trade-table-header');
 
 
   header.append('td').attr('class', 'amount').attr('colspan', 4);
@@ -131,18 +136,18 @@ var TradeFeed = function (options) {
   }
 
 
-//load price and volume stats from the last 24hours
+//load price and volume stats from the last day
   function loadDailyStats () {
     var now  = moment().utc();
-    var then = moment().utc().subtract(1, 'days');
+    var then = moment().utc().startOf('day');
 
     if (self.requestDaily) self.requestDaily.abort();
     self.requestDaily = apiHandler.offersExercised({
-      startTime     : then.format(),
-      endTime       : now.format(),
-      timeIncrement : 'all',
-      base          : self.base,
-      counter       : self.counter
+      startTime: then.format(),
+      endTime: now.format(),
+      base: self.base,
+      counter: self.counter,
+      timeIncrement: 'day'
 
     }, function(data){
 
@@ -166,9 +171,15 @@ var TradeFeed = function (options) {
   function updateDailyStats () {
     var base    = ripple.Currency.from_json(self.base.currency).to_human();
     var counter = ripple.Currency.from_json(self.counter.currency).to_human();
-    daily.select(".high").html("<small>H:</small> "+valueFilter(high, self.counter.currency));
-    daily.select(".low").html("<small>L:</small> "+valueFilter(low, self.counter.currency));
-    daily.select(".volume").html("<small>VOL:</small> "+valueFilter(volume, self.base.currency)+"<small>"+base+"</small>");
+    daily.select(".high").html("<small>H:</small> " +
+      valueFilter(high, self.counter.currency));
+    daily.select(".low").html("<small>L:</small> " +
+      valueFilter(low, self.counter.currency));
+    daily.select(".volume").html("<small>VOL:</small> " +
+      valueFilter(volume, self.base.currency) +
+      "<small>" + base + "</small>");
+    daily.select(".date").html(moment.utc().format('YYYY-MM-DD') +
+      ' <small>(UTC)</small>');
     price.select(".amount").html(valueFilter(close, self.counter.currency));
     price.select(".pair").html(base+"/"+counter);
   }
