@@ -270,7 +270,12 @@ var OrderBook = function (options) {
       if (!sum) {
         sum = amount;
       } else {
-        sum = sum.add(amount);
+        try {
+          sum = sum.add(amount);
+        } catch (e) {
+          console.log(e);
+          break;
+        }
       }
 
       if (!priceBook[price]) {
