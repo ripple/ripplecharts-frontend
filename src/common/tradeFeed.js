@@ -138,7 +138,7 @@ var TradeFeed = function (options) {
 
 //load price and volume stats from the last day
   function loadDailyStats () {
-    var now  = moment().utc();
+    var now  = moment().utc().endOf('day');
     var then = moment().utc().startOf('day');
 
     if (self.requestDaily) self.requestDaily.abort();
@@ -194,14 +194,13 @@ var TradeFeed = function (options) {
     loader.transition().style('opacity',1);
     status.html("");
 
-    var now  = moment().utc();
-    var then = moment().utc().subtract(1, 'days');
-
+    var end  = moment().utc().endOf('day');
+    var start = moment().utc().startOf('day').subtract(1,'day');
 
     if (self.request) self.request.abort();
     self.request = apiHandler.offersExercised({
-      startTime  : then.format(),
-      endTime    : now.format(),
+      endTime    : end.format(),
+      startTime  : start.format(),
       reduce     : false,
       base       : self.base,
       counter    : self.counter,

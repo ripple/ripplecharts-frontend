@@ -128,10 +128,16 @@ var MiniChart = function(base, counter, markets, gateways) {
       "Counter Issuer"   : self.counter.issuer || ""
     });
     */
+    var start = moment.utc();
+
+    start.startOf('minute')
+      .subtract(start.minutes() % 15, 'minutes')
+      .subtract(1, 'day');
+
     if (self.request) self.request.abort();
     self.request = self.markets.apiHandler.offersExercised({
-      startTime     : moment.utc().format(),
-      endTime       : moment.utc().subtract(1, 'day').format(),
+      startTime     : start.format(),
+      endTime       : moment.utc().endOf('day').format(),
       timeIncrement : "minute",
       timeMultiple  : 15,
       descending    : false,
