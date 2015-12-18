@@ -187,7 +187,12 @@ var OrderBook = function (options) {
         return price.toFixed(exponent < 0 ? (0 - exponent) : 0);
       }
 
-      return price.toFixed(precision);
+      price = price.toFixed(precision);
+      if (Number(price) === 0) {
+        return '< ' + Math.pow(10, 0 - precision);
+      } else {
+        return price;
+      }
     }
 
     for(i=0; i<data.length; i++) {
@@ -381,7 +386,7 @@ var OrderBook = function (options) {
 
     var duration = update ? 0 : 250;
     var bestBid = self.offers.bids[0].price;
-    var bestAsk   = self.offers.asks[0].price;
+    var bestAsk = self.offers.asks[0].price;
 
     midpoint = (bestBid+bestAsk)/2;
 
@@ -508,6 +513,8 @@ var OrderBook = function (options) {
     function formatAmount (amount) {
       if (!amount) {
         return '&nbsp';
+      } else if (amount.indexOf('<') !== -1) {
+        return amount;
       }
 
       parts = amount.split(".");
