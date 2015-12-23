@@ -1,0 +1,55 @@
+.transactions {
+  display: table;
+  margin-top: 5px;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.transactions .tx-input {
+  margin: 20px 0;
+  min-width: 820px;
+}
+
+.transactions .tx-input label {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin: 5px 10px;
+}
+
+.transactions .tx-input input {
+  border: none;
+  width: 750px;
+  color: #722;
+  font-size: 18px;
+  font-family: sans-serif;
+  background: none;
+}
+
+.transactions .column {
+  display: table-cell;
+  vertical-align: top;
+  border: 1px solid #eee;
+}
+
+.transactions .column1 {
+  width: 350px;
+  max-width: 350px;
+}
+
+.transactions txfeed tx {
+  border-bottom: 1px solid #eee;
+}
+
+.dark .transactions .column,
+.dark .transactions txfeed tx {
+  border-color: #222;
+}
+
+.dark .transactions txfeed .type {
+  opacity: .7;
+}
+
+.dark .transactions txfeed .account {
+  color: #68c;
+}

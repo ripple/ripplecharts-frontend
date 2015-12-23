@@ -12,6 +12,7 @@ angular.element(document).ready(function() {
     'ripplecharts.trade-volume',
     'ripplecharts.graph',
     'ripplecharts.accounts',
+    'ripplecharts.transactions',
     'ripplecharts.value',
     'ripplecharts.history',
     'ripplecharts.metrics',
@@ -22,7 +23,10 @@ angular.element(document).ready(function() {
     'rippleName',
     'matrixFactory',
     'chordDiagram',
-    'statusCheck'
+    'statusCheck',
+    'txsplain',
+    'txfeed',
+    'jsonFormatter'
   ])
 
   .config( function myAppConfig ( $stateProvider, $urlRouterProvider ) {

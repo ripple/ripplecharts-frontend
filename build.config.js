@@ -20,21 +20,21 @@ module.exports = {
    * app's unit tests.
    */
   app_files: {
-    js: [  
-      'src/**/*.js', 
+    js: [
+      'src/**/*.js',
       '!src/example.config.js',
-      '!src/**/*.spec.js', 
+      '!src/**/*.spec.js',
       '!src/assets/**/*.js',
       '!src/embed/**/*.js'
       ],
     jsunit: [ 'src/**/*.spec.js' ],
-    
+
     coffee: [ 'src/**/*.coffee', '!src/**/*.spec.coffee' ],
     coffeeunit: [ 'src/**/*.spec.coffee' ],
 
     atpl: [ 'src/app/**/*.tpl.html' ],
     ctpl: [ 'src/common/**/*.tpl.html' ],
-    
+
     html: [ 'src/index.html' ],
     maintenance : 'src/maintenance.html',
     less: 'src/less/main.less'
@@ -89,6 +89,7 @@ module.exports = {
       'vendor/jscrollpane/script/jquery.jscrollpane.js',
       'vendor/chartjs/Chart.js',
       'vendor/ddslick/jquery.ddslick.min.js',
+      'vendor/json-formatter/dist/json-formatter.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
       'deps/offersExercisedListener.js',
@@ -97,11 +98,12 @@ module.exports = {
     css: [
       'vendor/angular-snap/angular-snap.css',
       'vendor/snapjs/snap.css',
-      'vendor/jscrollpane/style/jquery.jscrollpane.css'
+      'vendor/jscrollpane/style/jquery.jscrollpane.css',
+      'vendor/json-formatter/dist/json-formatter.css'
     ],
     assets: [
     ],
-    
+
     fonts: [
       'vendor/bootstrap/dist/fonts/*'
     ]

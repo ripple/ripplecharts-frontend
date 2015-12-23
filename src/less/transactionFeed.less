@@ -1,4 +1,121 @@
-/* Icons */
+txfeed {
+
+  display: block;
+  width: 350px;
+  height: 1000px;
+  overflow: hidden;
+
+  /* For WebKit web-browsers: Chrome/Safari */
+  @-webkit-keyframes slideDown {
+    0% { transform: translateY(-50px); margin-top: -50px }
+    100% { transform: translateY(0px); margin-top: 0 }
+  }/* For Gecko: Mozilla Firefox */
+  @-moz-keyframes slideDown {
+    0% { transform: translateY(-50px); margin-top: -50px }
+    100% { transform: translateY(0px); margin-top: 0 }
+  }
+  @keyframes slideDown {
+    0% { transform: translateY(-50px); margin-top: -50px }
+    100% { transform: translateY(0px); margin-top: 0 }
+  }
+
+  tx {
+    height: 50px;
+    display: block;
+    overflow: hidden;
+    transform: translateY(-50px);
+    margin-top: -50px;
+    padding: 5px;
+    position: relative;
+
+    -webkit-animation: slideDown 1s ease forwards;
+    -moz-animation: slideDown 1s ease forwards;
+    animation: slideDown 1s ease forwards;
+  }
+
+  tx:hover {
+    background-color: rgba(150,150,150,.15);
+    cursor: pointer;
+    transition: background-color .3s ease;
+  }
+
+  .type {
+    display: inline-block;
+    font-size: 8px;
+    border-radius: 2px;
+    background: #888;
+    color: #fff;
+    padding: 2px 5px;
+    min-width: 60px;
+    text-align: center;
+    margin: 0 5px;
+  }
+
+  tx.OfferCreate .type {
+    background: #569;
+  }
+
+  tx.OfferCancel .type {
+    background: #955;
+  }
+
+  tx.Payment .type {
+    background: #474;
+  }
+
+  tx.TrustSet .type {
+    background: #a62;
+  }
+
+  .icon {
+    display: inline-block;
+    width:16px;
+    height:16px;
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:100%;
+    vertical-align:middle;
+    background-image:url('icons/intermediate.svg');
+  }
+
+  .OfferCreate .icon { background-image:url('icons/offerin.svg'); }
+  .OfferCancel .icon { background-image:url('icons/canceloffer.svg'); }
+  .Payment .icon { background-image:url('icons/send.svg'); }
+  .TrustSet .icon { background-image:url('icons/trustin.svg'); }
+  .AccountSet .icon { background-image:url('icons/accountset.svg'); }
+
+  .summary {
+    font-size: 12px;
+    margin: 0 2px;
+    clear: both;
+  }
+
+  .summary account {
+    font-size: .8em;
+    opacity: .6;
+  }
+
+  .account {
+    font-size: 11px;
+    color: #abc;
+    float: right;
+    padding: 3px 5px 0;
+  }
+
+  .result {
+    position: absolute;
+    bottom: 0;
+    right: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    color: darkred;
+  }
+
+  .result.success {
+    color:green;
+  }
+}
+
 .transactionFeed {
   text-align:left;
   overflow:auto;
@@ -6,6 +123,13 @@
   border:1px solid rgba(150,150,150,.3);
   border-radius:2px;
   margin:3px;
+
+  .send { background-image:url('icons/send.svg'); cursor:pointer;}
+  .receive { background-image:url('icons/receive.svg'); cursor:pointer;}
+  .intermediate { background-image:url('icons/intermediate.svg'); cursor:pointer;}
+  .sendfailed { background-image:url('icons/sendfailed.svg'); cursor:pointer;}
+  .receivefailed { background-image:url('icons/receivefailed.svg'); cursor:pointer;}
+  .intermediatefailed { background-image:url('icons/intermediatefailed.svg'); cursor:pointer;}
 
   .send { background-image:url('icons/send.svg'); cursor:pointer;}
   .receive { background-image:url('icons/receive.svg'); cursor:pointer;}
@@ -53,9 +177,9 @@
     display:inline-block;
     vertical-align:middle;
   }
-    
+
   .transaction .details {
-    font-size:15px;  
+    font-size:15px;
   }
 
   .transaction .details small {
@@ -68,17 +192,17 @@
 
   .transaction .details i {
     font-size:75%;
-    line-height:75%;  
+    line-height:75%;
   }
 
   .transaction i  {
     margin: 0 10px;
-    color: #aaa; 
+    color: #aaa;
   }
 
   .transaction .accounts {
     font-size:11px;
-    color:#8ab;  
+    color:#8ab;
     margin-top:-3px;
     vertical-align:middle;
   }
@@ -94,7 +218,7 @@
 
   .transaction .accounts i {
     margin: 0 10px;
-    color: #aaa; 
+    color: #aaa;
     float:left;
   }
 
@@ -117,7 +241,7 @@
     color:#777
   }
 
-  .transaction i { 
+  .transaction i {
     color:#666;
   }
 

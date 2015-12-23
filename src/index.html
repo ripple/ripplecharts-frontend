@@ -101,7 +101,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
             </div>
             </li>
             <li class="category">
-              <a href="#/graph" snap-close></i>Accounts  <span class="caret"></span></a>
+              <a href="#/graph" snap-close>Accounts  <span class="caret"></span></a>
               <div class="sub_wrapper">
               <ul class="subnav">
                 <li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
@@ -112,6 +112,9 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
                 </li>
               </ul>
             </div>
+            </li>
+            <li class="category">
+              <a href="#/transactions" snap-close ui-route="/transactions(/.+)?">Transactions</a>
             </li>
             <li class="category color_picker">
               <a><img title="Toggle Light/Dark themes" class="toggle_theme" ng-click="toggleTheme()" src="assets/icons/icn_brightness.svg"></a>
@@ -175,7 +178,7 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
           </ul>
         </li>
         <li class="category">
-          <a href="#/graph" snap-close><img src="assets/icons/999_accounts.svg"></i>Accounts</a>
+          <a href="#/graph" snap-close><img src="assets/icons/999_accounts.svg">Accounts</a>
         </li>
         <li class="page">
           <ul>
@@ -186,6 +189,9 @@ mixpanel.init(MIXPANEL);</script><!-- end Mixpanel -->
               <a href="#/accounts" snap-close>Accounts Created</a>
             </li>
           </ul>
+        </li>
+        <li class="category">
+          <a href="#/transactions" snap-close><img src="assets/images/flip.svg"/>Transactions</a>
         </li>
         <li class="category color_picker">
           <a class="toggle_theme_mobile" ng-click="toggleTheme()"><img src="assets/icons/icn_brightness.svg">Light / Dark</a>
