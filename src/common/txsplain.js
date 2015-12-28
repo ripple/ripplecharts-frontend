@@ -219,13 +219,128 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             return;
           }
 
-          html += '<li>It ' + action +
+          switch(node.LedgerEntryType) {
+            case 'AccountRoot':
+              html += renderAccountRoot(action, node);
+              break;
+            case 'DirectoryNode':
+              html += renderDirectoryNode(action, node);
+              break;
+            case 'Offer':
+              html += renderOfferNode(action, node);
+              break;
+            case 'RippleState':
+              html += renderRippleState(action, node);
+              break;
+            default:
+              html += '<li>It ' + action +
             ((node.LedgerEntryType === 'Offer' ||
               node.LedgerEntryType === 'AccountRoot') ? ' an ' : ' a ') +
             '<type>' + node.LedgerEntryType + '</type> node</li>';
+          }
+
         });
 
         meta.html(html + '</ul>');
+
+        function renderRippleState(action, node) {
+          var fields = node.FinalFields || node.NewFields;
+          var prev = node.PreviousFields;
+          var previousBalance = prev ? Number(prev.Balance.value) : 0;
+          var finalBalance = Number(fields.Balance.value);
+          var change;
+          var account;
+          var issuer;
+
+          if (finalBalance < 0) {
+            account = fields.HighLimit.issuer;
+            issuer = fields.LowLimit.issuer;
+            change = previousBalance - finalBalance;
+            finalBalance = 0 - finalBalance;
+          } else {
+            account = fields.LowLimit.issuer;
+            issuer = fields.HighLimit.issuer;
+            change = finalBalance - previousBalance;
+          }
+
+          var html = '<li>It ' + action + ' a ' +
+            '<b>' + fields.Balance.currency + '</b> ' +
+            '<type>RippleState</type> ' +
+            'node between <br/>' +
+            '<account>' + account + '</account> and ' +
+            '<account>' + issuer + '</account>';
+
+          if (change) {
+            html += '<ul><li>Balance changed by <b>' + commas(change.toPrecision(12)) +
+              '</b> to <b>' + commas(finalBalance) +
+              '</b> ' + fields.Balance.currency + '</li></ul>';
+          }
+
+
+          return html + '</li>';
+        }
+
+        function renderOfferNode(action, node) {
+          var fields = node.FinalFields || node.NewFields;
+          var html = '<li>It ' + action + ' a ' +
+            '<b>' + (fields.TakerPays.currency || 'XRP') + '/' +
+            (fields.TakerGets.currency || 'XRP') + '</b> ' +
+            '<type>Offer</type> ' +
+            'node of <account>' + fields.Account + '</account>';
+
+          return html + '</li>';
+        }
+
+        function renderAccountRoot(action, node) {
+          var fields = node.FinalFields || node.NewFields;
+          var prev = node.PreviousFields;
+          var previousBalance;
+          var finalBalance;
+          var html = '';
+
+          if (fields && fields.Account) {
+            html = '<li>It ' + action + ' the ' +
+            '<type>AccountRoot</type> ' +
+            'node of <account>' + fields.Account + '</account>';
+          } else {
+            html = '<li>It ' + action + ' an ' +
+            '<type>AccountRoot</type> node';
+          }
+
+          if (fields && prev) {
+            html += '<ul>';
+            previousBalance = Number(prev.Balance);
+            finalBalance = Number(fields.Balance);
+            if (previousBalance < finalBalance) {
+              html += '<li>Balance increased by <b>' +
+                commas((finalBalance - previousBalance) / 1000000) +
+                '</b> to <b>' + commas(finalBalance / 1000000) +
+                '</b> XRP </li>';
+            } else if (previousBalance > finalBalance) {
+              html += '<li>Balance reduced by <b>' +
+                commas((previousBalance - finalBalance) / 1000000) +
+                '</b> to <b>' + commas(finalBalance / 1000000) +
+                '</b> XRP </li>';
+            }
+
+            html += '</ul>';
+          }
+
+          return html;
+        }
+
+        function renderDirectoryNode(action, node) {
+          var fields = node.FinalFields || node.NewFields;
+          var html = '<li>It ' + action + ' a ' +
+            '<type>DirectoryNode</type> ' +
+            'node';
+
+          if (fields.Owner) {
+            html += ' owned by <account>' + fields.Owner + '</account>';
+          }
+
+          return html + '</li>';
+        }
       }
 
       function renderMemos(tx) {
