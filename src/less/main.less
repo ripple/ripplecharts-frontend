@@ -104,7 +104,7 @@ h1, h2, h3, h4 {
 }
 
 .headerPad {
-  height:55px;
+  height:60px;
 }
 
 .header status-check {
@@ -848,142 +848,148 @@ footer .links a:first-child {
  * DDslick dropdown styles
  */
 
-  ul.dd-options li:hover {
-    background: #fafafa;
-  }
+ul.dd-options {
+  max-height: 800px;
+}
 
-  .dd-option-image,
-  .dd-selected-image {
-    float: none !important;
-    height: 28px;
-    margin: 0 10px 0 0 !important;
-  }
+ul.dd-options li:hover {
+  background: #fafafa;
+}
 
-  .dd-container {
-    position: inherit !important; //override default
-  }
+.dd-option-image,
+.dd-selected-image {
+  float: none !important;
+  height: 28px;
+  margin-right: 10px !important;
+}
 
-  .dd-container li {
-    border-bottom: solid 1px #ddd;
-  }
+.dd-container {
+  position: inherit !important; //override default
+}
 
-  .dd-container .dd-option,
-  .dd-container {
-    border: none;
-  }
+.dd-container li {
+  border-bottom: solid 1px #ddd;
+}
 
-  .dd-container.currency .dd-option-image,
-  .dd-container.currency .dd-selected-image {
-    width: 14px !important;
-  }
+.dd-container .dd-option,
+.dd-container {
+  border: none;
+}
 
-  .dd-container.gateway .dd-option-image,
-  .dd-container.gateway .dd-selected-image {
-    max-width: 64px;
-  }
+.dd-container.currency .dd-option-image,
+.dd-container.currency .dd-selected-image {
+  width: 14px !important;
+  margin-top: -2px;
+  margin-right: 7px !important;
+}
 
-  .dd-container.gateway .dd-option label,
-  .dd-container.gateway .dd-selected label {
-    max-width: 200px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: inline-block;
-    overflow: hidden;
-    vertical-align: middle;
-  }
+.dd-container.gateway .dd-option-image,
+.dd-container.gateway .dd-selected-image {
+  max-width: 64px;
+}
 
-  #currencyPair a:hover, a:focus, .pairSelect a:hover{
-      text-decoration: none;
-  }
+.dd-container.gateway .dd-option label,
+.dd-container.gateway .dd-selected label {
+  max-width: 200px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: middle;
+}
 
-  .dd-container {
-    display: inline-block;
-  }
+#currencyPair a:hover, a:focus, .pairSelect a:hover{
+    text-decoration: none;
+}
 
-  .dd-options {
-   //position: fixed !important;
-  }
+.dd-container {
+  display: inline-block;
+}
 
-  .dd-pointer {
-    top: 51% !important;
-  }
+.dd-options {
+ //position: fixed !important;
+}
 
-  .dd-option-text {
-    cursor: pointer;
+.dd-pointer {
+  top: 51% !important;
+}
+
+.dd-option-text {
+  cursor: pointer;
+}
+
+.dd-option-text, .dd-selected-text {
+  line-height: 40px !important;
+  margin-bottom: 0;
+}
+
+//currency specific
+.dd-container.currency {
+
+  max-width: 100px;
+
+  .dd-select, .dd-options {
+    max-width: 100px;
   }
 
   .dd-option-text, .dd-selected-text {
-    line-height: 40px !important;
-    margin-bottom: 0;
+    padding-left: 0;
   }
-
-  //currency specific
-  .dd-container.currency {
-
-    max-width: 95px;
-
-    .dd-select, .dd-options {
-      max-width: 95px;
-    }
-
-    .dd-option-text, .dd-selected-text {
-      padding-left: 0;
-    }
-  }
-
-  //gateway specific
-  .dd-container.gateway {
-    margin-left: 5px;
-    max-width: 250px;
-
-    .dd-select, .dd-options {
-      max-width: 250px;
-    }
-
-  }
-
-  .dd-option,
-  .dd-selected {
-    color: #000;
-    font-family: "Open Sans";
-    padding: 0 10px !important;
-
-    &:hover {
-      color: #000;
-    }
-  }
-
-  .dd-option-text {
-    color: #000;
-    font-family: "Open Sans";
-
-    &:hover {
-      color: #000;
-    }
 }
-  .dd-select, .dd-option-selected, .dd-option {
-    background: transparent !important;
+
+//gateway specific
+.dd-container.gateway {
+  margin-left: 5px;
+  max-width: 250px;
+
+  .dd-select, .dd-options {
+    max-width: 250px;
   }
 
-  .disabledDropdown {
-    vertical-align: top;
-    padding-top: 40px;
-    border: 1px solid #ccc;
-    opacity: .5;
+}
 
-    .dd-select {
-      border: none !important;
-    }
+.dd-option,
+.dd-selected {
+  color: #000;
+  font-family: "Open Sans";
+  padding: 0 10px !important;
 
-    .dd-pointer-down {
-      opacity: .25;
-      top: -20px !important;
-      right: 12px;
-      cursor: initial !important;
-    }
-
-    li {
-      display: none;
-    }
+  &:hover {
+    color: #000;
   }
+}
+
+.dd-option-text {
+  color: #000;
+  font-family: "Open Sans";
+
+  &:hover {
+    color: #000;
+  }
+}
+.dd-select, .dd-option-selected, .dd-option {
+  background: transparent !important;
+}
+
+.disabledDropdown {
+  vertical-align: top;
+  padding-top: 40px;
+  border: 1px solid #ccc;
+  opacity: .5;
+
+  .dd-select {
+    border: none !important;
+  }
+
+  .dd-pointer-down {
+    opacity: .25;
+    top: -20px !important;
+    right: 12px;
+    cursor: initial !important;
+  }
+
+  li {
+    display: none;
+  }
+}
 

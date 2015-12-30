@@ -166,7 +166,7 @@
 
     //append edit list option to dropdowns
     function editList( selectionId, selectionSuffix ) {
-      $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append( '<a onClick=ga("send", "event", "Manage", "Edit button"); class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="edit_list ' + selectionSuffix + '"><span class="plus">+</span> Edit</li></a>');
+      $('#'+ selectionId + '_' + selectionSuffix + ' ul.dd-options').append( '<a onClick=ga("send", "event", "Manage", "Edit button"); class="edit_list" href="#/manage-' + selectionSuffix +'?'+ selectionId +'"><li ui-route="/manage-' + selectionSuffix + '" ng-class="{active:$uiRoute !== false}" class="' + selectionSuffix + '"><span class="plus">+</span><label class="dd-option-text">Edit</label></li></a>');
      }
 
     function oldDropdowns(selection, fixed) {

@@ -63,7 +63,7 @@
 }
 
 #currencyPair {
-  margin: 10px 0 5px 60px;
+  margin: 10px 60px 5px 60px;
   text-align: left;
 }
 
@@ -76,6 +76,7 @@
   background: #f6f6f6;
 }
 
+#currencyPair .sub,
 #base, #quote {
   display: inline-block;
   text-align: left;
@@ -267,20 +268,25 @@
 
 //edit list button
 .edit_list {
-  height: 41px;
-  line-height: 41px;
+  display: block;
   font-family: 'Open Sans';
   color: #000;
   vertical-align: top;
+
+  li {
+    border: none !important;
+  }
 
   &:hover {
     background: #fafafa;
   }
 
   .plus {
+    display:block;
+    float:left;
     color: rgb(153, 153, 153);
     font-size: 24px;
-    margin: 0 7px 0 13px;
+    padding: 2px 7px 0 13px;
     font-weight: bold;
   }
 }
@@ -289,7 +295,7 @@
   .edit_list.gateway {
 
     .plus {
-      margin: 0 10px 0 25px;
+      padding: 2px 10px 0 25px;
     }
 
   }
@@ -330,14 +336,6 @@
     float: none;
   }
 }
-
-@media (max-width: 1175px) {
-
-  #toCSV {
-    display: none;
-  }
-}
-
 
 @media (max-width:1100px) {
   .markets .dropdowns, .markets #flip, .markets #toCSV {
@@ -402,6 +400,10 @@
 }
 
 @media (max-width: 767px) {
+
+  #toCSV {
+    visibility: hidden;
+  }
 
   .markets #bookTables table {
     width:100%;
@@ -481,7 +483,8 @@
     text-align:center;
   }
 
-  #currencyPair #flip {
+  #currencyPair #flip,
+  #currencyPair #toCSV {
     margin-right:-20px;
     padding:12px 0;
   }
@@ -502,7 +505,7 @@
   }
 
   #currencyPair {
-    zoom: .80;
+    zoom: .92;
   }
 
   #currencyPair select{
@@ -518,10 +521,6 @@
   #interval {margin-left:20px; zoom:1.25}
   #range {margin-left:0px; zoom:1.25}
 
-  #toCSV img {
-    width:35px;
-  }
-
   .markets .col-md-3 .showHelp {
     margin:10px;
   }
@@ -530,6 +529,4 @@
     zoom:1.33;
     margin:10px;
   }
-
-
 }

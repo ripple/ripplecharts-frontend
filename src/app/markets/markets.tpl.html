@@ -3,23 +3,23 @@
     <div class="helpbox" ng-class="{showHelp : showHelp}">
       <h5>Live Trade Feed</h5>
       <p>
-        The live trade feed shows the most recent trades for the 
+        The live trade feed shows the most recent trades for the
         selected currency pair, the latest trade price and
         the 24 hour high, low, and volume.
       </p>
-      <p>  
+      <p>
         The large number at the top is the latest trade price.
-        Currency prices are always quoted in relation to one another, e.g. XRP/USD.    
-        The first currency in the pair is called the "base currency".  
-        The second one is called the "counter currency". The price quote shows 
-        the value of 1 unit of base currency in terms of the counter currency.          
+        Currency prices are always quoted in relation to one another, e.g. XRP/USD.
+        The first currency in the pair is called the "base currency".
+        The second one is called the "counter currency". The price quote shows
+        the value of 1 unit of base currency in terms of the counter currency.
       </p>
-      <p>  
-        The table below is a real-time ticker of the latest trades.   
-        The colored bar shows if the trade price was higher, lower or the 
+      <p>
+        The table below is a real-time ticker of the latest trades.
+        The colored bar shows if the trade price was higher, lower or the
         same as the previous trade listed directly below. The left column shows the
         amount traded and the right column shows the trade price.
-      </p>   
+      </p>
       <table>
         <tr><td class="type ask"></td><th>Higher than previous price</th></tr>
         <tr><td class="type bid"></td><th>Lower than previous price</th></tr>
@@ -37,19 +37,19 @@
             </div>
           </div>
         </div>
-    <div id="tradeFeed"></div> 
-  </div>   
-  
+    <div id="tradeFeed"></div>
+  </div>
+
   <div class="wrap col-md-9">
     <div class="helpbox" ng-class="{showHelp : showHelp}">
       <h5>Live Market Data</h5>
       <p>
-        The dropdowns allow you to select a base currency and a counter currency.  
-        Select the currency first, and the issuer dropdown will update to show 
+        The dropdowns allow you to select a base currency and a counter currency.
+        Select the currency first, and the issuer dropdown will update to show
         which issuers are available for the selected currency. On the right side,
         the current ledger number is represented, followed by a circle which
-        indicates whether or not Ripple Charts is currently connected to the 
-        Ripple Network real time feed.       
+        indicates whether or not Ripple Charts is currently connected to the
+        Ripple Network real time feed.
       </p>
          <table>
           <tr>
@@ -68,60 +68,62 @@
             </td>
             <th>Disconnected from the Ripple Network</th>
           </tr>
-        </table>     
+        </table>
       <p>
-        This chart below shows price change over time. Grey bars in the 
-        background represent trade volume for that time period. In the top left, 
+        This chart below shows price change over time. Grey bars in the
+        background represent trade volume for that time period. In the top left,
         select time intervals between each data point. The displayed time range will
         automatically adjust based on which interval you select.  At the top right
         you can select between line or candlestick display.
       </p>
       <p>
         Hover your mouse over the chart to see open, high, low, and close values
-        for each of the data points.  To download a csv file of the data from the 
-        current chart, click the <img class="downloadIcon" src="assets/images/download_icn.svg" /> icon to 
+        for each of the data points.  To download a csv file of the data from the
+        current chart, click the <img class="downloadIcon" src="assets/images/download_icn.svg" /> icon to
         the right of the currency dropdowns.
       </p>
-    </div> 
-    <div class="controls"> 
+    </div>
+    <div class="controls">
       <div id="currencyPair">
-        
-              
-        <div id="base" class="dropdowns"></div>
-        <div id="flip">
-          <img class="flipImg" title="Flip pair" src="assets/images/flip.svg"/>
+
+        <div class="sub">
+          <div id="base" class="dropdowns"></div>
+          <div id="flip">
+            <img class="flipImg" title="Flip pair" src="assets/images/flip.svg"/>
+          </div>
         </div>
-        <div id="quote" class="dropdowns"></div>
-         <a id="toCSV" disabled="true" title="Export to CSV">
-        <img class="downloadIcon" src="assets/images/download_icn.svg"/>
-         
-      </a>
+        <div class="sub">
+          <div id="quote" class="dropdowns"></div>
+          <a id="toCSV" disabled="true" title="Export to CSV">
+            <img class="downloadIcon" src="assets/images/download_icn.svg"/>
+          </a>
+        </div>
       </div>
-      
+
       <div class="rangeIntervalWrapper">
         <div id="range"></div>
         <div id="interval"></div>
       </div>
       <div class="chartTypeWrapper">
-        <div id="chartType"></div> 
+        <div id="chartType"></div>
       </div>
     </div>
     <div id="priceChart" data-snap-ignore="true"></div>
     <div class="helpbox" ng-class="{showHelp : showHelp}">
       <h5>Order Book</h5>
       <p>
-        The current order book for the selected currency pair is below - 
+        The current order book for the selected currency pair is below -
         these are orders across the Ripple Network that have been placed
-        but not yet filled. "Bids" are orders to buy the base currency, and 
-        "Asks" are orders to sell the base currency. The “Total” column shows 
+        but not yet filled. "Bids" are orders to buy the base currency, and
+        "Asks" are orders to sell the base currency. The “Total” column shows
         the total amount of currency anyone can get at that price. The "Size"
         columns show the amount of base currency available to buy or sell at
-        "Bid Price" or "Ask Price." The blue line shows the depth of the order 
-        book - the amount of base currency available at different rates. The 
+        "Bid Price" or "Ask Price." The blue line shows the depth of the order
+        book - the amount of base currency available at different rates. The
         vertical line represents the midpoint between the best bid and ask price
-        which is the current market price.       
+        which is the current market price.
       </p>
-    </div> 
+    </div>
     <div id="bookChart"  data-snap-ignore="true"></div>
     <div id="bookTables"></div>
   </div>
