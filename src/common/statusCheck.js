@@ -36,7 +36,7 @@ angular.module('statusCheck', [])
             tooltip.html('Network data is up to date');
 
           } else if (resp.data.score === 1) {
-            marker.attr('class', 'active');
+            marker.attr('class', 'warning');
             tooltip.html('Verification for imported ledgers is currently paused');
 
           } else {

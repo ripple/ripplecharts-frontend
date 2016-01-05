@@ -12,8 +12,8 @@ var ActiveAccounts = function (options){
   var metricSelect = div.append('div').attr('class','metricSelect selectList');
 
   metricSelect.append('label').html('Metric:');
-  metricSelect.selectAll('a').data(['volume','count'])
-    .enter().append('a')
+  metricSelect.selectAll('span').data(['volume','count'])
+    .enter().append('span')
     .text(function(d){return d})
     .classed('selected', function(d) { return d === metric })
     .on('click', function(d){
@@ -52,8 +52,8 @@ var ActiveAccounts = function (options){
   var periodSelect = div.append('div').attr('class','periodSelect selectList');
 
   periodSelect.append('label').html('Period:');
-  periodSelect.selectAll('a').data(['24h','3d','7d'])
-    .enter().append('a')
+  periodSelect.selectAll('span').data(['24h','3d','7d'])
+    .enter().append('span')
     .text(function(d){return d})
     .classed('selected', function(d) { return d === period })
     .on('click', function(d){

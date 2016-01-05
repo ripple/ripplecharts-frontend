@@ -6,7 +6,7 @@ function jsonToCSV(objArray) {
     var index, value;
 
     var head = array[0];
-    if ($("#quote").is(':checked')) {
+    if ($("#counter").is(':checked')) {
         for (index in array[0]) {
             value = index + "";
             line += '"' + value.replace(/"/g, '""') + '",';
@@ -19,12 +19,12 @@ function jsonToCSV(objArray) {
 
     line = line.slice(0, -1);
     str += line + '\r\n';
-    
+
 
     for (var i = 0; i < array.length; i++) {
         line = '';
 
-        if ($("#quote").is(':checked')) {
+        if ($("#counter").is(':checked')) {
             for (index in array[i]) {
                 value = array[i][index] + "";
                 line += '"' + value.replace(/"/g, '""') + '",';
@@ -39,5 +39,5 @@ function jsonToCSV(objArray) {
         str += line + '\r\n';
     }
     return str;
-    
+
 }
