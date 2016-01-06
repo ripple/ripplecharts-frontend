@@ -67,6 +67,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
       var status = div.select('.status');
       var explainView = div.select('.explain-view');
       var rawView = div.select('.raw-view');
+      var timer;
 
       scope.tx_json = null;
       scope.mode = 'explain';
@@ -74,16 +75,17 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
       scope.$watch('mode', setMode);
 
       scope.$watch('tx_hash', function() {
-
-        scope.tx_json = null;
-        explainView.html('');
-
         if (scope.tx_hash) {
           loadTx(scope.tx_hash);
         } else {
           status.style('display', 'none');
         }
       });
+
+      scope.reload = function() {
+        console.log('reload');
+        loadTx(scope.tx_hash);
+      };
 
       function setMode(mode) {
         explainView.style('display', mode && mode === 'explain' ? 'block' : 'none');
@@ -96,6 +98,9 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
 
       function loadTx(hash) {
         var url = API + '/transactions/' + hash;
+
+        scope.tx_json = null;
+        explainView.html('');
 
         $http({
           method: 'get',
@@ -119,26 +124,11 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
       function displayTx() {
         var tx = scope.tx_json;
 
-        if (tx.tx.TransactionType === 'OfferCreate') {
-          renderOfferCreate(tx);
-        } else if (tx.tx.TransactionType === 'OfferCancel') {
-          renderOfferCancel(tx);
-        } else if (tx.tx.TransactionType === 'Payment') {
-          renderPayment(tx);
-        } else if (tx.tx.TransactionType === 'TrustSet') {
-          renderTrustSet(tx);
-        } else {
-          explainView.append('div')
-          .attr('class', 'description')
-          .html('This is a <type>' + tx.tx.TransactionType +
-            '</type> Transaction.');
-        }
-
-        renderFlags(tx);
-        renderFee(tx);
-        renderSequence(tx);
         renderStatus(tx);
+        renderDescription(tx);
         renderMemos(tx);
+        renderFee(tx);
+        renderFlags(tx);
         renderMeta(tx);
 
         // add ripple names
@@ -158,7 +148,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
       function renderFlags(tx) {
         var flags = parseFlags(tx);
         if (flags.length) {
-          var html = 'The transaction specified the following flags:<ul>';
+          var html = '<H4>FLAGS:</h4>The transaction specified the following flags:<ul>';
 
           flags.forEach(function(flag) {
             html += '<li>' + flag + '</li>';
@@ -173,19 +163,14 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
       function renderFee(tx) {
         explainView.append('div')
         .attr('class', 'fee')
-        .html('Sending this transaction consumed ' +
+        .html('<h4>TRANSACTION COST:</h4>Sending this transaction consumed ' +
         '<amount>' + displayAmount(tx.tx.Fee) + '</amount>.');
       }
 
-      function renderSequence(tx) {
-        explainView.append('div')
-        .attr('class', 'sequence')
-        .html('The transaction\'s sequence number is ' +
-          '<b>' + tx.tx.Sequence + '</b>');
-      }
-
       function renderStatus(tx) {
-        var status = tx.meta.TransactionResult === 'tesSUCCESS' ?
+        var status = '<h4>STATUS:</h4>';
+
+        status += tx.meta.TransactionResult === 'tesSUCCESS' ?
           'This transaction was successful' :
           'This transaction failed with a status code of <fail>' +
           tx.meta.TransactionResult + '</fail>';
@@ -194,14 +179,15 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         .attr('class', 'status')
         .html(status + ', and validated in ledger ' +
         '<ledger_index>' + tx.ledger_index + '</ledger_index>' +
-        ' on <date>' + moment.utc(tx.date).format('LLL') + '<date>');
+        ' on <date>' + moment.utc(tx.date).format('LLL') + '<date>.');
 
       }
 
       function renderMeta(tx) {
         var meta = explainView.append('div')
         .attr('class', 'meta');
-        var html = 'It affected <b>' + tx.meta.AffectedNodes.length +
+        var html = '<h4>AFFECTED LEDGER NODES:</h4>' +
+          'It affected <b>' + tx.meta.AffectedNodes.length +
           '</b> nodes in the ledger:<ul class="affected-nodes">';
 
         tx.meta.AffectedNodes.forEach(function(a) {
@@ -344,17 +330,19 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
       }
 
       function renderMemos(tx) {
-        if (!tx.tx.Memos || !tx.tx.Memos.length) {
-          return;
-        }
-
         var memos = explainView.append('div')
         .attr('class', 'memos');
-        var html = 'The transaction contains the following memos:<ul>';
+        var html;
 
-        tx.tx.Memos.forEach(renderMemo);
+        if (tx.tx.Memos && tx.tx.Memos.length) {
+          html = 'The transaction contains the following memos:<ul class="list">';
+          tx.tx.Memos.forEach(renderMemo);
+          html += '</ul>';
+        } else {
+          html = 'The transaction has no memos.';
+        }
 
-        memos.html(html + '</ul>');
+        memos.html('<h4>MEMOS:</h4>' + html);
 
         function renderMemo(m, i) {
           var data = m.Memo.MemoData;
@@ -373,7 +361,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             data = decodeHex(data) + ' <small>(decoded hex)</small>';
           }
 
-          html += '<li>' + (i+1) + ').<ul>';
+          html += '<li><ul>';
 
           if (type) {
             html += '<li><label>Type:</label><span>' + type + '</span></li>';
@@ -386,98 +374,119 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           if (data) {
             html += '<li><label>Data:</label><span>' + data + '</span></li>';
           }
+
+          html += '</ul></li>';
         }
       }
 
-      function renderTrustSet(tx) {
-        explainView.append('div')
-        .attr('class', 'description')
-        .html('This is a <type>TrustSet</type> Transaction.' +
-          ' It establishes <b>' + commas(tx.tx.LimitAmount.value) + '</b>' +
-          ' as the maximum amount of ' + tx.tx.LimitAmount.currency +
-          ' that <account>' + tx.tx.Account + '</account> allows to be ' +
-          ' held by <account>' + tx.tx.LimitAmount.issuer + '</account>.');
-      }
+      function renderDescription(tx) {
+        var html = '<h4>DESCRIPTION:</h4>';
 
-      function renderPayment(tx) {
-        var description = explainView.append('div')
-        .attr('class', 'description');
+        html += renderType(tx.tx.TransactionType);
 
-        var text = 'This is a <type>Payment</type> from ' +
-          '<account>' + tx.tx.Account + '</account> to ' +
-          '<account>' + tx.tx.Destination + '</account>.';
-
-        if (tx.tx.SourceTag) {
-          text += '<br>The payment has a source tag: ' +
-            '<tag>' + tx.tx.SourceTag + '</tag>';
+        if (tx.tx.TransactionType === 'OfferCreate') {
+          html += renderOfferCreate(tx);
+        } else if (tx.tx.TransactionType === 'OfferCancel') {
+          html += renderOfferCancel(tx);
+        } else if (tx.tx.TransactionType === 'Payment') {
+          html += renderPayment(tx);
+        } else if (tx.tx.TransactionType === 'TrustSet') {
+          html += renderTrustSet(tx);
         }
 
-        if (tx.tx.DestinationTag) {
-          text += '<br>The payment has a destination tag: ' +
-            '<tag>' + tx.tx.DestinationTag + '</tag>';
-        }
+        html += '<br/>The transaction\'s sequence number is ' +
+          '<b>' + tx.tx.Sequence + '</b>';
 
-        text += '<br/>It was instructed to deliver ' +
-          '<amount>' + displayAmount(tx.tx.Amount) + '</amount>';
-
-        if (tx.tx.SendMax) {
-          text += ' by spending up to <amount>' +
-            displayAmount(tx.tx.SendMax) + '</amount>.';
-        } else {
-          text += '.';
-        }
-
-        description.html(text);
-      }
-
-      function renderOfferCreate(tx) {
-        var c1 = tx.tx.TakerPays.currency || 'XRP';
-        var c2 = tx.tx.TakerGets.currency || 'XRP';
-        var direction = 'buy';
-        var invert = currencyOrder.indexOf(c2) < currencyOrder.indexOf(c1);
-        var rate = toDecimal(tx.tx.TakerGets) / toDecimal(tx.tx.TakerPays);
-        var amount;
-        var pair;
-        var html;
-
-        if (invert) {
-          rate = 1/rate;
-          pair = c2 + '/' + c1;
-          amount = tx.tx.TakerPays;
-          direction = 'sell';
-
-        } else {
-          pair = c1 + '/' + c2;
-          amount = tx.tx.TakerGets;
-        }
-
-        html = 'This is an <type>OfferCreate</type>, where ' +
-          '<account>' + tx.tx.Account + '</account>' +
-          ' offered to pay ' +
-          '<amount>' + displayAmount(tx.tx.TakerGets) + '</amount>' +
-          ' in order to receive ' +
-          '<amount>' + displayAmount(tx.tx.TakerPays) + '</amount>.' +
-          '<div>The exchange rate for this offer is <amount><b>' +
-          commas(rate.toPrecision(5)) + ' ' + pair + '</b></amount>.</div>';
-
-        if (tx.tx.OfferSequence) {
-          html += 'The transaction will also cancel the existing offer' +
-            ' with sequence number <b>'+ tx.tx.OfferSequence + '</b>';
-        }
 
         explainView.append('div')
         .attr('class', 'description')
         .html(html);
-      }
 
 
-      function renderOfferCancel(tx) {
-        explainView.append('div')
-        .attr('class', 'description')
-        .html('This is an <type>OfferCancel</type> transaction from ' +
-          '<account>' + tx.tx.Account + '</account>.<br/>' +
-          'It is instructed to cancel offer #' +
-          '<b>' + tx.tx.OfferSequence + '<b>.');
+        function renderType(type) {
+          return 'This is a <type>' + type + '</type> Transaction.<br/>';
+        }
+
+        function renderTrustSet(tx) {
+          return 'It establishes <b>' + commas(tx.tx.LimitAmount.value) + '</b>' +
+            ' as the maximum amount of ' + tx.tx.LimitAmount.currency +
+            ' that <account>' + tx.tx.Account + '</account> allows to be ' +
+            ' held by <account>' + tx.tx.LimitAmount.issuer + '</account>.';
+        }
+
+        function renderPayment(tx) {
+
+          var html = 'The payment is from' +
+            '<account>' + tx.tx.Account + '</account> to ' +
+            '<account>' + tx.tx.Destination + '</account>.';
+
+          if (tx.tx.SourceTag) {
+            html += '<br>The payment has a source tag: ' +
+              '<tag>' + tx.tx.SourceTag + '</tag>';
+          }
+
+          if (tx.tx.DestinationTag) {
+            html += '<br>The payment has a destination tag: ' +
+              '<tag>' + tx.tx.DestinationTag + '</tag>';
+          }
+
+          html += '<br/>It was instructed to deliver ' +
+            '<amount>' + displayAmount(tx.tx.Amount) + '</amount>';
+
+          if (tx.tx.SendMax) {
+            html += ' by spending up to <amount>' +
+              displayAmount(tx.tx.SendMax) + '</amount>.';
+          } else {
+            html += '.';
+          }
+
+          return html;
+        }
+
+        function renderOfferCreate(tx) {
+          var c1 = tx.tx.TakerPays.currency || 'XRP';
+          var c2 = tx.tx.TakerGets.currency || 'XRP';
+          var direction = 'buy';
+          var invert = currencyOrder.indexOf(c2) < currencyOrder.indexOf(c1);
+          var rate = toDecimal(tx.tx.TakerGets) / toDecimal(tx.tx.TakerPays);
+          var amount;
+          var pair;
+          var html;
+
+          if (invert) {
+            rate = 1/rate;
+            pair = c2 + '/' + c1;
+            amount = tx.tx.TakerPays;
+            direction = 'sell';
+
+          } else {
+            pair = c1 + '/' + c2;
+            amount = tx.tx.TakerGets;
+          }
+
+          html = '<account>' + tx.tx.Account + '</account>' +
+            ' offered to pay ' +
+            '<amount>' + displayAmount(tx.tx.TakerGets) + '</amount>' +
+            ' in order to receive ' +
+            '<amount>' + displayAmount(tx.tx.TakerPays) + '</amount>.' +
+            '<br/>The exchange rate for this offer is <amount><b>' +
+            commas(rate.toPrecision(5)) + ' ' + pair + '</b></amount>.';
+
+          if (tx.tx.OfferSequence) {
+            html += '<br/>The transaction will also cancel ' +
+              '<account>' + tx.tx.Account + '</account>\'s existing offer' +
+              ' #<b>'+ tx.tx.OfferSequence + '</b>';
+          }
+
+          return html;
+        }
+
+
+        function renderOfferCancel(tx) {
+          return 'The transaction will cancel ' +
+            '<account>' + tx.tx.Account + '</account>' +
+            ' offer #<b>' + tx.tx.OfferSequence + '</b>.';
+        }
       }
 
       function toDecimal(amount) {

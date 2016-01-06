@@ -63,10 +63,11 @@ function CapChart(options) {
 
 
 //add chart type select
-  var type = controls.append("div").attr("class", "chartType selectList").selectAll("a")
+  var type = controls.append("div")
+    .attr("class", "chartType selectList")
+    .selectAll("span")
     .data(["line","stacked"])
-    .enter().append("a")
-    .attr("href", "#")
+    .enter().append("span")
     .classed("selected", function(d) { return d === self.format})
     .text(function(d) { return d })
     .on("click", function(d){
@@ -87,16 +88,16 @@ function CapChart(options) {
 
 //add interval select
   var list = controls.append("div").attr("class","interval selectList");
+
   list.append("label").html("Range:");
-  var interval = list.selectAll("a")
+  var interval = list.selectAll("span")
     .data([
       {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
       {name: "quarter",interval:"day",  offset: function(d) { return d3.time.month.offset(d, -3); }},
       {name: "year",   interval:"day", offset: function(d) { return d3.time.year.offset(d, -1); }},
       {name: "max",    interval:"week", offset: function(d) { return moment.utc('2013-01-01'); }}
     ])
-    .enter().append("a")
-    .attr("href", "#")
+    .enter().append("span")
     .classed("selected", function(d) { return d.name === self.range})
     .text(function(d) { return d.name; })
     .on("click", function(range){

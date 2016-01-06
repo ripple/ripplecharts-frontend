@@ -6,24 +6,30 @@
 }
 
 .transactions .tx-input {
-  margin: 20px 0;
-  min-width: 820px;
-}
-
-.transactions .tx-input label {
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: bold;
-  margin: 5px 10px;
+  margin: 20px 5px;
+  min-width: 620px;
+  text-align: center;
 }
 
 .transactions .tx-input input {
-  border: none;
-  width: 750px;
+  border: 1px solid rgba(100,100,100,.2);
+  width: 550px;
   color: #722;
-  font-size: 18px;
+  font-size: 14px;
   font-family: sans-serif;
   background: none;
+  padding: 2px 5px;
+  border-radius: 2px;
+  vertical-align: top;
+}
+
+.transactions .tx-input button {
+  border-radius:2px;
+  background: rgba(100,100,100,.2);
+  border: 1px solid rgba(100,100,100,.3);
+  font-size: 11px;
+  font-weight: bold;
+  vertical-align: top;
 }
 
 .transactions .column {
@@ -99,4 +105,18 @@
     border-radius: 2px;
     padding: 2px 10px;
   }
+}
+
+
+
+.dark .transactions .tx-input button {
+  color: #999;
+}
+
+.dark txsplain, .dark txfeed {
+  color: #777;
+}
+
+.dark txsplain h4 {
+  color: #aaa;
 }

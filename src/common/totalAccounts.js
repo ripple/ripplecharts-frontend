@@ -10,7 +10,7 @@ var TotalAccounts = function (options) {
   self.div.append("div").attr("class","lineChart").attr('id', options.id+"Chart");
 
   list.append("label").html("Range:");
-  var interval = list.selectAll("a")
+  var interval = list.selectAll("span")
     .data([
       {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
       {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
@@ -18,8 +18,7 @@ var TotalAccounts = function (options) {
       {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
       {name: "max",    interval:"week",  offset: function(d) { return new Date("Dec 31 2012 0:00:00")}}
     ])
-  .enter().append("a")
-    .attr("href", "#")
+  .enter().append("span")
     .classed("selected", function(d) { return d.name === "year"})
     .text(function(d) { return d.name; })
     .on("click", function(d){

@@ -26,20 +26,28 @@ angular.module( 'ripplecharts.transactions', [
 
 .controller('TransactionsCtrl',
             function TransactionsCtrl($scope, $state, $location, $interval) {
+  var timer;
 
   $scope.$watch(function() {
     return $location.url();
-  }, function(url){
-    $scope.tx_hash = $state.params.tx_hash;
+  }, function(url) {
+    $scope.tx_hash = $scope.input_tx_hash = $state.params.tx_hash;
   });
 
-  $scope.$watch('tx_hash', function() {
-    if ($scope.tx_hash) {
+  $scope.$watch('tx_hash', handleTransition);
+
+  $scope.load = function() {
+    $scope.tx_hash = $scope.input_tx_hash;
+    $scope.reload();
+  };
+
+  function handleTransition(hash) {
+    if (hash) {
       $state.transitionTo('transactions.tx_hash', {
-        tx_hash: $scope.tx_hash
+        tx_hash: hash
       });
     } else {
       $state.transitionTo('transactions');
     }
-  });
+  }
 });

@@ -4,8 +4,8 @@
   </div>
   <div class="column column2">
     <div class="tx-input">
-      <label>TX:</label>
-      <input type="text" ng-model="tx_hash" placeholder="enter a transaction hash"/>
+      <input type="text" ng-model="input_tx_hash" placeholder="enter a transaction hash"/>
+      <button type="button" ng-click="load()">GO</button>
     </div>
     <txsplain></txsplain>
   </div>
