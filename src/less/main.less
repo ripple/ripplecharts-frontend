@@ -590,10 +590,6 @@ h1, h2, h3, h4 {
  * Footer
  */
 
-.footerPad {
-  height:120px;
-}
-
 footer {
   border-top:1px solid #333;
   text-align:center;
@@ -637,6 +633,45 @@ footer .links a {
 footer .links a:first-child {
   margin-left:0;
 }
+
+.footerPad {
+  height:140px;
+}
+
+@media (max-width: 1200px) {
+  .footerPad {
+    height:160px;
+  }
+}
+
+@media (max-width: 700px) {
+  .footerPad {
+    height:200px;
+  }
+}
+
+@media (max-width: 550px) {
+  .footerPad {
+    height:240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footerPad {
+    height:300px;
+  }
+
+  footer .links a:first-child {margin:0 10px}
+  footer .links a {
+    display: inline-block;
+    width: 35%;
+  }
+
+  footer .footerInner {
+    width:90%
+  }
+}
+
 
 .landing .valueRateDisplay {
   float: right;
@@ -710,29 +745,6 @@ footer .links a:first-child {
 @import 'valueSummary.less';
 @import 'chordDiagram.less';
 @import 'datepicker.less';
-
-
-@media (max-width: 600px) {
-  .footerPad {
-    height:150px;
-  }
-}
-
-@media (max-width: 480px) {
-  .footerPad {
-    height:200px;
-  }
-
-  footer .links a:first-child {margin:0 10px}
-  footer .links a {
-    display: inline-block;
-    width: 35%;
-  }
-
-  footer .footerInner {
-    width:90%
-  }
-}
 
 /*
  * New header
