@@ -252,7 +252,7 @@ angular.module( 'ripplecharts.markets', [
   // set up flip button
   d3.select('#flip').on('click', function() {
     var swap = $scope.counter;
-    updateScopeAndStore('counter', $scope.base);
+    updateScopeAndStore('counter', $scope.base, true);
     updateScopeAndStore('base', swap);
     loadDropdowns();
   });
@@ -734,25 +734,17 @@ angular.module( 'ripplecharts.markets', [
     });
   }
 
+  // reload data when coming back online
+  $scope.$watch('online', function(online) {
+    if (online) {
+      loadPair();
+    }
+  });
 
   // stop the listeners when leaving page
   $scope.$on('$destroy', function(){
     priceChart.suspend();
     book.suspend();
     tradeFeed.suspend();
-  });
-
-
-  // reload data when coming back online
-  $scope.$watch('online', function(online) {
-    if (online) {
-      remote.connect();
-      setTimeout(function() {
-        loadPair();
-      }, 100);
-
-    } else {
-      remote.disconnect();
-    }
   });
 });

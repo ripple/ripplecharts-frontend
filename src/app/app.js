@@ -79,49 +79,63 @@ angular.element(document).ready(function() {
     });
 
   //connect to the ripple network;
-    remote = new ripple.Remote(Options.ripple);
-    remote.connect();
-
-  //get ledger number and total coins
-    remote.on('ledger_closed', function(x){
-
-      $scope.ledgerLabel = "Ledger #:";
-      $scope.ledgerIndex = commas(parseInt(x.ledger_index,10));
-      remote.request_ledger('closed', handleLedger);
+    remote = new ripple.RippleAPI(Options.ripple);
+    remote.connect()
+    .then(function() {
+      $scope.connectionStatus = "connected";
       $scope.$apply();
-
+    })
+    .catch(function(e) {
+      console.log(e.stack);
     });
 
-    function handleLedger(err, obj) {
-      if (obj) {
-        var totalCoins = obj.ledger.total_coins,
-            totalCoinsXrp = [commas(parseInt(totalCoins.slice(0, -6), 10)), totalCoins.slice(-6, -4)].join(".");
-        $scope.ledgerLabel = "Ledger #:";
-        $scope.ledgerIndex = commas(parseInt(obj.ledger.ledger_index, 10));
-        $scope.totalCoins = totalCoinsXrp;
-        $scope.totalXRP = parseFloat(totalCoins)/ 1000000.0;
-        $scope.$apply();
+    $scope.ledgerLabel = "connecting...";
+    $scope.ledgerIndex = "";
+    $scope.connectionStatus = "disconnected";
+
+    var last;
+
+  //get ledger number and total coins
+    remote.on('ledger', function(d) {
+      last = moment();
+
+      remote.getLedger({
+        ledgerVersion: d.ledgerVersion
+      }).then(handleLedger)
+      .catch(function(e) {
+        console.log(e.stack);
+      });
+    });
+
+    remote.on('error', function(e) {
+      console.log(e);
+    });
+
+    setInterval(checkLast, 2000);
+
+    function checkLast() {
+      if (last && moment().diff(last) > 6000) {
+        $scope.connectionStatus = "disconnected";
+        last = null;
       }
     }
 
-    $scope.ledgerLabel = "connecting...";
+    function handleLedger(d) {
+      if (d) {
+        var drops = d.totalDrops;
+        var totalXRP = [
+          commas(Number(drops.slice(0, -6))),
+          drops.slice(-6, -4)
+        ].join(".");
 
-    remote.request_ledger('closed', handleLedger); //get current ledger;
-    remote.on("disconnect", function(){
-      $scope.ledgerLabel      = "reconnecting...";
-      $scope.ledgerIndex      = "";
-      $scope.connectionStatus = "disconnected";
-      $scope.$apply();
-    });
-
-    remote.on("connect", function(){
-      $scope.ledgerLabel      = "connected";
-      $scope.connectionStatus = "connected";
-      $scope.$apply();
-
-      //setTimeout(function(){remote.disconnect()},5000);
-      //setTimeout(function(){remote.connect()},10000);
-    });
+        $scope.connectionStatus = "connected";
+        $scope.ledgerLabel = "Ledger #";
+        $scope.ledgerIndex = commas(d.ledgerVersion);
+        $scope.totalCoins = totalXRP;
+        $scope.totalXRP = parseFloat(drops)/ 1000000.0;
+        $scope.$apply();
+      }
+    }
 
     // remove loader after gateways resolves
     gateways.promise.then(function(){
@@ -132,6 +146,13 @@ angular.element(document).ready(function() {
       .each('end', function() {
         loading.style('display', 'none');
       });
+    });
+
+    // reconnect when coming back online
+    $scope.$watch('online', function(online) {
+      if (online) {
+        remote.connect()
+      }
     });
   });
 

@@ -129,7 +129,9 @@ networkGraph = function (nameService) {
       //window.location.hash = string;
       mode = 'individual';
       api.getTx(string, handleIndividualTransaction);
-      if (!isConnected()) remote.connect();
+      if (!remote.isConnected()) {
+        remote.connect();
+      }
     } else {
       changeMode('individual');
       refocus(string, true);
@@ -139,7 +141,8 @@ networkGraph = function (nameService) {
 
   var lastFocalNode = REFERENCE_NODE;
   var currentCurrency = "XRP";
-  var currentLedger = {ledger_current_index: 2011754};
+  var currentLedger;
+
   var w = 935;  //Width
   var h = 1100; //Height
   var hh = 710; //Height above the bottom bar
@@ -183,73 +186,37 @@ networkGraph = function (nameService) {
   }, REQUEST_REPETITION_INTERVAL);
 
 
-  function getLines(options, callback) {
-    var lines = [];
-    var message;
-    var request;
-
-    options.ledger = currentLedger.ledger_index;
-    options.limit  = 400;
-
-    request = remote.requestAccountLines(options);
-    request.once('error', function(err) {
-      $(".loading")
-        .text(err.remote ? err.remote.error_message : err)
-        .css("color","#a00");
-    });
-
-    request.once('success', function(result) {
-      lines = result.lines;
-
-      // if there's a marker, keep on querying
-      if (result.marker) {
-        options.marker = result.marker;
-
-        getLines(options, function (err, resp){
-          if (err) return callback(err);
-          lines = lines.concat(resp.lines);
-          callback (null, {account:options.account, message:message, lines:lines});
-        });
-      } else {
-        callback (null, {account:options.account, message:message, lines:lines});
-      }
-    });
-
-    request.request();
-    message = request.message;
-    return request;
-  }
-
-  //Repeatable methods for fetching from server
   function serverGetLines(address) {
-    if (!isConnected) remote.connect();
-
-
-    if ($.isEmptyObject(nodes[nodeMap[address]].trustLines)) {
-      getLines({account:address}, handleLines);
-    } else {
+    if (!$.isEmptyObject(nodes[nodeMap[address]].trustLines)) {
       addConnections(address, nodes[nodeMap[address]].trustLines);
+      return;
     }
+
+    var options;
+
+    if (!currentLedger) {
+      setTimeout(serverGetLines.bind(this, address), 100);
+      return;
+    }
+
+    remote.getTrustlines(address, {
+      ledgerVersion: currentLedger
+    })
+    .then(handleLines.bind(undefined, address))
+    .catch(function(e) {
+      console.log(e);
+    });
   }
 
   function serverGetInfo(address) {
 
-    if (!isConnected) remote.connect();
+    if (!nodes[nodeMap[address]] || !nodes[nodeMap[address]].account.index) {
 
-    if (nodes[nodeMap[address]] && nodes[nodeMap[address]].account.index) {
-      // Don't do anything if we already have information about this account.
-      // TODO: Why does this never happen?
-    } else {
-      //Get account info for address
-      var rrai = (function() {return function() {
-        var x = remote.request_account_info({account:address}, handleAccountData);
-        return x.message.id;
-      }})();
-      var reqID = rrai();
-      pendingRequests[reqID] = {
-        func:rrai,
-        timestamp:(new Date().getTime())
-      };
+      remote.getAccountInfo(address)
+       .then(handleAccountData.bind(undefined, address))
+       .catch(function(e) {
+        console.log(e);
+      });
     }
   }
 
@@ -263,49 +230,24 @@ networkGraph = function (nameService) {
       marker: nodes[nodeMap[focalNode]].marker,
       descending: true
     }, handleAccountTransactions);
-
-/**
-    if (!isConnected) remote.connect();
-
-    //request transactions for the current account, with offset = nodes[nodeMap[address]].transactions.length
-    var rrat = (function() {return function(){
-      var x = remote.request_account_tx({
-        binary:false,
-        account: focalNode,
-        limit: TRANSACTION_PAGE_LENGTH,
-        ledger_index_min: -1,
-        ledger_index_max: -1,
-        forward: false,
-        marker: nodes[nodeMap[focalNode]].transactionMarker
-      }, handleAccountTransactions);
-      return x.message.id;
-    }})();
-    var reqID = rrat();
-    pendingRequests[reqID] = {
-      func:rrat,
-      timestamp:(new Date().getTime())
-    };
-    //when the answer comes back, see if it's new information.
-    //if so, update WITH THE NEW INFO ONLY (i.e., don't clear the whole table, only do
-    //$("#transactionThrobber").remove();
-    //and add the new stuff.
-*/
   }
 
 
   //Handlers
-  function handleLines(err, obj) {
+  function handleLines(account, data) {
+    var trustlines = [];
 
-    delete pendingRequests[obj.message.id];
-    if (err && err.remote) {
-      $(".loading")
-        .text(err.remote.error_message)
-        .css("color","#a00");
-    } else if (err) {
-      console.log(err);
-    } else {
-      addConnections(obj.account, obj.lines);
-    }
+    data.forEach(function(d) {
+      trustlines.push({
+        account: d.specification.counterparty,
+        balance: Number(d.state.balance),
+        currency: d.specification.currency,
+        limit: Number(d.specification.limit),
+        limit_peer: Number(d.counterparty.limit)
+      });
+    });
+
+    addConnections(account, trustlines);
   }
 
   function handleTransaction(obj) {
@@ -313,8 +255,8 @@ networkGraph = function (nameService) {
     obj.date = moment((UNIX_RIPPLE_TIME + obj.tx.date)*1000).format();
     obj.hash = obj.tx.hash;
 
-    prependFeed(obj);
-    if (obj.transaction.TransactionType == "Payment") {
+    //prependFeed(obj);
+    if (obj.transaction.TransactionType === "Payment") {
       animateTransaction(obj);
     }
   }
@@ -324,41 +266,31 @@ networkGraph = function (nameService) {
     $('#transactionFeedTable tr').slice(50).remove();
   }
 
-  function handleLedger(err, obj) {
-    currentLedger = obj.ledger;
-    $("#ledgernumber").text(commas(parseInt(currentLedger.ledger_index, 10)));
-    $("#totalripples").text(commas(parseInt(currentLedger.total_coins, 10)/1000000));
-  }
+  function handleAccountData(account, data) {
 
-  function handleAccountData(err, obj) {
-    delete pendingRequests[this.message.id];
-    if (err &&
-        err.remote) {
-      console.log(err);
-      $(".loading")
-        .text(err.remote.error_message)
-        .css("color","#a00");
-    } else if (err) {
-      console.log(err, this.message);
-    } else {
-      if ($.isEmptyObject(obj.account_data)) {
-        alert("This address is not valid!");
-        console.log(obj);
-        refocus(lastFocalNode,true);
-      } else {
-        var n = nodes[nodeMap[obj.account_data.Account]];
-        n.account = obj.account_data; //XXXX Uncaught TypeError: Cannot set property 'account' of undefined
-        if (currentCurrency == "XRP") { // Change the size of the circles, and recalculate the arrows.
-          updated = svg.select("g#nodeGroup").select("circle#_"+obj.account_data.Account);
-          updated.attr("r", nodeRadius(n));
-          svg.select("g#haloGroup").select("circle#halo_"+obj.account_data.Account).attr("r", HALO_MARGIN+nodeRadius(n));
-        }
-        if (obj.account_data.Account == focalNode) {
-          //Update the XRP listing on the table below. (But don't rewrite the whole table)
-          $("#xrpBalance").text(commas(n.account.Balance/1000000));
-        }
-      }
+    var n = nodes[nodeMap[account]];
+
+    n.account = data;
+    n.account.Account = account;
+
+    // Change the size of the circles, and recalculate the arrows.
+    if (currentCurrency === 'XRP') {
+      updated = svg.select("g#nodeGroup")
+      .select("circle#_" + account)
+      .attr("r", nodeRadius(n));
+
+      svg.select("g#haloGroup")
+      .select("circle#halo_" + account)
+      .attr("r", HALO_MARGIN + nodeRadius(n));
     }
+
+    // Update the XRP listing on the table below.
+    // (But don't rewrite the whole table)
+    if (account === focalNode) {
+      $("#xrpBalance").text(commas(data.xrpBalance));
+    }
+
+
   }
 
   function handleAccountTransactions(err, obj) {
@@ -588,14 +520,13 @@ networkGraph = function (nameService) {
         y: hh*Math.random(),
         account: {
           Account: address,
-          Balance: 0
+          xrpBalance: 0
         },
         trustLines: [],
         balances: {}
       });
       nodeMap[address] = nodes.length-1;
       degreeMap[address] = degree;
-      console.log("Added node");
       anyNewNodes = true;
     }
 
@@ -801,8 +732,9 @@ networkGraph = function (nameService) {
 
   function currentCurrencyBalance(accountNode) {
     var output;
-    if (currentCurrency == "XRP") {
-      output = accountNode.account.Balance;
+    if (currentCurrency === 'XRP') {
+      output = accountNode.account.xrpBalance;
+
     } else {
       output = accountNode.balances[currentCurrency];
       if (!output) { output = 0; }
@@ -813,7 +745,7 @@ networkGraph = function (nameService) {
   var displayingTransactionInPlace = false;
 
   function addConnections(origin, trustLines) {
-    var transactionMode = (mode=="transaction") || displayingTransactionInPlace;
+    var transactionMode = (mode === "transaction") || displayingTransactionInPlace;
     $(".loading").css("display","none");
 
     if (!nodes[nodeMap[origin]]) {
@@ -887,7 +819,7 @@ networkGraph = function (nameService) {
                 y:nodes[nodeMap[origin]].y+Math.sin(angle)*radius,
                 account: {
                   Account:account,
-                  Balance:"0"
+                  xrpBalance:0
                 },
                 trustLines: [],
                 balances: {}
@@ -920,19 +852,20 @@ networkGraph = function (nameService) {
                linkWasToExisting &&
                !provisionallyExpandedNodes[account])) {
 
-            link={};
 
-            if (parseFloat(trustLine.limit) !== 0) {
-              link.source=nodes[nodeMap[ origin ]];
-              link.target=node;
-              link.value= parseFloat(trustLine.limit);
+            if (trustLine.limit !== 0) {
+              link={};
+              link.source = nodes[nodeMap[ origin ]];
+              link.target = node;
+              link.value  = trustLine.limit;
               goon(link);
             }
-            if (parseFloat(trustLine.limit_peer) !== 0) {
-              link={};
-              link.target=nodes[nodeMap[ origin ]];
-              link.source=node;
-              link.value= parseFloat(trustLine.limit_peer);
+
+            if (trustLine.limit_peer !== 0) {
+              link = {};
+              link.target = nodes[nodeMap[ origin ]];
+              link.source = node;
+              link.value  = trustLine.limit_peer;
               goon(link);
             }
           }
@@ -961,12 +894,14 @@ networkGraph = function (nameService) {
     displayingTransactionInPlace = false; //really?
 
     function goon(link) {
-      if (parseFloat(trustLine.limit) !== 0 && parseFloat(trustLine.limit_peer) !== 0) {
+      if (trustLine.limit !== 0 &&
+          trustLine.limit_peer !== 0) {
         link.strength = 0.5;
       } else {
         link.strength = 1;
       }
-      link.currency=trustLines[i].currency;
+
+      link.currency = trustLines[i].currency;
       le_links.push(link);
     }
   }
@@ -1084,13 +1019,18 @@ networkGraph = function (nameService) {
 
   function nodeRadius(accountNode) {
     var bal = currentCurrencyBalance(accountNode);
-    if (currentCurrency != "XRP") {
-      bal = bal * 1000000000;
+
+    if (!bal) {
+      bal = 0;
     }
-    return 14+Math.pow(Math.log(Math.abs(bal)+1),3) / 2000;
-    //TESTING FUN STUFF
-    /*var tl = accountNode.trustLines.length;
-    return 2+Math.pow(Math.log(1+tl),4)/25;*/
+
+    if (currentCurrency === "XRP") {
+      bal *= 1000000;
+    } else {
+      bal *= 1000000000;
+    }
+
+    return 14 + Math.pow(Math.log(Math.abs(bal) + 1), 3) / 2000;
   }
 
   var force = d3.layout.force()
@@ -1500,10 +1440,12 @@ function addNodes(degree) {
       (rCosTheta+rSinTheta*Math.sqrt(3))+" 0 L "+
       rCosTheta+" "+(-rSinTheta)+" z";
   }
-  var arrowhead = svg.select("g#arrowheadGroup").selectAll("path.arrowhead").data(force.links())
-    .enter().append("svg:path")
-    .attr("class", "arrowhead");
 
+  var arrowhead = svg.select("g#arrowheadGroup")
+  .selectAll("path.arrowhead")
+  .data(force.links())
+  .enter().append("svg:path")
+  .attr("class", "arrowhead");
 
   arrowhead = setArrowheads(arrowhead);
 
@@ -1535,8 +1477,14 @@ function addNodes(degree) {
         var position = d.source;
         return "translate("+position.x+","+position.y+"), rotate("+angle(d.source,d.target)+",0,0)";
       })
-      .attr("d", function(d) {return arrowheadPath(parseFloat($("#_"+d.source.account.Account).attr("r")), thetaValue(d.value)); } )
-      .style("display", function(d){ return (isLinkVisible(d) ? "block" : "none"); } );
+      .attr("d", function(d) {
+        var radius = parseFloat($("#_"+d.source.account.Account).attr("r"));
+        var theta = thetaValue(d.value);
+        return arrowheadPath(radius, theta);
+      })
+      .style("display", function(d) {
+        return (isLinkVisible(d) ? "block" : "none");
+      });
 
   }
 
@@ -1591,7 +1539,7 @@ function refocus(focus, erase, noExpand) {
     y: hh/2,
     account:{
       Account:focalNode,
-      Balance:0
+      xrpBalance:0
     },
     trustLines:[],
     balances:{}
@@ -1673,7 +1621,7 @@ function updateInformation(address) {
         '<circle cx="11" cy="11" r="11" style="fill:'+COLOR_TABLE['XRP'][0][1]+';"></circle>'+
       '</svg></td>'+
       '<td class="light small mediumgray" style="width:35px;">XRP</td>'+
-      '<td class="bold amount" id="xrpBalance">'+commas(nodes[nodeMap[address]].account.Balance/1000000)+'</td>'+
+      '<td class="bold amount" id="xrpBalance">'+commas(nodes[nodeMap[address]].account.xrpBalance)+'</td>'+
       '<td class="light expander">&nbsp;</td>'+
     '</tr>');
 
@@ -2004,6 +1952,7 @@ function getBalances(address) {
       }
     }
   }
+
   return balances;
 }
 
@@ -2138,30 +2087,42 @@ window.onhashchange = function(){
 
   addResizeListener($('#visualization').get(0), resizeGraph);
 
-  this.suspend = function (){
-    force.stop();
+  this.suspend = function() {
+    force.nodes([]).links([]).stop();
+    svg.html('');
     clearInterval(requestRepetitionInterval);
+    remote.connection.removeListener('transaction', handleTransaction);
+    remote.removeListener('ledger', handleLedger);
   }
 
-  function isConnected() {
-    var server;
+  remote.connection.on('transaction', handleTransaction);
+  remote.on('ledger', handleLedger);
 
-    return remote._connected
-    && (server = remote._getServer())
-    && (Date.now() - server._lastLedgerClose <= 1000 * 20);
+  function handleLedger(d) {
+    currentLedger = d.ledgerVersion;
   }
 
   function init () {
-      //Subscriptions
-      remote.on('ledger_closed', function(x,y){
-        currentLedger = x;
-        $("#ledgernumber").text(commas(parseInt(currentLedger.ledger_index, 10)));
-        remote.request_ledger('closed', handleLedger);
-      });
-      remote.on('transaction_all', handleTransaction);
 
-      //Get current ledger
-      remote.request_ledger('closed', handleLedger);
+      if (remote.isConnected()) {
+        subscribe();
+      } else {
+        remote.connect()
+        .then(subscribe)
+        .catch(function(e) {
+          console.log(e);
+        });
+      }
+
+      function subscribe() {
+        remote.connection.request({
+          command: 'subscribe',
+          streams: ['transactions']
+        })
+        .catch(function(e) {
+          console.log(e);
+        });
+      }
 
       if (firstTime) {
         if (transaction_id && transaction_id !== "") {
@@ -2178,7 +2139,6 @@ window.onhashchange = function(){
               focalNode = address;
               expandNode(focalNode);
               addNodes(0);
-              serverGetInfo(focalNode);
             } else {
               $(".loading")
                 .text('No Address Found.')
@@ -2191,19 +2151,19 @@ window.onhashchange = function(){
           lastFocalNode = REFERENCE_NODE;
           expandNode(focalNode);
           addNodes(0);
-          serverGetInfo(focalNode);
         }
       }
       firstTime = false;
   }
 
-  if (isConnected(remote)) {
+  if (remote.isConnected()) {
     init();
 
   } else {
-    //Opening sequence:
-    remote.connect(function() {
-      init();
+    remote.connect()
+    .then(init)
+    .catch(function(e) {
+      console.log(e);
     });
   }
 }

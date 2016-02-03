@@ -82,7 +82,7 @@ angular.module( 'ripplecharts.manage-gateways', [
       }
       else {
         description.html('Please enter a valid Ripple Address.');
-      } 
+      }
     });
   }
 
@@ -154,7 +154,7 @@ angular.module( 'ripplecharts.manage-gateways', [
     //format currnecies for dropdowns
     for (i=0; i<currencies.length; i++) {
       currencies[i] = {
-        text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3),
+        text     : currencies[i].currency,
         value    : i,
         currency : currencies[i].currency,
         imageSrc : currencies[i].icon

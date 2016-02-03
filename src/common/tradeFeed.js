@@ -5,12 +5,7 @@ var TradeFeed = function (options) {
     transactions = [],
     listener, dailyTimer, high, low, close, volume;
 
-  var numberFormat = {
-    precision      : 8,
-    min_precision  : 4,
-    max_sig_digits : 10
-  };
-
+  var numberFormat = d3.format(',');
   var summary = div.append("div").attr('class', 'summary');
   var price = summary.append("div").attr('class', 'price');
   price.append("span").attr('class', 'amount');
@@ -54,8 +49,8 @@ var TradeFeed = function (options) {
     if (listener) listener.updateViewOpts({base:base,counter:counter});
     else listener = new OffersExercisedListener({base:base,counter:counter}, handleTransaction);
 
-    var b = ripple.Currency.from_json(self.base.currency).to_human();
-    var c = ripple.Currency.from_json(self.counter.currency).to_human();
+    var b = self.base.currency;
+    var c = self.counter.currency;
 
     header.selectAll('.amount').html('Amount <small>'+b+'</small>');
     header.selectAll('.price').html('Price <small>'+c+'</small>');
@@ -70,22 +65,23 @@ var TradeFeed = function (options) {
 //process incoming transaction from the live feed handler
   function handleTransaction (data) {
     var last = transactions[0];
+    var price = data.value[2];
 
     var trade = {
       time   : moment.unix(data.value[7]),
-      amount : valueFilter(data.value[0], self.base.currency),
-      price  : valueFilter(data.value[2], self.counter.currency),
+      amount : valueFilter(data.value[0], 8),
+      price  : valueFilter(price, 5),
       type   : data.value[3] === data.value[5] ? 'buy' : 'sell'
     }
 
     transactions.unshift(trade);  //prepend trade
     transactions = transactions.slice(0,60);  //keep last 60
 
-    if (trade.price>high) high = trade.price;
-    if (trade.price<low)  low  = trade.price;
+    if (price > high) high = price;
+    if (price < low)  low  = price;
 
     close   = data.value[2];
-    volume += data.value[0]; //should be adjusted for demmurage
+    volume += data.value[0];
 
     updateDailyStats();
     updateTrades();
@@ -101,7 +97,7 @@ var TradeFeed = function (options) {
       .data(transactions);
 
     var rowEnter = rows.enter().append("tr");
-    var baseCurrency = ripple.Currency.from_json(self.base.currency).to_human();
+    var baseCurrency = self.base.currency;
     rowEnter.append("td").attr("class","type");
     rowEnter.append("td").attr("class","amount");
     rowEnter.append("td").attr("class","dot").html('.');
@@ -116,23 +112,24 @@ var TradeFeed = function (options) {
     rows.select(".amount").html(function(d){return d.amount.split('.')[0]});
     rows.select(".amount-decimal").html(function(d){
       var decimal = d.amount.split('.')[1];
-      return decimal ? decimal.replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+      return decimal ? decimal.replace(/0(0+)$/, '0<span class="insig">$1</span>') : '0';
     });
     rows.select(".time").html(function(d){return d.time.local().format('h:mm:ss a')});
     rows.select(".price").html(function(d){return d.price.split('.')[0]});
     rows.select(".price-decimal").html(function(d){
       var decimal = d.price.split('.')[1];
-      return decimal ? decimal.replace(/0(0+)$/, '0<span class="insig">$1</span>') : null;
+      return decimal ? decimal.replace(/0(0+)$/, '0<span class="insig">$1</span>') : '0';
     });
   }
 
 
 //make values human readable
-  function valueFilter (d, currency) {
+  function valueFilter (d, precision) {
     if (!d) return "&nbsp";
-    var value = ripple.Amount.from_human(d + " " + currency).to_human(numberFormat);
-    if (!value) value = "> 0.000001"; //must match min_precision variable
-    return value;
+
+    var value = Number(d.toPrecision(precision || 8));
+
+    return numberFormat(value);
   }
 
 
@@ -169,18 +166,18 @@ var TradeFeed = function (options) {
 
 //display 24 hour stats from the known values
   function updateDailyStats () {
-    var base    = ripple.Currency.from_json(self.base.currency).to_human();
-    var counter = ripple.Currency.from_json(self.counter.currency).to_human();
+    var base    = self.base.currency;
+    var counter = self.counter.currency;
     daily.select(".high").html("<small>H:</small> " +
-      valueFilter(high, self.counter.currency));
+      valueFilter(high, 5));
     daily.select(".low").html("<small>L:</small> " +
-      valueFilter(low, self.counter.currency));
+      valueFilter(low, 5));
     daily.select(".volume").html("<small>VOL:</small> " +
-      valueFilter(volume, self.base.currency) +
+      valueFilter(volume, 8) +
       "<small>" + base + "</small>");
     daily.select(".date").html(moment.utc().format('YYYY-MM-DD') +
       ' <small>(UTC)</small>');
-    price.select(".amount").html(valueFilter(close, self.counter.currency));
+    price.select(".amount").html(valueFilter(close, 5));
     price.select(".pair").html(base+"/"+counter);
   }
 
@@ -212,8 +209,8 @@ var TradeFeed = function (options) {
       loader.transition().style('opacity',0);
 
       data.forEach(function(d) {
-        d.amount   = valueFilter(d.amount, self.base.currency);
-        d.price    = valueFilter(d.price, self.counter.currency);
+        d.amount   = valueFilter(d.amount, 8);
+        d.price    = valueFilter(d.price, 5);
         transactions.push(d);
       });
 

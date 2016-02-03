@@ -10,7 +10,7 @@ module.exports = {
 
     common: [
       'vendor/d3/d3.js',
-      'vendor/ripple/ripple.js',
+      'deps/ripple.js',
       'vendor/jquery/jquery.js',
       'vendor/moment/moment.js'
     ],
@@ -20,21 +20,21 @@ module.exports = {
       'src/assets/icons/arrow_up.png',
       'src/assets/icons/icn_info.svg'
     ],
-    
+
     json: [
       {name: "gateways", path: 'src/assets/gateways.json'}
     ],
 
-    js: [  
+    js: [
       'vendor/smooth-div-scroll/js/jquery-ui-1.10.3.custom.min.js',
       'vendor/smooth-div-scroll/js/jquery.smoothdivscroll-1.3-min.js',
       'vendor/smooth-div-scroll/js/jquery.mousewheel.min.js',
       'src/common/apiHandler.js',
       'src/embed/ticker-script.js',
       'src/common/dropdowns.js',
-      'deps/offersExercisedListener.js' 
+      'deps/offersExercisedListener.js'
       ],
-    
+
     less: [
       'src/embed/ticker.less'
     ]

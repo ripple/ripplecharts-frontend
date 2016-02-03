@@ -34,7 +34,7 @@
         }
         else {
           currencies[i] = {
-            text     : ripple.Currency.from_json(currencies[i].currency).to_human().substring(0,3),
+            text     : currencies[i].currency,
             value    : i,
             currency : currencies[i].currency,
             imageSrc : currencies[i].icon
@@ -48,8 +48,7 @@
 
       if (select && !found) {
         currencies.push({
-          text: ripple.Currency.from_json(select.currency)
-            .to_human().substring(0,3),
+          text: select.currency,
           value: i,
           currency: select.currency,
           imageSrc: 'https://api.ripplecharts.com/api/currencies/' +

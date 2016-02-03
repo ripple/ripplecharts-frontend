@@ -394,8 +394,8 @@ PriceChart = function (options) {
     if      (candleWidth<3) candleWidth = 1;
     else if (candleWidth<4) candleWidth = 2;
 
-    var baseCurrency    = rippleCurrency(base.currency);
-    var counterCurrency = rippleCurrency(counter.currency);
+    var baseCurrency = base.currency;
+    var counterCurrency = counter.currency;
 
     gEnter.select(".axis.price").select("text").text("Price ("+counterCurrency+")");
     gEnter.select(".axis.volume").select("text").text("Volume ("+baseCurrency+")");
@@ -574,7 +574,7 @@ PriceChart = function (options) {
         v = d.baseVolume.toFixed(2);
       }
 
-      var baseCurrency = rippleCurrency(base.currency);
+      var baseCurrency = base.currency;
       var details = div.select('.chartDetails');
       details.html("<span class='date'>"+ parseDate(d.startTime.local(), chartInterval) +
         "</span><span><small>O:</small><b>" + o  + "</b></span>" +
@@ -712,14 +712,5 @@ PriceChart = function (options) {
     }
 
     return ripple.Amount.from_human(amount + " " + currency).to_human({max_sig_digits:6});
-  }
-
-  //format a currency if ripple-lib is present
-  function rippleCurrency (currency) {
-    if (typeof ripple === 'undefined' || !ripple.Currency) {
-      return currency;
-    }
-
-    return ripple.Currency.from_json(currency).to_human();
   }
 }

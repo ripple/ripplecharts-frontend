@@ -24,8 +24,8 @@ var MiniChart = function(base, counter, markets, gateways) {
   var width  = parseInt(self.div.style('width'), 10) - margin.left - margin.right;
   var height = width/2>150 ? width/2 : 150;
 
-  var baseCurrency    = base    ? ripple.Currency.from_json(base.currency).to_human()    : "XRP";
-  var counterCurrency = counter ? ripple.Currency.from_json(counter.currency).to_human() : "XRP";
+  var baseCurrency    = base    ? base.currency : "XRP";
+  var counterCurrency = counter ? counter.currency : "XRP";
 
   if (markets.options.fixed) {
     header = self.div.append("div").attr("class","chartHeader");
@@ -107,8 +107,8 @@ var MiniChart = function(base, counter, markets, gateways) {
       return;
     }
 
-    baseCurrency   = ripple.Currency.from_json(self.base.currency).to_human();
-    counterCounter = ripple.Currency.from_json(self.counter.currency).to_human();
+    baseCurrency   = self.base.currency;
+    counterCounter = self.counter.currency;
     markets.updateListHandler();
     if (!self.base || !self.counter ||
       (self.base.currency == self.counter.currency &&
@@ -368,7 +368,7 @@ var MiniChart = function(base, counter, markets, gateways) {
       low  = d3.min(self.lineData, function (d){return d.low}),
       last = self.lineData[self.lineData.length-1].close,
       vol  = d3.sum(self.lineData, function (d){return d.baseVolume}),
-      pct  = (((last-open)/open)*100).toFixed(2),
+      pct  = Number((((last-open)/open)*100).toFixed(2)),
       pathStyle, horizontalStyle, pointerStyle, changeStyle, flash;
 
 
@@ -447,7 +447,7 @@ var MiniChart = function(base, counter, markets, gateways) {
 
     if (lastY<20) lastY += 20; //reposition last price below line if its too high on the graph.
 
-    var showLast = amountToHuman(last, self.counter.currency);
+    var showLast = amountToHuman(last, 5);
 
     if (update) {
       if (direction === 'up') {
@@ -481,9 +481,9 @@ var MiniChart = function(base, counter, markets, gateways) {
         .attr("transform","translate(0, "+lastY+")");
     }
 
-    vol = amountToHuman(vol, self.base.currency, {min_precision:0, max_sig_digits:7});
-    showHigh.html("<label>H:</label> "+amountToHuman(high, self.counter.currency));
-    showLow.html("<label>L:</label> "+amountToHuman(low, self.counter.currency));
+    vol = amountToHuman(vol);
+    showHigh.html("<label>H:</label> "+amountToHuman(high, 5));
+    showLow.html("<label>L:</label> "+amountToHuman(low, 5));
     change.html((pct>0 ? "+":"")+amountToHuman(pct)+"%").style(changeStyle);
     volume.html("<label>V:</label> "+vol+"<small>"+baseCurrency+"</small>");
 
@@ -517,15 +517,8 @@ var MiniChart = function(base, counter, markets, gateways) {
 
 
 //present amount in human readable format
-  function amountToHuman (d, currency, opts) {
-    if (currency) d += " " + currency;
-    if (!opts) opts = {
-          precision      : 6,
-          min_precision  : 2,
-          max_sig_digits : 7
-      }
-
-    return ripple.Amount.from_human(d).to_human(opts);
+  function amountToHuman (d, precision) {
+    return commas(Number(d.toPrecision(precision || 7)));
   }
 }
 

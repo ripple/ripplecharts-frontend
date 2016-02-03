@@ -25,6 +25,8 @@
  *
  */
 
+remote = new ripple.RippleAPI({"server":"wss://s1.ripple.com"});
+
 var PriceChartWidget = function (options) {
   var self = this, div, el, theme;
 
@@ -46,7 +48,6 @@ var PriceChartWidget = function (options) {
     div        = d3.select("body").append("div").attr("id", options.id);
   }
 
-
   el    = options.bodyTheme ? d3.select("body") : div;
   theme = null;
 
@@ -57,7 +58,8 @@ var PriceChartWidget = function (options) {
     margin : options.margin,
     width  : options.width,
     height : options.height,
-    resize : options.resize || false
+    resize : options.resize || false,
+    live   : true
   });
 
 
@@ -69,7 +71,8 @@ var PriceChartWidget = function (options) {
       end      : params.end,
       interval : params.interval,
       multiple : params.multiple,
-      offset   : params.offset
+      offset   : params.offset,
+      live     : params.live
     }
 
     if (!range.start && !range.offset && range.interval) {

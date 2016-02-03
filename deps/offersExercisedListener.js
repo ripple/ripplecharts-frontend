@@ -1,31 +1,3 @@
-var Remote,
-  Amount,
-  moment,
-  remote;
-
-if (typeof require != 'undefined') {
-
-  /* Loading with Node.js */
-  var Remote = require('ripple-lib').Remote,
-    Amount = require('ripple-lib').Amount,
-    moment = require('moment'),
-    gateways = require('./gateways.json');
-
-} else if (ripple && moment) {
-
-  /* Loading in a webpage */
-  Remote = ripple.Remote;
-  Amount = ripple.Amount;
-
-  // Note: also be sure to load momentjs and gateways.json before loading this file
-
-} else {
-
-  throw (new Error('Error: cannot load offersExercisedListener without ripple-lib, momentjs, and gateways.json'));
-
-}
-
-
 /**
  *  HOW-TO use this script...
  *
@@ -47,8 +19,6 @@ if (typeof require != 'undefined') {
  *  {key: [[trade currency, trade curr issuer][base currency, base curr issuer], year, month, day, hour, minute second], value: [trade curr volume, base curr volume, exchange rate]}
  */
 
-
-
 /**
  *  createOffersExercisedListener listens to the live transaction feed,
  *  parses offersExercised events, and passes the parsed data to the
@@ -69,23 +39,6 @@ if (typeof require != 'undefined') {
  *  }
  */
 function OffersExercisedListener(opts, displayFn) {
-
-  // Connect to ripple-lib
-  if (remote) {
-    remote = remote;
-  } else {
-    remote = new Remote({
-        // trace: true,
-        servers: [{
-            host: 's-west.ripple.com',
-            port: 443
-        },{
-            host: 's-east.ripple.com',
-            port: 443
-        }]
-    });
-    remote.connect();
-  }
 
   if (typeof opts === 'function') {
     displayFn = opts;
@@ -178,7 +131,7 @@ OffersExercisedListener.prototype.stopListener = function() {
   if (listener.check)    clearInterval(listener.check);
 
   if (listener.txProcessor) {
-    remote.removeListener('transaction_all', listener.txProcessor);
+    remote.connection.removeListener('transaction', listener.txProcessor);
   }
 };
 
@@ -249,8 +202,21 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
     }, moment.duration(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement).asMilliseconds());
   }
 
-  remote.on('transaction_all', listener.txProcessor);
+  remote.connect()
+  .then(subscribe)
+  .catch(function(e) {
+    console.log(e);
+  });
 
+  function subscribe() {
+    var request = {
+      command: 'subscribe',
+      streams: ['transactions']
+    };
+
+    remote.connection.on('transaction', listener.txProcessor);
+    return remote.connection.request(request);
+  }
 }
 
 
@@ -379,18 +345,12 @@ function offersExercisedMap(doc, emit) {
                 return;
             }
 
-            // parse exchange_rate
-            // note: this block was inserted in addition to what is used in CouchDB
-            if ((node.FinalFields || node.NewFields) && typeof(node.FinalFields || node.NewFields).BookDirectory === "string") {
-                node.exchange_rate = Amount.from_quality((node.FinalFields || node.NewFields).BookDirectory).to_json().value;
-            }
-
-            var exchangeRate = node.exchange_rate,
-                counterparty = node.FinalFields.Account,
-                payCurr,
-                payAmnt,
-                getCurr,
-                getAmnt;
+            var counterparty = node.FinalFields.Account;
+            var exchangeRate;
+            var payCurr;
+            var payAmnt;
+            var getCurr;
+            var getAmnt;
 
             if (typeof node.PreviousFields.TakerPays === "object") {
                 payCurr = [node.PreviousFields.TakerPays.currency, node.PreviousFields.TakerPays.issuer];
@@ -398,7 +358,6 @@ function offersExercisedMap(doc, emit) {
             } else {
                 payCurr = ["XRP"];
                 payAmnt = (node.PreviousFields.TakerPays - node.FinalFields.TakerPays) / 1000000.0; // convert from drops
-                exchangeRate = exchangeRate / 1000000.0;
             }
 
             if (typeof node.PreviousFields.TakerGets === "object") {
@@ -407,13 +366,14 @@ function offersExercisedMap(doc, emit) {
             } else {
                 getCurr = ["XRP"];
                 getAmnt = (node.PreviousFields.TakerGets - node.FinalFields.TakerGets) / 1000000.0;
-                exchangeRate = exchangeRate * 1000000.0;
             }
+
+            exchangeRate = getAmnt/payAmnt;
 
             emit([payCurr, getCurr], [
               payAmnt, // base amount
               getAmnt, // counter amount
-              1/exchangeRate, // rate
+              exchangeRate, // rate
               tx.Account, // taker
               counterparty, // provider
               counterparty, // buyer

@@ -73,15 +73,8 @@ angular.module( 'ripplecharts.multimarkets', [
 //reload data when coming back online
   $scope.$watch('online', function(online) {
     if (online) {
-      remote.connect();
-      setTimeout(function(){ //put this in to prevent getting "unable to load data"
-        markets.reload();
-      }, 100);
-    } else {
-      remote.disconnect();
+      markets.reload();
     }
   });
-
-
 });
 

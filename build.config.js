@@ -69,7 +69,6 @@ module.exports = {
    */
   vendor_files: {
     js: [
-      'vendor/ripple/ripple-min.js',
       'vendor/snapjs/snap.js',
       'vendor/angular/angular.js',
       'vendor/angular-touch/angular-touch.js',
@@ -90,10 +89,13 @@ module.exports = {
       'vendor/chartjs/Chart.js',
       'vendor/ddslick/jquery.ddslick.min.js',
       'vendor/json-formatter/dist/json-formatter.js',
+      'vendor/lodash/lodash.js',
       'deps/jquery.selectbox.min.js',
       'deps/jquery.inview.js',
-      'deps/offersExercisedListener.js',
-      'deps/onResize.js'
+      'deps/onResize.js',
+      'deps/ripple.js',
+      'deps/ripple-orderbook.js',
+      'deps/offersExercisedListener.js'
     ],
     css: [
       'vendor/angular-snap/angular-snap.css',

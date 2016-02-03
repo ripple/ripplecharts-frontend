@@ -74,55 +74,50 @@ var OrderBook = function (options) {
     options.trade   = trade;
     lineData        = [];
     self.offers     = {};
-    baseCurrency    = ripple.Currency.from_json(base.currency).to_human();
-    counterCurrency = ripple.Currency.from_json(trade.currency).to_human();
+    baseCurrency    = base.currency;
+    counterCurrency = trade.currency;
 
     bookTables.transition().style("opacity", 0.5);
     fadeChart();
     isLoading = true;
-    if (!r.connected) r.connect();
-
-    if (asks) {
-      asks.removeListener('model', handleAskModel);
-      asks.unsubscribe();
-    }
-    if (bids) {
-      bids.removeListener('model', handleBidModel);
-      bids.unsubscribe();
-    }
-
-    r._books = {};
-    r._events.prepare_subscribe = [];
-
-    asks = r.book({
-      currency_pays: options.trade.currency,
-      issuer_pays: options.trade.issuer,
-      currency_gets: options.base.currency,
-      issuer_gets: options.base.issuer
-    });
-
-    bids = r.book({
-      currency_pays: options.base.currency,
-      issuer_pays: options.base.issuer,
-      currency_gets: options.trade.currency,
-      issuer_gets: options.trade.issuer
-    });
-
-    asks._shouldSubscribe = true;
-    bids._shouldSubscribe = true;
+    prepareBook();
 
     function addListeners() {
+      if (asks) {
+        asks.removeListener('model', handleAskModel);
+      }
+
+      if (bids) {
+        bids.removeListener('model', handleBidModel);
+      }
+
+      asks = rippleOrderbook.OrderBook.createOrderBook(r, {
+        currency_pays: options.trade.currency,
+        issuer_pays: options.trade.issuer,
+        currency_gets: options.base.currency,
+        issuer_gets: options.base.issuer
+      });
+
+      bids = rippleOrderbook.OrderBook.createOrderBook(r, {
+        currency_pays: options.base.currency,
+        issuer_pays: options.base.issuer,
+        currency_gets: options.trade.currency,
+        issuer_gets: options.trade.issuer
+      });
+
       asks.on('model', handleAskModel);
       bids.on('model', handleBidModel);
     }
 
-    if (remote.isConnected()) {
+    if (r.isConnected()) {
       addListeners();
     } else {
-      remote.once('connect', addListeners);
+      r.connect()
+      .then(addListeners)
+      .catch(function(e) {
+        console.log(e);
+      });
     }
-
-    prepareBook();
   }
 
   function handleAskModel (offers) {
@@ -144,13 +139,13 @@ var OrderBook = function (options) {
     var type = action === "asks" ? "gets" : "pays";
     var offers = [];
     var priceBook = { };
+    var sum = 0;
     var offer;
     var price;
     var sig = 4; //significant digits for price
     var exponent;
     var precision;
     var amount;
-    var sum;
     var i;
 
     function decimalAdjust(type, value, exp) {
@@ -173,10 +168,6 @@ var OrderBook = function (options) {
     }
 
     function formatAmount(price, opts) {
-      if (typeof price === 'object') {
-        price = Number(price.to_human({group_sep: false}));
-      }
-
       if (!opts) opts = {};
 
       if (opts.ask) {
@@ -203,49 +194,25 @@ var OrderBook = function (options) {
 
       offer = {
         account: data[i].Account || 'AUTOBRIDGED',
-        pays: {},
-        gets: {}
+        price: Number(data[i].quality)
       };
 
       if (data[i].TakerGets.value) {
-        offer.gets = {
-          value: data[i].taker_gets_funded,
-          currency: data[i].TakerGets.currency,
-          issuer: data[i].TakerGets.issuer
-        }
-      } else {
         offer.gets = Number(data[i].taker_gets_funded);
+      } else {
+        offer.gets = Number(data[i].taker_gets_funded) / 1000000.0;
+        offer.price *= 1000000.0;
       }
 
       if (data[i].TakerPays.value) {
-        offer.pays = {
-          value: data[i].taker_pays_funded,
-          currency: data[i].TakerPays.currency,
-          issuer: data[i].TakerPays.issuer
-        }
-      } else {
         offer.pays = Number(data[i].taker_pays_funded);
+      } else {
+        offer.pays = Number(data[i].taker_pays_funded) / 1000000.0;
+        offer.price /= 1000000.0;
       }
 
-      offer.gets = Amount.from_json(offer.gets);
-      offer.pays = Amount.from_json(offer.pays);
-
-      if (action === "asks") {
-        offer.price = Amount.from_quality(data[i].BookDirectory,
-                                      offer.pays.currency(),
-                                      offer.pays.issuer(), {
-          base_currency: offer.gets.currency(),
-          reference_date: new Date()
-        });
-      } else {
-
-        offer.price = Amount.from_quality(data[i].BookDirectory,
-                                      offer.gets.currency(),
-                                      offer.pays.issuer(), {
-          inverse: true,
-          base_currency: offer.pays.currency(),
-          reference_date: new Date()
-        });
+      if (action === 'bids') {
+        offer.price = 1 / offer.price;
       }
 
       // exponent determines the number
@@ -255,8 +222,8 @@ var OrderBook = function (options) {
       // not less than 0 and 4 orders of
       // magintude greater than the price
       if (!exponent) {
-        price = offer.price.to_human({group_sep: false});
-        exponent = Math.floor(Math.log(Number(price))/Math.log(10)) - sig + 1;
+        exponent = Math.log(Number(offer.price))/Math.log(10);
+        exponent = Math.floor(exponent) - sig + 1;
         precision = exponent > -4 ? exponent + 4 : 0;
       }
 
@@ -275,12 +242,7 @@ var OrderBook = function (options) {
       if (!sum) {
         sum = amount;
       } else {
-        try {
-          sum = sum.add(amount);
-        } catch (e) {
-          console.log(e);
-          break;
-        }
+        sum += amount;
       }
 
       if (!priceBook[price]) {
@@ -293,7 +255,7 @@ var OrderBook = function (options) {
         rowCount++;
 
       } else {
-        priceBook[price].size = priceBook[price].size.add(amount);
+        priceBook[price].size += amount;
       }
 
       priceBook[price].sum = sum;
@@ -312,8 +274,6 @@ var OrderBook = function (options) {
     return prices.map(function(price) {
       priceBook[price].displaySize = formatAmount(priceBook[price].size);
       priceBook[price].displaySum = formatAmount(priceBook[price].sum);
-      priceBook[price].size = Number(priceBook[price].size.to_human({group_sep: false}));
-      priceBook[price].sum = Number(priceBook[price].sum.to_human({group_sep: false}));
       return priceBook[price];
     });
   }
@@ -541,12 +501,10 @@ var OrderBook = function (options) {
   this.suspend = function () {
     if (asks) {
       asks.removeListener('model', handleAskModel);
-      asks.unsubscribe();
     }
 
     if (bids) {
       bids.removeListener('model', handleBidModel);
-      bids.unsubscribe();
     }
   }
 
