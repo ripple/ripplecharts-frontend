@@ -1,6 +1,6 @@
 ##Price Chart
 
-Widget for embedding a modifiable chart within any website.  The widget is capable 
+Widget for embedding a modifiable chart within any website.  The widget is capable
 of loading from the query string or from custom parameters.
 
 
@@ -8,7 +8,7 @@ of loading from the query string or from custom parameters.
 
 
 ####Configuration options:
-``` 
+```
   id        : id of element that will contain the chart. if not specified, the chart will be appended the body
   bodyTheme : true/false - setting true will apply the chart theme to the entire document, defaults to false
   customCSS : true/false - disables the default styling
@@ -21,7 +21,7 @@ of loading from the query string or from custom parameters.
 ```
   theme    : "light", "dark"
   type     : "line", "candlestick"
-  base     : e.g "{currency:'USD',issuer:'rXaiz....'}"  
+  base     : e.g "{currency:'USD',issuer:'rXaiz....'}"
   counter  : e.g "{currency:'BTC',issuer:'rXaiz....'}"
   start    : e.g "January 2, 2014 1:15pm"   - moment.js readable date/time
   end      : e.g "Feb 12, 2014"             - moment.js readable date/time
@@ -34,7 +34,7 @@ of loading from the query string or from custom parameters.
 ####Embedded IFRAME:
 
 ```
-<iframe src='http://ripplecharts.com/embed/pricechart?theme=dark&type=line&counter={"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}&base={"currency":"XRP"}'/>
+<iframe src='http://ripplecharts.com/embed/pricechart?theme=dark&type=line&counter={"currency":"USD","issuer":"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"}&base={"currency":"XRP"}&live=true'/>
 ```
 
 ####Javascript object:
@@ -49,7 +49,7 @@ of loading from the query string or from custom parameters.
 
 
  //load from params
- var chart = PriceChartWidget({ 
+ var chart = PriceChartWidget({
    id     : "priceChart",
    width  : 400,
    height : 500,
@@ -64,17 +64,17 @@ of loading from the query string or from custom parameters.
      "currency" : "USD",
      "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
    },
-     
-   interval : "hour",
-   theme    : "dark",         
- }); 
 
- 
- 
+   interval : "hour",
+   theme    : "dark",
+ });
+
+
+
  //multiple charts
  var one = new PriceChartWidget({id : "FirstChart"});
  var two = new PriceChartWidget();
- 
+
  one.load({
    base : {
      "currency" : "XRP"
@@ -83,12 +83,12 @@ of loading from the query string or from custom parameters.
      "currency" : "USD",
      "issuer" : "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
    },
-   
+
    interval : "hour",
    theme : "dark",
    });
- 
- 
+
+
    two.load({
    base : {
      "currency" : "XRP"
@@ -97,7 +97,7 @@ of loading from the query string or from custom parameters.
      "currency" : "USD",
      "issuer" : "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"
    },
-   
+
    interval : "hour",
    theme : "light",
    type : "line"
@@ -106,14 +106,14 @@ of loading from the query string or from custom parameters.
 
 ##Live Ticker
 
-Widget for embedding a stock ticker within any website.  The widget is capable 
+Widget for embedding a stock ticker within any website.  The widget is capable
 of loading from the query string or from custom parameters.
 
 ###How to Use:
 
 
 ####Configuration options:
-``` 
+```
   id        : id of element that will contain the live ticker. if not specified, appended to body
   apiURL    : custom url for the API backend, defaults to ripplecharts.com API
   closeable : optional, if set to true will allow the user to close the live ticker
@@ -121,7 +121,7 @@ of loading from the query string or from custom parameters.
 ```
 ####Chart options:
 ```
-  markets  : list of markets to be displayed on the live ticker 
+  markets  : list of markets to be displayed on the live ticker
             e.g '[
                     {
                       base: {"currency":"XRP"},
@@ -185,7 +185,7 @@ var ticker = TickerWidget({
 });
 
 ticker.load({
-  markets: [ 
+  markets: [
     {
       base: {currency:"XRP"},
       counter: {currency:"USD", issuer:"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}
@@ -218,7 +218,7 @@ ticker.load({
       base: {currency:"XRP"},
       counter: {currency:"EUR", issuer:"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"},
     }
-  ]  
+  ]
 });
 
 

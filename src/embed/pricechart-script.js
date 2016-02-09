@@ -72,7 +72,7 @@ var PriceChartWidget = function (options) {
       interval : params.interval,
       multiple : params.multiple,
       offset   : params.offset,
-      live     : params.live
+      live     : params.end ? undefined : params.live
     }
 
     if (!range.start && !range.offset && range.interval) {
