@@ -19615,8 +19615,8 @@ var rippleOrderbook =
       klass = function () {};
     }
     var proto = klass.prototype;
-    function addFunc(original, wrapper) {
-      proto[original.name] = wrapper || original;
+    function addFunc(original, name, wrapper) {
+      proto[name] = wrapper || original;
     }
     (definition.getters || []).forEach(function (k) {
       var key = '_' + k;
@@ -19624,24 +19624,24 @@ var rippleOrderbook =
         return this[key];
       };
     });
-    forEach(definition.virtuals, function (f) {
-      addFunc(f, function () {
+    forEach(definition.virtuals, function (f, n) {
+      addFunc(f, n, function () {
         throw new Error('unimplemented');
       });
     });
     forEach(definition.methods, addFunc);
-    forEach(definition, function (f) {
+    forEach(definition, function (f, n) {
       if (_.isFunction(f) && f !== klass) {
-        addFunc(f);
+        addFunc(f, n);
       }
     });
     _.assign(klass, definition.statics);
     if (typeof klass.init === 'function') {
       klass.init();
     }
-    forEach(definition.cached, function (f) {
-      var key = '_' + f.name;
-      addFunc(f, function () {
+    forEach(definition.cached, function (f, n) {
+      var key = '_' + n;
+      addFunc(f, n, function () {
         var value = this[key];
         if (value === undefined) {
           value = this[key] = f.call(this);
@@ -20153,6 +20153,28 @@ var rippleOrderbook =
         }
       ],
       [
+        "CancelAfter",
+        {
+          "nth": 36,
+          "isVLEncoded": false,
+          "bytes": "2024",
+          "isSerialized": true,
+          "isSigningField": true,
+          "type": "UInt32"
+        }
+      ],
+      [
+        "FinishAfter",
+        {
+          "nth": 37,
+          "isVLEncoded": false,
+          "bytes": "2025",
+          "isSerialized": true,
+          "isSigningField": true,
+          "type": "UInt32"
+        }
+      ],
+      [
         "IndexNext",
         {
           "nth": 1,
@@ -20406,6 +20428,17 @@ var rippleOrderbook =
         }
       ],
       [
+        "Digest",
+        {
+          "nth": 21,
+          "isVLEncoded": false,
+          "bytes": "5015",
+          "isSerialized": true,
+          "isSigningField": true,
+          "type": "Hash256"
+        }
+      ],
+      [
         "hash",
         {
           "nth": 257,
@@ -20521,6 +20554,17 @@ var rippleOrderbook =
           "nth": 9,
           "isVLEncoded": false,
           "bytes": "69",
+          "isSerialized": true,
+          "isSigningField": true,
+          "type": "Amount"
+        }
+      ],
+      [
+        "DeliverMin",
+        {
+          "nth": 10,
+          "isVLEncoded": false,
+          "bytes": "6A",
           "isSerialized": true,
           "isSigningField": true,
           "type": "Amount"
@@ -20730,6 +20774,17 @@ var rippleOrderbook =
           "nth": 14,
           "isVLEncoded": true,
           "bytes": "7E",
+          "isSerialized": true,
+          "isSigningField": true,
+          "type": "Blob"
+        }
+      ],
+      [
+        "Proof",
+        {
+          "nth": 17,
+          "isVLEncoded": true,
+          "bytes": "7011",
           "isSerialized": true,
           "isSigningField": true,
           "type": "Blob"
@@ -21033,7 +21088,7 @@ var rippleOrderbook =
         }
       ],
       [
-        "TemplateEntryType",
+        "Method",
         {
           "nth": 2,
           "isVLEncoded": false,
@@ -21279,15 +21334,15 @@ var rippleOrderbook =
       "TicketCreate": 10,
       "TicketCancel": 11,
       "NickNameSet": 6,
-      "WalletAdd": 2,
       "TrustSet": 20,
-      "PasswordFund": 4,
       "Payment": 0,
       "AccountSet": 3,
       "OfferCreate": 7,
       "SignerListSet": 12,
       "Contract": 9,
-      "Claim": 1,
+      "SuspendedPaymentCreate": 1,
+      "SuspendedPaymentFinish": 2,
+      "SuspendedPaymentCancel": 4,
       "Invalid": -1
     }
   };
