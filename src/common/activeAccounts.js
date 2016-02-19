@@ -11,6 +11,8 @@ var ActiveAccounts = function (options){
 
   var metricSelect = div.append('div').attr('class','metricSelect selectList');
 
+  self.xhr; //pending request
+
   metricSelect.append('label').html('Metric:');
   metricSelect.selectAll('span').data(['volume','count'])
     .enter().append('span')
@@ -19,7 +21,7 @@ var ActiveAccounts = function (options){
     .on('click', function(d){
       if (transactions) return;
       var that = this;
-      metricSelect.selectAll('a')
+      metricSelect.selectAll('span')
         .classed('selected', function() { return this === that; });
       metric = d;
 
@@ -64,7 +66,7 @@ var ActiveAccounts = function (options){
         store.session.set('traderPeriod', d);
       }
 
-      periodSelect.selectAll('a').classed('selected', function() { return this === that; });
+      periodSelect.selectAll('span').classed('selected', function() { return this === that; });
       self.load(null, null, d);
     });
 
@@ -162,7 +164,11 @@ var ActiveAccounts = function (options){
         selectedPeriod = '1day';
     }
 
-    apiHandler.activeAccounts({
+    if (self.xhr) {
+      self.xhr.abort();
+    }
+
+    self.xhr = apiHandler.activeAccounts({
       base         : base,
       counter      : counter,
       period       : selectedPeriod,

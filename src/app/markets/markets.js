@@ -348,7 +348,9 @@ angular.module( 'ripplecharts.markets', [
     return d.name;
   })
   .on('click', function(d) {
-    updateScopeAndStore('interval', d.name);
+    if (!isDisabledInterval(d)) {
+      updateScopeAndStore('interval', d.name);
+    }
   });
 
   // set up the chart type selector
