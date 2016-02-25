@@ -103,31 +103,31 @@ angular.module( 'ripplecharts.trade-volume', [
       start: date,
       end: date
     }, function(err, resp) {
+      var data = [];
 
       if (err) {
         console.log(err);
-        return;
-      }
 
-      var data = [];
-      resp.rows[0].components.forEach(function(c) {
-        if (!c.converted_amount) {
-          return;
-        }
+      } else if (resp.rows && resp.rows.length) {
+        resp.rows[0].components.forEach(function(c) {
+          if (!c.converted_amount) {
+            return;
+          }
 
-        data.push({
-          volume: c.converted_amount,
-          amount: c.amount,
-          count: c.count,
-          base_rate: c.rate,
-          base_currency: c.base.currency,
-          base_issuer: c.base.issuer,
-          counter_currency: c.counter.currency,
-          counter_issuer: c.counter.issuer,
-          base: c.base.currency + (c.base.issuer ? '.' + c.base.issuer : ''),
-          counter: c.counter.currency + (c.counter.issuer ? '.' + c.counter.issuer : '')
+          data.push({
+            volume: c.converted_amount,
+            amount: c.amount,
+            count: c.count,
+            base_rate: c.rate,
+            base_currency: c.base.currency,
+            base_issuer: c.base.issuer,
+            counter_currency: c.counter.currency,
+            counter_issuer: c.counter.issuer,
+            base: c.base.currency + (c.base.issuer ? '.' + c.base.issuer : ''),
+            counter: c.counter.currency + (c.counter.issuer ? '.' + c.counter.issuer : '')
+          });
         });
-      });
+      }
 
       $scope.chordData = data;
       $scope.update();

@@ -42,7 +42,7 @@ function ($window, matrixFactory, rippleName) {
       obj.setRates = function (rates) {
         exRates = {};
         rates.forEach(function(r) {
-          exRates[r.currency] = r.rate;
+          exRates[r.currency] = Number(r.rate);
         });
       }
 

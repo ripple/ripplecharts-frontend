@@ -283,12 +283,15 @@ angular.module('gateways', [])
   };
 
   var getName = function(currency, issuer) {
-    if (currency === "XRP") return "";
-    var gateways = custom[currency].issuers;
-    if (gateways) return gateways[issuer].name;
-    else return "";
+    if (currency !== 'XRP' &&
+        custom[currency] &&
+        custom[currency].issuers &&
+        custom[currency].issuers[issuer]) {
+      return custom[currency].issuers[issuer].name || '';
+    } else {
+      return '';
+    }
   };
-
 
   return {
     promise        : promise,

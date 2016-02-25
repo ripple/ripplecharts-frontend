@@ -211,10 +211,6 @@ var ValueSummary = function (options) {
       d = path.data()[i];
     }
 
-    if (d) {
-      showTooltip(d, i, true);
-    }
-
     //add labels
     label = label.data(path.data());
 
