@@ -144,56 +144,60 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
 
   var listener = this;
 
-  listener.stopListener();
-  listener.viewOpts = parseViewOpts(newOpts);
+  function update() {
+    listener.stopListener();
+    listener.viewOpts = parseViewOpts(newOpts);
 
-  // If timeIncrement is set, setup an interval to call the displayFn,
-  // otherwise, pass the displayFn directly to createTransactionProcessor()
-  if (!listener.viewOpts.timeIncrement) {
-    listener.txProcessor = createTransactionProcessor(listener.viewOpts, listener.displayFn);
-
-  } else {
-
-    //if there isnt a row, start time will be set to now
-    listener.resetStored(listener.viewOpts.incompleteApiRow || []);
-
-    // create regular listener
-    listener.txProcessor = createTransactionProcessor(listener.viewOpts, function(reducedTrade){
-
-      listener.storedResults = offersExercisedReduce([listener.storedResults, reducedTrade], true);
-
-      // Call displayFn every time a new trade comes in, as well as after the interval
-      listener.displayFn(formatReduceResult(listener.storedResults));
-
-    });
-
-
-    // handle first interval
-
-    var endTime   = moment.utc(listener.storedResults.startTime)
-      .add(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement);
-    var remainder = endTime.diff(moment.utc());
-
-    //if its more than 24 days, it will overflow
-    //the set timeout function. just assume no one
-    //will keep the browser open that long
-    if (remainder > 2073600000) return;
-
-    // If there is time left in the first timeIncrement, wait until that
-    // is finished to start the interval
-    if (remainder > 0) {
-
-      listener.timeout = setTimeout(function(){
-        listener.finishedInterval();
-        setNext(listener);
-
-      }, remainder);
+    // If timeIncrement is set, setup an interval to call the displayFn,
+    // otherwise, pass the displayFn directly to createTransactionProcessor()
+    if (!listener.viewOpts.timeIncrement) {
+      listener.txProcessor = createTransactionProcessor(listener.viewOpts, listener.displayFn);
 
     } else {
-      listener.finishedInterval();
-      setNext(listener);
+
+      //if there isnt a row, start time will be set to now
+      listener.resetStored(listener.viewOpts.incompleteApiRow || []);
+
+      // create regular listener
+      listener.txProcessor = createTransactionProcessor(listener.viewOpts, function(reducedTrade){
+
+        listener.storedResults = offersExercisedReduce([listener.storedResults, reducedTrade], true);
+
+        // Call displayFn every time a new trade comes in, as well as after the interval
+        listener.displayFn(formatReduceResult(listener.storedResults));
+
+      });
+
+
+      // handle first interval
+
+      var endTime   = moment.utc(listener.storedResults.startTime)
+        .add(listener.viewOpts.timeMultiple, listener.viewOpts.timeIncrement);
+      var remainder = endTime.diff(moment.utc());
+
+      //if its more than 24 days, it will overflow
+      //the set timeout function. just assume no one
+      //will keep the browser open that long
+      if (remainder > 2073600000) return;
+
+      // If there is time left in the first timeIncrement, wait until that
+      // is finished to start the interval
+      if (remainder > 0) {
+
+        listener.timeout = setTimeout(function(){
+          listener.finishedInterval();
+          setNext(listener);
+
+        }, remainder);
+
+      } else {
+        listener.finishedInterval();
+        setNext(listener);
+      }
     }
 
+    // add transaction listener
+    remote.connection.on('transaction', listener.txProcessor);
   }
 
   function setNext(listener) {
@@ -203,6 +207,7 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
   }
 
   remote.connect()
+  .then(update)
   .then(subscribe)
   .catch(function(e) {
     console.log(e);
@@ -214,7 +219,6 @@ OffersExercisedListener.prototype.updateViewOpts = function(newOpts) {
       streams: ['transactions']
     };
 
-    remote.connection.on('transaction', listener.txProcessor);
     return remote.connection.request(request);
   }
 }
@@ -250,7 +254,7 @@ function parseViewOpts(opts) {
  */
 function createTransactionProcessor(viewOpts, resultHandler) {
 
-  function txProcessor (txData){
+  function txProcessor(txData) {
 
     var txContainer = {
       close_time_timestamp: (new Date()).getTime(),
