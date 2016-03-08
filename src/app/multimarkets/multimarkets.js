@@ -24,21 +24,7 @@ angular.module( 'ripplecharts.multimarkets', [
 .controller( 'MultimarketsCtrl', function MultimarketsCtrl( $scope, $location, gateways) {
 
   $scope.markets  = store.session.get('multimarkets') ||
-    store.get('multimarkets') ||
-    Options.multimarkets || [
-    {
-      base    : {currency:"XRP"},
-      counter : {currency:"USD",issuer:"rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q"}},
-    {
-      base    : {currency:"XRP"},
-      counter : {currency:"JPY",issuer:"r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"}},
-    {
-      base    : {currency:"BTC",issuer:"rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"},
-      counter : {currency:"XRP"}},
-    {
-      base    : {currency:"XRP"},
-      counter : {currency:"CNY",issuer:"rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y"}}
-    ];
+    store.get('multimarkets') || 15;
 
 
   var markets = new MultiMarket ({

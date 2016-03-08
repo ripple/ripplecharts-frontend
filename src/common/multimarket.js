@@ -594,17 +594,34 @@ var MultiMarket = function (options) {
 
 //initialize charts with a list of currency pairs,
 //or remove them all with an empty array
-  this.list = function (charts) {
-    for (var i=0; i<self.charts.length; i++) {
-      self.charts[i].suspend();
-      self.charts[i].remove(false);
+  this.list = function (data) {
+    var self = this;
+
+    function update (charts) {
+      for (var i=0; i<self.charts.length; i++) {
+        self.charts[i].suspend();
+        self.charts[i].remove(false);
+      }
+
+      if (!charts.length && interval)
+        clearInterval(interval);
+
+      for (var j=0; j<charts.length; j++) {
+        self.addChart(charts[j].base, charts[j].counter);
+      }
     }
 
-    if (!charts.length && interval)
-      clearInterval(interval);
+    if (Number.isInteger(data)) {
+      self.apiHandler.getTopMarkets(data, function(err, resp) {
+        if (err) {
+          console.log(err);
+        } else {
+          update(resp);
+        }
+      });
 
-    for (var j=0; j<charts.length; j++) {
-      self.addChart(charts[j].base, charts[j].counter);
+    } else {
+      update(data);
     }
   }
 
