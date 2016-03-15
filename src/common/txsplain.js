@@ -410,8 +410,8 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         function renderTrustSet(tx) {
           return 'It establishes <b>' + commas(tx.tx.LimitAmount.value) + '</b>' +
             ' as the maximum amount of ' + tx.tx.LimitAmount.currency +
-            ' that <account>' + tx.tx.Account + '</account> allows to be ' +
-            ' held by <account>' + tx.tx.LimitAmount.issuer + '</account>.';
+            ' from <account>' + tx.tx.LimitAmount.issuer + '</account>' +
+            ' that <account>' + tx.tx.Account + '</account> is willing to hold.';
         }
 
         function renderPayment(tx) {
