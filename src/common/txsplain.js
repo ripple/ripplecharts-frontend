@@ -78,6 +78,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         if (scope.tx_hash) {
           loadTx(scope.tx_hash);
         } else {
+          explainView.html('');
           status.style('display', 'none');
         }
       });
@@ -107,6 +108,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           url: url
         })
         .then(function(resp) {
+          explainView.html('');
           status.style('display', 'none').html('');
           scope.tx_json = resp.data.transaction;
           displayTx();
