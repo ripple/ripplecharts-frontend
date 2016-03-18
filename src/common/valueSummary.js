@@ -160,10 +160,18 @@ var ValueSummary = function (options) {
     //add arcs
     path = path.data(pie(data));
     path.enter().append("path")
-    .on('mouseover',showTooltip)
+    .on('mouseover', function(d, i) {
+      showTooltip(d, i);
+      d3.select(this)
+      .transition()
+      .attr('transform', 'scale(1.05)');
+    })
     .on('mouseout', function(){
       path.classed('fade', false);
       label.classed('fade', false);
+      d3.select(this)
+      .transition()
+      .attr('transform', 'scale(1)');
     })
     .on('click', function(d) {
       if (d.data.base) {
@@ -189,15 +197,13 @@ var ValueSummary = function (options) {
 
     path.classed('pair', function(d) {
       return d.data.base ? true : false;
-    });
-
-    var pathUpdate = chart.selectAll("path")
-      .style("fill", function(d, i) { return color(d); })
-      .style("stroke", function(d, i) { return color(d); })
-      .style("stroke-width", ".35px")
-      .transition().duration(750).attrTween("d", arcTween)
-      .attr("id", function(d, i){return "arc_"+i})
-      .each("end", function(){transitioning = false});
+    })
+    .style("fill", function(d, i) { return color(d); })
+    .style("stroke", function(d, i) { return color(d); })
+    .style("stroke-width", ".35px")
+    .transition().duration(750).attrTween("d", arcTween)
+    .attr("id", function(d, i){return "arc_"+i})
+    .each("end", function(){transitioning = false});
 
     path.exit().remove();
 
