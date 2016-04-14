@@ -388,7 +388,7 @@ ApiHandler = function (baseURL) {
           row.components.forEach(function(c){
             c.rate = Number(c.rate);
             c.amount = Number(c.amount);
-            c.converted_amount = Number(c.converted_amount);
+            c.converted_amount = Number(c.converted_amount || '0');
           });
         });
         callback(null, resp);

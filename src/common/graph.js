@@ -220,16 +220,51 @@ networkGraph = function (nameService) {
     }
   }
 
-  var TRANSACTION_PAGE_LENGTH = 13;
+  var TRANSACTION_PAGE_LENGTH = 15;
 
   function getNextTransactionPage() {
 
+    var node = nodes[nodeMap[focalNode]];
+    var account = node.account.Account;
+
+    if (node.loadingTransactions) {
+      return;
+    }
+
+    node.loadingTransactions = true;
+
+
     api.getAccountTx({
-      account: focalNode,
+      account: account,
       limit: TRANSACTION_PAGE_LENGTH,
-      marker: nodes[nodeMap[focalNode]].marker,
+      marker: node.marker,
       descending: true
-    }, handleAccountTransactions);
+    },  function(err, obj) {
+
+    node.loadingTransactions = false;
+
+    if (err) {
+      console.log('Account TX error:', err);
+      return;
+    }
+
+    if (node.transactions) {
+      node.transactions.push.apply(node.transactions, obj.transactions);
+    } else {
+      node.transactions = obj.transactions;
+    }
+
+    if (obj.marker) {
+      node.marker = obj.marker;
+    } else {
+      node.transactionsFinished = true;
+      node.marker = null;
+    }
+
+    if (account === focalNode) {
+      updateTransactions(account);
+    }
+  });
   }
 
 
@@ -289,32 +324,6 @@ networkGraph = function (nameService) {
     if (account === focalNode) {
       $("#xrpBalance").text(commas(data.xrpBalance));
     }
-
-
-  }
-
-  function handleAccountTransactions(err, obj) {
-
-    if (err) {
-      console.log('Account TX error:', err);
-      return;
-    }
-
-    var n = nodes[nodeMap[focalNode]];
-
-    if (n.transactions) {
-      n.transactions.push.apply(n.transactions, obj.transactions);
-    } else {
-      n.transactions = obj.transactions;
-    }
-
-    if (obj.marker) {
-      n.marker = obj.marker;
-    } else {
-      n.transactionsFinished = true;
-    }
-
-    updateTransactions(focalNode); //appending=true
   }
 
   function handleIndividualTransaction(err, resp) {
@@ -1777,8 +1786,8 @@ function updateTransactions(address) {
             if (mn && LatestFields) {
               if (LatestFields.Account == address || (LatestFields.HighLimit && LatestFields.HighLimit.issuer == address) ) {
                 type = mn.LedgerEntryType;
-                if (type == "AccountRoot") {
-                  diff = LatestFields.Balance - (mn.PreviousFields ? mn.PreviousFields.Balance : 0);
+                if (type == "AccountRoot" && mn.PreviousFields && mn.PreviousFields.Balance) {
+                  diff = Number(LatestFields.Balance) - Number(mn.PreviousFields.Balance);
                   if (affectedBalances["XRP"]) {
                     affectedBalances["XRP"]+=diff;
                   } else {
@@ -1800,7 +1809,6 @@ function updateTransactions(address) {
                 } else {
                   //console.log("Affected my", type,  mn);
                 }
-
               } else {
                 //console.log("Did not affect me?", mn);
               }
@@ -1823,7 +1831,7 @@ function updateTransactions(address) {
               secondAmount = affectedKeys[negKey]=="XRP" ? -negative : {value: -negative, currency: affectedKeys[negKey]};
             }
           } else {
-            console.log("Could not interpret as offerin.", affectedBalances);
+            console.log("Could not interpret as offerin.", affectedBalances, obj);
             return;
           }
         }
