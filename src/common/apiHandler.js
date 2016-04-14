@@ -291,7 +291,9 @@ ApiHandler = function (baseURL) {
   this.getMaintenanceStatus = function(callback) {
     var url = self.url + '/maintenance/ripplecharts';
 
-    return d3.json(url, function(err, resp) {
+    var xhr = d3.json(url, function(err, resp) {
+      clearTimeout(timeout);
+
       if (err) {
         var e = err.response ? JSON.parse(err.response) : err;
         e.status = err.status;
@@ -301,6 +303,17 @@ ApiHandler = function (baseURL) {
         callback(null, resp);
       }
     });
+
+    var timeout = setTimeout(function() {
+      console.log(xhr);
+      xhr.abort();
+      callback({
+        status: 500,
+        message: 'Data Response Timeout'
+      });
+    }, 15000);
+
+    return xhr;
   };
 
   function getMetric (params, callback) {

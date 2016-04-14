@@ -172,18 +172,26 @@ angular.element(document).ready(function() {
     checkStatus();
   });
 
-  setInterval(checkStatus, 5 * 60 * 1000);
+  setInterval(checkStatus, 2 * 60 * 1000);
 
   function checkStatus() {
-    api.getMaintenanceStatus(function(err, resp) {
+    d = api.getMaintenanceStatus(function(err, resp) {
       var mode;
+      var html;
+      var style;
       var height;
 
       if (err) {
         console.log(err);
-      }
+        mode = 'maintenance';
+        html = err.message;
+        style = '';
 
-      mode = resp && resp.mode ? resp.mode : 'normal';
+      } else {
+        mode = resp && resp.mode ? resp.mode : 'normal';
+        html = resp && resp.html ? resp.html : '';
+        style = resp && resp.style ? resp.style : '';
+      }
 
       // start the app
       if (!started && mode !== 'maintenance') {
@@ -194,7 +202,7 @@ angular.element(document).ready(function() {
       // show maintenance
       if (mode === 'maintenance') {
         maintenance.select('.message')
-        .html(resp.html);
+        .html(html);
 
         maintenance
         .style('display','block')
@@ -217,8 +225,8 @@ angular.element(document).ready(function() {
       if (mode === 'banner') {
         height = banner.style('height');
 
-        banner.html(resp.html)
-        .style(resp.style)
+        banner.html(html)
+        .style(style)
 
         wrap.style('height', height)
         .transition()
