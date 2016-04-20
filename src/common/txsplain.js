@@ -78,6 +78,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         if (scope.tx_hash) {
           loadTx(scope.tx_hash);
         } else {
+          explainView.html('');
           status.style('display', 'none');
         }
       });
@@ -107,6 +108,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           url: url
         })
         .then(function(resp) {
+          explainView.html('');
           status.style('display', 'none').html('');
           scope.tx_json = resp.data.transaction;
           displayTx();
@@ -164,7 +166,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         explainView.append('div')
         .attr('class', 'fee')
         .html('<h4>TRANSACTION COST:</h4>Sending this transaction consumed ' +
-        '<amount>' + displayAmount(tx.tx.Fee) + '</amount>.');
+        '<amount>' + displayAmount(tx.tx.Fee, true) + '</amount>.');
       }
 
       function renderStatus(tx) {
@@ -257,8 +259,8 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             '<account>' + issuer + '</account>';
 
           if (change) {
-            html += '<ul><li>Balance changed by <b>' + commas(change.toPrecision(12)) +
-              '</b> to <b>' + commas(finalBalance) +
+            html += '<ul><li>Balance changed by <b>' + renderNumber(change.toPrecision(12)) +
+              '</b> to <b>' + renderNumber(finalBalance) +
               '</b> ' + fields.Balance.currency + '</li></ul>';
           }
 
@@ -299,13 +301,13 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             finalBalance = Number(fields.Balance);
             if (previousBalance < finalBalance) {
               html += '<li>Balance increased by <b>' +
-                commas((finalBalance - previousBalance) / 1000000) +
-                '</b> to <b>' + commas(finalBalance / 1000000) +
+                renderNumber((finalBalance - previousBalance) / 1000000) +
+                '</b> to <b>' + renderNumber(finalBalance / 1000000) +
                 '</b> XRP </li>';
             } else if (previousBalance > finalBalance) {
               html += '<li>Balance reduced by <b>' +
-                commas((previousBalance - finalBalance) / 1000000) +
-                '</b> to <b>' + commas(finalBalance / 1000000) +
+                renderNumber((previousBalance - finalBalance) / 1000000) +
+                '</b> to <b>' + renderNumber(finalBalance / 1000000) +
                 '</b> XRP </li>';
             }
 
@@ -408,15 +410,15 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         }
 
         function renderTrustSet(tx) {
-          return 'It establishes <b>' + commas(tx.tx.LimitAmount.value) + '</b>' +
+          return 'It establishes <b>' + renderNumber(tx.tx.LimitAmount.value) + '</b>' +
             ' as the maximum amount of ' + tx.tx.LimitAmount.currency +
-            ' that <account>' + tx.tx.Account + '</account> allows to be ' +
-            ' held by <account>' + tx.tx.LimitAmount.issuer + '</account>.';
+            ' from <account>' + tx.tx.LimitAmount.issuer + '</account>' +
+            ' that <account>' + tx.tx.Account + '</account> is willing to hold.';
         }
 
         function renderPayment(tx) {
 
-          var html = 'The payment is from' +
+          var html = 'The payment is from ' +
             '<account>' + tx.tx.Account + '</account> to ' +
             '<account>' + tx.tx.Destination + '</account>.';
 
@@ -470,7 +472,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             ' in order to receive ' +
             '<amount>' + displayAmount(tx.tx.TakerPays) + '</amount>.' +
             '<br/>The exchange rate for this offer is <amount><b>' +
-            commas(rate.toPrecision(5)) + ' ' + pair + '</b></amount>.';
+            renderNumber(rate.toPrecision(5)) + ' ' + pair + '</b></amount>.';
 
           if (tx.tx.OfferSequence) {
             html += '<br/>The transaction will also cancel ' +
@@ -497,11 +499,13 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         }
       }
 
-      function displayAmount(amount) {
-        if (typeof amount === 'string') {
+      function displayAmount(amount, isFee) {
+        if (isFee) {
           return '<b>' + commas(Number(amount) / 1000000) + '</b> XRP';
+        } else if (typeof amount === 'string') {
+          return '<b>' + renderNumber(Number(amount) / 1000000) + '</b> XRP';
         } else {
-          return '<b>' + commas(Number(amount.value).toPrecision(8)) + '</b> ' +
+          return '<b>' + renderNumber(Number(amount.value).toPrecision(8)) + '</b> ' +
             amount.currency + '.' +
             '<account>' + amount.issuer + '</account>';
         }
@@ -538,6 +542,12 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             if (v) str += String.fromCharCode(v);
         }
         return str;
+      }
+
+      function renderNumber(d) {
+        var parts = commas(d).split('.');
+        return parts[0] + (parts[1] ?
+          '<decimal>.' + parts[1] + '</decimal>' : '');
       }
     }
   };

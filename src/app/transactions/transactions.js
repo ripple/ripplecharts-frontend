@@ -38,7 +38,6 @@ angular.module( 'ripplecharts.transactions', [
 
   $scope.load = function() {
     $scope.tx_hash = $scope.input_tx_hash;
-    $scope.reload();
   };
 
   function handleTransition(hash) {

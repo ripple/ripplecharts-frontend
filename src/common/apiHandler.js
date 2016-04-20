@@ -46,6 +46,60 @@ ApiHandler = function (baseURL) {
     });
   }
 
+  this.getTopMarkets = function (limit, callback) {
+    var order = [
+      'XAU', 'XAG', 'BTC', 'ETH', 'LTC',
+      'XRP', 'EUR', 'USD', 'GBP', 'AUD',
+      'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'CNY'];
+
+    var url = self.url + '/network/top_markets' +
+      (limit ? '?limit=' + limit : '')
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = err.response ? JSON.parse(err.response) : err;
+        e.status = err.status;
+        e.text = err.statusText || 'Unable to load data';
+        callback(e);
+
+      } else {
+        var markets = [];
+        resp.markets.forEach(function(m, i) {
+
+          if (limit && i >= limit) {
+            return;
+          }
+
+          var pair = {
+            base: {
+              currency: m.base_currency,
+              issuer: m.base_issuer
+            },
+            counter: {
+              currency: m.counter_currency,
+              issuer: m.counter_issuer
+            }
+          };
+
+          var o1 = order.indexOf(pair.base.currency);
+          var o2 = order.indexOf(pair.counter.currency);
+
+          // order by priority
+          if (o1 > o2 || o1 === -1) {
+            pair = {
+              base: pair.counter,
+              counter: pair.base
+            };
+          }
+
+          markets.push(pair);
+        });
+
+        callback(null, markets);
+      }
+    });
+  }
+
 
   this.offersExercised = function (params, load, error) {
 
@@ -347,7 +401,7 @@ ApiHandler = function (baseURL) {
           row.components.forEach(function(c){
             c.rate = Number(c.rate);
             c.amount = Number(c.amount);
-            c.converted_amount = Number(c.converted_amount);
+            c.converted_amount = Number(c.converted_amount || '0');
           });
         });
         callback(null, resp);
