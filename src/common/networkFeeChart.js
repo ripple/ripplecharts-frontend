@@ -63,7 +63,7 @@ var NetworkFees = function (options) {
 
       var lineData = rows.map(function(d) {
         return {
-          x: moment.utc(d.date),
+          x: moment(d.date),
           y: d.avg,
           y2: d.total,
           data: d
