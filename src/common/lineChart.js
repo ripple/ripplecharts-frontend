@@ -65,17 +65,24 @@ var LineChart = function (options){
       return;
     }
 
+    var extents = d3.extent(self.lineData, function(d) { return d.y; });
+    if (options.minDomain !== undefined) {
+      extents[0] = options.minDomain;
+    }
+
     var x = d3.time.scale()
     .range([0, options.width])
     .domain(d3.extent(self.lineData, function(d) { return d.x; }));
 
     var y = d3.scale.linear()
     .range([options.height, 0])
-    .domain(d3.extent(self.lineData, function(d) { return d.y; }))
+    .domain(extents)
     .nice();
 
-    var y2 = d3.scale.pow()
-    .exponent(0.4)
+    var y2 = options.y2Exponent ?
+        d3.scale.pow().exponent(options.y2Exponent) : d3.scale.linear()
+
+    y2
     .range([options.height, 0])
     .domain(d3.extent(self.lineData, function(d) { return d.y2; }))
     .nice();

@@ -160,4 +160,15 @@ angular.module( 'ripplecharts.metrics', [
 
   $scope.$on("$destroy", function(){
   });
+
+
+  //create network fees chart
+  var networkFeeChart = new NetworkFees({
+    url: API,
+    id: 'network-fees',
+    resize: true
+  });
+
+  $scope.$on("$destroy", function(){
+  });
 });

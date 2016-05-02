@@ -37,6 +37,7 @@ var TotalAccounts = function (options) {
     title      : "Total Accounts",
     leftTitle  : "Accounts Created",
     rightTitle : "Total",
+    y2Exponent : 0.4,
     resize     : true,
     tooltip    : function (d, increment) {
       return "<div>"+parseDate(d.x.local(), increment) +
