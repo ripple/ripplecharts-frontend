@@ -1,6 +1,5 @@
 var NetworkFees = function (options) {
   var self        = this;
-  var apiHandler  = new ApiHandler(options.url);
   var request, basisRequest;
 
   if (options.id) self.div = d3.select('#'+options.id).attr('class','chartWrap');
@@ -50,7 +49,7 @@ var NetworkFees = function (options) {
     var interval = d === 'ledger' ? 'second' : d;
 
     start.subtract(multiplier * 900, interval);
-    var url = options.url +
+    var url = API +
         '/network/fees?limit=1000&interval=' + d +
         '&start=' + start.format('YYYY-MM-DDTHH:mm:ss');
     chart.loading = true;

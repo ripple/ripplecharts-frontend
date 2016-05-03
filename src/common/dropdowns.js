@@ -51,7 +51,7 @@
           text: select.currency,
           value: i,
           currency: select.currency,
-          imageSrc: 'https://api.ripplecharts.com/api/currencies/' +
+          imageSrc:  API + '/currencies/' +
             select.currency + '.svg',
           selected: true
         });

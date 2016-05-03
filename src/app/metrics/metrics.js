@@ -164,8 +164,21 @@ angular.module( 'ripplecharts.metrics', [
 
   //create network fees chart
   var networkFeeChart = new NetworkFees({
-    url: API,
     id: 'network-fees',
+    resize: true
+  });
+
+  //create transactions by type
+  var transactionsByType = new TransactionStats({
+    id: 'transaction-stats-type',
+    metric: 'type',
+    resize: true
+  });
+
+  //create transactions by type
+  var transactionsByResult = new TransactionStats({
+    id: 'transaction-stats-result',
+    metric: 'result',
     resize: true
   });
 
