@@ -16,6 +16,7 @@ angular.element(document).ready(function() {
     'ripplecharts.value',
     'ripplecharts.history',
     'ripplecharts.metrics',
+    'ripplecharts.topology',
     'ui.state',
     'ui.route',
     'snap',
