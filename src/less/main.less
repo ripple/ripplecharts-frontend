@@ -31,7 +31,6 @@
 @import '../../vendor/bootstrap/less/tables.less';
 @import '../../vendor/bootstrap/less/tooltip.less';
 @import '../../vendor/font-awesome/less/font-awesome.less';
-@import '../../vendor/font-awesome/less/font-awesome.less';
 
 /**
  * This is our main variables file. It in turn imports the `variables` file from
@@ -733,6 +732,7 @@ footer .links a:first-child {
 @import '../app/trade-volume/trade-volume.less';
 @import '../app/metrics/metrics.less';
 @import '../app/topology/topology.less';
+@import '../app/validators/validators.less';
 @import '../app/transactions/transactions.less';
 
 @import 'jquery.selectbox.less';
@@ -1011,3 +1011,46 @@ ul.dd-options li:hover {
   }
 }
 
+/**
+ * striped table
+ */
+
+.table-striped thead {
+  background: #eaf0f7
+}
+
+.tooltip-btn {
+  background-color: transparent;
+  border-radius: 50%;
+  padding: 1px 6px;
+  margin-left: 5px;
+  font-size: 10px;
+}
+
+.dark {
+  .table-striped {
+    border-color: #222;
+
+    thead {
+      background: #123;
+    }
+
+
+    thead th {
+      border-color: #345;
+    }
+
+    td {
+      border-color: #222;
+    }
+
+    tr:nth-child(odd) td {
+      background-color: #111;
+    }
+  }
+
+  .tooltip-btn {
+    border-color: #345;
+    color: #888;
+  }
+}

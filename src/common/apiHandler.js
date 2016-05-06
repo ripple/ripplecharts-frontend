@@ -341,6 +341,54 @@ ApiHandler = function (baseURL) {
     });
   }
 
+  this.getValidators = function (callback) {
+    var url = self.url + '/network/validator_reports';
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = err.response ? JSON.parse(err.response) : err;
+        e.status = err.status;
+        e.text = err.statusText || 'Unable to load data';
+        callback(e);
+
+      } else {
+        callback(null, resp.reports);
+      }
+    });
+  }
+
+  this.getValidator = function (pubkey, callback) {
+    var url = self.url + '/network/validators/' + pubkey;
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = err.response ? JSON.parse(err.response) : err;
+        e.status = err.status;
+        e.text = err.statusText || 'Unable to load data';
+        callback(e);
+
+      } else {
+        callback(null, resp);
+      }
+    });
+  }
+
+  this.getValidatorReports = function (options, callback) {
+    var url = self.url + '/network/validators/' +
+        options.pubkey + '/reports?descending=true';
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        var e = err.response ? JSON.parse(err.response) : err;
+        e.status = err.status;
+        e.text = err.statusText || 'Unable to load data';
+        callback(e);
+
+      } else {
+        callback(null, resp.reports);
+      }
+    });
+  }
 
   this.getMaintenanceStatus = function(callback) {
     var url = self.url + '/maintenance/ripplecharts';

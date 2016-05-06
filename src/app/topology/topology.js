@@ -22,38 +22,50 @@ angular.module( 'ripplecharts.topology', [
 })
 
 .controller('TopologyCtrl', function TopologyCtrl($scope, $http, gateways) {
-  $scope.loadingTopology = true;
-  $scope.topologyLoaded = false;
-  $scope.status = "Loading..."
+  $scope.loading = true;
+  $scope.status = "Loading...";
+
   var t = new Topology($http);
 
-  function fetchAndShowTable() {
+  function fetchAndShowTable(loadGraph) {
     t.fetch().then(function(data) {
+      $scope.loading = false;
+      $scope.status = '';
+
       if(data.node_count > 0) {
         data.nodes = t.formatUptimes(data.nodes);
         data.nodes = t.sortByUptime(data.nodes);
+        data.nodes.forEach(function(node) {
+          node.version_color = t.versionToColor(node.version);
+        });
         var sp = t.mergeOldAndNew(data.nodes, $scope.nodes);
         $scope.nodes = sp;
         $scope.$apply();
         t.animateChange(['inbound_connections', 'outbound_connections', 'uptime_formatted']);
-        $scope.loadingTopology = false;
-        $scope.topologyLoaded= true;
+
+        if (loadGraph) {
+          t.produce(data, {
+            element: ".topology-graph",
+            width: 1000,
+            height: 500
+          });
+        }
+      } else {
+        console.log('no nodes');
+
       }
+
+    }).catch(function(e) {
+      console.log(e);
+      $scope.loading = false;
+      $scope.status = e.toString();
     });
   }
-  fetchAndShowTable();
+  fetchAndShowTable(true);
 
   // update table every 60 seconds
   setInterval(function() {
     fetchAndShowTable();
-  }, 60000);
-
-  function fetchAndShowGraph() {
-    t.fetch().then(function(data) {
-      t.produce(data, ".topology-graph", 600, 1000, -250, 300, 0.5);
-      $scope.$apply();
-    });
-  }
-  fetchAndShowGraph();
+  }, 30000);
 });
 

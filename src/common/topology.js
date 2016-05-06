@@ -95,44 +95,71 @@ var Topology = function ($http) {
     });
   },
 
-  self.produce = function(data, element, height, width, charge, link_distance, growth_factor) {
-    function versionToColor(version) {
-      var green = "#4890CE";
-      var yellow = "#FDB34D";
-      var red = "#C0464B";
-      var color = "#FFFFFF";
-      var LATEST_VERSION = 301;
+  self.versionToColor = function(version) {
+    var blue = '#38b';
+    var yellow = "#FDB34D";
+    var red = "#c11";
+    var color = "#FFFFFF";
+    var LATEST_VERSION = 301;
 
-      if (version) {
-        var v_arr = version.split("-");
-        var v_str = v_arr[1];
-        var split = v_str.split('.');
-        var v_num = parseInt(split[0] + split[1] + split[2], 10);
-        if (v_num < LATEST_VERSION)
-          color = red;
-        else
-          color = green;
-      }
-      return color;
+    if (version) {
+      var v_arr = version.split("-");
+      var v_str = v_arr[1];
+      var split = v_str.split('.');
+      var v_num = parseInt(split[0] + split[1] + split[2], 10);
+      if (v_num < LATEST_VERSION)
+        color = red;
+      else
+        color = blue;
     }
+    return color;
+  },
 
-    var color = d3.scale.category20();
+  self.produce = function(data, options) {
+    var width = options.width || 600;
+    var height = options.height || 300;
+    var linkDistance = options.linkDistance || (width + height) / 4;
+    var charge = options.charge || 0 - (width + height) / 4;
+    var chargeDistance = options.chargeDistance || charge / 10;
+    var growth_factor = options.growth_factor || 0.5;
 
     var force = d3.layout.force()
         .charge(charge)
-        .linkDistance(link_distance)
+        .chargeDistance(chargeDistance)
+        .linkDistance(linkDistance)
+        .linkStrength(0.3)
+        .friction(0.3)
+        .gravity(1)
+        //.theta(options.theta)
+        //.alpha(options.alpha)
         .size([width, height]);
 
-    var svg = d3.select(element).append("svg")
+    var svg = d3.select(options.element).append("svg")
         .attr("width", width)
         .attr("height", height)
 
+    var linkGroup = svg.append('g');
+    var nodeGroup = svg.append('g');
+
     // builds reference array of sources and targets
     var edges = [];
+
     data.links.forEach(function(e) {
-      var sourceNode = data.nodes.filter(function(n) { return n.node_public_key === e.source; })[0],
-        targetNode = data.nodes.filter(function(n) { return n.node_public_key === e.target; })[0];
-      edges.push({source: sourceNode, target: targetNode});
+      var sourceNode = data.nodes.filter(function(n) {
+        return n.node_public_key === e.source;
+      })[0];
+
+      var targetNode = data.nodes.filter(function(n) {
+        return n.node_public_key === e.target;
+      })[0];
+
+      if (!sourceNode || !targetNode) {
+        console.log(e, data.nodes);
+      }
+
+      edges.push({
+        source: sourceNode,
+        target: targetNode});
     });
 
     // allows dragged node to be fixed
@@ -147,18 +174,38 @@ var Topology = function ($http) {
         .links(edges)
         .start();
 
-    var link = svg.selectAll(".topology-link")
+    var link = linkGroup.selectAll(".topology-link")
         .data(edges)
         .enter().append("line")
-        .attr("class", "topology-link");
+        .attr("class", "topology-link")
+        .style('opacity', 0);
 
-    var node = svg.selectAll(".topology-node")
+        link.transition()
+        .delay(function(d, i) {
+          return 1000 + 1 * i
+        })
+        .duration(500)
+        .style('opacity', 1)
+
+    var node = nodeGroup.selectAll(".topology-node")
         .data(data.nodes)
         .enter().append("circle")
         .attr("class", "topology-node")
-        .attr("r", function(d) { return parseInt(d.inbound_count, 10) + parseInt(d.outbound_count, 10) ? Math.pow(parseInt(d.inbound_count,10) + parseInt(d.outbound_count,10), growth_factor) + 1 : 1;})
-        .style("fill", function(d) { return versionToColor(d.version); })
+        .attr("r", function(d) {
+          return Number(d.inbound_count) + Number(d.outbound_count) ?
+            Math.pow(Number(d.inbound_count) + Number(d.outbound_count), growth_factor) + 2 : 2;
+        })
+        .style("fill", function(d) { return self.versionToColor(d.version); })
+        .style('opacity', 0)
         .call(drag);
+
+
+      node.transition()
+        .delay(function(d, i) {
+          return 500 + 20 * i
+        })
+        .duration(1000)
+        .style('opacity', 1)
 
     node.append("title")
         .text(function(d) { return d.node_public_key; });

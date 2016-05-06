@@ -1,0 +1,53 @@
+
+<div class="validations">
+  <h2>Validator Registry</h2>
+  <h4>{{date}}</h4>
+  <h4>{{status}}</h4>
+
+  <div ng-hide='loading'>
+    <table class='table table-striped'>
+
+      <thead>
+        <tr>
+          <th></th>
+          <th>Validation Public Key</th>
+          <th>
+            Agreement
+            <button type="button" class="tooltip-btn btn btn-default"
+              data-toggle="tooltip"
+              tooltip-placement="top"
+              data-container="row"
+              tooltip="The percentage of ledgers that passed consensus that were validated by the validator">?
+            </button>
+          </th>
+          <th>
+            Disagreement
+            <button type="button" class="tooltip-btn btn btn-default"
+              data-toggle="tooltip"
+              tooltip-placement="top"
+              data-container="row"
+              tooltip="The percentage of ledgers validated by the validator that did not pass consensus">?
+            </button>
+          </th>
+          <th>Total Validations</th>
+          <th>Domain</th>
+        </tr>
+      </thead>
+
+      <tr ng-repeat="report in reports" class='report'>
+        <td></td>
+        <td class="pubkey"><a ng-click='$event.stopPropagation()' ng-href="#/validators/{{report.validation_public_key}}">{{report.validation_public_key}}</a></td>
+        <td>{{report.main_net_agreement}}</td>
+        <td>{{report.main_net_disagreement}}</td>
+        <td>{{report.total_ledgers | number}}</td>
+        <td ng-if="report.domain">
+          <a ng-click='$event.stopPropagation()' href='https://{{report.domain}}' ng-class="{verified: report.domain_state === 'verified'}">
+            {{report.domain}}
+            <small ng-if="report.domain_state === 'verified'">&#10004</small>
+          </a>
+        </td>
+        <td ng-if="!report.domain"><a ng-click='$event.stopPropagation()' href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification' class='unverified'>unverified</a></td>
+      </tr>
+    </table>
+  </div>
+</div>

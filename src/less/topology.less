@@ -1,18 +1,20 @@
 .topology-node {
-  stroke: #FFF;
-  stroke-width: 1.2px;
+  stroke: #444;
+  stroke-width: .7;
+  stroke-opacity:.5;
+  fill-opacity:.7;
 }
 
 .topology-link {
-  stroke: #999;
-  stroke-opacity: .1;
+  stroke: #000;
+  stroke-opacity: .05;
+  stroke-width: .7;
 }
 
-.tooltip-btn {
-  background-color: transparent;
-  border-radius: 99px;
-  padding: 0 7px;
-  margin-left: 5px;
-  font-size: 12px;
-  color: grey;
+.dark .topology-node {
+  stroke: #bbb;
+}
+
+.dark .topology-link {
+  stroke: #fff;
 }

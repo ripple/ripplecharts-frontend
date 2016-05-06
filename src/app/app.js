@@ -17,6 +17,8 @@ angular.element(document).ready(function() {
     'ripplecharts.history',
     'ripplecharts.metrics',
     'ripplecharts.topology',
+    'ripplecharts.validators',
+    'ripplecharts.validator',
     'ui.state',
     'ui.route',
     'snap',

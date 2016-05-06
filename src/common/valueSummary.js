@@ -162,16 +162,20 @@ var ValueSummary = function (options) {
     path.enter().append("path")
     .on('mouseover', function(d, i) {
       showTooltip(d, i);
-      d3.select(this)
-      .transition()
-      .attr('transform', 'scale(1.05)');
+      if (!transitioning) {
+        d3.select(this)
+        .transition()
+        .attr('transform', 'scale(1.05)');
+      }
     })
     .on('mouseout', function(){
       path.classed('fade', false);
       label.classed('fade', false);
-      d3.select(this)
-      .transition()
-      .attr('transform', 'scale(1)');
+      if (!transitioning) {
+        d3.select(this)
+        .transition()
+        .attr('transform', 'scale(1)');
+      }
     })
     .on('click', function(d) {
       if (d.data.base) {

@@ -1,0 +1,49 @@
+<div class='validations'>
+  <h2><a ng-href='#/validators'>Validator Registry</a></h2>
+  <h4 class='validator-show-domain'>
+    <a ng-if="validator.domain" href='https://{{domain}}' ng-class='validator.domain_state'>
+      {{validator.domain}}
+      <span ng-if="validator.domain_state === 'verified'">&#10004</span>
+    </a>
+    <a class="unverified" ng-if="validator.domain_state !== 'verified'" href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification'>
+      unverified
+    </a>
+    - <span class="pubkey">{{validator.pubkey}}</span>
+  </h4>
+  <h4>{{status}}</h4>
+
+  <table ng-hide='loading' class='table table-striped'>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Date</th>
+        <th>
+          Agreement
+          <button type="button" class="tooltip-btn btn btn-default"
+            data-toggle="tooltip"
+            tooltip-placement="top"
+            data-container="row"
+            tooltip="The percentage of ledgers that passed consensus that were validated by the validator">?
+          </button>
+        </th>
+        <th>
+          Disagreement
+          <button type="button" class="tooltip-btn btn btn-default"
+            data-toggle="tooltip"
+            tooltip-placement="top"
+            data-container="row"
+            tooltip="The percentage of ledgers validated by the validator that did not pass consensus">?
+          </button>
+        </th>
+        <th>Total Validations</th>
+      </tr>
+    </thead>
+    <tr ng-repeat="report in reports" class='report'>
+      <td></td>
+      <td>{{report.date}}</td>
+      <td>{{report.main_net_agreement}}</td>
+      <td>{{report.main_net_disagreement}}</td>
+      <td>{{report.total_ledgers | number}}</td>
+    </tr>
+  </table>
+</div>
