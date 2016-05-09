@@ -40,10 +40,12 @@
         <td>{{report.main_net_agreement}}</td>
         <td>{{report.main_net_disagreement}}</td>
         <td>{{report.total_ledgers | number}}</td>
-        <td ng-if="report.domain">
+        <td ng-if="report.domain" class="domain">
           <a ng-click='$event.stopPropagation()' href='https://{{report.domain}}' ng-class="{verified: report.domain_state === 'verified'}">
             {{report.domain}}
             <small ng-if="report.domain_state === 'verified'">&#10004</small>
+            <b ng-if="report.domain_state !== 'verified' && report.domain"
+              title="report.domain_state">X</b>
           </a>
         </td>
         <td ng-if="!report.domain"><a ng-click='$event.stopPropagation()' href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification' class='unverified'>unverified</a></td>

@@ -22,10 +22,6 @@
     cursor: hand;
   }
 
-  .validator-show-domain .verified {
-    text-decoration: underline;
-  }
-
   .notice, .alert {
     top: 80px;
     position: relative;
@@ -51,15 +47,21 @@
     font-size: 11px;
   }
 
-  .verified, .verified:visited {
+  .domain a, domain a:visited {
+    color: #da6265;
+  }
+
+  .domain .verified, domain .verified:visited {
     color: #5ac88f;
   }
 
-  .verified small {
+  .domain a small, .domain a b {
     margin: 0 5px;
   }
   .unverified, .unverified:visited {
-    color: #da6265;
+    color: #777;
+    opacity: .5;
+    font-style: italic;
   }
 
   table {

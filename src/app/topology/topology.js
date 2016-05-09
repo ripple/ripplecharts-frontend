@@ -63,9 +63,14 @@ angular.module( 'ripplecharts.topology', [
   }
   fetchAndShowTable(true);
 
-  // update table every 60 seconds
-  setInterval(function() {
+  // update table every 30 seconds
+  var interval = setInterval(function() {
     fetchAndShowTable();
   }, 30000);
+
+  // stop the listeners when leaving page
+  $scope.$on('$destroy', function(){
+    clearInterval(interval);
+  });
 });
 

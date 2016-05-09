@@ -1,9 +1,11 @@
 <div class='validations'>
   <h2><a ng-href='#/validators'>Validator Registry</a></h2>
-  <h4 class='validator-show-domain'>
+  <h4 class='domain'>
     <a ng-if="validator.domain" href='https://{{domain}}' ng-class='validator.domain_state'>
       {{validator.domain}}
       <span ng-if="validator.domain_state === 'verified'">&#10004</span>
+      <b ng-if="validator.domain_state !== 'verified' && validator.domain"
+        title="validator.domain_state">X</b>
     </a>
     <a class="unverified" ng-if="validator.domain_state !== 'verified'" href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification'>
       unverified
