@@ -49,10 +49,12 @@ angular.module( 'ripplecharts.topology', [
             width: 1000,
             height: 500
           });
+        } else {
+          t.update(data);
         }
+
       } else {
         console.log('no nodes');
-
       }
 
     }).catch(function(e) {

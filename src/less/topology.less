@@ -7,8 +7,15 @@
 
 .topology-link {
   stroke: #000;
-  stroke-opacity: .05;
-  stroke-width: .7;
+  -webkit-animation: unhighlight-link .3s ease forwards;
+  -moz-animation: unhighlight-link .3s ease forwards;
+  animation: unhighlight-link .3s ease forwards;
+}
+
+.topology-link.highlight {
+  -webkit-animation: highlight-link .3s ease forwards;
+  -moz-animation: highlight-link .3s ease forwards;
+  animation: highlight-link .3s ease forwards;
 }
 
 .dark .topology-node {
@@ -17,4 +24,27 @@
 
 .dark .topology-link {
   stroke: #fff;
+}
+
+
+@keyframes highlight-link {
+  0% {
+    stroke-width: .7;
+    stroke-opacity: .05;
+  }
+  100% {
+    stroke-width: 1.5;
+    stroke-opacity: .2;
+  }
+}
+
+@keyframes unhighlight-link {
+  100% {
+    stroke-width: .7;
+    stroke-opacity: .05;
+  }
+  0% {
+    stroke-width: 1.5;
+    stroke-opacity: .2;
+  }
 }

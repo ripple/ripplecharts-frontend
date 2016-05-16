@@ -30,7 +30,7 @@
           </th>
           <th></th>
       </thead>
-      <tr ng-repeat="node in nodes" class="node">
+      <tr ng-repeat="node in nodes" class="topology-node {{node.new.node_public_key}}" pubkey="{{node.new.node_public_key}}">
         <td></td>
         <td class="pubkey">{{node.new.node_public_key}}</td>
         <td>{{node.new.ip}}</td>
