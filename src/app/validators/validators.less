@@ -1,3 +1,7 @@
+.dark .validations .validatorsTable .validatorsHeader {
+  background: #123;
+}
+
 .validations {
 
   h2, h4 {
@@ -18,7 +22,7 @@
     opacity: .8;
   }
 
-  a, td:hover, tr:hover {
+  a, div:hover, div:hover {
     cursor: hand;
   }
 
@@ -27,46 +31,121 @@
     position: relative;
   }
 
-  .report {
-    color: #888;
-  }
-
   .disclaimer {
     color: #888;
   }
 
-  tr a:hover {
+  div a:hover {
     text-decoration:underline;
   }
 
-  .table td {
-    vertical-align: middle;
+  .validatorsTable {
+    display: table;
+    width: 100%;
+    font-size: 14px;
+    border-collapse: collapse;
+
+    .validatorsHeader {
+      background: #eaf0f7;
+      display: table-row;
+
+      div:first-child {
+        text-align: left;
+      }
+
+      div {
+        display: table-cell;
+        padding: 10px;
+        font-weight: bold;
+        text-align: left;
+        border-bottom: 1px solid rgba(160,160,160,0.2);
+      }
+    }
+      
+    .report:nth-child(odd) {
+      background: rgba(200,200,200,0.1);
+    }
+
+    .report {
+      color: #888;
+      display: table-row;
+
+      div {
+        display: table-cell;
+        padding: 4px 10px;
+        text-align: left;
+      }
+
+      .pubkey {
+        font-size: 11px;
+        color: #889;
+        text-align: left;
+      }
+
+      .site {
+        padding: 0px;
+      }
+
+      .domain a, 
+      .domain a:visited {
+        color: #da6265;
+      }
+
+      .domain .verified, 
+      .domain .verified:visited {
+        color: #5ac88f;
+      }
+
+      .domain a small, 
+      .domain a b {
+        margin: 0 5px;
+      }
+
+      .unverified, 
+      .unverified:visited {
+        color: #777;
+        opacity: .5;
+        font-style: italic;
+      }
+    }
   }
 
-  td.pubkey {
-    font-size: 11px;
-  }
+  @media (max-width: 768px) {
+    .validatorsTable {
+      margin-top:10px;
 
-  .domain a, domain a:visited {
-    color: #da6265;
-  }
+      .validatorsHeader {
+        display:none;
+      }
 
-  .domain .verified, domain .verified:visited {
-    color: #5ac88f;
-  }
+      .report {
+        display:block;
+        overflow:hidden;
+      }
 
-  .domain a small, .domain a b {
-    margin: 0 5px;
-  }
-  .unverified, .unverified:visited {
-    color: #777;
-    opacity: .5;
-    font-style: italic;
-  }
+      .report:nth-child(odd) {
+        background:none;
+      }
 
-  table {
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
+      .report .site {
+        float:right;
+        padding:0px;
+      }
+
+      .report div {
+        display:block !important;
+        float:left;
+        min-width:50px;
+        padding:4px 10px;
+        border:none;
+      }
+
+      .report .pubkey {
+        float:none;
+        border-bottom:1px solid rgba(150,150,150,.3);
+        padding-top:10px;
+        background:rgba(200,200,200,0.1);
+      }
+    }
   }
 }
-

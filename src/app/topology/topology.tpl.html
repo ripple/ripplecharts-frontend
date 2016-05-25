@@ -11,36 +11,31 @@
   </div>
 
   <div class="topology-graph"></div>
-  <div id="topology-table">
-    <table class="table table-striped" ng-hide="loading">
-      <thead>
-          <th></th>
-          <th>Public Key</th>
-          <th>IP Address</th>
-          <th class="version">Version</th>
-          <th>Inbound Connections</th>
-          <th>Outbound Connections</th>
-          <th class="uptime">
-            Uptime
-            <button type="button" class="tooltip-btn btn btn-default"
-              data-toggle="tooltip"
-              tooltip-placement="top"
-              tooltip="age of node's longest current connection">?
-            </button>
-          </th>
-          <th></th>
-      </thead>
-      <tr ng-repeat="node in nodes" class="topology-node {{node.new.node_public_key}}" pubkey="{{node.new.node_public_key}}">
-        <td></td>
-        <td class="pubkey">{{node.new.node_public_key}}</td>
-        <td>{{node.new.ip}}</td>
-        <td ng-style="{color:node.new.version_color}">{{node.new.version}}</td>
-        <td class="inbound_connections" data-old="{{node.old.inbound_count}}" data-new="{{node.new.inbound_count}}"></td>
-        <td class="outbound_connections" data-old="{{node.old.outbound_count}}" data-new="{{node.new.outbound_count}}"></td>
-        <td class="uptime_formatted" data-old="{{node.old.uptime_formatted}}" data-new="{{node.new.uptime_formatted}}"></td>
-        <td></td>
-      </tr>
-    </table>
+  <div id="topology-table" ng-hide="loading">
+    <div class="topologyTableHeader">
+      <div>Public Key</div>
+      <div>IP Address</div>
+      <div>Version</div>
+      <div>Inbound Connections</div>
+      <div>Outbound Connections</div>
+      <div class="uptime">
+        Uptime
+        <button type="button" class="tooltip-btn btn btn-default"
+          data-toggle="tooltip"
+          tooltip-placement="top"
+          tooltip="age of node's longest current connection">?
+        </button>
+      </div>
+    </div>
+    
+    <div ng-repeat="node in nodes" class="topology-node {{node.new.node_public_key}}" pubkey="{{node.new.node_public_key}}">
+        <div class="pubkey">{{node.new.node_public_key}}</div>
+        <div class="ip">{{node.new.ip}}</div>
+        <div class="version" ng-style="{color:node.new.version_color}">{{node.new.version}}</div>
+        <div class="inbound_connections" data-old="{{node.old.inbound_count}}" data-new="{{node.new.inbound_count}}"></div>
+        <div class="outbound_connections" data-old="{{node.old.outbound_count}}" data-new="{{node.new.outbound_count}}"></div>
+        <div class="uptime_formatted" data-old="{{node.old.uptime_formatted}}" data-new="{{node.new.uptime_formatted}}"></div>
+      </div>
   </div>
 </div>
 

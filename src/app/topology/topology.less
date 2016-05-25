@@ -1,29 +1,184 @@
-#topology .helpbox {
-  margin: 0 60px;
-  font-size: 14px;
+.dark #topology #topology-table {
+  .topologyTableHeader {
+ 	background: #123;
+  }
+  
+  @media (max-width: 768px) {
+    .topology-node .pubkey {
+      float:none;
+      border-bottom:1px solid rgba(150,150,150,.3);
+      padding-top:10px;
+      background:rgba(200,200,200,0.1);
+      color:#c2cbd4;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .topology-node .pubkey {
+      float:none;
+      border-bottom:1px solid rgba(150,150,150,.3);
+      padding-top:10px;
+      background:rgba(200,200,200,0.1);
+      color:#c2cbd4;
+    }
+  }
 }
 
-#topology #global-stats-item {
-  font-size: 20px;
-}
+#topology {
 
-#topology h2, #topology h4 {
-  text-align: center;
-}
+  h2, h4 {
+  	text-align: center;
+  }
 
-#topology h4 {
-  margin-bottom: 10px;
-  opacity: .8;
-}
+  h4 {
+  	margin-bottom: 10px;
+  	opacity: .8;
+  }
 
-#topology .topology-graph {
-  text-align: center;
-}
+  .helpbox {
+  	margin: 0 60px;
+   font-size: 14px;
+  }
 
-#topology .topology-node.highlight td {
-  background-color: rgba(90,130,170,.2);
-}
+  .topology-graph {
+  	text-align: center;
+  }
 
-#topology .pubkey {
-  font-size: 11px;
+  #topology-table {
+  	display: table;
+    width: 100%;
+    font-size: 14px;
+    border-collapse: collapse;
+
+    .topologyTableHeader {
+      background: #eaf0f7;
+      display: table-row;
+
+      div:first-child {
+        text-align: left;
+      }
+
+      div {
+        display: table-cell;
+        padding: 10px;
+        font-weight: bold;
+        text-align: left;
+        border-bottom: 1px solid rgba(160,160,160,0.2);
+      }
+    }
+
+    .topology-node:nth-child(odd) {
+      background: rgba(200,200,200,0.1);
+    }
+
+    .topology-node.highlight {
+  	  background-color: rgba(90,130,170,.2);
+  	}
+
+    .topology-node {
+      display: table-row;
+
+      div {
+        display: table-cell;
+        padding: 4px 10px;
+        text-align: left;
+      }
+
+      .pubkey {
+        font-size: 11px;
+        text-align: left;
+      }
+    }
+  }
+
+  @media (max-width: 768px) and (min-width: 501px) {
+    #topology-table {
+      margin-top:10px;
+
+      .topologyTableHeader {
+        display:none;
+      }
+
+      .topology-node {
+        display:block;
+        overflow:hidden;
+      }
+
+      .topology-node div {
+        display:block;
+        float:left;
+        min-width:30px;
+        padding:4px 10px;
+        border:none;
+        color:#888;
+      }
+
+      .topology-node .ip,
+      .topology-node .version {
+      	min-width:125px;
+      }
+
+      .topology-node .pubkey {
+        float:none;
+        border-bottom:1px solid rgba(150,150,150,.3);
+        padding-top:10px;
+        background:rgba(200,200,200,0.1);
+        color:#292d31;
+      }
+
+      .topology-node .uptime_formatted {
+      	float:right;
+      }
+    }
+
+    .topology-graph svg {
+    	zoom: .6;
+  	}
+  }
+
+  @media (max-width: 500px) {
+    #topology-table {
+      margin-top:10px;
+
+      .topologyTableHeader {
+        display:none;
+      }
+
+      .topology-node {
+        display:block;
+        overflow:hidden;
+        text-align:right;
+      }
+
+      .topology-node div {
+        display:inline-block;
+        min-width:50px;
+        padding:4px 10px;
+        border:none;
+        color:#888;
+      }
+
+      .topology-node .pubkey {
+      	width:100%;
+        float:none;
+        border-bottom:1px solid rgba(150,150,150,.3);
+        padding-top:10px;
+        background:rgba(200,200,200,0.1);
+        color:#292d31;
+        text-align:left;
+      }
+
+      .topology-node .version {
+      	float:left;
+      }
+
+      .topology-node .ip {
+      	display:none;
+      }
+    }
+
+    .topology-graph svg {
+      zoom: .4;
+  	}
+  }
 }
