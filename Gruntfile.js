@@ -1,4 +1,4 @@
-module.exports = function ( grunt ) {
+module.exports = function (grunt) {
 
   /**
    * Load required Grunt tasks. These are installed based on the versions listed
