@@ -82,15 +82,15 @@ var Topology = function ($http) {
     }
 
     _.each(propertyArray, function(prop) {
-      var tds = $('td.' + prop);
-      tds.each(function(index, td) {
-        var $td = $(td);
-        var nv = $td.attr('data-new');
-        var ov = $td.attr('data-old');
-        if (nv !== ov) {
-          animate($td, ov, nv);
+      var divs = $('div.' + prop);
+      divs.each(function(index, div) {
+        var $div = $(div);
+        var ndiv = $div.attr('data-new');
+        var odiv = $div.attr('data-old');
+        if (ndiv !== odiv) {
+          animate($div, odiv, ndiv);
         } else {
-          $td.html(nv);
+          $div.html(ndiv);
         }
       });
     });
