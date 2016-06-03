@@ -480,6 +480,14 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
               ' #<b>'+ tx.tx.OfferSequence + '</b>';
           }
 
+          if (tx.tx.Expiration) {
+            var expiration = moment.unix(tx.tx.Expiration + RIPPLE_EPOCH);
+            var tense = expiration.diff(new Date()) > 0 ? 'expires' : 'expired';
+            html += '<br/>The offer ' + tense +
+              ' at <date>'+ expiration.format('LTS [on] l') + '</date>' +
+              ' unless canceled or consumed before then.';
+          }
+
           return html;
         }
 

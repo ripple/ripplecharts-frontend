@@ -733,7 +733,9 @@ networkGraph = function (nameService) {
       "<b>Hash:</b> <tt>"+tx.hash+"</tt><br/>"+
       "<b>Ledger:</b> "+tx.ledger_index+"<br/>"+
       "<b>Signing key:</b> <tt>"+tx.tx.SigningPubKey+
-      "</tt><br/><b>Signature:</b><br/><div class='bigString' style='width:"+tx.tx.TxnSignature.length*4+"px;'>"+tx.tx.TxnSignature+"</div>");
+      "</tt><br/><b>Signature:</b><br/><div class='bigString' style='width:" +
+      tx.tx.TxnSignature.length*4 + "px;'>" + tx.tx.TxnSignature + "</div>" +
+      "<a href='#/transactions/" + tx.hash + "'>more details</a>");
 
     return div;
   }
