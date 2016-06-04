@@ -445,28 +445,6 @@ module.exports = function (grunt) {
       }
     },
 
-    embed: {
-      build: {
-        dir  : '<%= build_dir %>/embed/',
-        src  : [ 'src/embed/**/*.config.js' ]
-      },
-
-      compile: {
-        dir  : '<%= compile_dir %>/embed/',
-        src  : [ 'src/embed/**/*.config.js' ]
-      },
-
-      build_css: {
-        dir  : '<%= build_dir %>/embed/',
-        src  : [ 'src/embed/**/*.config.js' ]
-      },
-
-      compile_css: {
-        dir  : '<%= compile_dir %>/embed/',
-        src  : [ 'src/embed/**/*.config.js' ]
-      }
-    },
-
 
     /**
      * This task compiles the karma template so that changes to its file array
@@ -526,12 +504,7 @@ module.exports = function (grunt) {
           '<%= app_files.js %>',
           'deps/*.js'
         ],
-        tasks: [ 'jshint:src', 'karma:unit:run', 'copy:build_appjs', 'copy:build_vendorjs', 'embed:build' ]
-      },
-
-      embed: {
-        files: ['src/embed/**/*.js', 'src/embed/**/*.html'],
-        tasks: ['embed:build']
+        tasks: [ 'jshint:src', 'karma:unit:run', 'copy:build_appjs', 'copy:build_vendorjs']
       },
 
       /**
@@ -579,13 +552,8 @@ module.exports = function (grunt) {
        * When the CSS files change, we need to compile and minify them.
        */
       less: {
-        files: [ 'src/**/*.less', '!src/embed/**/*.less' ],
+        files: [ 'src/**/*.less' ],
         tasks: [ 'recess:build', 'concat:build_css' ]
-      },
-
-      embed_less: {
-        files: [ 'src/embed/**/*.less' ],
-        tasks: [ 'embed:build_css' ]
       },
 
       /**
@@ -648,8 +616,7 @@ module.exports = function (grunt) {
     'clean', 'html2js', 'jshint', 'coffeelint',  'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
     'copy:build_vendor_fonts', 'copy:build_appjs', 'copy:build_vendorjs',
-    'copy:build_maintenance', 'index:build', 'embed:build_css',
-    'embed:build', 'karmaconfig'//, 'karma:continuous'
+    'copy:build_maintenance', 'index:build', 'karmaconfig'//, 'karma:continuous'
   ]);
 
   /**
@@ -659,7 +626,7 @@ module.exports = function (grunt) {
   grunt.registerTask( 'compile', [
     'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance',
     'ngAnnotate', 'concat:compile_js', 'uglify',
-    'index:compile',  'embed:compile_css', 'embed:compile'
+    'index:compile',
   ]);
 
   /**
@@ -710,203 +677,6 @@ module.exports = function (grunt) {
           }
         });
       }
-    });
-  });
-
-
-  grunt.registerMultiTask( 'embed', 'Process embeds', function () {
-
-    var type  = this.target;
-    var embed = this.data.dir;
-
-    this.filesSrc.forEach(function(file){
-      var config  = require("./"+file);
-      var dir     = embed+config.name+"/";
-
-
-      //compile and minify css
-      if (type=='build_css' || type=='compile_css') {
-
-        grunt.config.set('recess.embed_'+config.name, {
-          src: config.files.less,
-          dest: dir+'stylesheet.css',
-          options: {
-            compile       : true,
-            compress      : type=='compile_css'? true : false,
-            noUnderscores : false,
-            noIDs         : false,
-            zeroUnits     : false
-          }});
-
-        grunt.task.run("recess:embed_"+config.name);
-        return;
-
-      }
-
-      //copy images  NOTE: This is not sufficient for compiled scripts,
-      //because we dont want to depend on external links.
-/*
-      config.files.images.forEach(function(file) {
-        var filename = file.split("/").pop();
-        grunt.log.writeln('copying '+file+" to "+dir+"assets/images/"+filename);
-        grunt.file.copy(file, dir+"assets/images/"+filename);
-      });
-*/
-      var jsFiles = [], cssFiles = [], iconFiles = [], commonFiles = [], jsonFiles = ["json.js"], json_string = "", filename;
-
-      if (type=="build") {
-
-        //copy files to build/embed
-        config.files.js.forEach(function(file) {
-          var filename = file.split("/").pop();
-          grunt.log.writeln('copying '+file+" to "+dir+filename);
-          grunt.file.copy(file, dir+filename);
-          jsFiles.push(filename);
-        });
-
-        if (config.files.less && config.files.less.length)
-          cssFiles.push('stylesheet.css');
-
-        if (config.files.loader) {
-          filename = config.files.loader.split("/").pop();
-          grunt.log.writeln('copying '+config.files.loader+" to "+dir+"assets/images/"+filename);
-          grunt.file.copy(config.files.loader, dir+"assets/images/"+filename);
-        }
-
-        if (config.files.common) {
-          config.files.common.forEach(function(file) {
-            filename = file.split("/").pop();
-            grunt.log.writeln('copying '+file+' to '+dir+filename);
-            grunt.file.copy(file, dir+filename);
-            commonFiles.push(filename);
-          });
-        }
-
-        //copy icon files to build/embed
-        if (config.files.icons){
-          config.files.icons.forEach(function(file){
-            var filename = file.split("/").pop();
-            grunt.log.writeln("copying "+file+" to "+dir+"assets/icons/"+filename);
-            grunt.file.copy(file, dir+"assets/icons/"+filename);
-            iconFiles.push(filename);
-          })
-        }
-
-        //copy json files to build/embed
-        if (config.files.json){
-          config.files.json.forEach(function(file, i){
-            var varname = file.name,
-                json    = grunt.file.read(file.path, {encoding:null}).toString();
-            grunt.log.writeln("creating variable for "+varname);
-            json_string += "var "+varname+" = "+json+"; "
-          });
-          grunt.file.write(dir+'json.js', json_string);
-        }
-
-      } else {
-
-        if (config.files.json){
-          config.files.json.forEach(function(file, i){
-            var varname = file.name,
-                json    = grunt.file.read(file.path, {encoding:null}).toString();
-            grunt.log.writeln("creating variable for "+varname);
-            json_string += "var "+varname+" = "+json+"; "
-          });
-          grunt.file.write(dir+'json.js', json_string);
-          config.files.js.push(dir+'json.js');
-        }
-
-        if (config.files.common) {
-          config.files.common.forEach(function(file){
-            filename = file.split("/").pop();
-            grunt.log.writeln('copying '+file+' to '+dir+filename);
-            grunt.file.copy(file, dir+filename);
-            commonFiles.push(filename);
-          });
-        }
-
-        //compile files to bin/embed
-        var jsFile = dir+"script.js";
-        var files  = {};
-        files[jsFile] = jsFile; //for uglify
-        jsFiles.push("script.js"); //for index template;
-
-        grunt.config.set('concat.embed_'+config.name, {
-          options: {
-            banner: '<%= meta.banner %>'
-          },
-          src: config.files.js,
-          dest: jsFile
-        });
-
-        grunt.config.set('ngAnnotate.embed_'+config.name, {
-          files: [
-            {
-              src: [ jsFile ],
-              cwd: dir,
-              dest: dir,
-              expand: true
-            }
-          ]
-
-        });
-
-        //get loader png
-        var loader = config.files.loader ? grunt.file.read(config.files.loader, {encoding:null}) : "";
-        var banner = '<%= meta.banner %>'+
-          'var API="'+deploymentConfig.api+'";'+
-          'var DOMAIN="'+deploymentConfig.domain+'";';
-
-        if (config.files.less && config.files.less.length) {
-          var css = grunt.file.read(dir+"stylesheet.css").replace(/\r?\n|\r/g, '');
-          banner += 'var '+config.name.toUpperCase()+'_CSS="'+css+'";';
-        }
-
-        if (loader)
-          banner += 'var LOADER_PNG="'+loader.toString('base64')+'";';
-
-        //get icons png
-        var icons = config.files.icons;
-        if (icons){
-          for (var i=0; i<icons.length; i++){
-            var icon = grunt.file.read(icons[i], {encoding:null});
-            filename = icons[i].split("/").pop();
-            filename = filename.split(".")[0].toUpperCase();
-            banner += 'var '+filename+'_PNG="'+icon.toString('base64')+'";';
-          }
-        }
-
-        grunt.config.set('uglify.embed_'+config.name, {
-          options: {banner: banner},
-          files:files
-        });
-
-
-
-        grunt.task.run('concat:embed_'+config.name);
-        grunt.task.run('ngAnnotate:embed_'+config.name);
-        grunt.task.run('uglify:embed_'+config.name);
-
-      }
-
-
-      grunt.file.copy(config.files.html, dir + 'index.html', {
-        process: function ( contents, path ) {
-
-          return grunt.template.process( contents, {
-            data: {
-              scripts  : jsFiles,
-              styles   : cssFiles,
-              json     : jsonFiles,
-              common   : commonFiles,
-              mixpanel : deploymentConfig.mixpanel,
-              api      : deploymentConfig.api,
-              domain   : deploymentConfig.domain,
-              version  : grunt.config( 'pkg.version' )
-            }
-          });
-        }
-      });
     });
   });
 

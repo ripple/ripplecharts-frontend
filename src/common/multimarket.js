@@ -49,35 +49,16 @@ var MiniChart = function(base, counter, markets, gateways) {
     .attr("class", "loader")
     .attr("src", "assets/images/rippleThrobber.png");
 
-  dropdownA = ripple.currencyDropdown(gateways, true, markets.options.fixed).selected(self.base);
-  dropdownA.on("change", function(d) {
-      self.base = d;
-      if (!flipping && loaded) self.load();
-      });
-
-  dropdownB = ripple.currencyDropdown(gateways, true, markets.options.fixed).selected(self.counter);
-  dropdownB.on("change", function(d) {
-      self.counter = d;
-      if (loaded) self.load();
-    });
-
-  dropdowns = self.div.append("div");
-  dropdowns.append("div").attr("class","base dropdowns").attr("id", "base"+self.index).call(dropdownA);
-  dropdowns.append("div").attr("class","counter dropdowns").attr("id", "quote"+self.index).call(dropdownB);
-
   if (markets.options.fixed) {
-    dropdowns.style("display","none");
-    header.html("<small>"+gateways.getName(self.base.currency, self.base.issuer)+
-      "</small>"+baseCurrency+"/"+counterCurrency+"<small>"+
-      gateways.getName(self.counter.currency, self.counter.issuer)+"</small>");
+    header.html("<div>"+self.base.currency +
+      '<small>' + (self.base.issuer || '') + '</small></div><b>/</b>' +
+      '<div>'+ self.counter.currency +
+      '<small>' + (self.counter.issuer || '') + '</small></div>');
   }
 
   status = self.div.append("h4").attr("class", "status");
 
   if (markets.options.clickable) {
-    dropdowns.on("click", function(){
-      d3.event.stopPropagation();
-    });
     self.div.classed("clickable", true).on("click", function(){
       markets.chartClickHandler(self);
     });
@@ -120,18 +101,10 @@ var MiniChart = function(base, counter, markets, gateways) {
       isLoading = true;
     }
 
-    /*
-    if (typeof mixpanel !== undefined) mixpanel.track("Multimarket", {
-      "Base Currency"    : self.base.currency,
-      "Base Issuer"      : self.base.issuer || "",
-      "Counter Currency" : self.counter.currency,
-      "Counter Issuer"   : self.counter.issuer || ""
-    });
-    */
     var start = moment.utc();
 
     start.startOf('minute')
-      .subtract(start.minutes() % 15, 'minutes')
+      .subtract(start.minutes() % 5, 'minutes')
       .subtract(1, 'day');
 
     if (self.request) self.request.abort();
@@ -139,7 +112,7 @@ var MiniChart = function(base, counter, markets, gateways) {
       startTime     : start.format(),
       endTime       : moment.utc().endOf('day').format(),
       timeIncrement : "minute",
-      timeMultiple  : 15,
+      timeMultiple  : 5,
       descending    : false,
       base          : self.base,
       counter       : self.counter

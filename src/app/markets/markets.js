@@ -15,18 +15,13 @@ angular.module( 'ripplecharts.markets', [
       }
     },
     data:{ pageTitle: 'Live Chart' },
-    resolve : {
-      gateInit : function (gateways) {
-        return gateways.promise;
-      }
-    }
   }).state('markets.pair', {
     url: '/:base/:counter?interval&range&type&start&end',
     data:{ pageTitle: 'Live Chart' }
   });
 })
 
-.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location, gateways) {
+.controller( 'MarketsCtrl', function MarketsCtrl( $scope, $state, $location) {
 
   var intervalList = [
     {name: '5m',  interval:'minute',  multiple:5 },
@@ -35,10 +30,7 @@ angular.module( 'ripplecharts.markets', [
     {name: '1h',  interval:'hour',    multiple:1 },
     {name: '2h',  interval:'hour',    multiple:2 },
     {name: '4h',  interval:'hour',    multiple:4 },
-    {name: '1d',  interval:'day',     multiple:1 },
-    {name: '3d',  interval:'day',     multiple:3 },
-    {name: '7d',  interval:'day',     multiple:7 },
-    {name: '1M',  interval:'month',   multiple:1 }
+    {name: '1d',  interval:'day',     multiple:1 }
   ];
 
   var rangeList = [
@@ -47,26 +39,15 @@ angular.module( 'ripplecharts.markets', [
     {name: '3d',  interval:'30m', offset: function(d) { return d3.time.day.offset(d, -3); }},
     {name: '1w',  interval:'1h',  offset: function(d) { return d3.time.day.offset(d, -7); }},
     {name: '2w',  interval:'2h',  offset: function(d) { return d3.time.day.offset(d, -14); }},
-    {name: '1m',  interval:'4h',  offset: function(d) { return d3.time.month.offset(d, -1); }},
-    {name: '3m',  interval:'1d',  offset: function(d) { return d3.time.month.offset(d, -3); }},
-    {name: '6m',  interval:'1d',  offset: function(d) { return d3.time.month.offset(d, -6); }},
-    {name: '1y',  interval:'3d',  offset: function(d) { return d3.time.year.offset(d, -1); }},
-    {name: 'max', interval:'3d',  offset: getStartDate },
-    {name: 'custom', offset: getStartDate }
+    {name: '1m',  interval:'4h',  offset: function(d) { return d3.time.month.offset(d, -1); }}
   ];
 
   var dateFormat = 'YYYY-MM-DD';
   var updateMode = '';
-  var dropdownA;
-  var dropdownB;
 
   $scope.$watch(function() {
     return $location.url();
   }, setParams);
-
-  $scope.$watch('theme', function(d) {
-    loadDropdowns();
-  });
 
   $scope.$watchCollection('base', handleTransition.bind(undefined, 'pair'));
   $scope.$watchCollection('counter', handleTransition.bind(undefined, 'pair'));
@@ -237,25 +218,11 @@ angular.module( 'ripplecharts.markets', [
 
     // update pair and chart
     } else {
-      updateMaxRange();
       loadPair();
-    }
-
-    // load dropdowns
-    if (!dropdownA) {
-      loadDropdowns();
     }
 
     updateMode = ''; // reset
   }
-
-  // set up flip button
-  d3.select('#flip').on('click', function() {
-    var swap = $scope.counter;
-    updateScopeAndStore('counter', $scope.base, true);
-    updateScopeAndStore('base', swap);
-    loadDropdowns();
-  });
 
   // set up the range selector
   var ranges = d3.select('#range').selectAll('span')
@@ -291,52 +258,6 @@ angular.module( 'ripplecharts.markets', [
     }
 
     updateScopeAndStore('range', d.name);
-  });
-
-  // add custom date range
-  var dates = d3.select('#range')
-  .append('div')
-  .attr('id', 'dates');
-
-  dates.append('input')
-  .attr('type', 'text')
-  .attr('id', 'start')
-  .attr('class', 'datepicker')
-  .property('maxLength', 10)
-  .style('display', 'none');
-
-  dates.append('input')
-  .attr('type', 'text')
-  .attr('id', 'end')
-  .attr('class', 'datepicker')
-  .property('maxLength', 10)
-  .style('display', 'none');
-
-
-  $('#end').datepicker({
-    dateFormat: 'yy-mm-dd',
-    onSelect: function(dateText) {
-      var start = moment.utc($scope.start || undefined, dateFormat);
-      var end = moment.utc(dateText || undefined, dateFormat);
-
-      updateScopeAndStore('start', start.format(dateFormat), true);
-      updateScopeAndStore('end', end.format(dateFormat), true);
-      updateScopeAndStore('range', 'custom');
-      updateMaxRange();
-    }
-  });
-
-  $('#start').datepicker({
-    dateFormat: 'yy-mm-dd',
-    onSelect: function(dateText) {
-      var start = moment.utc(dateText || undefined, dateFormat);
-      var end = moment.utc($scope.end || undefined, dateFormat);
-
-      updateScopeAndStore('start', start.format(dateFormat), true);
-      updateScopeAndStore('end', end.format(dateFormat), true);
-      updateScopeAndStore('range', 'custom');
-      updateMaxRange();
-    }
   });
 
   // set up the interval selector
@@ -429,27 +350,6 @@ angular.module( 'ripplecharts.markets', [
     if (state=='loaded') toCSV.style('opacity',1).attr('disabled',null);
     else toCSV.style('opacity',0.3).attr('disabled',true);
   };
-
-  /**
-   * loadDropdowns
-   */
-
-  function loadDropdowns() {
-    dropdownA = ripple.currencyDropdown(gateways)
-    .selected($scope.base)
-    .on('change', function(d) {
-      updateScopeAndStore('base', d);
-    });
-
-    dropdownB = ripple.currencyDropdown(gateways)
-    .selected($scope.counter)
-    .on('change', function(d) {
-      updateScopeAndStore('counter', d);
-    });
-
-    d3.select('#base').call(dropdownA);
-    d3.select('#counter').call(dropdownB);
-  }
 
   /**
    * utcDate
@@ -572,73 +472,6 @@ angular.module( 'ripplecharts.markets', [
   }
 
   /**
-   * getStartDate
-   */
-
-  function getStartDate() {
-    var gatewayList;
-    var minDate = new Date();
-    var candidate;
-    var changed = false;
-    var base = $scope.base;
-    var counter = $scope.counter;
-
-    if (base.issuer) {
-      gatewayList = gateways.getIssuers(base.currency);
-      gatewayList.forEach(function(gateway){
-        if (base.issuer === gateway.account && gateway.start_date) {
-          candidate = new Date(gateway.start_date);
-          if (candidate < minDate) {
-            minDate = candidate;
-            changed = true;
-          }
-        }
-      });
-    }
-
-    if (counter.issuer) {
-      gatewayList = gateways.getIssuers(counter.currency);
-      gatewayList.forEach(function(gateway){
-        if (counter.issuer === gateway.account && gateway.start_date) {
-          candidate = new Date(gateway.start_date);
-          if (candidate < minDate) {
-            minDate = candidate;
-            changed = true;
-          }
-        }
-      });
-    }
-
-    return changed ? minDate : new Date('2013-1-1');
-  }
-
-  /**
-   * updateMaxRange
-   */
-
-  function updateMaxRange() {
-    var start = getStartDate();
-    var end;
-
-    $('#start').datepicker('option', 'minDate', utcDate(start.toISOString()));
-    $('#start').datepicker('option', 'maxDate', utcDate($('#end').val(), -1));
-    $('#end').datepicker('option', 'minDate', utcDate($('#start').val(), 1));
-    $('#end').datepicker('option', 'maxDate', utcDate(undefined, 1));
-
-    // start or end may now differ
-    // and therefore need updating
-    if ($scope.end) {
-      end = moment.utc($('#end').val()).format(dateFormat);
-      updateScopeAndStore('end', end);
-    }
-
-    if ($scope.start) {
-      start = moment.utc($('#start').val()).format(dateFormat);
-      updateScopeAndStore('start', start);
-    }
-  }
-
-  /**
    * updateScopeAndStore
    */
 
@@ -728,12 +561,6 @@ angular.module( 'ripplecharts.markets', [
     updateChart();
     book.getMarket($scope.base, $scope.counter);
     tradeFeed.loadPair ($scope.base, $scope.counter);
-    mixpanel.track('Price Chart', {
-      'Base Currency'  : $scope.base.currency  + ($scope.base.issuer  ? '.'+$scope.base.issuer  : ''),
-      'Trade Currency' : $scope.counter.currency + ($scope.counter.issuer ? '.'+$scope.counter.issuer : ''),
-      'Interval'       : interval.name,
-      'Chart Type'     : priceChart.type
-    });
   }
 
   // reload data when coming back online
