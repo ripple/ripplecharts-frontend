@@ -50,9 +50,13 @@ var MiniChart = function(base, counter, markets, gateways) {
     .attr("src", "assets/images/rippleThrobber.png");
 
   if (markets.options.fixed) {
-    header.html("<div>"+self.base.currency +
+    header.html('<div class="base" title="' + self.base.currency + ' ' +
+      (self.base.issuer || '') + '">' +
+      self.base.currency +
       '<small>' + (self.base.issuer || '') + '</small></div><b>/</b>' +
-      '<div>'+ self.counter.currency +
+      '<div class="counter" title="' + self.counter.currency + ' ' +
+      (self.counter.issuer || '') + '">' +
+      self.counter.currency +
       '<small>' + (self.counter.issuer || '') + '</small></div>');
   }
 
@@ -140,7 +144,7 @@ var MiniChart = function(base, counter, markets, gateways) {
 
     aligned = time.subtract({
       seconds : time.seconds(),
-      minutes : time.minutes()%15
+      minutes : time.minutes() % 5
     });
 
     return aligned;
@@ -166,7 +170,7 @@ var MiniChart = function(base, counter, markets, gateways) {
       base    : self.base,
       counter : self.counter,
       timeIncrement    : "minute",
-      timeMultiple     : 15,
+      timeMultiple     : 5,
       incompleteApiRow : point
     }
 
@@ -188,7 +192,7 @@ var MiniChart = function(base, counter, markets, gateways) {
     var last      = lineData.length ? lineData[lineData.length-1] : null;
     var point     = data;
     var prev      = last ? last.close : point.close;
-    var end       = moment.utc(point.startTime).add(15, 'minutes');
+    var end       = moment.utc(point.startTime).add(5, 'minutes');
     var direction;
 
     point.startTime = moment.utc(point.startTime);
@@ -384,8 +388,8 @@ var MiniChart = function(base, counter, markets, gateways) {
     // Update the y-scale.
     priceScale
       .domain([
-        d3.min(self.lineData, function(d) { return d.close; })*0.975,
-        d3.max(self.lineData, function(d) { return d.close; })*1.025])
+        d3.min(self.lineData, function(d) { return d.close; })*0.99,
+        d3.max(self.lineData, function(d) { return d.close; })*1.01])
       .range([height, 0]).nice();
 
    gEnter.select(".grid")

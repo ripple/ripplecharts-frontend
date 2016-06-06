@@ -136,24 +136,6 @@ angular.module( 'ripplecharts.markets', [
       Options.interval  ||
       '30m';
 
-    $scope.start = $state.params.start ||
-      store.session.get('start') ||
-      store.get('start');
-
-    $scope.end = $state.params.end ||
-      store.session.get('end') ||
-      store.get('end');
-
-    $('#end')
-    .datepicker('setDate', $scope.end ? utcDate($scope.end) : utcDate(undefined, 1))
-    .css('display', $scope.range === 'custom' ? 'inline-block' :'none')
-    .blur();
-
-    $('#start')
-    .datepicker('setDate', utcDate($scope.start))
-    .css('display', $scope.range === 'custom' ? 'inline-block' :'none')
-    .blur();
-
     // validate range
     if (!getRange()) {
       updateScopeAndStore('range', '1d');

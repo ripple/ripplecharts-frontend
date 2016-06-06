@@ -8,3 +8,4 @@ bin/
 node_modules/
 vendor/
 src/config.js
+config.json

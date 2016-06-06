@@ -15,17 +15,15 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-recess');
-  grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-html2js');
 
   /**
    * Load in our build configuration file.
    */
-  var userConfig       = require( './build.config.js' );
-  var env              = process.env.NODE_ENV || "development";
-  var deploymentConfig = require('./deployment.environments.json')[env];
-  var maintenance      = deploymentConfig.maintenance ? "maintenance.html" : null;
+  var userConfig = require( './build.config.js' );
+  var env = process.env.NODE_ENV || "development";
+  var deploymentConfig = require('./config.json')[env];
 
   /**
    * This is the configuration object Grunt uses to give each plugin its
@@ -154,10 +152,10 @@ module.exports = function (grunt) {
           }
         ]
       },
-      build_maintenance: {
+      build_markets: {
         files: [
           {
-            src: '<%= app_files.maintenance %>',
+            src: '<%= app_files.markets %>',
             dest: '<%= build_dir %>/',
             cwd: '.',
             expand: true,
@@ -165,10 +163,10 @@ module.exports = function (grunt) {
           }
         ]
       },
-      compile_maintenance: {
+      compile_markets: {
        files: [
         {
-          src: '<%= app_files.maintenance %>',
+          src: '<%= app_files.markets %>',
           dest: '<%= compile_dir %>/',
           cwd: '.',
           expand: true,
@@ -213,11 +211,9 @@ module.exports = function (grunt) {
         },
         src: [
           '<%= vendor_files.js %>',
-          'module.prefix',
           '<%= build_dir %>/src/**/*.js',
           '<%= html2js.app.dest %>',
           '<%= html2js.common.dest %>',
-          'module.suffix'
         ],
         dest: '<%= compile_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.js'
       }
@@ -391,22 +387,6 @@ module.exports = function (grunt) {
     },
 
     /**
-     * The Karma configurations.
-     */
-    karma: {
-      options: {
-        configFile: '<%= build_dir %>/karma-unit.js'
-      },
-      unit: {
-        port: 9101,
-        background: true
-      },
-      continuous: {
-        singleRun: true
-      }
-    },
-
-    /**
      * The `index` task compiles the `index.html` file as a Grunt template. CSS
      * and JS files co-exist here but they get split apart later.
      */
@@ -441,23 +421,6 @@ module.exports = function (grunt) {
         src: [
           '<%= concat.compile_js.dest %>',
           '<%= recess.compile.dest %>'
-        ]
-      }
-    },
-
-
-    /**
-     * This task compiles the karma template so that changes to its file array
-     * don't have to be managed manually.
-     */
-    karmaconfig: {
-      unit: {
-        dir: '<%= build_dir %>',
-        src: [
-          '<%= vendor_files.js %>',
-          '<%= html2js.app.dest %>',
-          '<%= html2js.common.dest %>',
-          '<%= test_files.js %>'
         ]
       }
     },
@@ -504,7 +467,7 @@ module.exports = function (grunt) {
           '<%= app_files.js %>',
           'deps/*.js'
         ],
-        tasks: [ 'jshint:src', 'karma:unit:run', 'copy:build_appjs', 'copy:build_vendorjs']
+        tasks: [ 'jshint:src', 'copy:build_appjs', 'copy:build_vendorjs']
       },
 
       /**
@@ -515,7 +478,7 @@ module.exports = function (grunt) {
         files: [
           '<%= app_files.coffee %>'
         ],
-        tasks: [ 'coffeelint:src', 'coffee:source', 'karma:unit:run', 'copy:build_appjs' ]
+        tasks: [ 'coffeelint:src', 'coffee:source', 'copy:build_appjs' ]
       },
 
       /**
@@ -524,9 +487,10 @@ module.exports = function (grunt) {
        */
       assets: {
         files: [
-          'src/assets/**/*'
+          'src/assets/**/*',
+          'markets.json'
         ],
-        tasks: [ 'copy:build_app_assets' ]
+        tasks: [ 'copy:build_app_assets', 'copy:build_markets' ]
       },
 
       /**
@@ -564,7 +528,7 @@ module.exports = function (grunt) {
         files: [
           '<%= app_files.jsunit %>'
         ],
-        tasks: [ 'jshint:test', 'karma:unit:run' ],
+        tasks: [ 'jshint:test'],
         options: {
           livereload: false
         }
@@ -578,7 +542,7 @@ module.exports = function (grunt) {
         files: [
           '<%= app_files.coffeeunit %>'
         ],
-        tasks: [ 'coffeelint:test', 'karma:unit:run' ],
+        tasks: [ 'coffeelint:test'],
         options: {
           livereload: false
         }
@@ -602,7 +566,6 @@ module.exports = function (grunt) {
    */
   grunt.renameTask( 'watch', 'delta' );
   grunt.registerTask( 'watch', [ 'build', 'delta' ] );
-  grunt.registerTask( 'watch', [ 'build', 'karma:unit:start', 'delta' ] );
 
   /**
    * The default task is to build and compile.
@@ -616,7 +579,7 @@ module.exports = function (grunt) {
     'clean', 'html2js', 'jshint', 'coffeelint',  'coffee', 'recess:build',
     'concat:build_css', 'copy:build_app_assets', 'copy:build_vendor_assets',
     'copy:build_vendor_fonts', 'copy:build_appjs', 'copy:build_vendorjs',
-    'copy:build_maintenance', 'index:build', 'karmaconfig'//, 'karma:continuous'
+    'copy:build_markets', 'index:build',
   ]);
 
   /**
@@ -624,7 +587,7 @@ module.exports = function (grunt) {
    * minifying your code.
    */
   grunt.registerTask( 'compile', [
-    'recess:compile', 'copy:compile_assets', 'copy:compile_maintenance',
+    'recess:compile', 'copy:compile_assets', 'copy:compile_markets',
     'ngAnnotate', 'concat:compile_js', 'uglify',
     'index:compile',
   ]);
@@ -666,38 +629,14 @@ module.exports = function (grunt) {
       process: function ( contents, path ) {
         return grunt.template.process( contents, {
           data: {
-            scripts  : jsFiles,
-            styles   : cssFiles,
-            maintenance : maintenance,
-            mixpanel    : deploymentConfig.mixpanel,
-            api         : deploymentConfig.api,
-            ga_account  : deploymentConfig.ga_account,
-            ga_id       : deploymentConfig.ga_id,
-            version     : grunt.config( 'pkg.version' )
+            scripts: jsFiles,
+            styles: cssFiles,
+            mixpanel: deploymentConfig.mixpanel,
+            api: deploymentConfig.api,
+            version: grunt.config( 'pkg.version' )
           }
         });
       }
     });
   });
-
-
-  /**
-   * In order to avoid having to specify manually the files needed for karma to
-   * run, we use grunt to manage the list for us. The `karma/*` files are
-   * compiled as grunt templates for use by Karma. Yay!
-   */
-  grunt.registerMultiTask( 'karmaconfig', 'Process karma config templates', function () {
-    var jsFiles = filterForJS( this.filesSrc );
-
-    grunt.file.copy( 'karma/karma-unit.tpl.js', grunt.config( 'build_dir' ) + '/karma-unit.js', {
-      process: function ( contents, path ) {
-        return grunt.template.process( contents, {
-          data: {
-            scripts: jsFiles
-          }
-        });
-      }
-    });
-  });
-
 };

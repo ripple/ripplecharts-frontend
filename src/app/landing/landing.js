@@ -6,46 +6,46 @@ angular.module( 'ripplecharts.landing', [
   $stateProvider.state( 'landing', {
     url: '/',
     views: {
-      "main": {
+      main: {
         controller: 'LandingCtrl',
         templateUrl: 'landing/landing.tpl.html'
       }
     },
-    data:{
-    }
+    data: {}
   });
 })
 
-.controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location ) {
+.controller( 'LandingCtrl', function LandingCtrl( $scope, $state, $location ) {
 
   var api = new ApiHandler(API);
-
-
 
   //get "fixed" multimarket charts for the most important markets
   var markets = new MultiMarket ({
     url            : API,
-    id             : "multimarkets",
+    id             : 'multimarkets',
     fixed          : true,
     clickable      : true,
     updateInterval : 60, //1 minute
   });
 
+  // load preset list or top 12
+  markets.list(marketList && marketList.length ? marketList : 12);
 
-  markets.list(9);
-
-  markets.on('chartClick', function(chart){
-    var path = "/markets/"+chart.base.currency+
-      (chart.base.issuer ? ":"+chart.base.issuer : "")+
-      "/"+chart.counter.currency+
-      (chart.counter.issuer ? ":"+chart.counter.issuer : "");
-    $location.path(path);
-    $scope.$apply();
+  markets.on('chartClick', function(chart) {
+    $state.transitionTo('markets.pair', {
+      base: chart.base.currency +
+        (chart.base.issuer ? ':' + chart.base.issuer : '') ,
+      counter: chart.counter.currency +
+        (chart.counter.issuer ? ':' + chart.counter.issuer : ''),
+      interval: '5m',
+      range: '1d',
+      type: 'candlestick'
+    });
   });
 
 
   //stuff to do when leaving the page
-  $scope.$on("$destroy", function(){
+  $scope.$on('$destroy', function() {
     markets.list([]); //this will disable the update listeners for the charts
   });
 

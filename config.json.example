@@ -1,0 +1,16 @@
+{
+  "development": {
+    "api"         : "REPLACEME",
+    "domain"      : "http://localhost",
+  },
+
+  "staging": {
+    "api"         : "REPLACEME",
+    "domain"      : "http://staging.example.com",
+  },
+
+  "production": {
+    "api"         : "REPLACEME",
+    "domain"      : "http://example.com",
+  }
+}

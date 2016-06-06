@@ -36,7 +36,7 @@ module.exports = {
     ctpl: [ 'src/common/**/*.tpl.html' ],
 
     html: [ 'src/index.html' ],
-    maintenance : 'src/maintenance.html',
+    markets : 'markets.js',
     less: 'src/less/main.less'
   },
 
@@ -71,8 +71,6 @@ module.exports = {
     js: [
       'vendor/snapjs/snap.js',
       'vendor/angular/angular.js',
-      'vendor/angular-touch/angular-touch.js',
-      'vendor/angular-snap/angular-snap.js',
       'vendor/angular-bootstrap/ui-bootstrap-tpls.min.js',
       'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
@@ -98,8 +96,6 @@ module.exports = {
       'deps/offersExercisedListener.js'
     ],
     css: [
-      'vendor/angular-snap/angular-snap.css',
-      'vendor/snapjs/snap.css',
       'vendor/jscrollpane/style/jquery.jscrollpane.css',
       'vendor/json-formatter/dist/json-formatter.css'
     ],

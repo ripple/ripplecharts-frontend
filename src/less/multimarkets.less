@@ -1,8 +1,9 @@
  .mmpage{
   margin-bottom: 300px;
  }
- 
+
  .multiMarket {
+   padding: 20px;
 
  .add {
   width:320px;
@@ -22,18 +23,44 @@
   border-color:#ccc;
 }
 
- .chartHeader {
+.chartHeader {
   font-size:18px;
   font-weight:bold;
   border-bottom:1px solid #ddd;
   padding:3px;
   color:#888;
+  text-align: center
 }
 
- .chartHeader small {
-  margin:5px;
+.chartHeader div, .chartHeader b {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.chartHeader b {
+
+}
+
+.chartHeader div {
+  width: 45%;
+}
+
+.chartHeader div.base {
+  text-align: right;
+}
+
+.chartHeader div.counter {
+  text-align: left;
+}
+
+.chartHeader small {
   color:#aaa;
   font-weight:normal;
+  font-size: .6em;
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
  .chartDetails {
@@ -49,8 +76,8 @@
   .chartDetails {
     height:40px;
   }
-}  
-  
+}
+
  .chartDetails label {display:inline}
  .chartDetails .range {float:left; text-align:left; padding-top:2px; font-size:12px; font-weight:bold; overflow:hidden}
  .chartDetails .range span {padding-right:5px}
@@ -66,9 +93,9 @@
  .chart {
   border:1px solid #ddd;
   margin:5px;
-  float:left;
+  display: inline-block;
   position:relative;
-  width:320px;
+  width:420px;
   overflow:hidden;
 }
 
@@ -86,13 +113,13 @@
  .clickable:hover {
   box-shadow:0 0 2px #36c, inset 0 0 2px #36c;
   border-color:#58b;
-  border-radius:2px;  
+  border-radius:2px;
   cursor:pointer;
 }
 
  .clickable:hover {
   box-shadow:0 0 5px #36c, inset 0 0 3px #36c;
-  border-color:#249;  
+  border-color:#249;
 }
 
  .grid .domain {
@@ -108,7 +135,7 @@
 }
 
  .chart .axis .tick line {
-  stroke:none;  
+  stroke:none;
 }
 
  .chart .axis .title {
@@ -159,17 +186,17 @@
 }
 
  .chart .flip {
-  fill: #999;  
+  fill: #999;
   stroke:none;
   cursor:pointer;
 }
 
  .chart .flip:hover {
-  fill: #888;  
+  fill: #888;
 }
 
  .chart .flip:active {
-  fill: #456;  
+  fill: #456;
 }
 
  .chart .flip text {
@@ -178,7 +205,7 @@
 
  .chart .pointer {
   fill: #aaa;
-  stroke:none; 
+  stroke:none;
 }
 
  .chart svg {display:block}
@@ -194,14 +221,14 @@
 }
 
  .chart .dropdowns .base {
-  border-right:1px solid #ddd;  
-} 
+  border-right:1px solid #ddd;
+}
 
  .chart .dropdowns select{
   -webkit-appearance: none;
   border:none;
   background:none;
-  width:auto;  
+  width:auto;
   margin:0;
   height:22px;
   background:url('images/dropdown.png') no-repeat 97% 70%;
@@ -214,7 +241,7 @@
 }
 
  .chart .dropdowns .currency {
-  font-size:16px;  
+  font-size:16px;
   width:60px;
   float: left;
 }
@@ -271,7 +298,7 @@
 
 /*
  * Dark theme
- * 
+ *
  */
 
  .dark .multiMarket {
@@ -300,7 +327,7 @@
    .chart .axis text {
     fill:@darkText;
   }
-   
+
    .chart .timeBackground {
     fill: #333;
   }
@@ -337,8 +364,8 @@
   }
 
    .chart .dropdowns .base {
-    border-color:#333;  
-  } 
+    border-color:#333;
+  }
 
    .chart .dropdowns select {
     border-color:#333;
@@ -354,3 +381,18 @@
   }
 
 }
+
+@media (max-width: 1350px) {
+
+  .multiMarket .chart {
+    width: 350px;
+  }
+}
+
+@media (max-width: 800px) {
+
+  .multiMarket .chart {
+    width: 100%;
+  }
+}
+

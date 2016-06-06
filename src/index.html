@@ -27,6 +27,8 @@
       API = "<%= api %>";
     </script>
 
+    <script type="text/javascript" src="markets.js"></script>
+
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
     <link rel="stylesheet" type="text/css" href="<%= file %>" /><% }); %>
 
@@ -35,7 +37,27 @@
 
   </head>
   <body class="light">
-    <div class="snap-content" ui-view="main"></div>
+    <div class="header">
+      <div class="wrapper">
+        <a href="#/" ui-route="/" class="logo" snap-close></a>
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li class="category">
+                <a href="#/" snap-close>Markets</a>
+              </li>
+              <li class="category">
+                <a href="#/markets" snap-close>Live Chart</a>
+              </li>
+              <li class="category">
+                <a href="#/graph" snap-close>Account Explorer</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div ui-view="main"></div>
   </body>
 </html>
 
