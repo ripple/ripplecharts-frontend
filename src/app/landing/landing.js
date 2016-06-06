@@ -20,7 +20,7 @@ angular.module( 'ripplecharts.landing', [
   });
 })
 
-.controller( 'LandingCtrl', function LandingCtrl( $scope, $rootScope, $location, gateways ) {
+.controller( 'LandingCtrl', function LandingCtrl( $scope, $state, $location, gateways ) {
 
   var api   = new ApiHandler(API);
   var donut = new ValueSummary({id:"metricDetail", gateways: gateways});
@@ -87,12 +87,15 @@ angular.module( 'ripplecharts.landing', [
   markets.list(9);
 
   markets.on('chartClick', function(chart){
-    var path = "/markets/"+chart.base.currency+
-      (chart.base.issuer ? ":"+chart.base.issuer : "")+
-      "/"+chart.counter.currency+
-      (chart.counter.issuer ? ":"+chart.counter.issuer : "");
-    $location.path(path);
-    $scope.$apply();
+    $state.transitionTo('markets.pair', {
+      base: chart.base.currency +
+        (chart.base.issuer ? ":"+chart.base.issuer : ""),
+      counter: chart.counter.currency +
+      (chart.counter.issuer ? ":"+chart.counter.issuer : ""),
+      interval: '5m',
+      range: '1d',
+      type: store.get('chartType') || 'line'
+    });
   });
 
 

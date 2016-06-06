@@ -131,7 +131,7 @@ var MiniChart = function(base, counter, markets, gateways) {
     var start = moment.utc();
 
     start.startOf('minute')
-      .subtract(start.minutes() % 15, 'minutes')
+      .subtract(start.minutes() % 5, 'minutes')
       .subtract(1, 'day');
 
     if (self.request) self.request.abort();
@@ -139,7 +139,7 @@ var MiniChart = function(base, counter, markets, gateways) {
       startTime     : start.format(),
       endTime       : moment.utc().endOf('day').format(),
       timeIncrement : "minute",
-      timeMultiple  : 15,
+      timeMultiple  : 5,
       descending    : false,
       base          : self.base,
       counter       : self.counter
@@ -167,7 +167,7 @@ var MiniChart = function(base, counter, markets, gateways) {
 
     aligned = time.subtract({
       seconds : time.seconds(),
-      minutes : time.minutes()%15
+      minutes : time.minutes() % 5
     });
 
     return aligned;
