@@ -40,6 +40,15 @@ angular.module( 'ripplecharts.transactions', [
     $scope.tx_hash = $scope.input_tx_hash;
   };
 
+  $scope.toggleFeed = function () {
+    $scope.feedHidden = !$scope.feedHidden;
+    $scope.toggleText = $scope.feedHidden ? 'Show Feed' : 'X';
+    store.set('feedHidden', $scope.feedHidden);
+  };
+
+  $scope.feedHidden = !(store.get('feedHidden') || false);
+  $scope.toggleFeed();
+
   function handleTransition(hash) {
     if (hash) {
       $state.transitionTo('transactions.tx_hash', {

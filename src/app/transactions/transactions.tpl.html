@@ -1,5 +1,8 @@
 <div class="transactions">
-  <div class="column column1">
+  <div class="column column1" ng-class="{feedHidden: feedHidden}">
+    <div class="toggle" ng-click="toggleFeed()">
+      <span>{{toggleText}}</span>
+    </div>
     <txfeed></txfeed>
   </div>
   <div class="column column2">
