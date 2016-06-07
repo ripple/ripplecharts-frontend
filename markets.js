@@ -1,5 +1,7 @@
 var marketList = [];
 
+
+
 /*
 example:
 
@@ -9,7 +11,8 @@ example:
   },
   "counter": {
     "currency": "USD",
-    "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B"
+    "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+    "name": "Bitstamp"
   }
 }]
 */

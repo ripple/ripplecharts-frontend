@@ -52,11 +52,15 @@ var MiniChart = function(base, counter, markets, gateways) {
   if (markets.options.fixed) {
     header.html('<div class="base" title="' + self.base.currency + ' ' +
       (self.base.issuer || '') + '">' +
-      self.base.currency +
+      '<div class="currency"><span>' + (self.base.name || '') +
+      '</span><b>' + self.base.currency + '</b>' +
+      '</div>' +
       '<small>' + (self.base.issuer || '') + '</small></div><b>/</b>' +
       '<div class="counter" title="' + self.counter.currency + ' ' +
       (self.counter.issuer || '') + '">' +
-      self.counter.currency +
+      '<div class="currency"><b>' + self.counter.currency +
+      '</b><span>' + (self.counter.name || '') +
+      '</span></div>' +
       '<small>' + (self.counter.issuer || '') + '</small></div>');
   }
 

@@ -25,7 +25,6 @@
 
 .chartHeader {
   font-size:18px;
-  font-weight:bold;
   border-bottom:1px solid #ddd;
   padding:3px;
   color:#888;
@@ -35,10 +34,6 @@
 .chartHeader div, .chartHeader b {
   display: inline-block;
   vertical-align: top;
-}
-
-.chartHeader b {
-
 }
 
 .chartHeader div {
@@ -53,9 +48,20 @@
   text-align: left;
 }
 
+.chartHeader .currency {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+}
+
+.chartHeader span {
+  font-size: .8em;
+  margin: 0 3px;
+}
+
 .chartHeader small {
   color:#aaa;
-  font-weight:normal;
   font-size: .6em;
   display: block;
   white-space: nowrap;

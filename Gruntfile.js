@@ -488,7 +488,7 @@ module.exports = function (grunt) {
       assets: {
         files: [
           'src/assets/**/*',
-          'markets.json'
+          'markets.js'
         ],
         tasks: [ 'copy:build_app_assets', 'copy:build_markets' ]
       },

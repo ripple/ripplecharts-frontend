@@ -5,7 +5,7 @@ networkGraph = function (nameService) {
   var UNIX_RIPPLE_TIME = 946684800;
   var RECURSION_DEPTH = 1;
   var MAX_NUTL = 360;
-  var REFERENCE_NODE = store.session.get('graphID') || 'r3kmLJN5D28dHuH8vZNUZpMC43pEHpaocV';
+  var REFERENCE_NODE = '';
   var HALO_MARGIN = 6;
   var COLOR_TABLE = {
   //currency  |  center  |   rim  |
@@ -110,6 +110,11 @@ networkGraph = function (nameService) {
     focalNode = REFERENCE_NODE;
   }
 
+  if (!nameService) {
+    nameService = function(address, cb) {
+      cb(null, address);
+    }
+  }
 
   function gotoThing() {
     var string = $('#focus').val().replace(/\s+/g, '');
@@ -186,7 +191,7 @@ networkGraph = function (nameService) {
   }, REQUEST_REPETITION_INTERVAL);
 
 
-  function serverGetLines(address) {
+  function serverGetLines(address, cb) {
     if (!$.isEmptyObject(nodes[nodeMap[address]].trustLines)) {
       addConnections(address, nodes[nodeMap[address]].trustLines);
       return;
@@ -195,28 +200,46 @@ networkGraph = function (nameService) {
     var options;
 
     if (!currentLedger) {
-      setTimeout(serverGetLines.bind(this, address), 100);
+      setTimeout(serverGetLines.bind(this, address, cb), 100);
       return;
     }
 
-    remote.getTrustlines(address, {
-      ledgerVersion: currentLedger
-    })
-    .then(handleLines.bind(undefined, address))
-    .catch(function(e) {
-      console.log(e);
-    });
+    if (!cb) cb = function() {};
+
+    try {
+      remote.getTrustlines(address, {
+        ledgerVersion: currentLedger
+      })
+      .then(handleLines.bind(undefined, address))
+      .then(function(d) {
+        cb();
+      })
+      .catch(function(e) {
+        cb(e);
+      });
+    } catch(e) {
+      cb(e);
+    }
   }
 
-  function serverGetInfo(address) {
+  function serverGetInfo(address, cb) {
 
     if (!nodes[nodeMap[address]] || !nodes[nodeMap[address]].account.index) {
 
-      remote.getAccountInfo(address)
-       .then(handleAccountData.bind(undefined, address))
-       .catch(function(e) {
-        console.log(e);
-      });
+      if (!cb) cb = function() {}
+
+      try {
+        remote.getAccountInfo(address)
+        .then(handleAccountData.bind(undefined, address))
+        .then(function() {
+          cb();
+        })
+        .catch(function(e) {
+          cb(e);
+        });
+      } catch(e) {
+        cb(e);
+      }
     }
   }
 
@@ -938,6 +961,7 @@ networkGraph = function (nameService) {
   var translationX = 0;
   var translationY = 0;
   var panOffset = [0,0];
+
   function redraw() {
     translationX += d3.event.dx;
     translationY += d3.event.dy;
@@ -1063,7 +1087,7 @@ networkGraph = function (nameService) {
   function expandNode(address) {
     var nutl;
 
-    store.session.set("graphID", address);
+    //store.session.set("graphID", address);
 
     if (typeof(nodes[nodeMap[address]]) !== "undefined") {
       nutl = numberOfUnseenTrustLines(nodes[nodeMap[address]]);
@@ -1093,7 +1117,9 @@ networkGraph = function (nameService) {
       if (nutl>MAX_NUTL) {
         alert('Account '+address+' has too many trustlines to show ('+nutl+')');
       } else {
-        serverGetLines(address);
+        serverGetLines(address, function(e) {
+          console.log('s', e);
+        });
       }
       updateInformation(address);
     }
@@ -1565,7 +1591,12 @@ function refocus(focus, erase, noExpand) {
   reassignColors(focalNode);
   fadeLinks(focalNode);
   colorRogueNodes();
-  serverGetInfo(focalNode);
+  serverGetInfo(focalNode, function(e) {
+    if (e) console.log(e);
+    if (e && e.name === 'ValidationError') {
+      $('.loading').text('Invalid Ripple Address.')
+    }
+  });
   updateInformation(focus);
   getNextTransactionPage();
 }
@@ -2134,6 +2165,8 @@ window.onhashchange = function(){
         });
       }
 
+      //console.log('init', firstTime, rippleName, REFERENCE_NODE, focalNode);
+
       if (firstTime) {
         if (transaction_id && transaction_id !== "") {
           nodeMap = {};
@@ -2156,11 +2189,13 @@ window.onhashchange = function(){
             }
           });
 
-        } else {
+        } else if (REFERENCE_NODE) {
           $('#focus').val(focalNode);
           lastFocalNode = REFERENCE_NODE;
           expandNode(focalNode);
           addNodes(0);
+        } else {
+          $('.loading').text('Enter a Ripple address or transaction hash');
         }
       }
       firstTime = false;
@@ -2173,7 +2208,10 @@ window.onhashchange = function(){
     remote.connect()
     .then(init)
     .catch(function(e) {
-      console.log(e);
+      if (e) console.log(e);
+      if (e && e.name === 'ValidationError') {
+        $('.loading').text('Invalid Ripple Address.')
+      }
     });
   }
 }
