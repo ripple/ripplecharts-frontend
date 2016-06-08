@@ -113,9 +113,12 @@
         color:#888;
       }
 
-      .topology-node .ip,
+      .topology-node .ip {
+        min-width:125px;
+      }
+
       .topology-node .version {
-      	min-width:125px;
+      	min-width:150px;
       }
 
       .topology-node .pubkey {
@@ -128,11 +131,12 @@
 
       .topology-node .uptime_formatted {
       	float:right;
+        min-width:75px;
       }
     }
 
     .topology-graph svg {
-    	zoom: .6;
+    	zoom:.6;
   	}
   }
 
@@ -175,10 +179,14 @@
       .topology-node .ip {
       	display:none;
       }
+
+      .topology-node .uptime_formatted {
+        min-width:75px;
+      }
     }
 
     .topology-graph svg {
-      zoom: .4;
+      zoom:.4;
   	}
   }
 }
