@@ -50,18 +50,7 @@ var MiniChart = function(base, counter, markets, gateways) {
     .attr("src", "assets/images/rippleThrobber.png");
 
   if (markets.options.fixed) {
-    header.html('<div class="base" title="' + self.base.currency + ' ' +
-      (self.base.issuer || '') + '">' +
-      '<div class="currency"><span>' + (self.base.name || '') +
-      '</span><b>' + self.base.currency + '</b>' +
-      '</div>' +
-      '<small>' + (self.base.issuer || '') + '</small></div><b>/</b>' +
-      '<div class="counter" title="' + self.counter.currency + ' ' +
-      (self.counter.issuer || '') + '">' +
-      '<div class="currency"><b>' + self.counter.currency +
-      '</b><span>' + (self.counter.name || '') +
-      '</span></div>' +
-      '<small>' + (self.counter.issuer || '') + '</small></div>');
+    loadHeader();
   }
 
   status = self.div.append("h4").attr("class", "status");
@@ -77,7 +66,22 @@ var MiniChart = function(base, counter, markets, gateways) {
   load();
   addResizeListener(self.div.node(), resizeChart);
 
-//show status to the user, or remove it
+  function loadHeader() {
+    header.html('<div class="base" title="' + self.base.currency + ' ' +
+      (self.base.issuer || '') + '">' +
+      '<div class="currency"><span>' + (self.base.name || '') +
+      '</span><b>' + self.base.currency + '</b>' +
+      '</div>' +
+      '<small>' + (self.base.issuer || '') + '</small></div><b>/</b>' +
+      '<div class="counter" title="' + self.counter.currency + ' ' +
+      (self.counter.issuer || '') + '">' +
+      '<div class="currency"><b>' + self.counter.currency +
+      '</b><span>' + (self.counter.name || '') +
+      '</span></div>' +
+      '<small>' + (self.counter.issuer || '') + '</small></div>');
+  }
+
+  //show status to the user, or remove it
   function setStatus (string) {
     status.html(string);
     if (string && !isLoading) {
@@ -289,22 +293,14 @@ var MiniChart = function(base, counter, markets, gateways) {
       .attr("transform", "translate("+(width+margin.left)+","+(height+margin.top)+")")
       .on("click", function() {
         d3.event.stopPropagation();
-        flipping = true;
 
-        dropdownA.selected(self.counter);
-        dropdownB.selected(self.base);
-        dropdowns.selectAll("div").remove();
-        dropdowns.append("div").attr("class","base dropdowns").attr("id", "base"+self.index).call(dropdownA);
-        dropdowns.append("div").attr("class","counter dropdowns").attr("id", "quote"+self.index).call(dropdownB);
-
+        var swap = self.base;
+        self.base = self.counter;
+        self.counter = swap;
         self.load();
 
-        flipping = false;
-
         if (markets.options.fixed) {
-          header.html("<small>"+gateways.getName(self.base.currency, self.base.issuer)+
-            "</small>"+self.base.currency+"/"+self.counter.currency+"<small>"+
-            gateways.getName(self.counter.currency, self.counter.issuer)+"</small>");
+          loadHeader();
         }
       });
 
