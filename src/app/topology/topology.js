@@ -46,7 +46,7 @@ angular.module( 'ripplecharts.topology', [
         if (loadGraph) {
           t.produce(data, {
             element: ".topology-graph",
-            width: 1000,
+            width: 700,
             height: 500
           });
         } else {
