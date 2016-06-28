@@ -359,7 +359,7 @@ var Topology = function ($http) {
 }
 
 
-var TopologyMap = function ($http) {
+var TopologyMap = function($http) {
   var self = this;
   var map;
 
@@ -379,5 +379,17 @@ var TopologyMap = function ($http) {
         });
     })
   }
+
+  // draw the atlas
+  self.draw = function(properties) {
+
+  }
+
+  // populate the atlas with locations
+  self.populate = function(nodeList) {
+
+
+  }
+
 }
 
