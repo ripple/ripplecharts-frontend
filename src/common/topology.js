@@ -78,7 +78,7 @@ var Topology = function ($http) {
         $element.animate({'color': toColor, 'opacity': 1}, 600, function() {
           $element.animate({'color': originalColor}, 600);
         });
-      });
+      }); 
     }
 
     _.each(propertyArray, function(prop) {
@@ -357,3 +357,27 @@ var Topology = function ($http) {
     graph.links.exit().remove();
   }
 }
+
+
+var TopologyMap = function ($http) {
+  var self = this;
+  var map;
+
+  self.fetch = function() {
+    var url = API + '/network/topology/nodes?verbose=true';
+    return new Promise(function(resolve, reject) {
+        $http
+        .get(url)
+        .then(function(response) {
+          if(typeof response.data === 'object') {
+            return resolve(response.data);
+          } else {
+            return reject(response.data);
+          }
+        }, function(response) {
+          return reject(response.data);
+        });
+    })
+  }
+}
+

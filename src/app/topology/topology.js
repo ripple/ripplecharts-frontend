@@ -31,7 +31,7 @@ angular.module( 'ripplecharts.topology', [
     t.fetch().then(function(data) {
       $scope.loading = false;
       $scope.status = '';
-
+      
       if(data.node_count > 0) {
         data.nodes = t.formatUptimes(data.nodes);
         data.nodes = t.sortByUptime(data.nodes);
@@ -65,9 +65,20 @@ angular.module( 'ripplecharts.topology', [
   }
   fetchAndShowTable(true);
 
-  // update table every 30 seconds
+  
+
+  var m = new TopologyMap($http);
+  function fetchAndShowMap(loadMap) {
+    m.fetch().then(function(data){
+      console.log(data);
+    });
+
+  }
+  fetchAndShowMap(true);
+  // update table and map every 30 seconds
   var interval = setInterval(function() {
     fetchAndShowTable();
+    fetchAndShowMap();
   }, 30000);
 
   // stop the listeners when leaving page
