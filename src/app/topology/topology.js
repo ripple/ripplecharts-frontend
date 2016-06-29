@@ -67,7 +67,7 @@ angular.module( 'ripplecharts.topology', [
 
   
 
-  var m = new TopologyMap($http);
+  var m = new TopologyMap($http, t);
   function fetchAndShowMap() {
 
     // draw the map next to the node chart
