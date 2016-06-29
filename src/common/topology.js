@@ -382,7 +382,29 @@ var TopologyMap = function($http) {
 
   // draw the atlas
   self.draw = function(properties) {
+    var w = properties.width, h = properties.height;
 
+    // alternative options: stereographic, orthographic, equirectangular, albers, transverseMercator
+    var projection = d3.geo.mercator() 
+        .center([0, 40])
+        .scale(100)
+        .translate([w/2, h/2]);
+
+    var path = d3.geo.path().projection(projection);
+    var svg = d3.select(properties.element).append("svg")
+        .attr("width", w)
+        .attr("height", h)
+        .append("g");
+
+    d3.json("../src/app/topology/map.json", function(json) {
+
+      // draw all of the countries
+      svg.selectAll("path")
+        .data(json["features"])
+        .enter()
+        .append("path")
+        .attr("d", path);
+    });
   }
 
   // populate the atlas with locations

@@ -9,9 +9,10 @@
         The Ripple Network topology graph shows the active rippled nodes and the connections between them. Every three seconds a snapshot is taken of the network topology, which records the status on each node in the network and its connections to other nodes. Each node is a rippled and the links between the nodes are tcp connections. A node's size corresponds to the number of connections it has and its color indicates the software version. Blue nodes represent version 0.30.1+ and red nodes represent all earlier versions.
       </p>
   </div>
-
-  <div class="topology-graph"></div>
-  <div class="topology-map"></div>
+  <div class="topology-container">
+    <div class="topology-graph"></div>
+    <div class="topology-map"></div>
+  </div>
   <div id="topology-table" ng-hide="loading">
     <div class="topologyTableHeader">
       <div>Public Key</div>

@@ -73,11 +73,11 @@ angular.module( 'ripplecharts.topology', [
     // draw the map next to the node chart
     m.draw({
       element: ".topology-map",
-      width: 700,
-      height: 700
+      width: 600,
+      height: 500
     });
     m.fetch().then(function(data){
-      if(data.node_count > 0) {
+      if(data.count > 0) {
         // do whatever formatting is required
 
         // draw the node locations on the map
@@ -86,7 +86,7 @@ angular.module( 'ripplecharts.topology', [
 
   }
   fetchAndShowMap();
-  
+
   // update table and map every 30 seconds
   var interval = setInterval(function() {
     fetchAndShowTable();
