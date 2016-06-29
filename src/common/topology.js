@@ -361,7 +361,7 @@ var Topology = function ($http) {
 
 var TopologyMap = function($http) {
   var self = this;
-  var map;
+  var svg, projection;
 
   self.fetch = function() {
     var url = API + '/network/topology/nodes?verbose=true';
@@ -385,32 +385,56 @@ var TopologyMap = function($http) {
     var w = properties.width, h = properties.height;
 
     // alternative options: stereographic, orthographic, equirectangular, albers, transverseMercator
-    var projection = d3.geo.mercator() 
+    projection = d3.geo.mercator() 
         .center([0, 40])
         .scale(100)
-        .translate([w/2, h/2]);
+        .translate([w/2, h/2-20]);
 
     var path = d3.geo.path().projection(projection);
-    var svg = d3.select(properties.element).append("svg")
-        .attr("width", w)
-        .attr("height", h)
-        .append("g");
+    svg = d3.select(properties.element).append("svg")
+            .attr("width", w)
+            .attr("height", h)
+            .append("g");
 
     d3.json("../src/app/topology/map.json", function(json) {
-
       // draw all of the countries
       svg.selectAll("path")
-        .data(json["features"])
-        .enter()
-        .append("path")
-        .attr("d", path);
+         .data(json["features"])
+         .enter()
+         .append("path")
+         .attr("d", path);
     });
   }
 
   // populate the atlas with locations
   self.populate = function(nodeList) {
+    // nodeList.forEach(function(node) {
 
-
+    // });
+    var count = 0;
+    svg.selectAll("ellipse")
+      .data(nodeList)
+      .enter()
+      .append("ellipse")
+      .attr("class", "topology-node")
+      .attr("transform", function(d, i) {
+        if(d.ip) {
+          // lat +90 to -90 long +180 to -180
+          if (d.lat > 90 || d.lat < -90) {
+            console.log("exceeds lat range");
+            console.log("Node: " + i + "; lat: " + d.lat);
+          }
+          if (d.long > 180 || d.long < -180)
+            console.log("exceeds long range");
+          // console.log("Node: " + i + "; latitude: " + d.lat + "; longitude: " + d.long);
+          count++;
+          return "translate(" + projection([d.lat, d.long]) + ")";
+          
+        }
+      })
+      .attr("ry", 2)
+      .attr("rx", 1);
+    console.log("Total nodes with ip addresses: " + count);
   }
 
 }

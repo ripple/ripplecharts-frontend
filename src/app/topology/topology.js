@@ -73,14 +73,16 @@ angular.module( 'ripplecharts.topology', [
     // draw the map next to the node chart
     m.draw({
       element: ".topology-map",
-      width: 600,
+      width: 630,
       height: 500
     });
     m.fetch().then(function(data){
       if(data.count > 0) {
+        console.log(data);
         // do whatever formatting is required
 
         // draw the node locations on the map
+        m.populate(data.nodes);
       } 
     });
 
