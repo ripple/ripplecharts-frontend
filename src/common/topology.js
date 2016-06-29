@@ -213,7 +213,6 @@ var Topology = function ($http) {
     if (!graph) {
       return;
     }
-
     // builds reference array of sources and targets
     var edges = [];
     var nodes = graph.force.nodes();
@@ -380,6 +379,59 @@ var TopologyMap = function($http) {
     })
   }
 
+  function highlight() {
+    var pubkey = d3.select(this).attr('pubkey');
+
+    d3.selectAll('.' + pubkey)
+    .classed('highlight', true);
+
+    graph.nodeGroup.selectAll('.topology-node.' + pubkey)
+    .transition()
+    .style('fill-opacity', 0.9)
+    .style('stroke-opacity', 0.8)
+    .style('stroke-width', 3)
+    .attr('r', function() {
+      return d3.select(this).attr('_r') * 2;
+    });
+
+  }
+
+  function unhighlight() {
+    graph.nodeGroup.selectAll('.topology-node.highlight')
+    .transition()
+    .style('fill-opacity', 0.7)
+    .style('stroke-opacity', 0.5)
+    .style('stroke-width', 0.7)
+    .attr('r', function(d) {
+      return d3.select(this).attr('_r');
+    });
+
+    d3.selectAll('.topology-node')
+    .classed('highlight', false);
+    d3.selectAll('.topology-link')
+    .classed('highlight', false);
+  }
+
+  self.versionToColor = function(version) {
+    var blue = '#38b';
+    var yellow = "#FDB34D";
+    var red = "#c11";
+    var color = "#FFFFFF";
+    var LATEST_VERSION = 301;
+
+    if (version) {
+      var v_arr = version.split("-");
+      var v_str = v_arr[1];
+      var split = v_str.split('.');
+      var v_num = parseInt(split[0] + split[1] + split[2], 10);
+      if (v_num < LATEST_VERSION)
+        color = red;
+      else
+        color = blue;
+    }
+    return color;
+  }
+
   // draw the atlas
   self.draw = function(properties) {
     var w = properties.width, h = properties.height;
@@ -411,30 +463,32 @@ var TopologyMap = function($http) {
     // nodeList.forEach(function(node) {
 
     // });
-    var count = 0;
-    svg.selectAll("ellipse")
+    var x_offset = 80, y_offset = 300;
+
+    var locations = svg.selectAll("circle")
       .data(nodeList)
       .enter()
-      .append("ellipse")
-      .attr("class", "topology-node")
-      .attr("transform", function(d, i) {
-        if(d.ip) {
-          // lat +90 to -90 long +180 to -180
-          if (d.lat > 90 || d.lat < -90) {
-            console.log("exceeds lat range");
-            console.log("Node: " + i + "; lat: " + d.lat);
-          }
-          if (d.long > 180 || d.long < -180)
-            console.log("exceeds long range");
-          // console.log("Node: " + i + "; latitude: " + d.lat + "; longitude: " + d.long);
-          count++;
-          return "translate(" + projection([d.lat, d.long]) + ")";
-          
-        }
+      .append("circle")
+      .attr("class", function(d) {
+        return [
+          'topology-node',
+          d.node_public_key
+        ].join(' ')
       })
-      .attr("ry", 2)
-      .attr("rx", 1);
-    console.log("Total nodes with ip addresses: " + count);
+      .attr("transform", function(d, i) {
+        if(d.ip && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180) {
+          // lat +90 to -90 long +180 to -180 constitute valid coords
+          return "translate(" + projection([d.lat, d.long]) + ")";
+        }
+        return "translate(" + x_offset + "," + y_offset + ")"; 
+      })
+      .attr("r", 2)
+      .style("opacity", 1);
+
+    // d3.selectAll('.topology-node')
+    //   .on('mouseover', highlight)
+    //   .on('mouseout', unhighlight);
+
   }
 
 }
