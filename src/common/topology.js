@@ -364,7 +364,7 @@ var Topology = function ($http) {
 var TopologyMap = function($http, topology) {
   var self = this;
   var t = topology;
-  var svg, projection;
+  var svg, projection, w, h;
 
   self.fetch = function() {
     var url = API + '/network/topology/nodes?verbose=true';
@@ -383,9 +383,23 @@ var TopologyMap = function($http, topology) {
     })
   }
 
+  function get_offset(invalid_count) {
+    var x_dim = 12, y_dim = 12, x_offset = 10, y_offset = 420;
+
+    var placement = x_dim * invalid_count;
+    var row = Math.floor(placement / w);
+
+    x_offset = placement >= w ? x_offset + placement % w : placement;
+
+    y_offset += row * y_dim;
+
+    console.log("Invalid Node: " + invalid_count + "; x_offset: " + x_offset + "; y_offset: " + y_offset);
+    return {x: x_offset, y: y_offset};
+  }
+
   // draw the atlas
   self.draw = function(properties) {
-    var w = properties.width, h = properties.height;
+    w = properties.width, h = properties.height;
 
     // alternative options: stereographic, orthographic, equirectangular, albers, transverseMercator
     projection = d3.geo.mercator() 
@@ -428,6 +442,9 @@ var TopologyMap = function($http, topology) {
 
     var x_offset = 80, y_offset = 300;
 
+    // running tally of the number of nodes with invalid locations
+    var invalid_count = 0;
+
     var locations = svg.selectAll("circle")
       .data(node_list)
       .enter()
@@ -443,8 +460,10 @@ var TopologyMap = function($http, topology) {
         if(d.ip && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180) {
           return "translate(" + projection([d.lat, d.long]) + ")";
         }
-        // temporarily place in the pacific
-        return "translate(" + x_offset + "," + y_offset + ")"; 
+        // invalid locations
+        invalid_count++;
+        var o = get_offset(invalid_count);
+        return "translate(" + o.x + "," + o.y + ")"; 
       })
       .style("fill", function(d) {
         return t.versionToColor(d.version);
@@ -464,6 +483,12 @@ var TopologyMap = function($http, topology) {
 
     locations.append("title")
       .text(function(d) { return d.node_public_key; });
+
+    // console.log(locations[0]);
+    // console.log(d3.selectAll("circle.topology-node"));
+    // locations[0].forEach(function(d, i) {
+      
+    // });
 
   }
 
