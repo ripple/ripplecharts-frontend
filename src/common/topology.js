@@ -364,7 +364,7 @@ var Topology = function ($http) {
 var TopologyMap = function($http, topology) {
   var self = this;
   var t = topology;
-  var svg, projection, w, h;
+  var parent, svg, projection, w, h;
 
   self.fetch = function() {
     var url = API + '/network/topology/nodes?verbose=true';
@@ -384,7 +384,7 @@ var TopologyMap = function($http, topology) {
   }
 
   function get_offset(invalid_count) {
-    var x_dim = 12, y_dim = 12, x_offset = 10, y_offset = 420;
+    var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = 420;
 
     var placement = x_dim * invalid_count;
     var row = Math.floor(placement / w);
@@ -408,20 +408,18 @@ var TopologyMap = function($http, topology) {
         .translate([w/2-3, h/2-37]);
 
     var path = d3.geo.path().projection(projection);
-    svg = d3.select(properties.element).append("svg")
+    parent = d3.select(properties.element).append("svg")
             .attr("width", w)
             .attr("height", h)
             .append("g");
 
-    d3.json("../src/app/topology/map.json", function(json) {
-      // draw all of the countries
-      svg.selectAll("path")
-         .data(json["features"])
-         .enter()
-         .append("path")
-         .attr("d", path);
-    });
+    svg = parent.append("g");
 
+    svg.append("rect")
+       .attr("x", -w)
+       .attr("y", -h)
+       .attr("width", w*3)
+       .attr("height", h*3);
     // dividing line for the unknown/invalid ip zone
     svg.append("line")
        .attr("x1", 0)
@@ -430,10 +428,18 @@ var TopologyMap = function($http, topology) {
        .attr("y2", 410);
 
     svg.append("text")
-       .attr("x", 10)
+       .attr("x", 7)
        .attr("y", 403)
        .text("Unknown Location");
 
+    // draw all of the countries
+    d3.json("../src/app/topology/map.json", function(json) {
+      svg.selectAll("path")
+         .data(json["features"])
+         .enter()
+         .append("path")
+         .attr("d", path);
+    });
 
   }
 
@@ -457,7 +463,8 @@ var TopologyMap = function($http, topology) {
       })
       .attr("transform", function(d, i) {
         // lat +90 to -90 long +180 to -180 constitute valid coords
-        if(d.ip && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180) {
+        // && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180
+        if(d.ip) {
           return "translate(" + projection([d.lat, d.long]) + ")";
         }
         // invalid locations
@@ -484,11 +491,25 @@ var TopologyMap = function($http, topology) {
     locations.append("title")
       .text(function(d) { return d.node_public_key; });
 
-    // console.log(locations[0]);
-    // console.log(d3.selectAll("circle.topology-node"));
-    // locations[0].forEach(function(d, i) {
-      
-    // });
+    // enables zooming behavior
+    parent.call(d3.behavior.zoom()
+      .scaleExtent([1, 100])
+      .on("zoom", function() {
+        svg.attr("transform","translate("+ 
+            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+        // if (d3.event.scale > 5) {
+        //   svg.selectAll("ellipse")
+        //     .attr("ry", function(d){ return 2*5/d3.event.scale;})
+        //     .attr("rx", function(d){ return 5*(get_length(label_text(d)) + 1)/d3.event.scale; });
+        // }
+        // else {
+        //   svg.selectAll("ellipse")
+        //     .attr("ry", function(d){ return 2;})
+        //     .attr("rx", function(d){ return (get_length(label_text(d)) + 1); })
+        // }
+        // last = d3.event.scale;
+      })
+    );
 
   }
 
