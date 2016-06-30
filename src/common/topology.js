@@ -313,10 +313,12 @@ var Topology = function ($http) {
       .style('opacity', 0)
       .call(drag);
 
-    node.on('click', function(d) {
-      var row = d3.select('#topology-table .' + d.id);
+    d3.selectAll('circle').on('click', function(d) {
+      var row = d3.select('#topology-table .' + d.node_public_key);
       var box = row.node().getBoundingClientRect();
+
       var header = d3.select('.header').node().getBoundingClientRect();
+
       var y = window.pageYOffset + box.top - header.bottom;
 
       d3.transition()
@@ -436,11 +438,11 @@ var TopologyMap = function($http, topology) {
       })
       .attr("r", function(d) {
         return Number(d.inbound_count) + Number(d.outbound_count) ?
-          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.5) + 2 : 2;
+          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.25) + 2 : 2;
       })
       .attr("_r", function(d) {
         return Number(d.inbound_count) + Number(d.outbound_count) ?
-          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.5) + 2 : 2;
+          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.25) + 2 : 2;
       })
       .style("opacity", 1)
       .attr('pubkey', function(d) {
