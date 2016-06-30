@@ -51,20 +51,29 @@
   }
 
   .topology-map {
-    /*position: absolute;*/
     float: left;
     min-width: 600px;
     margin-left: 10%;
 
+    svg {
+      border: 1px solid black;
+      margin: 0 auto;
+    }
+
     path {
-      stroke: black;
+      stroke: solid black;
       stroke-width: 0.10px;
       fill: #d3d3d3;
     }
 
-    svg {
-      border: 1px solid black;
-      margin: 0 auto;
+    line {
+      stroke: black;
+      stroke-width: .5px;
+    }
+
+    text {
+      font-size: 10px;
+      fill: black;
     }
   }
 

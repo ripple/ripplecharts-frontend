@@ -407,14 +407,26 @@ var TopologyMap = function($http, topology) {
          .append("path")
          .attr("d", path);
     });
+
+    // dividing line for the unknown/invalid ip zone
+    svg.append("line")
+       .attr("x1", 0)
+       .attr("y1", 410)
+       .attr("x2", 650)
+       .attr("y2", 410);
+
+    svg.append("text")
+       .attr("x", 10)
+       .attr("y", 403)
+       .text("Unknown Location");
+
+
   }
 
   // populate the atlas with locations
   self.populate = function(node_list) {
-    // nodeList.forEach(function(node) {
 
-    // });
-    var x_offset = 80, y_offset = 300, r;
+    var x_offset = 80, y_offset = 300;
 
     var locations = svg.selectAll("circle")
       .data(node_list)
@@ -427,10 +439,11 @@ var TopologyMap = function($http, topology) {
         ].join(' ')
       })
       .attr("transform", function(d, i) {
+        // lat +90 to -90 long +180 to -180 constitute valid coords
         if(d.ip && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180) {
-          // lat +90 to -90 long +180 to -180 constitute valid coords
           return "translate(" + projection([d.lat, d.long]) + ")";
         }
+        // temporarily place in the pacific
         return "translate(" + x_offset + "," + y_offset + ")"; 
       })
       .style("fill", function(d) {
