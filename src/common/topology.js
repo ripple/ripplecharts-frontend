@@ -366,6 +366,19 @@ var TopologyMap = function($http, topology) {
   var t = topology;
   var parent, svg, projection, w, h;
 
+  var zoom = d3.behavior.zoom()
+  .scaleExtent([1, 100])
+  .on("zoom", function() {
+    var e = d3.event,
+        tx = Math.min(0, Math.max(e.translate[0], w - w * e.scale)),
+        ty = Math.min(0, Math.max(e.translate[1], h - h * e.scale));
+    zoom.translate([tx, ty]);
+    svg.attr("transform", [
+      "translate(" + [tx, ty] + ")",
+      "scale(" + e.scale + ")"
+      ].join(" "));
+  });
+
   self.fetch = function() {
     var url = API + '/network/topology/nodes?verbose=true';
     return new Promise(function(resolve, reject) {
@@ -492,26 +505,7 @@ var TopologyMap = function($http, topology) {
       .text(function(d) { return d.node_public_key; });
 
     // enables zooming behavior
-    parent.call(d3.behavior.zoom()
-      .scaleExtent([1, 100])
-      .on("zoom", function() {
-        svg.attr("transform","translate("+ 
-            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
-        // if (d3.event.scale > 5) {
-        //   svg.selectAll("ellipse")
-        //     .attr("ry", function(d){ return 2*5/d3.event.scale;})
-        //     .attr("rx", function(d){ return 5*(get_length(label_text(d)) + 1)/d3.event.scale; });
-        // }
-        // else {
-        //   svg.selectAll("ellipse")
-        //     .attr("ry", function(d){ return 2;})
-        //     .attr("rx", function(d){ return (get_length(label_text(d)) + 1); })
-        // }
-        // last = d3.event.scale;
-      })
-    );
-
+    parent.call(zoom);
   }
 
 }
-
