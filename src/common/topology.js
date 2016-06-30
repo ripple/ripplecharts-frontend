@@ -390,8 +390,8 @@ var TopologyMap = function($http, topology) {
     // alternative options: stereographic, orthographic, equirectangular, albers, transverseMercator
     projection = d3.geo.mercator() 
         .center([0, 40])
-        .scale(100)
-        .translate([w/2, h/2-20]);
+        .scale(101)
+        .translate([w/2-3, h/2-37]);
 
     var path = d3.geo.path().projection(projection);
     svg = d3.select(properties.element).append("svg")
