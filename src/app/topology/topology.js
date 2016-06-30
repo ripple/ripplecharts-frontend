@@ -89,7 +89,7 @@ angular.module( 'ripplecharts.topology', [
   }
   fetchAndShowMap();
 
-  // update table and map every 30 seconds
+  // update table every 30 seconds
   var interval = setInterval(function() {
     fetchAndShowTable();
   }, 30000);

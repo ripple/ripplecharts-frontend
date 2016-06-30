@@ -166,12 +166,12 @@ var Topology = function ($http) {
   }
 
   function highlight() {
+    // console.log("HIGHLIGHT");
     var pubkey = d3.select(this).attr('pubkey');
-
     d3.selectAll('.' + pubkey)
     .classed('highlight', true);
 
-    graph.nodeGroup.selectAll('.topology-node.' + pubkey)
+    d3.selectAll('.topology-node.' + pubkey)
     .transition()
     .style('fill-opacity', 0.9)
     .style('stroke-opacity', 0.8)
@@ -183,7 +183,8 @@ var Topology = function ($http) {
   }
 
   function unhighlight() {
-    graph.nodeGroup.selectAll('.topology-node.highlight')
+    // console.log("UNHIGHLIGHT");
+    d3.selectAll('.topology-node.highlight')
     .transition()
     .style('fill-opacity', 0.7)
     .style('stroke-opacity', 0.5)
@@ -288,7 +289,7 @@ var Topology = function ($http) {
 
     link.transition()
       .delay(function(d, i) {
-        return 1000 + 1 * i
+        return 1000 + 1 * i;
       })
       .duration(500)
       .style('opacity', 1)
@@ -325,7 +326,7 @@ var Topology = function ($http) {
 
     node.transition()
       .delay(function(d, i) {
-        return 500 + 20 * i
+        return 500 + 20 * i;
       })
       .duration(1000)
       .style('opacity', 1);
@@ -349,7 +350,7 @@ var Topology = function ($http) {
       .attr('_r', r)
       //.transition()
       .attr('r', r);
-    })
+    });
 
 
     graph.nodes.exit().remove();
@@ -407,14 +408,14 @@ var TopologyMap = function($http, topology) {
   }
 
   // populate the atlas with locations
-  self.populate = function(nodeList) {
+  self.populate = function(node_list) {
     // nodeList.forEach(function(node) {
 
     // });
-    var x_offset = 80, y_offset = 300;
+    var x_offset = 80, y_offset = 300, r;
 
     var locations = svg.selectAll("circle")
-      .data(nodeList)
+      .data(node_list)
       .enter()
       .append("circle")
       .attr("class", function(d) {
@@ -433,8 +434,18 @@ var TopologyMap = function($http, topology) {
       .style("fill", function(d) {
         return t.versionToColor(d.version);
       })
-      .attr("r", 2)
-      .style("opacity", 1);
+      .attr("r", function(d) {
+        return Number(d.inbound_count) + Number(d.outbound_count) ?
+          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.5) + 2 : 2;
+      })
+      .attr("_r", function(d) {
+        return Number(d.inbound_count) + Number(d.outbound_count) ?
+          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.5) + 2 : 2;
+      })
+      .style("opacity", 1)
+      .attr('pubkey', function(d) {
+        return d.node_public_key;
+      });
 
     locations.append("title")
       .text(function(d) { return d.node_public_key; });
