@@ -172,31 +172,47 @@ var Topology = function ($http) {
     .classed('highlight', true);
 
     d3.selectAll('.topology-node.' + pubkey)
-    .transition()
-    .style('fill-opacity', 0.9)
-    .style('stroke-opacity', 0.8)
-    .style('stroke-width', 3)
-    .attr('r', function() {
-      return d3.select(this).attr('_r') * 2;
-    });
+      .transition()
+      .style('fill-opacity', 0.9)
+      .style('stroke-opacity', 0.8)
+      .attr('r', function() {
+        return d3.select(this).attr('_r') * 2;
+      });
+
+    d3.selectAll('.chart.topology-node' + pubkey)
+      .transition()
+      .style('fill-opacity', 0.9)
+      .style('stroke-opacity', 0.8)
+      .style('stroke-width', 3)
+      .attr('r', function() {
+        return d3.select(this).attr('_r') * 2;
+      });
 
   }
 
   function unhighlight() {
     // console.log("UNHIGHLIGHT");
     d3.selectAll('.topology-node.highlight')
-    .transition()
-    .style('fill-opacity', 0.7)
-    .style('stroke-opacity', 0.5)
-    .style('stroke-width', 0.7)
-    .attr('r', function(d) {
-      return d3.select(this).attr('_r');
-    });
+      .transition()
+      .style('fill-opacity', 0.7)
+      .style('stroke-opacity', 0.5)
+      .attr('r', function(d) {
+        return d3.select(this).attr('_r');
+      });
+
+    d3.selectAll('.chart.topology-node.highlight')
+      .transition()
+      .style('fill-opacity', 0.7)
+      .style('stroke-opacity', 0.5)
+      .style('stroke-width', 0.7)
+      .attr('r', function(d) {
+        return d3.select(this).attr('_r');
+      });
 
     d3.selectAll('.topology-node')
-    .classed('highlight', false);
+      .classed('highlight', false);
     d3.selectAll('.topology-link')
-    .classed('highlight', false);
+      .classed('highlight', false);
   }
 
   function scrollTween(offset) {
@@ -302,6 +318,7 @@ var Topology = function ($http) {
     var node = graph.nodes.enter().append("circle")
       .attr("class", function(d) {
         return [
+          'chart',
           'topology-node',
           d.node_public_key
         ].join(' ')
@@ -377,6 +394,26 @@ var TopologyMap = function($http, topology) {
       "translate(" + [tx, ty] + ")",
       "scale(" + e.scale + ")"
       ].join(" "));
+
+    // if(e.scale > 5) {
+      // svg.selectAll("circle").attr("r", function(){
+      //   var radius = d3.select(this).attr("_r");
+      //   return radius * 5 / e.scale;
+      // });
+      svg.selectAll("circle")
+      .attr("transform", function(){
+        var trans = d3.transform(d3.select(this).attr("transform"));
+        return "translate(" + trans.translate[0] + "," + trans.translate[1] + ")scale(" + 1/e.scale + ")";
+      })
+      .attr("_r", function(){
+        return d3.select(this).attr("r");
+      });
+    // }
+
+    // d3.selectAll('.tick').attr('transform', function(){
+    //   transform = d3.transform(d3.select(this).attr("transform"));
+    //   return "translate("+transform.translate[0]+", -3)";
+    // });
   });
 
   self.fetch = function() {
@@ -396,17 +433,21 @@ var TopologyMap = function($http, topology) {
     })
   }
 
+  // if the node has an invalid/unknown location, then place it in the appropriate zone
+  // this function generates the x and y offsets so that those nodes are placed in neat rows and cols
   function get_offset(invalid_count) {
     var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = 420;
 
+    // variable for which column the node should be placed in
     var placement = x_dim * invalid_count;
+    // if the node placement is beyond the edge of the box, then go to the next row
     var row = Math.floor(placement / w);
 
+    // start in the first column if the node is placed in the next row
     x_offset = placement >= w ? x_offset + placement % w : placement;
 
     y_offset += row * y_dim;
 
-    console.log("Invalid Node: " + invalid_count + "; x_offset: " + x_offset + "; y_offset: " + y_offset);
     return {x: x_offset, y: y_offset};
   }
 
@@ -414,7 +455,7 @@ var TopologyMap = function($http, topology) {
   self.draw = function(properties) {
     w = properties.width, h = properties.height;
 
-    // alternative options: stereographic, orthographic, equirectangular, albers, transverseMercator
+    // alternative options: stereographic, orthographic (globe), equirectangular, albers, transverseMercator
     projection = d3.geo.mercator() 
         .center([0, 40])
         .scale(101)
@@ -426,13 +467,17 @@ var TopologyMap = function($http, topology) {
             .attr("height", h)
             .append("g");
 
+    // intermediate layer so that dragging is smooth
+    // see: http://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
     svg = parent.append("g");
 
+    // transparent rectangle to click to drag works on the entire map, not just the land
     svg.append("rect")
-       .attr("x", -w)
-       .attr("y", -h)
-       .attr("width", w*3)
-       .attr("height", h*3);
+       .attr("x", 0)
+       .attr("y", 0)
+       .attr("width", w)
+       .attr("height", h);
+
     // dividing line for the unknown/invalid ip zone
     svg.append("line")
        .attr("x1", 0)
@@ -440,6 +485,7 @@ var TopologyMap = function($http, topology) {
        .attr("x2", 650)
        .attr("y2", 410);
 
+    // label for unknown/invalid ip zone
     svg.append("text")
        .attr("x", 7)
        .attr("y", 403)
@@ -476,11 +522,14 @@ var TopologyMap = function($http, topology) {
       })
       .attr("transform", function(d, i) {
         // lat +90 to -90 long +180 to -180 constitute valid coords
-        // && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180
+        // && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180\
+
+        // only place on the map if the ip exists and can be geocoded
         if(d.ip) {
           return "translate(" + projection([d.lat, d.long]) + ")";
         }
-        // invalid locations
+
+        // if there is no location, then place the node in the invalid zone
         invalid_count++;
         var o = get_offset(invalid_count);
         return "translate(" + o.x + "," + o.y + ")"; 
@@ -509,3 +558,4 @@ var TopologyMap = function($http, topology) {
   }
 
 }
+

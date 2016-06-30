@@ -77,13 +77,8 @@ angular.module( 'ripplecharts.topology', [
       height: 500
     });
     m.fetch().then(function(data){
-      if(data.count > 0) {
-        console.log(data);
-        // do whatever formatting is required
-
-        // draw the node locations on the map
+      if(data.count > 0)
         m.populate(data.nodes);
-      } 
     });
 
   }
