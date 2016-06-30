@@ -395,25 +395,18 @@ var TopologyMap = function($http, topology) {
       "scale(" + e.scale + ")"
       ].join(" "));
 
-    // if(e.scale > 5) {
-      // svg.selectAll("circle").attr("r", function(){
-      //   var radius = d3.select(this).attr("_r");
-      //   return radius * 5 / e.scale;
-      // });
       svg.selectAll("circle")
       .attr("transform", function(){
         var trans = d3.transform(d3.select(this).attr("transform"));
         return "translate(" + trans.translate[0] + "," + trans.translate[1] + ")scale(" + 1/e.scale + ")";
       })
       .attr("_r", function(){
-        return d3.select(this).attr("r");
-      });
-    // }
+        // only update _r if the node isn't highlighted
+        // prevents node size from being stuck if the user zooms while highlighting a node
+        var is_highlighted = d3.select(this).attr("class").indexOf("highlight") > -1,
 
-    // d3.selectAll('.tick').attr('transform', function(){
-    //   transform = d3.transform(d3.select(this).attr("transform"));
-    //   return "translate("+transform.translate[0]+", -3)";
-    // });
+        return is_highlighted ? d3.select(this).attr("_r") : d3.select(this).attr("r");
+      });
   });
 
   self.fetch = function() {
