@@ -89,6 +89,20 @@ angular.module( 'ripplecharts.topology', [
     fetchAndShowTable();
   }, 30000);
 
+  // click to toggle between charts
+  $('.toggle').click(function() {
+      $(this).animate({
+          left: '-50%'
+      }, 500, function() {
+          $(this).css('left', '250%');
+          $(this).appendTo('.topology-container');
+      });
+
+      $(this).next().animate({
+          left: '50%'
+      }, 500);
+  });
+
   // stop the listeners when leaving page
   $scope.$on('$destroy', function(){
     clearInterval(interval);

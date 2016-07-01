@@ -403,7 +403,7 @@ var TopologyMap = function($http, topology) {
       .attr("_r", function(){
         // only update _r if the node isn't highlighted
         // prevents node size from being stuck if the user zooms while highlighting a node
-        var is_highlighted = d3.select(this).attr("class").indexOf("highlight") > -1,
+        var is_highlighted = d3.select(this).attr("class").indexOf("highlight") > -1;
 
         return is_highlighted ? d3.select(this).attr("_r") : d3.select(this).attr("r");
       });
