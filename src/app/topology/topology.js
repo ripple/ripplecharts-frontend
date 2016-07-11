@@ -68,6 +68,8 @@ angular.module( 'ripplecharts.topology', [
   
 
   var m = new TopologyMap($http, t);
+
+  // API endpoint: https://data-staging.ripple.com/v2/network/topology/nodes?verbose=true
   function fetchAndShowMap() {
 
     // draw the map next to the node chart
