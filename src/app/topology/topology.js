@@ -82,7 +82,6 @@ angular.module( 'ripplecharts.topology', [
       if(data.count > 0)
         m.populate(data.nodes);
     });
-
   }
   fetchAndShowMap();
 
@@ -111,8 +110,12 @@ angular.module( 'ripplecharts.topology', [
         }
         $(this).removeClass('first');
     });
-      
   });
+
+  // change the weight of the nodes when the user toggles the radio buttons
+  $('.weight-toggle').children().click(function(event) {
+    m.weight(this.value);
+  })
 
   // stop the listeners when leaving page
   $scope.$on('$destroy', function(){

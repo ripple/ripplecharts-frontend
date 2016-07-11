@@ -362,8 +362,7 @@ var Topology = function ($http) {
       .on('mouseout', unhighlight);
 
     graph.nodes.each(function(d) {
-      var r = Number(d.inbound_count) + Number(d.outbound_count) ?
-        Math.pow(Number(d.inbound_count) + Number(d.outbound_count), graph.growth_factor) + 2 : 2;
+      var r = Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) + 2;
 
       d3.select(this)
       .attr('_r', r)
@@ -382,6 +381,8 @@ var TopologyMap = function($http, topology) {
   var self = this;
   var t = topology;
   var parent, svg, projection, w, h;
+
+  var locations;
 
   var zoom = d3.behavior.zoom()
   .scaleExtent([1, 100])
@@ -464,7 +465,7 @@ var TopologyMap = function($http, topology) {
     // see: http://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
     svg = parent.append("g");
 
-    // transparent rectangle to click to drag works on the entire map, not just the land
+    // transparent rectangle so click to drag works on the entire map, not just the land
     svg.append("rect")
        .attr("x", 0)
        .attr("y", 0)
@@ -503,7 +504,7 @@ var TopologyMap = function($http, topology) {
     // running tally of the number of nodes with invalid locations
     var invalid_count = 0;
 
-    var locations = svg.selectAll("circle")
+    locations = svg.selectAll("circle")
       .data(node_list)
       .enter()
       .append("circle")
@@ -517,7 +518,7 @@ var TopologyMap = function($http, topology) {
         // lat +90 to -90 long +180 to -180 constitute valid coords
         // && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180\
 
-        // only place on the map if the ip exists and can be geocoded
+        // only place on the map if the ip exists
         if(d.ip) {
           return "translate(" + projection([d.lat, d.long]) + ")";
         }
@@ -527,16 +528,20 @@ var TopologyMap = function($http, topology) {
         var o = get_offset(invalid_count);
         return "translate(" + o.x + "," + o.y + ")"; 
       })
-      .style("fill", function(d) {
-        return t.versionToColor(d.version);
-      })
       .attr("r", function(d) {
-        return Number(d.inbound_count) + Number(d.outbound_count) ?
-          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.25) + 2 : 2;
+        return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;
       })
       .attr("_r", function(d) {
-        return Number(d.inbound_count) + Number(d.outbound_count) ?
-          Math.pow(Number(d.inbound_count) + Number(d.outbound_count), 0.25) + 2 : 2;
+        return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;
+      })
+      .attr("connections", function(d) {
+        return (Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0);
+      })
+      .attr("uptime", function(d) {
+        return Number(d.uptime); // uptime in seconds
+      })
+      .style("fill", function(d) {
+        return t.versionToColor(d.version);
       })
       .style("opacity", 1)
       .attr('pubkey', function(d) {
@@ -550,5 +555,35 @@ var TopologyMap = function($http, topology) {
     parent.call(zoom);
   }
 
+  function calculate_weight(node, weight_by) {
+
+    var connections = d3.select(node).attr("connections"),
+        uptime = d3.select(node).attr("uptime"),
+        radius = d3.select(node).attr("r"),
+        conn_radius = connections ? Math.pow(connections, 0.5) - 0.5: 2,
+        up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 1: 2,
+        scale;
+    if(weight_by == "connections") {
+      scale = radius / up_radius;
+      return conn_radius * scale;
+    }
+    else {
+      scale = radius / conn_radius;
+      return up_radius * scale;
+    }
+  }
+
+  self.weight = function(weight_by) {
+
+    var current_weight;
+    locations
+      .attr("r", function(d) {
+        current_weight = calculate_weight(this, weight_by); 
+        return current_weight;
+      })
+      .attr("_r", function() {
+        return d3.select(this).attr("r");
+      });
+  }
 }
 
