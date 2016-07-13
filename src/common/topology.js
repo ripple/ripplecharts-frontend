@@ -520,7 +520,7 @@ var TopologyMap = function($http, topology) {
 
         // only place on the map if the ip exists
         if(d.ip) {
-          return "translate(" + projection([d.lat, d.long]) + ")";
+          return "translate(" + projection([d.long, d.lat]) + ")";
         }
 
         // if there is no location, then place the node in the invalid zone
