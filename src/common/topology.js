@@ -430,7 +430,7 @@ var TopologyMap = function($http, topology) {
   // if the node has an invalid/unknown location, then place it in the appropriate zone
   // this function generates the x and y offsets so that those nodes are placed in neat rows and cols
   function get_offset(invalid_count) {
-    var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = 420;
+    var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = h-80; // 420
 
     // variable for which column the node should be placed in
     var placement = x_dim * invalid_count;
@@ -475,14 +475,14 @@ var TopologyMap = function($http, topology) {
     // dividing line for the unknown/invalid ip zone
     svg.append("line")
        .attr("x1", 0)
-       .attr("y1", 410)
+       .attr("y1", h-90)
        .attr("x2", 650)
-       .attr("y2", 410);
+       .attr("y2", h-90); // 410
 
     // label for unknown/invalid ip zone
     svg.append("text")
        .attr("x", 7)
-       .attr("y", 403)
+       .attr("y", h-97) // 403
        .text("Unknown Location");
 
     // draw all of the countries
@@ -498,8 +498,6 @@ var TopologyMap = function($http, topology) {
 
   // populate the atlas with locations
   self.populate = function(node_list) {
-
-    var x_offset = 80, y_offset = 300;
 
     // running tally of the number of nodes with invalid locations
     var invalid_count = 0;

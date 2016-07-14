@@ -146,41 +146,69 @@
    font-size: 14px;
   }
 
-  .topology-container {
+  .visualization {
     width: 100%;
-    height: 100%;
-    margin-top: 50px;
-    margin-bottom: 550px;
+    height: 420px;
     overflow: hidden;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .topology-container {
+    width: 550px;
+    height: 100%;
+    float: left;
+    position: relative;
+    overflow: hidden;
+    margin: 0 15px;
+    flex: 0 0 auto;
+  }
+
+  .control-panel {
+    width: 100px;
+    position: relative;
+    /*float: right;*/
+    p {
+      margin-top: 40px;
+    }
+    margin: 0 15px;
+    flex: 0 0 auto;
+
+    /*form {
+      float: left;
+      margin-left: 20px;
+      margin-bottom: 10px;
+      text-align: left;
+    }*/
   }
 
   .toggle {
     position: absolute;
-    width: 630px;
+    width: 550px;
     text-align: center;
     left: 250%;
-    margin-left: -315px;
+    margin-left: -275px;
   }
+/*  .toggle {
+    position: relative;
+    width: 550px;
+    text-align: center;
 
+  }
+*/
   .first {
     left: 50%;
   }
 
   .topology-map {
-    p {
-      float: left;
-    }
 
-    form {
-      float: left;
-      margin-left: 20px;
-      margin-bottom: 10px;
-      text-align: left;
-    }
 
     svg {
-      border: 1px solid black;
+      border: 1px solid #eee;
       margin: 0 auto;
+      float: left;
     }
 
     path {
@@ -202,7 +230,9 @@
       font-size: 10px;
       fill: black;
     }
+
   }
+
 
   #topology-table {
   	display: table;
@@ -352,3 +382,8 @@
 }
 
 
+.dark {
+  svg {
+
+  }
+}
