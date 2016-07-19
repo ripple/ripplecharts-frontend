@@ -46,8 +46,8 @@ angular.module( 'ripplecharts.topology', [
         if (loadGraph) {
           t.produce(data, {
             element: ".topology-graph",
-            width: 700,
-            height: 500
+            width: 550,
+            height: 425
           });
         } else {
           t.update(data);
@@ -92,23 +92,14 @@ angular.module( 'ripplecharts.topology', [
 
   // click to toggle between charts
   $('.switch-input').click(function(event) { 
-    $('.first').animate({
-        left: '-50%'
-    }, 500, function() {
-        $(this).css('left', '250%');
-        $(this).appendTo('.topology-container');
-        if($(this).hasClass('topology-graph')) {
-          $('.topology-map').addClass('first')
-          .animate({
-              left: '50%'
-          }, 500);
-        } else {
-          $('.topology-graph').addClass('first')
-          .animate({
-              left: '50%'
-          }, 500);
-        }
-        $(this).removeClass('first');
+    $('.first').fadeOut(500, function() {
+      if($(this).hasClass('topology-graph')) {
+        $('.topology-map').addClass('first').fadeIn(500);
+      }
+      else {
+        $('.topology-graph').addClass('first').fadeIn(500);
+      }
+      $(this).removeClass('first');
     });
   });
 

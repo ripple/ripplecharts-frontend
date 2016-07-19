@@ -24,6 +24,56 @@
   }
 }
 
+.dark {
+  .topology-map {
+    svg {
+      border: 1px solid #222 !IMPORTANT;
+      margin: 0 auto;
+      float: left;
+    }
+
+    path {
+      stroke: #444 !IMPORTANT;
+      fill: #333 !IMPORTANT;
+    }
+  }
+  .switch {
+    background: linear-gradient(to bottom, #222, #111 25px);
+    background-image: -webkit-linear-gradient(top, #111111, #000000 25px);
+    box-shadow: inset 0 -1px white, inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  }
+  .switch-label {
+    background: #222;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 2px rgba(0, 0, 0, 0.15);
+    border: 1px solid gray;
+  }
+  .switch-label:before {
+    color: #aaaaaa;
+    text-shadow: 0 1px rgba(255, 255, 255, 0.5);
+  }
+  .switch-label:after {
+    color: #aaaaaa;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.2);
+  }
+  .switch-input:checked ~ .switch-label {
+    background: #111111;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), inset 0 0 3px rgba(0, 0, 0, 0.2);
+  }
+  .switch-handle {
+    background: linear-gradient(to bottom, #000000 40%, #f0f0f0);
+    background-image: -webkit-linear-gradient(top, #000000 40%, #f0f0f0);
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+  }
+  .switch-handle:before {
+    background: linear-gradient(to bottom, #111111, #000000);
+    background-image: -webkit-linear-gradient(top, #111111, #000000);
+    box-shadow: inset 0 1px rgba(0, 0, 0, 0.02);
+  }
+  .switch-input:checked ~ .switch-handle {
+    box-shadow: -1px 1px 5px rgba(0, 0, 0, 0.2);
+  }
+}
+
 /* Slider Switch Styles */
 .switch {
   position: absolute;
@@ -114,7 +164,7 @@
   box-shadow: inset 0 1px rgba(0, 0, 0, 0.02);
 }
 .switch-input:checked ~ .switch-handle {
-  left: 74px;
+  left: 72px;
   box-shadow: -1px 1px 5px rgba(0, 0, 0, 0.2);
 }
  
@@ -147,59 +197,42 @@
   }
 
   .visualization {
-    width: 100%;
-    height: 420px;
+    width: 800px;
+    height: 425px;
     overflow: hidden;
-    padding: 0 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .topology-container {
-    width: 550px;
-    height: 100%;
-    float: left;
     position: relative;
-    overflow: hidden;
-    margin: 0 15px;
-    flex: 0 0 auto;
+    margin: 0 auto;
   }
 
   .control-panel {
     width: 100px;
-    position: relative;
-    /*float: right;*/
+    position: absolute;
+    right: 0;
+
     p {
       margin-top: 40px;
+      margin-left: 5px;
     }
-    margin: 0 15px;
-    flex: 0 0 auto;
 
-    /*form {
+    form {
       float: left;
-      margin-left: 20px;
       margin-bottom: 10px;
       text-align: left;
-    }*/
+      margin-left: 5px;
+    }
   }
 
-  .toggle {
+  .swap {
     position: absolute;
     width: 550px;
     text-align: center;
-    left: 250%;
-    margin-left: -275px;
-  }
-/*  .toggle {
-    position: relative;
-    width: 550px;
-    text-align: center;
-
-  }
-*/
-  .first {
     left: 50%;
+    margin-left: -275px;
+    opacity: 0;
+  }
+
+  .first {
+    opacity: 1;
   }
 
   .topology-map {
@@ -233,6 +266,31 @@
 
   }
 
+  /* stacks the control panel on top of the map */
+  @media (max-width: 860px) {
+    .visualization {
+      width: 100%;
+      height: 500px;
+
+    }
+    .control-panel {
+      width: 192px;
+      position: relative;
+      right: 0;
+      margin: 0 auto;
+      overflow: hidden;
+      p {
+        float: left;
+        width: 80px;
+      }
+      form {
+        float: left;
+        margin: 40px 0 10px -5px;
+        text-align: left;
+        width: 95px;
+      }
+    }
+  }
 
   #topology-table {
   	display: table;
@@ -378,12 +436,5 @@
     .topology-graph svg {
       zoom:.4;
   	}
-  }
-}
-
-
-.dark {
-  svg {
-
   }
 }
