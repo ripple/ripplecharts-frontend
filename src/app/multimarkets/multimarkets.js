@@ -24,8 +24,11 @@ angular.module( 'ripplecharts.multimarkets', [
 .controller( 'MultimarketsCtrl', function MultimarketsCtrl($scope, $state, $location, gateways) {
 
   $scope.markets  = store.session.get('multimarkets') ||
-    store.get('multimarkets') || 15;
+    store.get('multimarkets');
 
+  if (!$scope.markets || !$scope.markets.length) {
+    $scope.markets = 15;  //load top 15
+  }
 
   var markets = new MultiMarket ({
     url            : API,

@@ -120,7 +120,7 @@
             !found) {
           disable = false;
           issuers.push({
-            text: select.issuer,
+            text: gateways.getName(select.issuer) || select.issuer,
             value: issuers.length,
             account: select.issuer,
             selected: true
@@ -169,52 +169,82 @@
      }
 
     function oldDropdowns(selection, fixed) {
-      var currencies       = gateways.getCurrencies(fixed);
-      var currencySelect   = selection.append("select").attr("class","currency").on("change", changeCurrency);
-      var gateway          = gateways.getName(select.currency, select.issuer);
+      var currencies = gateways.getCurrencies(fixed);
+      var currencySelect = selection.append('select')
+        .attr('class','currency')
+        .on('change', changeCurrency);
       var selectedCurrency = select ? select.currency : null;
+      var gatewaySelect = selection.append('select')
+        .attr('class','gateway')
+        .on('change', changeGateway);
 
-      var gatewaySelect  = selection.append("select").attr("class","gateway").on("change", changeGateway);
-
-      var option = currencySelect.selectAll("option")
+      var option = currencySelect.selectAll('option')
         .data(currencies)
-        .enter().append("option")
-        .attr("class", function(d){ return d.currency })
-        .property("selected", function(d) { return selectedCurrency && d.currency === selectedCurrency; })
+        .enter().append('option')
+        .attr('class', function(d){ return d.currency })
+        .property('selected', function(d) {
+          return selectedCurrency && d.currency === selectedCurrency; })
         .text(function(d){ return d.currency });
 
       changeCurrency();
 
       function changeCurrency() {
         var currency = currencySelect.node().value;
-        var list = currency == 'XRP' ? [""] :
-          gateways.getIssuers(currency, fixed).map(function(d){
-            return d.name;
+        var list = [];
+
+        if (currency !== 'XRP') {
+          list = gateways.getIssuers(currency, fixed);
+
+          if (list.every(function(d) { return select.issuer !== d.account})) {
+            list.unshift({
+              name: gateways.getName(select.issuer) || select.issuer,
+              account: select.issuer
+            });
+          }
+        }
+
+        var option = gatewaySelect.selectAll('option')
+        .data(list);
+
+        option.enter().append('option')
+          .text(function(d) {
+            return d.name
           });
 
-        var option = gatewaySelect.selectAll("option").data(list, String);
-
-        option.enter().append("option").text(function(d){return d});
         option.exit().remove();
-        if (currency=="XRP") gatewaySelect.attr("disabled", "true");
-        else gatewaySelect.attr('disabled', null);
+
+        if (currency === 'XRP') {
+          gatewaySelect.attr('disabled', 'true');
+        } else {
+          gatewaySelect.attr('disabled', null);
+        }
 
 
         if (select) {
-          option.property("selected", function(d) { return d === gateway });
+          option.property('selected', function(d) {
+            return d.account === select.issuer;
+          });
         }
 
         changeGateway();
       }
 
       function changeGateway() {
-        var gateway = gatewaySelect.node().value,
-          currency  = currencySelect.node().value,
-          accounts  = gateways.getIssuers(currency, fixed),
-          account   = accounts && accounts.filter(function(d) { return d.name === gateway; })[0];
-          issuer    = account ? account.account : null;
+        var name = gatewaySelect.node().value;
+        var currency = currencySelect.node().value;
+        var list = gatewaySelect.selectAll('option')
+        .data();
 
-          event.change(issuer ? {currency:currency, issuer:issuer} : {currency:currency});
+        var gateway = list.filter(function(d) {
+          return d.name === name;
+        })[0];
+
+        event.change(gateway ? {
+          currency: currency,
+          issuer: gateway.account
+        } : {
+          currency: currency
+        });
       }
     }
 

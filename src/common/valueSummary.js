@@ -321,7 +321,7 @@ var ValueSummary = function (options) {
 
     var currency = d.data.base ? d.data.base.currency : d.data.currency;
     var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
-    var gateway  = gateways.getName(currency, issuer) || issuer;
+    var gateway  = gateways.getName(issuer, currency) || issuer;
     var amount   = commas(d.data.amount,2);
     var value    = currency === exchange.currency || !exchange.rate ? "" : commas(d.value/exchange.rate,2);
     var count    = d.data.count;

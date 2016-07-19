@@ -61,15 +61,15 @@ var MiniChart = function(base, counter, markets, gateways) {
       if (loaded) self.load();
     });
 
-  dropdowns = self.div.append("div");
+  dropdowns = self.div.append("div").attr('class','control');
   dropdowns.append("div").attr("class","base dropdowns").attr("id", "base"+self.index).call(dropdownA);
   dropdowns.append("div").attr("class","counter dropdowns").attr("id", "quote"+self.index).call(dropdownB);
 
   if (markets.options.fixed) {
     dropdowns.style("display","none");
-    header.html("<small>"+gateways.getName(self.base.currency, self.base.issuer)+
+    header.html("<small>"+gateways.getName(self.base.issuer, self.base.currency)+
       "</small>"+baseCurrency+"/"+counterCurrency+"<small>"+
-      gateways.getName(self.counter.currency, self.counter.issuer)+"</small>");
+      gateways.getName(self.counter.issuer, self.counter.currency)+"</small>");
   }
 
   status = self.div.append("h4").attr("class", "status");
@@ -321,9 +321,9 @@ var MiniChart = function(base, counter, markets, gateways) {
         flipping = false;
 
         if (markets.options.fixed) {
-          header.html("<small>"+gateways.getName(self.base.currency, self.base.issuer)+
+          header.html("<small>"+gateways.getName(self.base.issuer, self.base.currency)+
             "</small>"+self.base.currency+"/"+self.counter.currency+"<small>"+
-            gateways.getName(self.counter.currency, self.counter.issuer)+"</small>");
+            gateways.getName(self.counter.issuer, self.counter.currency)+"</small>");
         }
       });
 

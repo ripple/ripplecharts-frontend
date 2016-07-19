@@ -242,7 +242,7 @@ function CapChart(options) {
 
       sendDataCache[currency][range.name]['raw'].push({
         address : c.issuer,
-        name    : options.gateways.getName(c.currency, c.issuer),
+        name    : options.gateways.getName(c.issuer, c.currency),
         results : data.payments.map(function(d) {
           return [
             moment.utc(d.start).unix()*1000,
@@ -323,7 +323,7 @@ function CapChart(options) {
 
       tradeDataCache[currency][range.name]['raw'].push({
         address : base.issuer,
-        name    : options.gateways.getName(base.currency, base.issuer),
+        name    : options.gateways.getName(base.issuer, base.currency),
         results : data.map(function(d){return[d.startTime.unix()*1000,d.baseVolume]})
       });
 
@@ -404,7 +404,7 @@ function CapChart(options) {
 
       capDataCache[currency][range.name]['raw'].push({
         address: data.issuer,
-        name: options.gateways.getName(data.currency, data.issuer),
+        name: options.gateways.getName(data.issuer, data.currency),
         results: data.rows.map(function(d) {
           return [
             moment.utc(d.date).unix()*1000,

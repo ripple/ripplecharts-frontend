@@ -1,7 +1,7 @@
  .mmpage{
   margin-bottom: 300px;
  }
- 
+
  .multiMarket {
 
  .add {
@@ -49,8 +49,8 @@
   .chartDetails {
     height:40px;
   }
-}  
-  
+}
+
  .chartDetails label {display:inline}
  .chartDetails .range {float:left; text-align:left; padding-top:2px; font-size:12px; font-weight:bold; overflow:hidden}
  .chartDetails .range span {padding-right:5px}
@@ -86,13 +86,13 @@
  .clickable:hover {
   box-shadow:0 0 2px #36c, inset 0 0 2px #36c;
   border-color:#58b;
-  border-radius:2px;  
+  border-radius:2px;
   cursor:pointer;
 }
 
  .clickable:hover {
   box-shadow:0 0 5px #36c, inset 0 0 3px #36c;
-  border-color:#249;  
+  border-color:#249;
 }
 
  .grid .domain {
@@ -108,7 +108,7 @@
 }
 
  .chart .axis .tick line {
-  stroke:none;  
+  stroke:none;
 }
 
  .chart .axis .title {
@@ -159,17 +159,17 @@
 }
 
  .chart .flip {
-  fill: #999;  
+  fill: #999;
   stroke:none;
   cursor:pointer;
 }
 
  .chart .flip:hover {
-  fill: #888;  
+  fill: #888;
 }
 
  .chart .flip:active {
-  fill: #456;  
+  fill: #456;
 }
 
  .chart .flip text {
@@ -178,30 +178,27 @@
 
  .chart .pointer {
   fill: #aaa;
-  stroke:none; 
+  stroke:none;
 }
 
  .chart svg {display:block}
  .chart .dropdowns {
-  border-top:1px solid #bbb;
-  display: inline-block;
+  float: left;
   width: 50%;
-}
- .chart .dropdowns div {
-  overflow:hidden;
-  display:table-cell;
-  text-align:left;
+  border-top: 1px solid #bbb;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
  .chart .dropdowns .base {
-  border-right:1px solid #ddd;  
-} 
+  border-right:1px solid #ddd;
+}
 
  .chart .dropdowns select{
   -webkit-appearance: none;
   border:none;
   background:none;
-  width:auto;  
+  width:auto;
   margin:0;
   height:22px;
   background:url('images/dropdown.png') no-repeat 97% 70%;
@@ -214,21 +211,20 @@
 }
 
  .chart .dropdowns .currency {
-  font-size:16px;  
-  width:60px;
+  font-size:16px;
+  width:50px;
   float: left;
 }
 
  .chart .dropdowns .gateway {
   font-size:11px;
-  width: 96px;
   border-right:1px solid #ddd;
+  min-width: 90px;
 }
 
 .chart .counter .gateway {
   border-right: none !important;
   background-position: 100% 70% !important;
-  width: 110px !important;
 }
 
 @-moz-document url-prefix() {
@@ -271,7 +267,7 @@
 
 /*
  * Dark theme
- * 
+ *
  */
 
  .dark .multiMarket {
@@ -300,7 +296,7 @@
    .chart .axis text {
     fill:@darkText;
   }
-   
+
    .chart .timeBackground {
     fill: #333;
   }
@@ -337,8 +333,8 @@
   }
 
    .chart .dropdowns .base {
-    border-color:#333;  
-  } 
+    border-color:#333;
+  }
 
    .chart .dropdowns select {
     border-color:#333;

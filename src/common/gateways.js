@@ -10,8 +10,7 @@ angular.module('gateways', [])
     var currency;
 
     defaultGateways = data;
-    custom = store.session.get('userGateways') ||
-      store.get('userGateways') || { };
+    custom = store.get('userGateways') || { };
 
     //add or update gateways based
     //on data from api
@@ -89,7 +88,6 @@ angular.module('gateways', [])
     }
 
     // save
-    store.session.set('userGateways', custom);
     store.set('userGateways', custom);
   });
 
@@ -234,7 +232,6 @@ angular.module('gateways', [])
     } else return;
 
     //save
-    store.session.set('userGateways', custom);
     store.set('userGateways', custom);
 
     //check for featured gateway
@@ -278,27 +275,35 @@ angular.module('gateways', [])
     } else return;
 
     //save
-    store.session.set('userGateways', custom);
     store.set('userGateways', custom);
   };
 
-  var getName = function(currency, issuer) {
-    if (currency !== 'XRP' &&
+  var getName = function(issuer, currency) {
+    if (currency && currency !== 'XRP' &&
         custom[currency] &&
         custom[currency].issuers &&
         custom[currency].issuers[issuer]) {
       return custom[currency].issuers[issuer].name || '';
+
     } else {
+      for (var key in custom) {
+        for (var address in custom[key].issuers) {
+          if (address === issuer) {
+            return custom[key].issuers[issuer].name || '';
+          }
+        }
+      }
+
       return '';
     }
   };
 
   return {
-    promise        : promise,
-    getCurrencies  : getCurrencies,
-    getIssuers     : getIssuers,
-    updateCurrency : updateCurrency,
-    updateIssuer   : updateIssuer,
-    getName        : getName
+    promise: promise,
+    getCurrencies: getCurrencies,
+    getIssuers: getIssuers,
+    updateCurrency: updateCurrency,
+    updateIssuer: updateIssuer,
+    getName: getName
   }
 });
