@@ -103,10 +103,11 @@ angular.module( 'ripplecharts.topology', [
     });
   });
 
+
   // change the weight of the nodes when the user toggles the radio buttons
   $('.weight-toggle').children().on('change', function(event) {
-    console.log(this);
-    m.weight(this.value);
+    console.log(m.getLocations());
+    weight(this.value, t.getNodes(), m.getLocations());
   })
 
   // stop the listeners when leaving page

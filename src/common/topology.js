@@ -2,6 +2,10 @@ var Topology = function ($http) {
   var self = this;
   var graph;
 
+  self.getNodes = function() {
+    return graph.nodes;
+  }
+
   self.fetch = function() {
     var url = API + '/network/topology';
     return new Promise(function(resolve, reject) {
@@ -416,6 +420,11 @@ var TopologyMap = function($http, topology) {
       });
   });
 
+  self.getLocations = function() {
+    return locations;
+  }
+
+
   self.fetch = function() {
     var url = API + '/network/topology/nodes?verbose=true';
     return new Promise(function(resolve, reject) {
@@ -555,19 +564,21 @@ var TopologyMap = function($http, topology) {
     parent.call(zoom);
   }
 
+}
 
-  // given the node and the new attribute by which to weight,
-  // returns the updated radius.
-  // calculates the current scale by dividing the current radius
-  // by the original radius for that weight
-  function calculate_weight(node, weight_by) {
+// given the node and the new attribute by which to weight,
+// returns the updated radius.
+// calculates the current scale by dividing the current radius
+// by the original radius for that weight
+function calculate_weight(node, type, weight_by) {
 
-    var connections = d3.select(node).attr("connections"),
-        uptime = d3.select(node).attr("uptime"),
-        radius = d3.select(node).attr("r"),
-        conn_radius = connections ? Math.pow(connections, 0.5) - 0.5: 2,
-        up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 1: 2,
-        scale;
+  var connections = d3.select(node).attr("connections"),
+      uptime = d3.select(node).attr("uptime"),
+      radius = d3.select(node).attr("r"),
+      conn_radius, up_radius, scale;
+  if(type == "map") {
+    conn_radius = connections ? Math.pow(connections, 0.5) - 0.5: 2;
+    up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 1: 2;
     if(weight_by == "connections") {
       scale = radius / up_radius;
       return conn_radius * scale;
@@ -577,17 +588,29 @@ var TopologyMap = function($http, topology) {
       return up_radius * scale;
     }
   }
-
-  // changes the weight of all nodes from uptime to connections (or vice versa)
-  self.weight = function(weight_by) {
-
-    d3.selectAll("circle")
-      .attr("r", function(d) {
-        return calculate_weight(this, weight_by); 
-      })
-      .attr("_r", function() {
-        return d3.select(this).attr("r");
-      });
+  else {
+    conn_radius = connections ? Math.pow(connections, 0.5) + 3: 2;
+    up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 3: 2;
+    if(weight_by == "connections")
+      return conn_radius;
+    else
+      return up_radius;
   }
 }
 
+// changes the weight of all nodes from uptime to connections (or vice versa)
+function weight(weight_by, nodes, locations) {
+  locations.each(function(d) {
+    var r = calculate_weight(this, "map", weight_by);
+    d3.select(this)
+      .attr('r', r)
+      .attr('_r', r);
+  });
+
+  nodes.each(function(d) {
+    var r = calculate_weight(this, "graph", weight_by);
+    d3.select(this)
+      .attr('r', r)
+      .attr('_r', r);
+  });
+}
