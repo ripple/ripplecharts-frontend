@@ -326,6 +326,12 @@ var Topology = function ($http) {
       .style("fill", function(d) {
         return self.versionToColor(d.version);
       })
+      .attr("connections", function(d) {
+        return (Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0);
+      })
+      .attr("uptime", function(d) {
+        return Number(d.uptime); // uptime in seconds
+      })
       .attr('r', 0)
       .style('opacity', 0)
       .call(drag);
@@ -430,7 +436,7 @@ var TopologyMap = function($http, topology) {
   // if the node has an invalid/unknown location, then place it in the appropriate zone
   // this function generates the x and y offsets so that those nodes are placed in neat rows and cols
   function get_offset(invalid_count) {
-    var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = h-80; // 420
+    var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = h-60; // 420
 
     // variable for which column the node should be placed in
     var placement = x_dim * invalid_count;
@@ -451,7 +457,7 @@ var TopologyMap = function($http, topology) {
 
     // alternative options: stereographic, orthographic (globe), equirectangular, albers, transverseMercator
     projection = d3.geo.mercator() 
-        .center([0, 40])
+        .center([0, 25])
         .scale(101)
         .translate([w/2-3, h/2-37]);
 
@@ -475,14 +481,14 @@ var TopologyMap = function($http, topology) {
     // dividing line for the unknown/invalid ip zone
     svg.append("line")
        .attr("x1", 0)
-       .attr("y1", h-90)
+       .attr("y1", h-70)
        .attr("x2", 650)
-       .attr("y2", h-90); // 410
+       .attr("y2", h-70); // 410
 
     // label for unknown/invalid ip zone
     svg.append("text")
        .attr("x", 7)
-       .attr("y", h-97) // 403
+       .attr("y", h-77) // 403
        .text("Unknown Location");
 
     // draw all of the countries
@@ -513,13 +519,9 @@ var TopologyMap = function($http, topology) {
         ].join(' ')
       })
       .attr("transform", function(d, i) {
-        // lat +90 to -90 long +180 to -180 constitute valid coords
-        // && d.lat <= 90 && d.lat >= -90 && d.long <= 180 && d.long >= -180\
-
         // only place on the map if the ip exists
-        if(d.ip) {
+        if(d.ip)
           return "translate(" + projection([d.long, d.lat]) + ")";
-        }
 
         // if there is no location, then place the node in the invalid zone
         invalid_count++;
@@ -553,6 +555,11 @@ var TopologyMap = function($http, topology) {
     parent.call(zoom);
   }
 
+
+  // given the node and the new attribute by which to weight,
+  // returns the updated radius.
+  // calculates the current scale by dividing the current radius
+  // by the original radius for that weight
   function calculate_weight(node, weight_by) {
 
     var connections = d3.select(node).attr("connections"),
@@ -571,13 +578,12 @@ var TopologyMap = function($http, topology) {
     }
   }
 
+  // changes the weight of all nodes from uptime to connections (or vice versa)
   self.weight = function(weight_by) {
 
-    var current_weight;
-    locations
+    d3.selectAll("circle")
       .attr("r", function(d) {
-        current_weight = calculate_weight(this, weight_by); 
-        return current_weight;
+        return calculate_weight(this, weight_by); 
       })
       .attr("_r", function() {
         return d3.select(this).attr("r");
