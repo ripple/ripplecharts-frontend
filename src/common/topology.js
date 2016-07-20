@@ -381,7 +381,7 @@ var Topology = function ($http) {
     graph.links.exit().remove();
   }
 
-  // changes the weight of all nodes from uptime to connections (or vice versa)
+  // changes the weight of graph nodes from uptime to connections (or vice versa)
   this.weight = function(weight_by) {
     d3.selectAll("circle.graph").each(function(d) {
       var r = calculate_weight(this, "graph", weight_by);
@@ -568,11 +568,9 @@ var TopologyMap = function($http, topology) {
   }
 
 
-  // changes the weight of all nodes from uptime to connections (or vice versa)
+  // changes the weight of map nodes from uptime to connections (or vice versa)
   this.weight = function(weight_by) {
-    console.log("hello");
     d3.selectAll("circle.map").each(function(d) {
-      console.log("*");
       var r = calculate_weight(this, "map", weight_by);
       d3.select(this)
         .attr('r', r)
