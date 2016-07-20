@@ -2,10 +2,6 @@ var Topology = function ($http) {
   var self = this;
   var graph;
 
-  self.getNodes = function() {
-    return graph.nodes;
-  }
-
   self.fetch = function() {
     var url = API + '/network/topology';
     return new Promise(function(resolve, reject) {
@@ -175,7 +171,7 @@ var Topology = function ($http) {
     d3.selectAll('.' + pubkey)
     .classed('highlight', true);
 
-    d3.selectAll('.topology-node.' + pubkey)
+    d3.selectAll('.map.' + pubkey)
       .transition()
       .style('fill-opacity', 0.9)
       .style('stroke-opacity', 0.8)
@@ -183,7 +179,7 @@ var Topology = function ($http) {
         return d3.select(this).attr('_r') * 2;
       });
 
-    d3.selectAll('.chart.topology-node' + pubkey)
+    d3.selectAll('.graph' + pubkey)
       .transition()
       .style('fill-opacity', 0.9)
       .style('stroke-opacity', 0.8)
@@ -196,7 +192,7 @@ var Topology = function ($http) {
 
   function unhighlight() {
     // console.log("UNHIGHLIGHT");
-    d3.selectAll('.topology-node.highlight')
+    d3.selectAll('.map.highlight')
       .transition()
       .style('fill-opacity', 0.7)
       .style('stroke-opacity', 0.5)
@@ -204,7 +200,7 @@ var Topology = function ($http) {
         return d3.select(this).attr('_r');
       });
 
-    d3.selectAll('.chart.topology-node.highlight')
+    d3.selectAll('.graph.highlight')
       .transition()
       .style('fill-opacity', 0.7)
       .style('stroke-opacity', 0.5)
@@ -322,7 +318,7 @@ var Topology = function ($http) {
     var node = graph.nodes.enter().append("circle")
       .attr("class", function(d) {
         return [
-          'chart',
+          'graph',
           'topology-node',
           d.node_public_key
         ].join(' ')
@@ -384,6 +380,17 @@ var Topology = function ($http) {
     graph.nodes.exit().remove();
     graph.links.exit().remove();
   }
+
+  // changes the weight of all nodes from uptime to connections (or vice versa)
+  this.weight = function(weight_by) {
+    d3.selectAll("circle.graph").each(function(d) {
+      var r = calculate_weight(this, "graph", weight_by);
+      d3.select(this)
+        .attr('r', r)
+        .attr('_r', r);
+    });
+  }
+
 }
 
 
@@ -419,11 +426,6 @@ var TopologyMap = function($http, topology) {
         return is_highlighted ? d3.select(this).attr("_r") : d3.select(this).attr("r");
       });
   });
-
-  self.getLocations = function() {
-    return locations;
-  }
-
 
   self.fetch = function() {
     var url = API + '/network/topology/nodes?verbose=true';
@@ -524,6 +526,7 @@ var TopologyMap = function($http, topology) {
       .attr("class", function(d) {
         return [
           'topology-node',
+          'map',
           d.node_public_key
         ].join(' ')
       })
@@ -564,6 +567,18 @@ var TopologyMap = function($http, topology) {
     parent.call(zoom);
   }
 
+
+  // changes the weight of all nodes from uptime to connections (or vice versa)
+  this.weight = function(weight_by) {
+    console.log("hello");
+    d3.selectAll("circle.map").each(function(d) {
+      console.log("*");
+      var r = calculate_weight(this, "map", weight_by);
+      d3.select(this)
+        .attr('r', r)
+        .attr('_r', r);
+    });
+  }
 }
 
 // given the node and the new attribute by which to weight,
@@ -596,21 +611,4 @@ function calculate_weight(node, type, weight_by) {
     else
       return up_radius;
   }
-}
-
-// changes the weight of all nodes from uptime to connections (or vice versa)
-function weight(weight_by, nodes, locations) {
-  locations.each(function(d) {
-    var r = calculate_weight(this, "map", weight_by);
-    d3.select(this)
-      .attr('r', r)
-      .attr('_r', r);
-  });
-
-  nodes.each(function(d) {
-    var r = calculate_weight(this, "graph", weight_by);
-    d3.select(this)
-      .attr('r', r)
-      .attr('_r', r);
-  });
 }
