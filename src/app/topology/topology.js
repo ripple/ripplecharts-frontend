@@ -75,7 +75,7 @@ angular.module( 'ripplecharts.topology', [
     // draw the map next to the node chart
     m.draw({
       element: ".topology-map",
-      width: 550, // 630
+      width: 600, // 630
       height: 400 // 500
     });
     m.fetch().then(function(data){
