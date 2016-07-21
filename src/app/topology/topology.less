@@ -1,8 +1,8 @@
 .dark #topology #topology-table {
   .topologyTableHeader {
- 	background: #123;
+   background: #123;
   }
-  
+
   @media (max-width: 768px) {
     .topology-node .pubkey {
       float:none;
@@ -24,28 +24,271 @@
   }
 }
 
+.dark {
+  #topology .topology-map {
+    svg {
+      border: 1px solid #222;
+      margin: 0 auto;
+      float: left;
+    }
+
+    path {
+      fill: #222;
+    }
+
+    line {
+      stroke: #666;
+    }
+
+    text {
+      fill: #999;
+    }
+  }
+  .switch-label {
+    background: #161616;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+    border: 1px solid #262626;
+  }
+  topoloswitch-label:before {
+    color: #555;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.5);
+  }
+  .switch-label:after {
+    color: #555;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.5);
+  }
+  .switch-input:checked ~ .switch-label {
+    background: #161616;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  .switch-handle {
+    background: linear-gradient(to bottom, #333 40%, #666);
+    background-image: -webkit-linear-gradient(top, #333 40%, #666);
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+  }
+  .switch-handle:before {
+    background: linear-gradient(to bottom, #000, #333);
+    background-image: -webkit-linear-gradient(top, #000, #333);
+    box-shadow: inset 0 1px rgba(0, 0, 0, 0.02);
+  }
+  .switch-input:checked ~ .switch-handle {
+    box-shadow: -1px 1px 5px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Slider Switch Styles */
+.switch {
+  position: absolute;
+  display: block;
+  left: 50%;
+  width: 100px;
+  height: 30px;
+  padding: 3px;
+  margin: 0 10px 20px -50px;
+  border-radius: 18px;
+  cursor: pointer;
+}
+.switch-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+}
+.switch-label {
+  position: relative;
+  display: block;
+  height: inherit;
+  font-size: 10px;
+  text-transform: uppercase;
+  background: #eceeef;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 2px rgba(0, 0, 0, 0.15);
+}
+.switch-label:before, .switch-label:after {
+  position: absolute;
+  top: 50%;
+  margin-top: -.5em;
+  line-height: 1;
+  -webkit-transition: inherit;
+  -moz-transition: inherit;
+  -o-transition: inherit;
+  transition: inherit;
+}
+.switch-label:before {
+  content: attr(data-off);
+  right: 11px;
+  color: #aaaaaa;
+  text-shadow: 0 1px rgba(255, 255, 255, 0.5);
+}
+.switch-label:after {
+  content: attr(data-on);
+  left: 11px;
+  color: #aaaaaa;
+  text-shadow: 0 1px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+}
+.switch-input:checked ~ .switch-label {
+  background: #eeeeee;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), inset 0 0 3px rgba(0, 0, 0, 0.2);
+}
+.switch-input:checked ~ .switch-label:before {
+  opacity: 0;
+}
+.switch-input:checked ~ .switch-label:after {
+  opacity: 1;
+}
+.switch-handle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(to bottom, #FFFFFF 40%, #f0f0f0);
+  background-image: -webkit-linear-gradient(top, #FFFFFF 40%, #f0f0f0);
+  border-radius: 100%;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+}
+.switch-handle:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -6px 0 0 -6px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(to bottom, #eeeeee, #FFFFFF);
+  background-image: -webkit-linear-gradient(top, #eeeeee, #FFFFFF);
+  border-radius: 6px;
+  box-shadow: inset 0 1px rgba(0, 0, 0, 0.02);
+}
+.switch-input:checked ~ .switch-handle {
+  left: 72px;
+  box-shadow: -1px 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Transition
+========================== */
+.switch-label, .switch-handle {
+  transition: All 0.3s ease;
+  -webkit-transition: All 0.3s ease;
+  -moz-transition: All 0.3s ease;
+  -o-transition: All 0.3s ease;
+}
+
+
+
+
 #topology {
 
   h2, h4 {
-  	text-align: center;
+    text-align: center;
   }
 
   h4 {
-  	margin-bottom: 10px;
-  	opacity: .8;
+    margin-bottom: 10px;
+    opacity: .8;
   }
 
   .helpbox {
-  	margin: 0 60px;
+    margin: 0 60px;
    font-size: 14px;
   }
 
-  .topology-graph {
-  	text-align: center;
+  .visualization {
+    width: 950px;
+    height: 470px;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .control-panel {
+    width: 120px;
+    position: absolute;
+    right: -20px;
+
+    p {
+      margin-top: 40px;
+      margin-left: 14px;
+    }
+
+    form {
+      float: left;
+      margin-bottom: 10px;
+      text-align: left;
+      margin-left: 14px;
+    }
+  }
+
+  .swap {
+    position: absolute;
+    width: 750px;
+    height: 450px;
+    text-align: center;
+    left: 50%;
+    margin-left: -375px;
+    visibility: hidden;
+  }
+
+  .first {
+    visibility: inherit !IMPORTANT;
+  }
+
+  .topology-map {
+    svg {
+      border: 1px solid #eee;
+      margin: 0 auto;
+      float: left;
+    }
+
+    path {
+      stroke: #777;
+      stroke-width: 0.25px;
+      fill: #d3d3d3;
+    }
+
+    rect {
+      opacity: 0;
+    }
+
+    line {
+      stroke: black;
+      stroke-width: .5px;
+    }
+
+    text {
+      font-size: 10px;
+      fill: black;
+    }
+  }
+
+  /* stacks the control panel on top of the map */
+  @media (max-width: 1000px) {
+    .visualization {
+      width: 100%;
+      height: 550px;
+    }
+
+    .control-panel {
+      width: 192px;
+      position: relative;
+      right: 0;
+      margin: 0 auto;
+      overflow: hidden;
+      p {
+        float: left;
+        width: 80px;
+      }
+      form {
+        float: left;
+        margin: 40px 0 10px -5px;
+        text-align: left;
+        width: 95px;
+      }
+    }
   }
 
   #topology-table {
-  	display: table;
+    display: table;
     width: 100%;
     font-size: 14px;
     border-collapse: collapse;
@@ -72,8 +315,8 @@
     }
 
     .topology-node.highlight {
-  	  background-color: rgba(90,130,170,.2);
-  	}
+      background-color: rgba(90,130,170,.2);
+    }
 
     .topology-node {
       display: table-row;
@@ -92,6 +335,14 @@
   }
 
   @media (max-width: 768px) and (min-width: 501px) {
+    .visualization {
+      height: 450px;
+    }
+
+    .visualization .swap {
+      zoom: .75;
+    }
+
     #topology-table {
       margin-top:10px;
 
@@ -118,7 +369,7 @@
       }
 
       .topology-node .version {
-      	min-width:150px;
+        min-width:150px;
       }
 
       .topology-node .pubkey {
@@ -130,17 +381,21 @@
       }
 
       .topology-node .uptime_formatted {
-      	float:right;
+        float:right;
         min-width:75px;
       }
     }
-
-    .topology-graph svg {
-    	zoom:.6;
-  	}
   }
 
   @media (max-width: 500px) {
+    .visualization {
+      height: 380px;
+    }
+
+    .visualization .swap {
+      zoom: 0.6;
+    }
+
     #topology-table {
       margin-top:10px;
 
@@ -163,7 +418,7 @@
       }
 
       .topology-node .pubkey {
-      	width:100%;
+        width:100%;
         float:none;
         border-bottom:1px solid rgba(150,150,150,.3);
         padding-top:10px;
@@ -173,20 +428,16 @@
       }
 
       .topology-node .version {
-      	float:left;
+        float:left;
       }
 
       .topology-node .ip {
-      	display:none;
+        display:none;
       }
 
       .topology-node .uptime_formatted {
         min-width:75px;
       }
     }
-
-    .topology-graph svg {
-      zoom:.4;
-  	}
   }
 }

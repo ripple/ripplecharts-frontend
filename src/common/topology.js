@@ -124,9 +124,10 @@ var Topology = function ($http) {
     }
 
     graph = { };
+    var div = d3.select(options.element);
 
-    var width = options.width || 600;
-    var height = options.height || 300;
+    var width = div.node().getBoundingClientRect().width;
+    var height = div.node().getBoundingClientRect().height;
     var linkDistance = options.linkDistance || (width + height) / 4;
     var charge = options.charge || 0 - (width + height) / 4;
     var chargeDistance = options.chargeDistance || charge / 10;
@@ -153,7 +154,7 @@ var Topology = function ($http) {
           .attr("cy", function(d) { return d.y; });
       });
 
-    graph.svg = d3.select(options.element).append("svg")
+    graph.svg = div.append("svg")
       .attr("width", width)
       .attr("height", height)
 
@@ -166,36 +167,35 @@ var Topology = function ($http) {
   }
 
   function highlight() {
+    // console.log("HIGHLIGHT");
     var pubkey = d3.select(this).attr('pubkey');
-
     d3.selectAll('.' + pubkey)
     .classed('highlight', true);
 
-    graph.nodeGroup.selectAll('.topology-node.' + pubkey)
-    .transition()
-    .style('fill-opacity', 0.9)
-    .style('stroke-opacity', 0.8)
-    .style('stroke-width', 3)
-    .attr('r', function() {
-      return d3.select(this).attr('_r') * 2;
-    });
+    d3.selectAll('.topology-node.' + pubkey)
+      .transition()
+      .style('fill-opacity', 0.9)
+      .style('stroke-opacity', 0.8)
+      .attr('r', function() {
+        return d3.select(this).attr('_r') * 2;
+      });
 
   }
 
   function unhighlight() {
-    graph.nodeGroup.selectAll('.topology-node.highlight')
-    .transition()
-    .style('fill-opacity', 0.7)
-    .style('stroke-opacity', 0.5)
-    .style('stroke-width', 0.7)
-    .attr('r', function(d) {
-      return d3.select(this).attr('_r');
-    });
+    // console.log("UNHIGHLIGHT");
+    d3.selectAll('.topology-node.highlight')
+      .transition()
+      .style('fill-opacity', 0.7)
+      .style('stroke-opacity', 0.5)
+      .attr('r', function(d) {
+        return d3.select(this).attr('_r');
+      });
 
     d3.selectAll('.topology-node')
-    .classed('highlight', false);
+      .classed('highlight', false);
     d3.selectAll('.topology-link')
-    .classed('highlight', false);
+      .classed('highlight', false);
   }
 
   function scrollTween(offset) {
@@ -213,7 +213,6 @@ var Topology = function ($http) {
     if (!graph) {
       return;
     }
-
     // builds reference array of sources and targets
     var edges = [];
     var nodes = graph.force.nodes();
@@ -289,7 +288,7 @@ var Topology = function ($http) {
 
     link.transition()
       .delay(function(d, i) {
-        return 1000 + 1 * i
+        return 1000 + 1 * i;
       })
       .duration(500)
       .style('opacity', 1)
@@ -303,20 +302,29 @@ var Topology = function ($http) {
       .attr("class", function(d) {
         return [
           'topology-node',
+          'graph-node',
           d.node_public_key
         ].join(' ')
       })
       .style("fill", function(d) {
         return self.versionToColor(d.version);
       })
+      .attr("connections", function(d) {
+        return (Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0);
+      })
+      .attr("uptime", function(d) {
+        return Number(d.uptime); // uptime in seconds
+      })
       .attr('r', 0)
       .style('opacity', 0)
       .call(drag);
 
-    node.on('click', function(d) {
-      var row = d3.select('#topology-table .' + d.id);
+    d3.selectAll('circle').on('click', function(d) {
+      var row = d3.select('#topology-table .' + d.node_public_key);
       var box = row.node().getBoundingClientRect();
+
       var header = d3.select('.header').node().getBoundingClientRect();
+
       var y = window.pageYOffset + box.top - header.bottom;
 
       d3.transition()
@@ -326,7 +334,7 @@ var Topology = function ($http) {
 
     node.transition()
       .delay(function(d, i) {
-        return 500 + 20 * i
+        return 500 + 20 * i;
       })
       .duration(1000)
       .style('opacity', 1);
@@ -343,17 +351,249 @@ var Topology = function ($http) {
       .on('mouseout', unhighlight);
 
     graph.nodes.each(function(d) {
-      var r = Number(d.inbound_count) + Number(d.outbound_count) ?
-        Math.pow(Number(d.inbound_count) + Number(d.outbound_count), graph.growth_factor) + 2 : 2;
+      var r = Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) + 2;
 
       d3.select(this)
       .attr('_r', r)
       //.transition()
       .attr('r', r);
-    })
+    });
 
 
     graph.nodes.exit().remove();
     graph.links.exit().remove();
+  }
+
+  // changes the weight of graph nodes from uptime to connections (or vice versa)
+  this.weight = function(weight_by) {
+    d3.selectAll("circle.graph-node").each(function(d) {
+      var r = calculate_weight(this, "graph", weight_by);
+      d3.select(this)
+        .attr('r', r)
+        .attr('_r', r);
+    });
+  }
+
+}
+
+
+var TopologyMap = function($http, topology) {
+  var self = this;
+  var t = topology;
+  var parent, svg, projection, w, h;
+
+  var locations;
+
+  var zoom = d3.behavior.zoom()
+  .scaleExtent([1, 100])
+  .on("zoom", function() {
+    var e = d3.event,
+        tx = Math.min(0, Math.max(e.translate[0], w - w * e.scale)),
+        ty = Math.min(0, Math.max(e.translate[1], h - h * e.scale));
+    zoom.translate([tx, ty]);
+    svg.attr("transform", [
+      "translate(" + [tx, ty] + ")",
+      "scale(" + e.scale + ")"
+      ].join(" "));
+
+      svg.selectAll("circle")
+      .attr("transform", function(){
+        var trans = d3.transform(d3.select(this).attr("transform"));
+        return "translate(" + trans.translate[0] + "," + trans.translate[1] + ")scale(" + 1/e.scale + ")";
+      })
+      .attr("_r", function(){
+        // only update _r if the node isn't highlighted
+        // prevents node size from being stuck if the user zooms while highlighting a node
+        var is_highlighted = d3.select(this).attr("class").indexOf("highlight") > -1;
+
+        return is_highlighted ? d3.select(this).attr("_r") : d3.select(this).attr("r");
+      });
+  });
+
+  self.fetch = function() {
+    var url = API + '/network/topology/nodes?verbose=true';
+    return new Promise(function(resolve, reject) {
+        $http
+        .get(url)
+        .then(function(response) {
+          if(typeof response.data === 'object') {
+            return resolve(response.data);
+          } else {
+            return reject(response.data);
+          }
+        }, function(response) {
+          return reject(response.data);
+        });
+    })
+  }
+
+  // if the node has an invalid/unknown location, then place it in the appropriate zone
+  // this function generates the x and y offsets so that those nodes are placed in neat rows and cols
+  function get_offset(invalid_count) {
+    var x_dim = 10, y_dim = 12, x_offset = 10, y_offset = h-25; // 420
+
+    // variable for which column the node should be placed in
+    var placement = x_dim * invalid_count;
+    // if the node placement is beyond the edge of the box, then go to the next row
+    var row = Math.floor(placement / w);
+
+    // start in the first column if the node is placed in the next row
+    x_offset = placement >= w ? x_offset + placement % w : placement;
+
+    y_offset += row * y_dim;
+
+    return {x: x_offset, y: y_offset};
+  }
+
+  // draw the atlas
+  self.draw = function(properties) {
+    var div = d3.select(properties.element);
+
+    w = div.node().getBoundingClientRect().width;
+    h = div.node().getBoundingClientRect().height;
+
+    // alternative options: stereographic, orthographic (globe), equirectangular, albers, transverseMercator
+    projection = d3.geo.mercator()
+        .center([0, 35])
+        .scale(w/6.25)
+        .translate([w/2-3, h/2-37]);
+
+    var path = d3.geo.path().projection(projection);
+
+    parent = div.append("svg")
+      .attr("width", w)
+      .attr("height", h)
+      .append("g");
+
+    // intermediate layer so that dragging is smooth
+    // see: http://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
+    svg = parent.append("g");
+
+    // transparent rectangle so click to drag works on the entire map, not just the land
+    svg.append("rect")
+       .attr("x", 0)
+       .attr("y", 0)
+       .attr("width", w)
+       .attr("height", h);
+
+    // dividing line for the unknown/invalid ip zone
+    svg.append("line")
+       .attr("x1", 0)
+       .attr("y1", h-35)
+       .attr("x2", w)
+       .attr("y2", h-35); // 410
+
+    // label for unknown/invalid ip zone
+    svg.append("text")
+       .attr("x", 7)
+       .attr("y", h-42) // 403
+       .text("Unknown Location");
+
+    // draw all of the countries
+    d3.json("../src/app/topology/map.json", function(json) {
+      svg.selectAll("path")
+         .data(json["features"])
+         .enter()
+         .append("path")
+         .attr("d", path);
+    });
+
+  }
+
+  // populate the atlas with locations
+  self.populate = function(node_list) {
+
+    // running tally of the number of nodes with invalid locations
+    var invalid_count = 0;
+
+    locations = svg.selectAll("circle")
+      .data(node_list)
+      .enter()
+      .append("circle")
+      .attr("class", function(d) {
+        return [
+          'topology-node',
+          'map-node',
+          d.node_public_key
+        ].join(' ')
+      })
+      .attr("transform", function(d, i) {
+        // only place on the map if the ip exists
+        if(d.ip)
+          return "translate(" + projection([d.long, d.lat]) + ")";
+
+        // if there is no location, then place the node in the invalid zone
+        invalid_count++;
+        var o = get_offset(invalid_count);
+        return "translate(" + o.x + "," + o.y + ")";
+      })
+      .attr("r", function(d) {
+        return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;
+      })
+      .attr("_r", function(d) {
+        return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;
+      })
+      .attr("connections", function(d) {
+        return (Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0);
+      })
+      .attr("uptime", function(d) {
+        return Number(d.uptime); // uptime in seconds
+      })
+      .style("fill", function(d) {
+        return t.versionToColor(d.version);
+      })
+      .style("opacity", 1)
+      .attr('pubkey', function(d) {
+        return d.node_public_key;
+      });
+
+    locations.append("title")
+      .text(function(d) { return d.node_public_key; });
+
+    // enables zooming behavior
+    parent.call(zoom);
+  }
+
+
+  // changes the weight of map nodes from uptime to connections (or vice versa)
+  this.weight = function(weight_by) {
+    d3.selectAll("circle.map-node").each(function(d) {
+      var r = calculate_weight(this, "map", weight_by);
+      d3.select(this)
+        .attr('r', r)
+        .attr('_r', r);
+    });
+  }
+}
+
+// given the node and the new attribute by which to weight,
+// returns the updated radius.
+// calculates the current scale by dividing the current radius
+// by the original radius for that weight
+function calculate_weight(node, type, weight_by) {
+
+  var connections = d3.select(node).attr("connections"),
+      uptime = d3.select(node).attr("uptime"),
+      radius = d3.select(node).attr("r"),
+      conn_radius, up_radius, scale;
+  if(type == "map") {
+    conn_radius = connections ? Math.pow(connections, 0.5) - 0.5: 2;
+    up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 1: 2;
+    if(weight_by == "connections") {
+      scale = radius / up_radius;
+      return conn_radius * scale;
+    }
+    else {
+      scale = radius / conn_radius;
+      return up_radius * scale;
+    }
+  }
+  else {
+    conn_radius = connections ? Math.pow(connections, 0.5) + 3: 2;
+    up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 3: 2;
+    if(weight_by == "connections")
+      return conn_radius;
+    else
+      return up_radius;
   }
 }
