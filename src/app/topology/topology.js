@@ -33,7 +33,7 @@ angular.module( 'ripplecharts.topology', [
     t.fetch().then(function(data) {
       $scope.loading = false;
       $scope.status = '';
-      
+
       if(data.node_count > 0) {
         data.nodes = t.formatUptimes(data.nodes);
         data.nodes = t.sortByUptime(data.nodes);
@@ -47,9 +47,7 @@ angular.module( 'ripplecharts.topology', [
 
         if (loadGraph) {
           t.produce(data, {
-            element: ".topology-graph",
-            width: 550,
-            height: 425
+            element: ".topology-graph"
           });
           // change from default if uptime was previously selected
           if(store.get('weight-mode') == "uptime") {
@@ -72,7 +70,7 @@ angular.module( 'ripplecharts.topology', [
     });
   }
   fetchAndShowTable(true);
-  
+
 
   var m = new TopologyMap($http, t);
 
@@ -81,9 +79,7 @@ angular.module( 'ripplecharts.topology', [
 
     // draw the map next to the node chart
     m.draw({
-      element: ".topology-map",
-      width: 600, // 630
-      height: 400 // 500
+      element: ".topology-map"
     });
     m.fetch().then(function(data){
       if(data.count > 0)
@@ -107,7 +103,7 @@ angular.module( 'ripplecharts.topology', [
 
 
   // click to toggle between charts
-  $('.switch-input').click(function(event) { 
+  $('.switch-input').click(function(event) {
     $('.first').fadeOut(500, function() {
       if($(this).hasClass('topology-graph')) {
         // persist the selection
@@ -142,7 +138,7 @@ angular.module( 'ripplecharts.topology', [
     $('.topology-map').addClass('first');
     $('.switch-input').prop('checked', true);
   }
-  else 
+  else
       $('.topology-graph').addClass('first');
 
 

@@ -78,7 +78,7 @@ var Topology = function ($http) {
         $element.animate({'color': toColor, 'opacity': 1}, 600, function() {
           $element.animate({'color': originalColor}, 600);
         });
-      }); 
+      });
     }
 
     _.each(propertyArray, function(prop) {
@@ -124,9 +124,10 @@ var Topology = function ($http) {
     }
 
     graph = { };
+    var div = d3.select(options.element);
 
-    var width = options.width || 600;
-    var height = options.height || 300;
+    var width = div.node().getBoundingClientRect().width;
+    var height = div.node().getBoundingClientRect().height;
     var linkDistance = options.linkDistance || (width + height) / 4;
     var charge = options.charge || 0 - (width + height) / 4;
     var chargeDistance = options.chargeDistance || charge / 10;
@@ -153,7 +154,7 @@ var Topology = function ($http) {
           .attr("cy", function(d) { return d.y; });
       });
 
-    graph.svg = d3.select(options.element).append("svg")
+    graph.svg = div.append("svg")
       .attr("width", width)
       .attr("height", height)
 
@@ -446,19 +447,23 @@ var TopologyMap = function($http, topology) {
 
   // draw the atlas
   self.draw = function(properties) {
-    w = properties.width, h = properties.height;
+    var div = d3.select(properties.element);
+
+    w = div.node().getBoundingClientRect().width;
+    h = div.node().getBoundingClientRect().height;
 
     // alternative options: stereographic, orthographic (globe), equirectangular, albers, transverseMercator
-    projection = d3.geo.mercator() 
-        .center([0, 40])
-        .scale(101)
+    projection = d3.geo.mercator()
+        .center([0, 35])
+        .scale(w/6.25)
         .translate([w/2-3, h/2-37]);
 
     var path = d3.geo.path().projection(projection);
-    parent = d3.select(properties.element).append("svg")
-            .attr("width", w)
-            .attr("height", h)
-            .append("g");
+
+    parent = div.append("svg")
+      .attr("width", w)
+      .attr("height", h)
+      .append("g");
 
     // intermediate layer so that dragging is smooth
     // see: http://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
@@ -475,7 +480,7 @@ var TopologyMap = function($http, topology) {
     svg.append("line")
        .attr("x1", 0)
        .attr("y1", h-35)
-       .attr("x2", 650)
+       .attr("x2", w)
        .attr("y2", h-35); // 410
 
     // label for unknown/invalid ip zone
@@ -520,7 +525,7 @@ var TopologyMap = function($http, topology) {
         // if there is no location, then place the node in the invalid zone
         invalid_count++;
         var o = get_offset(invalid_count);
-        return "translate(" + o.x + "," + o.y + ")"; 
+        return "translate(" + o.x + "," + o.y + ")";
       })
       .attr("r", function(d) {
         return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;

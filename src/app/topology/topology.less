@@ -25,24 +25,23 @@
 }
 
 .dark {
-  .topology-map {
+  #topology .topology-map {
     svg {
-      border: 1px solid #222 !IMPORTANT;
+      border: 1px solid #222;
       margin: 0 auto;
       float: left;
     }
 
     path {
-      stroke: #444 !IMPORTANT;
-      fill: #333 !IMPORTANT;
+      fill: #222;
     }
 
     line {
-      stroke: #999 !IMPORTANT;
+      stroke: #666;
     }
 
     text {
-      fill: #999 !IMPORTANT;
+      fill: #999;
     }
   }
   .switch-label {
@@ -50,7 +49,7 @@
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
     border: 1px solid #262626;
   }
-  .switch-label:before {
+  topoloswitch-label:before {
     color: #555;
     text-shadow: 0 1px rgba(0, 0, 0, 0.5);
   }
@@ -196,8 +195,8 @@
   }
 
   .visualization {
-    width: 800px;
-    height: 425px;
+    width: 950px;
+    height: 470px;
     position: relative;
     margin: 0 auto;
   }
@@ -222,10 +221,11 @@
 
   .swap {
     position: absolute;
-    width: 550px;
+    width: 750px;
+    height: 450px;
     text-align: center;
     left: 50%;
-    margin-left: -300px;
+    margin-left: -375px;
     visibility: hidden;
   }
 
@@ -241,8 +241,8 @@
     }
 
     path {
-      stroke: black;
-      stroke-width: 0.1px;
+      stroke: #777;
+      stroke-width: 0.25px;
       fill: #d3d3d3;
     }
 
@@ -262,12 +262,12 @@
   }
 
   /* stacks the control panel on top of the map */
-  @media (max-width: 860px) {
+  @media (max-width: 1000px) {
     .visualization {
       width: 100%;
-      height: 500px;
-
+      height: 550px;
     }
+
     .control-panel {
       width: 192px;
       position: relative;
@@ -335,6 +335,14 @@
   }
 
   @media (max-width: 768px) and (min-width: 501px) {
+    .visualization {
+      height: 450px;
+    }
+
+    .visualization .swap {
+      zoom: .75;
+    }
+
     #topology-table {
       margin-top:10px;
 
@@ -377,13 +385,17 @@
         min-width:75px;
       }
     }
-
-    .topology-graph svg {
-      zoom:.6;
-    }
   }
 
   @media (max-width: 500px) {
+    .visualization {
+      height: 380px;
+    }
+
+    .visualization .swap {
+      zoom: 0.6;
+    }
+
     #topology-table {
       margin-top:10px;
 
@@ -426,10 +438,6 @@
       .topology-node .uptime_formatted {
         min-width:75px;
       }
-    }
-
-    .topology-graph svg {
-      zoom:.4;
     }
   }
 }
