@@ -490,7 +490,7 @@ var TopologyMap = function($http, topology) {
        .text("Unknown Location");
 
     // draw all of the countries
-    d3.json("../src/assets/map.json", function(json) {
+    d3.json("assets/map.json", function(json) {
       svg.selectAll("path")
          .data(json["features"])
          .enter()
