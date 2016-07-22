@@ -380,7 +380,7 @@ var Topology = function ($http) {
 var TopologyMap = function($http, topology) {
   var self = this;
   var t = topology;
-  var parent, svg, projection, w, h;
+  var parent, svg, nodes, countries, projection, w, h;
 
   var locations;
 
@@ -468,30 +468,32 @@ var TopologyMap = function($http, topology) {
     // intermediate layer so that dragging is smooth
     // see: http://stackoverflow.com/questions/10988445/d3-behavior-zoom-jitters-shakes-jumps-and-bounces-when-dragging
     svg = parent.append("g");
+    countries = svg.append("g").attr("class", "countries");
+    nodes = svg.append("g").attr("class", "nodes");
 
     // transparent rectangle so click to drag works on the entire map, not just the land
-    svg.append("rect")
+    nodes.append("rect")
        .attr("x", 0)
        .attr("y", 0)
        .attr("width", w)
        .attr("height", h);
 
     // dividing line for the unknown/invalid ip zone
-    svg.append("line")
+    nodes.append("line")
        .attr("x1", 0)
        .attr("y1", h-35)
        .attr("x2", w)
        .attr("y2", h-35); // 410
 
     // label for unknown/invalid ip zone
-    svg.append("text")
+    nodes.append("text")
        .attr("x", 7)
        .attr("y", h-42) // 403
        .text("Unknown Location");
 
     // draw all of the countries
     d3.json("assets/map.json", function(json) {
-      svg.selectAll("path")
+      countries.selectAll("path")
          .data(json["features"])
          .enter()
          .append("path")
@@ -506,7 +508,7 @@ var TopologyMap = function($http, topology) {
     // running tally of the number of nodes with invalid locations
     var invalid_count = 0;
 
-    locations = svg.selectAll("circle")
+    locations = nodes.selectAll("circle")
       .data(node_list)
       .enter()
       .append("circle")
