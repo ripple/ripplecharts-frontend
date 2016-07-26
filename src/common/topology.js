@@ -101,7 +101,7 @@ var Topology = function ($http) {
     var yellow = "#FDB34D";
     var red = "#c11";
     var color = "#FFFFFF";
-    var LATEST_VERSION = 301;
+    var LATEST_VERSION = 320;
 
     if (version) {
       var v_arr = version.split("-");
