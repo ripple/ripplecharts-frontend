@@ -289,3 +289,22 @@ function commas (number, precision) {
   else if (precision===0) return parts[0];
   return parts.join(".");
 }
+
+
+// HACK to disable transitions
+// when the doc is not in view
+var D3transition = d3.selection.prototype.transition;
+d3.selection.prototype.transition = function() {
+  if (document.hidden) {
+    setImmediate(flushD3Transitions);
+  }
+
+  return D3transition.apply(this, arguments);
+}
+
+var flushD3Transitions = function() {
+  var now = Date.now;
+  Date.now = function() { return Infinity; };
+  d3.timer.flush();
+  Date.now = now;
+}
