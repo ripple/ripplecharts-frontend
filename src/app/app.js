@@ -179,16 +179,20 @@ angular.element(document).ready(function() {
 
   function checkStatus() {
     d = api.getMaintenanceStatus(function(err, resp) {
-      var mode;
-      var html;
-      var style;
+      var mode = 'maintenance';
+      var title = 'This site is under maintenance.'
+      var html = '';
+      var style = '';
       var height;
 
       if (err) {
         console.log(err);
-        mode = 'maintenance';
-        html = err.message;
-        style = '';
+        if (err.status === 0) {
+          title = 'Unable to connect to the data service.'
+        } else {
+          title = err.message || err.text;
+          html += err.status
+        }
 
       } else {
         mode = resp && resp.mode ? resp.mode : 'normal';
@@ -204,7 +208,10 @@ angular.element(document).ready(function() {
 
       // show maintenance
       if (mode === 'maintenance') {
-        maintenance.select('.message')
+        maintenance.select('.title')
+        .html(title);
+
+        maintenance.select('.subtitle')
         .html(html);
 
         maintenance

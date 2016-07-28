@@ -411,7 +411,7 @@ ApiHandler = function (baseURL) {
       xhr.abort();
       callback({
         status: 500,
-        message: 'Data Response Timeout'
+        text: 'Data Response Timeout'
       });
     }, 15000);
 
