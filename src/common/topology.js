@@ -103,7 +103,7 @@ var Topology = function ($http) {
     var color = "#FFFFFF";
     var LATEST_VERSION = 320;
 
-    if (version) {
+    if(version && version != "not_present") {
       var v_arr = version.split("-");
       var v_str = v_arr[1];
       var split = v_str.split('.');
@@ -521,7 +521,7 @@ var TopologyMap = function($http, topology) {
       })
       .attr("transform", function(d, i) {
         // only place on the map if the ip exists
-        if(d.ip)
+        if(d.lat && d.long)
           return "translate(" + projection([d.long, d.lat]) + ")";
 
         // if there is no location, then place the node in the invalid zone
