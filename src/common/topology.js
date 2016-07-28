@@ -1,5 +1,7 @@
 var Topology = function ($http) {
   var self = this;
+  var cScale = d3.scale.linear().range([1,10]);
+  var uScale = d3.scale.linear().range([1,10]);
   var graph;
 
   self.fetch = function() {
@@ -96,32 +98,7 @@ var Topology = function ($http) {
     });
   },
 
-  self.versionToColor = function(version) {
-    var blue = '#38b';
-    var yellow = "#FDB34D";
-    var red = "#c11";
-    var color = "#FFFFFF";
-    var LATEST_VERSION = 320;
-
-    if (version) {
-      var v_arr = version.split("-");
-      var v_str = v_arr[1];
-      var split = v_str.split('.');
-      var v_num = parseInt(split[0] + split[1] + split[2], 10);
-      if (v_num < LATEST_VERSION)
-        color = red;
-      else
-        color = blue;
-    }
-    return color;
-  },
-
-  self.produce = function(data, options) {
-
-    if (graph) {
-      self.update(data);
-      return;
-    }
+  self.produce = function(options) {
 
     graph = { };
     var div = d3.select(options.element);
@@ -162,8 +139,6 @@ var Topology = function ($http) {
     graph.nodeGroup = graph.svg.append('g');
     graph.links = graph.linkGroup.selectAll(".topology-link");
     graph.nodes = graph.nodeGroup.selectAll(".topology-node");
-
-    self.update(data);
   }
 
   function highlight() {
@@ -218,6 +193,20 @@ var Topology = function ($http) {
     var nodes = graph.force.nodes();
     var nodesByPubkey = {};
     var drag;
+
+
+    var extent = d3.extent(data.nodes, function(d) {
+      d.connections = Number(d.inbound_count || 0)  + Number(d.outbound_count || 0);
+      return d.connections;
+    });
+
+    cScale.domain(extent);
+
+    extent = d3.extent(data.nodes, function(d) {
+      return d.uptime;
+    });
+
+    uScale.domain(extent);
 
     nodes.forEach(function(d) {
       d.keep = false;
@@ -306,15 +295,6 @@ var Topology = function ($http) {
           d.node_public_key
         ].join(' ')
       })
-      .style("fill", function(d) {
-        return self.versionToColor(d.version);
-      })
-      .attr("connections", function(d) {
-        return (Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0);
-      })
-      .attr("uptime", function(d) {
-        return Number(d.uptime); // uptime in seconds
-      })
       .attr('r', 0)
       .style('opacity', 0)
       .call(drag);
@@ -350,16 +330,6 @@ var Topology = function ($http) {
       .on('mouseover', highlight)
       .on('mouseout', unhighlight);
 
-    graph.nodes.each(function(d) {
-      var r = Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) + 2;
-
-      d3.select(this)
-      .attr('_r', r)
-      //.transition()
-      .attr('r', r);
-    });
-
-
     graph.nodes.exit().remove();
     graph.links.exit().remove();
   }
@@ -367,13 +337,27 @@ var Topology = function ($http) {
   // changes the weight of graph nodes from uptime to connections (or vice versa)
   this.weight = function(weight_by) {
     d3.selectAll("circle.graph-node").each(function(d) {
-      var r = calculate_weight(this, "graph", weight_by);
-      d3.select(this)
+
+      var node = d3.select(this);
+      var scale = weight_by === 'uptime' ? uScale : cScale;
+      var value = weight_by === 'uptime' ?
+          d.uptime : d.connections;
+
+      var r = scale(value);
+      node
+        .attr('_r', r)
+        .transition('radius')
+        .duration(500)
         .attr('r', r)
-        .attr('_r', r);
     });
   }
 
+  this.color = function(versionColor) {
+    d3.selectAll("circle.graph-node").each(function(d) {
+      d3.select(this)
+      .style('fill', versionColor(d.version));
+    });
+  }
 }
 
 
@@ -381,7 +365,8 @@ var TopologyMap = function($http, topology) {
   var self = this;
   var t = topology;
   var parent, svg, nodes, countries, projection, w, h;
-
+  var cScale = d3.scale.linear().range([1,8]);
+  var uScale = d3.scale.linear().range([1,8]);
   var locations;
 
   var zoom = d3.behavior.zoom()
@@ -507,10 +492,23 @@ var TopologyMap = function($http, topology) {
 
     // running tally of the number of nodes with invalid locations
     var invalid_count = 0;
+    var extent = d3.extent(node_list, function(d) {
+      d.connections = Number(d.inbound_count || 0)  + Number(d.outbound_count || 0);
+      return d.connections;
+    });
+
+    cScale.domain(extent);
+
+    extent = d3.extent(node_list, function(d) {
+      return d.uptime;
+    });
+
+    uScale.domain(extent);
 
     locations = nodes.selectAll("circle")
-      .data(node_list)
-      .enter()
+      .data(node_list);
+
+    locations.enter()
       .append("circle")
       .attr("class", function(d) {
         return [
@@ -519,83 +517,63 @@ var TopologyMap = function($http, topology) {
           d.node_public_key
         ].join(' ')
       })
+      .attr('opacity', 1)
+      .attr('r', 0)
+      .attr('pubkey', function(d) {
+        return d.node_public_key;
+      });
+
+    locations.enter()
+      .append("title")
+      .text(function(d) {
+      return d.node_public_key;
+    });
+
+    nodes.selectAll("circle")
       .attr("transform", function(d, i) {
+
         // only place on the map if the ip exists
-        if(d.ip)
+        if(d.ip && d.lat && d.long) {
           return "translate(" + projection([d.long, d.lat]) + ")";
+        }
 
         // if there is no location, then place the node in the invalid zone
         invalid_count++;
         var o = get_offset(invalid_count);
         return "translate(" + o.x + "," + o.y + ")";
-      })
-      .attr("r", function(d) {
-        return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;
-      })
-      .attr("_r", function(d) {
-        return Math.pow((Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0), 0.5) - 0.5;
-      })
-      .attr("connections", function(d) {
-        return (Number(d.inbound_count) || 0 + Number(d.outbound_count) || 0);
-      })
-      .attr("uptime", function(d) {
-        return Number(d.uptime); // uptime in seconds
-      })
-      .style("fill", function(d) {
-        return t.versionToColor(d.version);
-      })
-      .style("opacity", 1)
-      .attr('pubkey', function(d) {
-        return d.node_public_key;
       });
 
-    locations.append("title")
-      .text(function(d) { return d.node_public_key; });
+    locations.exit()
+    .transition()
+    .duration(1000)
+    .attr('r', 0)
+    .remove();
 
     // enables zooming behavior
     parent.call(zoom);
   }
 
 
+  this.color = function(versionColor) {
+    d3.selectAll("circle.map-node").each(function(d) {
+      d3.select(this)
+      .style('fill', versionColor(d.version));
+    });
+  }
+
   // changes the weight of map nodes from uptime to connections (or vice versa)
   this.weight = function(weight_by) {
     d3.selectAll("circle.map-node").each(function(d) {
-      var r = calculate_weight(this, "map", weight_by);
-      d3.select(this)
+      var node = d3.select(this);
+      var scale = weight_by === 'uptime' ? uScale : cScale;
+      var value = weight_by === 'uptime' ?
+          d.uptime : d.connections;
+
+      var r = scale(value);
+      node.transition()
+        .duration(500)
         .attr('r', r)
         .attr('_r', r);
     });
-  }
-}
-
-// given the node and the new attribute by which to weight,
-// returns the updated radius.
-// calculates the current scale by dividing the current radius
-// by the original radius for that weight
-function calculate_weight(node, type, weight_by) {
-
-  var connections = d3.select(node).attr("connections"),
-      uptime = d3.select(node).attr("uptime"),
-      radius = d3.select(node).attr("r"),
-      conn_radius, up_radius, scale;
-  if(type == "map") {
-    conn_radius = connections ? Math.pow(connections, 0.5) - 0.5: 2;
-    up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 1: 2;
-    if(weight_by == "connections") {
-      scale = radius / up_radius;
-      return conn_radius * scale;
-    }
-    else {
-      scale = radius / conn_radius;
-      return up_radius * scale;
-    }
-  }
-  else {
-    conn_radius = connections ? Math.pow(connections, 0.5) + 3: 2;
-    up_radius   = uptime ? Math.pow((Number(uptime)/60/60/24), 0.5) + 3: 2;
-    if(weight_by == "connections")
-      return conn_radius;
-    else
-      return up_radius;
   }
 }

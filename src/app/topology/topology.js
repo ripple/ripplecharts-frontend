@@ -24,40 +24,93 @@ angular.module( 'ripplecharts.topology', [
 .controller('TopologyCtrl', function TopologyCtrl($scope, $http, gateways) {
   $scope.loading = true;
   $scope.status = "Loading...";
-
+  $scope.weight = store.get('weight-mode');
 
   var t = new Topology($http);
+  var m = new TopologyMap($http, t);
   var nodes, locations;
 
-  function fetchAndShowTable(loadGraph) {
+  $http
+  .get(API + '/network/rippled_versions')
+  .then(function(d) {
+    d.data.rows.forEach(function(row) {
+      if (row.repo === 'stable') {
+        $scope.stable = row.version;
+        updateVersionColors();
+      }
+    });
+  });
+
+  function updateVersionColors() {
+    if ($scope.nodes) {
+      $scope.nodes.forEach(function(d) {
+        d.new.version_color = versionToColor($scope.stable, d.new.version);
+      });
+    }
+
+    t.color(versionToColor.bind(t, $scope.stable));
+    m.color(versionToColor.bind(m, $scope.stable));
+  }
+
+  function versionToColor(stable, version) {
+    var v = version.split('-');
+    var comp = v[1] && stable ? semverCompare(v[1], stable) : '';
+
+    if (!v[1] || !stable) {
+      return 'grey';
+    }
+
+    if (comp === -1) {
+      return '#c11';
+    }
+
+    if (comp === 1) {
+      return '#66b';
+    }
+
+    return '#38b';
+  }
+
+  function semverCompare (a, b) {
+    var pa = a.split('.');
+    var pb = b.split('.');
+    for (var i = 0; i < 3; i++) {
+        var na = Number(pa[i]);
+        var nb = Number(pb[i]);
+        if (na > nb) return 1;
+        if (nb > na) return -1;
+        if (!isNaN(na) && isNaN(nb)) return 1;
+        if (isNaN(na) && !isNaN(nb)) return -1;
+    }
+    return 0;
+  }
+
+  function fetchAndShowTable(draw) {
     t.fetch().then(function(data) {
       $scope.loading = false;
       $scope.status = '';
 
+      if (draw) {
+        t.produce({
+          element: ".topology-graph"
+        });
+      }
+
       if(data.node_count > 0) {
         data.nodes = t.formatUptimes(data.nodes);
         data.nodes = t.sortByUptime(data.nodes);
-        data.nodes.forEach(function(node) {
-          node.version_color = t.versionToColor(node.version);
-        });
+
         var sp = t.mergeOldAndNew(data.nodes, $scope.nodes);
         $scope.nodes = sp;
-        $scope.$apply();
-        t.animateChange(['inbound_connections', 'outbound_connections', 'uptime_formatted']);
+        updateVersionColors();
 
-        if (loadGraph) {
-          t.produce(data, {
-            element: ".topology-graph"
-          });
-          // change from default if uptime was previously selected
-          if(store.get('weight-mode') == "uptime") {
-            $('input:radio[value="uptime"]').prop('checked', true);
-            t.weight("uptime");
-          }
-        }
-        else {
-          t.update(data);
-        }
+        $scope.date = moment(data.date).format('llll');
+        $scope.$apply();
+
+        t.animateChange(['inbound_connections', 'outbound_connections', 'uptime_formatted']);
+        t.update(data)
+        t.weight(store.get('weight-mode'));
+        t.color(versionToColor.bind(m, $scope.stable));
 
       } else {
         console.log('no nodes');
@@ -65,42 +118,46 @@ angular.module( 'ripplecharts.topology', [
 
     }).catch(function(e) {
       console.log(e);
+      console.log(e.stack);
       $scope.loading = false;
       $scope.status = e.toString();
     });
   }
-  fetchAndShowTable(true);
-
-
-  var m = new TopologyMap($http, t);
 
   // API endpoint: https://data-staging.ripple.com/v2/network/topology/nodes?verbose=true
-  function fetchAndShowMap() {
+  function fetchAndShowMap(draw) {
+    m.fetch().then(function(data) {
 
-    // draw the map next to the node chart
-    m.draw({
-      element: ".topology-map"
-    });
-    m.fetch().then(function(data){
-      if(data.count > 0)
-        m.populate(data.nodes);
-      // change from default if uptime was previously selected
-      if(store.get('weight-mode') == "uptime") {
-        m.weight("uptime");
+      if (draw) {
+        m.draw({
+          element: ".topology-map"
+        });
       }
+
+      m.populate(data.nodes);
+      m.weight(store.get('weight-mode'));
+      m.color(versionToColor.bind(m, $scope.stable));
+
     }).catch(function(e) {
       console.log(e);
+      console.log(e.stack);
       $scope.loading = false;
       $scope.status = e.toString();
     });
   }
-  fetchAndShowMap();
 
   // update table every 30 seconds
   var interval = setInterval(function() {
+    if (document.hidden) {
+      return;
+    }
+
     fetchAndShowTable();
+    fetchAndShowMap();
   }, 30000);
 
+  fetchAndShowTable(true);
+  fetchAndShowMap(true);
 
   // click to toggle between charts
   $('.switch-input').click(function(event) {
@@ -121,11 +178,11 @@ angular.module( 'ripplecharts.topology', [
 
 
   // change the weight of the nodes when the user toggles the radio buttons
-  $('.weight-toggle').children().on('change', function(event) {
-    store.set('weight-mode', this.value);
-    t.weight(this.value);
-    m.weight(this.value);
-  })
+  $scope.$watch('weight', function(d) {
+    store.set('weight-mode', d);
+    t.weight(d);
+    m.weight(d);
+  });
 
   // stop the listeners when leaving page
   $scope.$on('$destroy', function(){
