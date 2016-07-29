@@ -1,7 +1,7 @@
 <div class='validations'>
   <h2><a ng-href='#/validators'>Validator Registry</a></h2>
   <h4 class='domain'>
-    <a ng-if="validator.domain" href='https://{{domain}}' ng-class='validator.domain_state'>
+    <a ng-if="validator.domain" href='http://{{validator.domain}}' ng-class='validator.domain_state'>
       {{validator.domain}}
       <span ng-if="validator.domain_state === 'verified'">&#10004</span>
       <b ng-if="validator.domain_state !== 'verified' && validator.domain"
