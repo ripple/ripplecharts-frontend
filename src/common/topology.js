@@ -384,7 +384,7 @@ var TopologyMap = function($http, topology) {
       svg.selectAll("circle")
       .attr("transform", function(){
         var trans = d3.transform(d3.select(this).attr("transform"));
-        return "translate(" + trans.translate[0] + "," + trans.translate[1] + ")scale(" + 1/e.scale + ")";
+        return "translate(" + trans.translate[0] + "," + trans.translate[1] + ")scale(" + Math.pow(1/e.scale, 0.7) + ")";
       })
       .attr("_r", function(){
         // only update _r if the node isn't highlighted
@@ -521,33 +521,31 @@ var TopologyMap = function($http, topology) {
       .attr('r', 0)
       .attr('pubkey', function(d) {
         return d.node_public_key;
-      });
-
-    locations.enter()
+      })
       .append("title")
       .text(function(d) {
-      return d.node_public_key;
-    });
+        return d.node_public_key;
+      });
 
     nodes.selectAll("circle")
       .attr("transform", function(d, i) {
 
-        // only place on the map if the ip exists
-        if(d.ip && d.lat && d.long) {
-          return "translate(" + projection([d.long, d.lat]) + ")";
+        // only place on the map if the coordinates exist
+        if(d.lat && d.long) {
+          return "translate(" + projection([d.long, d.lat]) + ")scale(" + Math.pow(1/zoom.scale(), 0.7) + ")";
         }
 
         // if there is no location, then place the node in the invalid zone
         invalid_count++;
         var o = get_offset(invalid_count);
-        return "translate(" + o.x + "," + o.y + ")";
+        return "translate(" + o.x + "," + o.y + ")scale(" + Math.pow(1/zoom.scale(), 0.7) + ")";
       });
 
     locations.exit()
-    .transition()
-    .duration(1000)
-    .attr('r', 0)
-    .remove();
+      .transition()
+      .duration(1000)
+      .attr('r', 0)
+      .remove();
 
     // enables zooming behavior
     parent.call(zoom);
