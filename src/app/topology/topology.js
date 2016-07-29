@@ -24,7 +24,7 @@ angular.module( 'ripplecharts.topology', [
 .controller('TopologyCtrl', function TopologyCtrl($scope, $http, gateways) {
   $scope.loading = true;
   $scope.status = "Loading...";
-  $scope.weight = store.get('weight-mode');
+  $scope.weight = store.get('weight-mode') || 'connections';
 
   var t = new Topology($http);
   var m = new TopologyMap($http, t);
