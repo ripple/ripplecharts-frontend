@@ -12,11 +12,11 @@ var TotalAccounts = function (options) {
   list.append("label").html("Range:");
   var interval = list.selectAll("span")
     .data([
-      {name: "week",   interval:"hour",  offset: function(d) { return d3.time.day.offset(d, -7); }},
-      {name: "month",  interval:"day",  offset: function(d) { return d3.time.month.offset(d, -1); }},
-      {name: "quarter",interval:"day",   offset: function(d) { return d3.time.month.offset(d, -3); }},
-      {name: "year",   interval:"day",   offset: function(d) { return d3.time.year.offset(d, -1); }},
-      {name: "max",    interval:"week",  offset: function(d) { return new Date("Dec 31 2012 0:00:00")}}
+      {name: "week",   interval:"hour",  offset: function(d) { return moment.utc(d).subtract(7, 'days'); }},
+      {name: "month",  interval:"day",   offset: function(d) { return moment.utc(d).subtract(1, 'month'); }},
+      {name: "quarter",interval:"day",   offset: function(d) { return moment.utc(d).subtract(3, 'months'); }},
+      {name: "year",   interval:"day",   offset: function(d) { return moment.utc(d).subtract(1, 'year'); }},
+      {name: "max",    interval:"week",  offset: function(d) { return moment.utc('2012-12-31')}}
     ])
   .enter().append("span")
     .classed("selected", function(d) { return d.name === "year"})
@@ -49,10 +49,7 @@ var TotalAccounts = function (options) {
 
   function selectRange (d) {
     var end   = moment.utc();
-    var start = d.offset(end);
-
-    //$('#startTime').datepicker('setValue', start);
-    //$('#endTime').datepicker('setValue', end);
+    var start = d.offset(end).startOf(d.interval);
     update(d.interval, start, end);
   }
 
@@ -61,28 +58,17 @@ var TotalAccounts = function (options) {
     chart.loading = true;
     chart.fadeOut();
 
-    if (start.getFullYear()<2005) { //because of bug in API for earlier dates
-      chart.basis = 0;
+    if (basisRequest) basisRequest.abort();
+    basisRequest = apiHandler.getTotalAccounts(moment.utc(start).format(), function(err, total) {
+      chart.basis = total;
+
       updateHelper({
         startTime     : moment.utc(start).format(),
         endTime       : end.format(),
         timeIncrement : increment,
         descending    : true
       });
-
-    } else {
-      if (basisRequest) basisRequest.abort();
-      basisRequest = apiHandler.getTotalAccounts(moment.utc(start).format(), function(err, total) {
-        chart.basis = total;
-
-        updateHelper({
-          startTime     : moment.utc(start).format(),
-          endTime       : end.format(),
-          timeIncrement : increment,
-          descending    : true
-        });
-      });
-    }
+    });
   }
 
   this.suspend = function () {
