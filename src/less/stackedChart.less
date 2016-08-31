@@ -60,6 +60,12 @@
     font-size:10px;
   }
 
+   .section path {
+     fill-opacity: .75;
+     stroke-width: .5;
+     stroke-opacity: .9;
+   }
+
   div.details {
     position: absolute;
     text-align: center;
@@ -71,8 +77,14 @@
     z-index:1000;
     border-radius:2px;
     opacity:0;
-    padding-bottom: 10px;
+    padding: 10px 5px;
   }
+
+   div.details h5 {
+     margin-top: 0;
+   }
+
+
 
   div.details th, div.details td {
     text-align: left;
@@ -100,7 +112,7 @@
 .dark .stackedChart {
 
    .section {
-    opacity:.7;
+    opacity:.8;
   }
 
    .background,

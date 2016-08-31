@@ -20,7 +20,6 @@
     "jquery": "~2.0.3",
     "jscrollpane": "~2.0.14",
     "jquery-ui": "~1.11.2",
-    "chartjs": "https://github.com/leighquince/Chart.js.git#587fa9296cb8817063da8edd4f023d03bde3a264",
     "smooth-div-scroll": "https://github.com/tkahn/Smooth-Div-Scroll.git",
     "ddslick": "https://github.com/prashantchaudhary/ddslick.git",
     "json-formatter": "~0.4.2",

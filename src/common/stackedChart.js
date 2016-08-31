@@ -18,9 +18,10 @@ var StackedChart = function (options) {
   var yAxis = d3.svg.axis().scale(yScale).orient('right').tickFormat(d3.format('s'));
   var xScale = d3.time.scale().nice();
   var yScale = d3.scale.linear().nice();
-  var color = d3.scale.category20();
+  var color = options.color || d3.scale.category20();
 
   var area = d3.svg.area()
+  .interpolate('monotone')
   .x(function(d) {
     return xScale(d.date);
   })
@@ -50,9 +51,9 @@ var StackedChart = function (options) {
   self.loading  = false;
 
   function drawChart () {
+
     div.html('');
-    svg = div.selectAll('svg').data([0]);
-    svgEnter = svg.enter().append('svg')
+    svg = div.append('svg')
       .attr('width', options.width + options.margin.left + options.margin.right)
       .attr('height', options.height + options.margin.top + options.margin.bottom);
 
@@ -136,6 +137,13 @@ var StackedChart = function (options) {
     var xExtent;
     var yExtent;
 
+    if (!self.data) {
+      return;
+    }
+
+    xScale.range([0, options.width])
+    yScale.range([options.height, 0]);
+
     setStatus('');
     loader.transition().style('opacity', 0);
     color.domain(Object.keys(self.data));
@@ -154,9 +162,9 @@ var StackedChart = function (options) {
 
     yExtent = [0, d3.max(data, function(d) {
         return d3.max(d.values, function(v) {
-          return v.y0
-        });
-      }) * 1.1
+          return v.y + v.y0;
+        }) * 1.1;
+      })
     ];
 
     xScale.domain(xExtent);
@@ -177,6 +185,9 @@ var StackedChart = function (options) {
 
     path.enter().append('path')
     .style('fill', function(d) {
+      return color(d.name);
+    })
+    .style('stroke', function(d) {
       return color(d.name);
     });
 
@@ -201,7 +212,23 @@ var StackedChart = function (options) {
       var mouse = d3.mouse(this);
       var date = xScale.invert(mouse[0] - options.margin.left);
       var i = d3.bisect(self.byDate.map(function(d) {return moment(d.date)}), date);
+      var d0 = i > 0 ? self.byDate[i-1] : null;
       var d = self.byDate[i];
+
+      // determine which is closest
+      if (d0 && !d) {
+        d = d0;
+      } else if (d0) {
+        var first = moment.utc(d0.date);
+        var second = moment.utc(d.date);
+        var check = moment.utc(date);
+
+        if (first.unix() - check.unix() >
+            check.unix() - second.unix()) {
+          d = d0;
+        }
+      }
+
       var tx = xScale(date) + options.margin.left;
       var data;
 
@@ -223,9 +250,10 @@ var StackedChart = function (options) {
         hover.style('opacity', 1)
         .attr('transform', 'translate(' + tx + ')');
 
+
         details.html('')
         .append('h5')
-        .html(moment(d.date).format('YYYY-MM-DD'));
+        .html(moment.utc(d.date).format(options.dateFormat || 'YYYY-MM-DD'));
 
         var rows = details.selectAll('tr')
         .data(data).enter().append('tr')
@@ -240,13 +268,16 @@ var StackedChart = function (options) {
           return color(d.key);
         })
 
-        rows.append('th').text(function(d) {
-          return d.key;
+        rows.append('th').html(function(d) {
+          return options.formatLabel ?
+            options.formatLabel(d.key) : d.key;
         });
 
-        rows.append('td').text(function(d) {
-          return commas(d.value);
+        rows.append('td').html(function(d) {
+          return options.formatValue ?
+            options.formatValue(d.value) : commas(d.value);
         });
+
 
 
         details.style('opacity', 1);
@@ -254,21 +285,6 @@ var StackedChart = function (options) {
     }
 
     svg.on('mousemove.hover', mousemove);
-  }
-
-  function createTooltip(d) {
-      var date = moment(d.date).format('YYYY-MM-DD');
-      var html = '<div><span>Date:</span> '+ date +'</div>' + '<table>';
-
-      for (var key in d.data) {
-        if (d.data[key]) {
-          html += '<tr><th class="box"></th>' +
-            '<th>' + key + '</th>' +
-            '<td>'+ d.data[key] + '</td>';
-        }
-      }
-
-      return html + '</table>';
   }
 
   this.setStatus = function (string) {

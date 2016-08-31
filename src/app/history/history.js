@@ -24,9 +24,9 @@ angular.module( 'ripplecharts.history', [
 .controller( 'HistoryCtrl', function HistoryCtrl( $scope, gateways ) {
 
   var history = new TotalHistory({
-    url      : API,
-    id       : 'totalHistory',
-    resize   : true,
-    gateways : gateways
-  });
+    url: API,
+    id: 'historical-chart',
+    resize: true,
+    gateways: gateways
+  }).load();
 });

@@ -21,9 +21,9 @@
       </p>
       </div>
       <div class="cell">
-      <h5>Trade Volume</h5>
+      <h5>Exchange Volume</h5>
       <p>
-        The trade volume chart shows the aggregate volume of trade between each currency
+        The trade volume chart shows the aggregate volume of exchanges between each currency
         and XRP. The legend at the bottom allows a deeper view into how that volume breaks down into different gateways.
       </p>
       </div>
@@ -34,7 +34,6 @@
   <div class="control">
     <div id="breadcrumb">
       <ul class="crumbs">
-        <li class="crumb" id="totals">Total Volume</li>
       </ul>
       <a id="csv" disabled="true" title="Export to CSV">
         <img class="downloadIcon toCSV" src="assets/images/download_icn.svg"/>
@@ -42,7 +41,7 @@
       <div id="currency">
         <div class="tag">Valued in:</div>
         <select class="valueCurrencySelect">
-          <option value="USD">USD</option>
+          <option value="USD" checked=tr>USD</option>
           <option value="XRP">XRP</option>
           <option value="BTC">BTC</option>
           <option value="EUR">EUR</option>
@@ -54,15 +53,15 @@
     <div class="interval">
       <div id="intervals">
         <div class="tag">Interval:</div>
-        <a id="month" class="int"> months </a>
-        <a id="week" class="int"> weeks </a>
-        <a id="day" class="int clicked"> days </a>
+        <a id="day" class="int">day</a>
+        <a id="week" class="int">week</a>
+        <a id="month" class="int">month</a>
       </div>
       <div id="ranges">
         <div class="tag">Range:</div>
         <input type="text" class="ui-datepicker calendar" id="datepicker_from">
         <input type="text" class="ui-datepicker calendar" id="datepicker_to">
-        <a id="1m" class="range clicked">1M</a>
+        <a id="1m" class="range">1m</a>
         <a id="3m" class="range">3m</a>
         <a id="6m" class="range">6m</a>
         <a id="1y" class="range">1y</a>
@@ -71,18 +70,7 @@
       </div>
     </div>
   </div>
-
-   <div class="chart_wrapper">
-    <img class="throbber loader loading" src="assets/images/rippleThrobber.png">
-    <canvas id="canvas"></canvas>
-  </div>
-  <div id="lineLegend"></div>
-  <div id="tooltip">
-    <div class="title"></div>
-    <div class="iss"></div>
-    <div class="date"></div>
-    <div class="value"></div>
-  </div>
+  <div id="historical-chart"/>
 </div>
 <style>
   footer .footerInner {
