@@ -1,8 +1,23 @@
-.dark .validations .validatorsTable .validatorsHeader {
-  background: #123;
-}
 
 .validations {
+
+  .helpbox.showHelp {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .helpbox .warning {
+    background: rgba(230,0,0, .3);
+    padding: 5px;
+    margin: 10px -5px 0;
+    border-radius: 2px;
+    color: #611;
+  }
+
+  .asterisk {
+    color: #922;
+    cursor: pointer;
+  }
 
   h2, h4 {
     text-align: center;
@@ -61,7 +76,7 @@
         border-bottom: 1px solid rgba(160,160,160,0.2);
       }
     }
-      
+
     .report:nth-child(odd) {
       background: rgba(200,200,200,0.1);
     }
@@ -86,22 +101,22 @@
         padding: 0px;
       }
 
-      .domain a, 
+      .domain a,
       .domain a:visited {
         color: #da6265;
       }
 
-      .domain .verified, 
+      .domain .verified,
       .domain .verified:visited {
         color: #5ac88f;
       }
 
-      .domain a small, 
+      .domain a small,
       .domain a b {
         margin: 0 5px;
       }
 
-      .unverified, 
+      .unverified,
       .unverified:visited {
         color: #777;
         opacity: .5;
@@ -148,4 +163,13 @@
       }
     }
   }
+}
+
+
+.dark .validations .validatorsTable .validatorsHeader {
+  background: #123;
+}
+
+.dark .validations .helpbox .warning {
+  color: #c66;
 }
