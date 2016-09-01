@@ -5,16 +5,15 @@
     <p>
       Validators are rippled nodes running as a validating server - meaning they are configured to
       participate in the
-      <a href="https://ripple.com/knowledge_center/the-ripple-ledger-consensus-process/">
-        consensus process
-      </a> for validating transactions.  This
+      <a href="https://ripple.com/knowledge_center/the-ripple-ledger-consensus-process/">consensus process</a>
+      for validating transactions.  This
       <a href="https://ripple.com/build/rippled-setup/#types-of-rippled-servers">guide</a>
       is a helpful reference for understanding and operating rippled servers. Each validator is
       identified by its public validation key, which is used to sign validations.
     </p>
     <p>
-      The 'Aggreement' and 'Disagreement' columns represent how closely this validator's validations
-      match the validations of the ledgers by trusted nodes represented in the Unique Node List (UNL).
+      The 'Agreement' and 'Disagreement' columns represent how closely this validator's validations
+      match the validations of the ledgers by the recommended trusted validators set.
       A value of 1 means the validator validated every ledger that was also validated by the trusted
       validators on the day specified, while a value of 0 indicates the validator did not validate
       any of the ledgers validated by the trusted group.  Disagreement is opposite, it indicates how
@@ -23,11 +22,8 @@
     </p>
     <p>
       Rippled software allows operators the ability to associate a node with a specific domain that
-      is under their control in order to encourage trust and transparency.  This is acheived by creating
-      a ripple address from the same master key that generated the validation key, and setting the domain
-      field on that ripple account.  The second step is to publicly publish a ripple.txt page on the
-      same domain that contains the validator's public key.  For details and instructions on verifying
-      the domain of a validating node, look <a href="https://ripple.com/build/rippled-setup/#domain-verification">here</a>
+      is under their control in order to encourage trust and transparency. For details and instructions on verifying the domain of a validating node, look
+      <a href="https://ripple.com/build/rippled-setup/#domain-verification">here</a>.
 
       <div class="warning">
         * Successful Domain verification is independently done by rippled operators and does not imply any
