@@ -1,0 +1,13 @@
+machine:
+  node:
+    version: 0.12.0
+test:
+  pre:
+    - npm run lint
+    - npm install -g bower
+    - npm install -g grunt
+    - bower install
+  override:
+    - cp src/example.config.js src/config.js
+    - cp deployment.environments.json.example deployment.environments.json
+    - NODE_ENV=development grunt
