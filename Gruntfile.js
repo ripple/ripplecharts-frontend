@@ -575,6 +575,7 @@ module.exports = function(grunt) {
   /**
    * Deployment Tasks
    */
+
   grunt.registerTask('deploy', ['default', 's3', 'cloudflare']);
 
   /**
@@ -584,6 +585,7 @@ module.exports = function(grunt) {
    * `delta`) and then add a new task called `watch` that does a clean build
    * before watching for changes.
    */
+
   grunt.renameTask('watch', 'delta');
   grunt.registerTask('watch', ['build', 'delta']);
   grunt.registerTask('watch', ['build', 'karma:unit:start', 'delta']);
@@ -661,7 +663,6 @@ module.exports = function(grunt) {
             scripts: jsFiles,
             styles: cssFiles,
             maintenance: maintenance,
-            mixpanel: deploymentConfig.mixpanel,
             api: deploymentConfig.api,
             ga_account: deploymentConfig.ga_account,
             ga_id: deploymentConfig.ga_id,
@@ -814,8 +815,7 @@ module.exports = function(grunt) {
         var loader = config.files.loader ?
             grunt.file.read(config.files.loader, {encoding: null}) : '';
         var banner = '<%= meta.banner %>' +
-          'var API="' + deploymentConfig.api + '";' +
-          'var DOMAIN="' + deploymentConfig.domain + '";';
+          'var API="' + deploymentConfig.api + '";';
 
         if (config.files.less && config.files.less.length) {
           var css = grunt.file.read(dir + 'stylesheet.css')
@@ -825,18 +825,20 @@ module.exports = function(grunt) {
         }
 
         if (loader) {
-          banner += 'var LOADER_PNG="' + loader.toString('base64') + '";';
+          banner += 'var LOADER_PNG="data:image/png;base64,' +
+            loader.toString('base64') + '";';
         }
 
         // get icons png
         var icons = config.files.icons;
+
         if (icons) {
           for (var i = 0; i < icons.length; i++) {
             var icon = grunt.file.read(icons[i], {encoding: null});
             filename = icons[i].split('/').pop();
             filename = filename.split('.')[0].toUpperCase();
-            banner += 'var ' + filename + '_PNG="' +
-              icon.toString('base64') + '";';
+            banner += 'var ' + filename + '_PNG="data:image/gif;base64,'
+              + icon.toString('base64') + '";';
           }
         }
 
@@ -859,9 +861,7 @@ module.exports = function(grunt) {
               styles: cssFiles,
               json: jsonFiles,
               common: commonFiles,
-              mixpanel: deploymentConfig.mixpanel,
               api: deploymentConfig.api,
-              domain: deploymentConfig.domain,
               version: grunt.config('pkg.version')
             }
           });
