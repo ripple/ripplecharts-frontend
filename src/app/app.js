@@ -1,6 +1,55 @@
+/* eslint no-unused-vars: [2, {"args": "after-used"}] */
+'use strict';
+
+// HACK to disable transitions
+// when the doc is not in view
+function flushD3Transitions() {
+  var now = Date.now;
+  Date.now = function() {
+    return Infinity;
+  };
+
+  d3.timer.flush();
+  Date.now = now;
+}
+
+var D3transition = d3.selection.prototype.transition;
+d3.selection.prototype.transition = function() {
+  if (document.hidden) {
+    setImmediate(flushD3Transitions);
+  }
+
+  return D3transition.apply(this, arguments);
+};
+
+// TODO: change landing.js and elsewhere
+// to use local version
+function commas(number, precision) {
+  if (number === 0) {
+    return 0;
+  } else if (!number) {
+    return null;
+  }
+
+  var parts = number.toString().split('.');
+
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  if (precision && parts[1]) {
+    parts[1] = parts[1].substring(0, precision);
+    while (precision > parts[1].length) {
+      parts[1] += '0';
+    }
+
+  } else if (precision === 0) {
+    return parts[0];
+  }
+
+  return parts.join('.');
+}
 
 angular.element(document).ready(function() {
-  angular.module( 'ripplecharts', [
+  angular.module('ripplecharts', [
     'templates-app',
     'templates-common',
     'ripplecharts.landing',
@@ -31,74 +80,105 @@ angular.element(document).ready(function() {
     'txfeed',
     'jsonFormatter'
   ])
-
-  .config( function myAppConfig ( $stateProvider, $urlRouterProvider ) {
+  .config(function myAppConfig($urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
   })
-
   .run(function($window, $rootScope) {
-    if (typeof navigator.onLine != 'undefined') {
+    if (typeof navigator.onLine !== 'undefined') {
       $rootScope.online = navigator.onLine;
-      $window.addEventListener("offline", function () {
+      $window.addEventListener('offline', function() {
         $rootScope.$apply(function() {
           $rootScope.online = false;
         });
       }, false);
-      $window.addEventListener("online", function () {
+      $window.addEventListener('online', function() {
         $rootScope.$apply(function() {
           $rootScope.online = true;
         });
       }, false);
     }
   })
+  .controller('AppCtrl', function AppCtrl($scope, gateways) {
 
-  .controller( 'AppCtrl', function AppCtrl ( $scope, $location, gateways ) {
+    var last;
+
+    function checkLast() {
+      if (last && moment().diff(last) > 6000) {
+        $scope.connectionStatus = 'disconnected';
+        last = null;
+      }
+    }
+
+    function handleLedger(d) {
+      if (d) {
+        var drops = d.totalDrops;
+        var totalXRP = [
+          commas(Number(drops.slice(0, -6))),
+          drops.slice(-6, -4)
+        ].join('.');
+
+        $scope.connectionStatus = 'connected';
+        $scope.ledgerLabel = 'Ledger #';
+        $scope.ledgerIndex = commas(d.ledgerVersion);
+        $scope.totalCoins = totalXRP;
+        $scope.totalXRP = parseFloat(drops) / 1000000.0;
+        $scope.$apply();
+      }
+    }
 
     $scope.theme = store.get('theme') || Options.theme || 'dark';
-    $scope.$watch('theme', function(){store.set('theme', $scope.theme)});
+    $scope.$watch('theme', function() {
+      store.set('theme', $scope.theme);
+    });
 
-    $scope.toggleTheme = function(){
-      if ($scope.theme == 'dark') $scope.theme = 'light';
-      else $scope.theme = 'dark';
+    $scope.toggleTheme = function() {
+      if ($scope.theme === 'dark') {
+        $scope.theme = 'light';
+      } else {
+        $scope.theme = 'dark';
+      }
     };
 
     $scope.snapOptions = {
       disable: 'right',
       maxPosition: 267
+    };
+
+    // disable touch drag for desktop devices
+    if (!Modernizr.touch) {
+      $scope.snapOptions.touchToDrag = false;
     }
 
-    //disable touch drag for desktop devices
-    if (!Modernizr.touch) $scope.snapOptions.touchToDrag = false;
+    $scope.$on('$stateChangeSuccess', function(event, toState) {
+      if (ga) {
+        ga('send', 'pageview', toState.name);
+      }
 
+      if (angular.isDefined(toState.data.pageTitle)) {
+        $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts';
 
-    $scope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams){
-      mixpanel.track("Page", {"Page Name":toState.name, "Theme":$scope.theme});
-      if (ga) ga('send', 'pageview', toState.name);
-
-      if ( angular.isDefined( toState.data.pageTitle ) )
-           $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts' ;
-      else $scope.pageTitle = "Ripple Charts"
-
+      } else {
+        $scope.pageTitle = 'Ripple Charts';
+      }
     });
 
-  //connect to the ripple network;
+    // connect to the ripple network;
     remote = new ripple.RippleAPI(Options.ripple);
+
     remote.connect()
     .then(function() {
-      $scope.connectionStatus = "connected";
+      $scope.connectionStatus = 'connected';
       $scope.$apply();
     })
     .catch(function(e) {
       console.log(e.stack);
     });
 
-    $scope.ledgerLabel = "connecting...";
-    $scope.ledgerIndex = "";
-    $scope.connectionStatus = "disconnected";
+    $scope.ledgerLabel = 'connecting...';
+    $scope.ledgerIndex = '';
+    $scope.connectionStatus = 'disconnected';
 
-    var last;
-
-  //get ledger number and total coins
+    // get ledger number and total coins
     remote.on('ledger', function(d) {
       last = moment();
 
@@ -116,32 +196,8 @@ angular.element(document).ready(function() {
 
     setInterval(checkLast, 2000);
 
-    function checkLast() {
-      if (last && moment().diff(last) > 6000) {
-        $scope.connectionStatus = "disconnected";
-        last = null;
-      }
-    }
-
-    function handleLedger(d) {
-      if (d) {
-        var drops = d.totalDrops;
-        var totalXRP = [
-          commas(Number(drops.slice(0, -6))),
-          drops.slice(-6, -4)
-        ].join(".");
-
-        $scope.connectionStatus = "connected";
-        $scope.ledgerLabel = "Ledger #";
-        $scope.ledgerIndex = commas(d.ledgerVersion);
-        $scope.totalCoins = totalXRP;
-        $scope.totalXRP = parseFloat(drops)/ 1000000.0;
-        $scope.$apply();
-      }
-    }
-
     // remove loader after gateways resolves
-    gateways.promise.then(function(){
+    gateways.promise.then(function() {
       var loading = d3.select('#loading');
       loading.transition()
       .duration(600)
@@ -154,7 +210,7 @@ angular.element(document).ready(function() {
     // reconnect when coming back online
     $scope.$watch('online', function(online) {
       if (online) {
-        remote.connect()
+        remote.connect();
       }
     });
   });
@@ -166,21 +222,10 @@ angular.element(document).ready(function() {
   var bannerPads;
   var started = false;
 
-  setTimeout(function() {
-    api = new ApiHandler(API);
-    wrap = d3.select('.banner-wrap');
-    banner = wrap.select('.banner');
-    maintenance = d3.select('#maintenance');
-    bannerPads = d3.selectAll('.banner-pad');
-    checkStatus();
-  });
-
-  setInterval(checkStatus, 2 * 60 * 1000);
-
   function checkStatus() {
-    d = api.getMaintenanceStatus(function(err, resp) {
+    api.getMaintenanceStatus(function(err, resp) {
       var mode = 'maintenance';
-      var title = 'This site is under maintenance.'
+      var title = 'This site is under maintenance.';
       var html = '';
       var style = '';
       var height;
@@ -188,10 +233,10 @@ angular.element(document).ready(function() {
       if (err) {
         console.log(err);
         if (err.status === 0) {
-          title = 'Unable to connect to the data service.'
+          title = 'Unable to connect to the data service.';
         } else {
           title = err.message || err.text;
-          html += err.status
+          html += err.status;
         }
 
       } else {
@@ -215,7 +260,7 @@ angular.element(document).ready(function() {
         .html(html);
 
         maintenance
-        .style('display','block')
+        .style('display', 'block')
         .transition()
         .duration(1000)
         .style('opacity', 1);
@@ -227,7 +272,7 @@ angular.element(document).ready(function() {
         .duration(1000)
         .style('opacity', 0)
         .each('end', function() {
-          maintenance.style('display','none');
+          maintenance.style('display', 'none');
         });
       }
 
@@ -236,7 +281,7 @@ angular.element(document).ready(function() {
         height = banner.style('height');
 
         banner.html(html)
-        .style(style)
+        .style(style);
 
         wrap.style('height', height)
         .transition()
@@ -275,36 +320,15 @@ angular.element(document).ready(function() {
       }
     });
   }
+
+  setTimeout(function() {
+    api = new ApiHandler(API);
+    wrap = d3.select('.banner-wrap');
+    banner = wrap.select('.banner');
+    maintenance = d3.select('#maintenance');
+    bannerPads = d3.selectAll('.banner-pad');
+    checkStatus();
+  });
+
+  setInterval(checkStatus, 2 * 60 * 1000);
 });
-
-function commas (number, precision) {
-  if (number===0) return 0;
-  if (!number) return null;
-  var parts = number.toString().split(".");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  if (precision && parts[1]) {
-    parts[1] = parts[1].substring(0,precision);
-    while(precision>parts[1].length) parts[1] += '0';
-  }
-  else if (precision===0) return parts[0];
-  return parts.join(".");
-}
-
-
-// HACK to disable transitions
-// when the doc is not in view
-var D3transition = d3.selection.prototype.transition;
-d3.selection.prototype.transition = function() {
-  if (document.hidden) {
-    setImmediate(flushD3Transitions);
-  }
-
-  return D3transition.apply(this, arguments);
-}
-
-var flushD3Transitions = function() {
-  var now = Date.now;
-  Date.now = function() { return Infinity; };
-  d3.timer.flush();
-  Date.now = now;
-}

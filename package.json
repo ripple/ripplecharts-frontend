@@ -38,5 +38,27 @@
     "karma-firefox-launcher": "~0.1.3",
     "karma-jasmine": "~0.1.5",
     "karma-phantomjs-launcher": "~0.1.1"
+  },
+  "eslintConfig": {
+    "globals": {
+      "angular": true,
+      "d3": true,
+      "moment": true,
+      "ripple": true,
+      "remote": true,
+      "$": true,
+      "store": true,
+      "ga": true,
+      "Options": true,
+      "OffersExercisedListener": true,
+      "addResizeListener": true,
+      "ApiHandler": true,
+      "Modernizr": true,
+      "jsonToCSV": true,
+      "API": true,
+      "TradeFeed": true,
+      "PriceChart": true,
+      "OrderBook": true
+    }
   }
 }

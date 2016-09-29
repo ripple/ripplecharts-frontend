@@ -2,16 +2,14 @@
 <html>
   <head>
     <title>Ripple Charts Embedded Chart</title>
-    
+
     <!-- D3 needs this -->
     <meta charset="utf-8">
-    
-    <script>
-      API    = "<%= api %>";  
-      DOMAIN = "<%= domain %>";
 
+    <script>
+      API = "<%= api %>";
     </script>
-    
+
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,800,300' rel='stylesheet' type='text/css'>
 
     <!-- compiled CSS --><% styles.forEach( function ( file ) { %>
@@ -25,31 +23,33 @@
 
     <!-- compiled JavaScript --><% scripts.forEach( function ( file ) { %>
     <script type="text/javascript" src="<%= file %>"></script><% }); %>
-  
+
     <style>
       body {
         font-family:'Open Sans', sans-serif;
-        text-align:center;  
+        text-align:center;
         margin:0;
         background:#fff;
         height:100%;
         position:absolute;
         width:100%;
       }
-      
+
     </style>
   </head>
   <body>
     <div id="liveTicker"></div>
     <script>
 
-    TickerWidget({
+    var TW = new TickerWidget({
       url : API,
       id  : "liveTicker",
       closeable : false,
       info : true
-    }).loadFromQS();
+    });
+
+    TW.loadFromQS();
 
     </script>
   </body>
-</html>   
+</html>
