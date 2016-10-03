@@ -203,7 +203,8 @@ angular.module('txsplain', [])
         function renderRippleState(action, node) {
           var fields = node.FinalFields || node.NewFields;
           var prev = node.PreviousFields;
-          var previousBalance = prev ? Number(prev.Balance.value) : 0;
+          var previousBalance = prev && prev.Balance ?
+              Number(prev.Balance.value) : 0;
           var finalBalance = Number(fields.Balance.value);
           var change;
           var account;
@@ -331,14 +332,13 @@ angular.module('txsplain', [])
           if (fields && fields.Account) {
             html = '<li>It ' + action + ' the ' +
             '<type>AccountRoot</type> ' +
-            'node of <account>' + fields.Account + '</account>';
+            'node of <account>' + fields.Account + '</account><ul>';
           } else {
             html = '<li>It ' + action + ' an ' +
-            '<type>AccountRoot</type> node';
+            '<type>AccountRoot</type> node<ul>';
           }
 
           if (fields && prev) {
-            html += '<ul>';
             previousBalance = Number(prev.Balance);
             finalBalance = Number(fields.Balance);
             if (previousBalance < finalBalance) {
@@ -354,11 +354,9 @@ angular.module('txsplain', [])
                 '</b> to <b>' + renderNumber(finalBalance / 1000000) +
                 '</b> XRP </li>';
             }
-
-            html += '</ul>';
           }
 
-          return html;
+          return html + '</ul>';
         }
 
         // render DirectoryNode
@@ -613,8 +611,6 @@ angular.module('txsplain', [])
       // display TX
       function displayTx() {
         var tx = scope.tx_json;
-
-        console.log(tx);
 
         renderStatus(tx);
         renderDescription(tx);
