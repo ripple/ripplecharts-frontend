@@ -1,10 +1,19 @@
+'use strict';
+
 angular.module('txsplain', [])
 .directive('txsplain', ['$http', 'rippleName', function($http, rippleName) {
   var commas = d3.format(',');
-  var currencyOrder = ['XAU', 'XAG', 'BTC', 'LTC', 'XRP', 'EUR', 'USD', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'CNY'];
+  var currencyOrder = [
+    'XAU', 'XAG', 'BTC', 'LTC', 'XRP',
+    'EUR', 'USD', 'GBP', 'AUD', 'NZD',
+    'USD', 'CAD', 'CHF', 'JPY', 'CNY'
+  ];
 
-var hexMatch = new RegExp('^(0x)?[0-9A-Fa-f]+$');
-var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})([=]{1,2})?$');
+  var hexMatch = new RegExp('^(0x)?[0-9A-Fa-f]+$');
+  // var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*' +
+  //                             '(?:[A-Za-z0-9+/]{2}==|' +
+  //                             '[A-Za-z0-9+/]{3}=|' +
+  //                             '[A-Za-z0-9+/]{4})([=]{1,2})?$');
 
   var txFlags = {
     all: {
@@ -41,116 +50,107 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
     SetFee: {}
   };
 
-  var PATHSTEP_RIPPLING = 0x01;
-  var PATHSTEP_REDEEMING = 0x02;
-  var PATHSTEP_ORDERBOOK = 0x10;
-  var PATHSTEP_ISSUER = 0x20;
+  // var PATHSTEP_RIPPLING = 0x01;
+  // var PATHSTEP_REDEEMING = 0x02;
+  // var PATHSTEP_ORDERBOOK = 0x10;
+  // var PATHSTEP_ISSUER = 0x20;
   var RIPPLE_EPOCH = 946684800;
 
+  function renderNumber(d) {
+    var parts = commas(d).split('.');
+    return parts[0] + (parts[1] ?
+      '<decimal>.' + parts[1] + '</decimal>' : '');
+  }
+
+  function toDecimal(amount) {
+    if (typeof amount === 'string') {
+      return Number(amount) / 1000000;
+    } else {
+      return Number(amount.value);
+    }
+  }
+
+  function displayAmount(amount, isFee) {
+    if (isFee) {
+      return '<b>' + renderNumber(Number(amount) / 1000000) + '</b> XRP';
+    } else if (typeof amount === 'string') {
+      return '<b>' + renderNumber(Number(amount) / 1000000) + '</b> XRP';
+    } else {
+      return '<b>' + renderNumber(Number(amount.value).toPrecision(8)) +
+        '</b> ' + amount.currency + '.' +
+        '<account>' + amount.issuer + '</account>';
+    }
+  }
+
+  function parseFlags(tx) {
+    var flags = txFlags[tx.tx.TransactionType];
+    var num = tx.tx.Flags;
+    var list = [];
+    var key;
+
+    // flags for all transactions
+    for (key in txFlags.all) {
+      if (num & key) {
+        list.push(txFlags.all[key]);
+      }
+    }
+
+    // type specific flags
+    for (key in flags) {
+      if (num & key) {
+        list.push(flags[key]);
+      }
+    }
+
+    return list;
+  }
+
+
+  function decodeHex(hex) {
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2) {
+      var v = parseInt(hex.substr(i, 2), 16);
+      str += v ? String.fromCharCode(v) : '';
+    }
+    return str;
+  }
 
   return {
     restrict: 'AE',
     template: '<div class="contents">' +
       '<div class="status"></div>' +
       '<div class="control">' +
-      '<span ng-click="mode = \'explain\'" ng-class="{selected: mode === \'explain\'}">Description</span>' +
-      '<span ng-click="mode = \'raw\'" ng-class="{selected: mode === \'raw\'}">Raw</span>' +
+      '<span ng-click="mode = \'explain\'" ' +
+      'ng-class="{selected: mode === \'explain\'}">Description</span>' +
+      '<span ng-click="mode = \'raw\'" ' +
+      'ng-class="{selected: mode === \'raw\'}">Raw</span>' +
       '</div>' +
       '<div class="sub explain-view"></div>' +
       '<div class="sub raw-view">' +
       '<json-formatter json="tx_json" open="3"></json-formatter>' +
       '</div>' +
       '</div>',
-    link: function(scope, element, attr) {
+    link: function(scope, element) {
 
       var div = d3.select(element[0]);
       var status = div.select('.status');
       var explainView = div.select('.explain-view');
       var rawView = div.select('.raw-view');
-      var timer;
 
-      scope.tx_json = null;
-      scope.mode = 'explain';
-
-      scope.$watch('mode', setMode);
-
-      scope.$watch('tx_hash', function() {
-        if (scope.tx_hash) {
-          loadTx(scope.tx_hash);
-        } else {
-          explainView.html('');
-          status.style('display', 'none');
-        }
-      });
-
-      scope.reload = function() {
-        console.log('reload');
-        loadTx(scope.tx_hash);
-      };
-
+      // set mode
       function setMode(mode) {
-        explainView.style('display', mode && mode === 'explain' ? 'block' : 'none');
-        rawView.style('display', mode && mode === 'raw' ? 'block' : 'none');
+        explainView.style('display', mode && mode === 'explain' ?
+                          'block' : 'none');
+        rawView.style('display', mode && mode === 'raw' ?
+                      'block' : 'none');
       }
 
-      /**
-       * loadTx
-       */
-
-      function loadTx(hash) {
-        var url = API + '/transactions/' + hash;
-
-        scope.tx_json = null;
-        explainView.html('');
-
-        $http({
-          method: 'get',
-          url: url
-        })
-        .then(function(resp) {
-          explainView.html('');
-          status.style('display', 'none').html('');
-          scope.tx_json = resp.data.transaction;
-          displayTx();
-        },
-        function(err) {
-          status.attr('class', 'alert alert-danger')
-          .style('display','block')
-          .html(err.data.message);
-        })
-      }
-
-      /**
-       * displayTx
-       */
-      function displayTx() {
-        var tx = scope.tx_json;
-
-        renderStatus(tx);
-        renderDescription(tx);
-        renderMemos(tx);
-        renderFee(tx);
-        renderFlags(tx);
-        renderMeta(tx);
-
-        // add ripple names
-        div.selectAll('account').each(function(){
-          var div = d3.select(this);
-          var account = div.html();
-
-          rippleName(account, function(name) {
-            if (name) {
-              div.html('<t>~</t><name>' +
-                name + '</name> <addr>(' + account + ')</addr>');
-            }
-          });
-        });
-      }
-
+      // render Flags
       function renderFlags(tx) {
         var flags = parseFlags(tx);
         if (flags.length) {
-          var html = '<H4>FLAGS:</h4>The transaction specified the following flags:<ul>';
+          var html = '<H4>FLAGS:</h4>' +
+              'The transaction specified the following flags:<ul>';
 
           flags.forEach(function(flag) {
             html += '<li>' + flag + '</li>';
@@ -162,6 +162,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         }
       }
 
+      // render Fee
       function renderFee(tx) {
         explainView.append('div')
         .attr('class', 'fee')
@@ -169,68 +170,36 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
         '<amount>' + displayAmount(tx.tx.Fee, true) + '</amount>.');
       }
 
+      // render stats
       function renderStatus(tx) {
-        var status = '<h4>STATUS:</h4>';
+        var statusText = '<h4>STATUS:</h4>';
 
-        status += tx.meta.TransactionResult === 'tesSUCCESS' ?
+        statusText += tx.meta.TransactionResult === 'tesSUCCESS' ?
           'This transaction was successful' :
           'This transaction failed with a status code of <fail>' +
           tx.meta.TransactionResult + '</fail>';
 
         explainView.append('div')
         .attr('class', 'status')
-        .html(status + ', and validated in ledger ' +
+        .html(statusText + ', and validated in ledger ' +
         '<ledger_index>' + tx.ledger_index + '</ledger_index>' +
         ' on <date>' + moment.utc(tx.date).format('LLL') + '<date>.');
 
       }
 
+      // render Meta
       function renderMeta(tx) {
         var meta = explainView.append('div')
         .attr('class', 'meta');
-        var html = '<h4>AFFECTED LEDGER NODES:</h4>' +
+        var d = '<h4>AFFECTED LEDGER NODES:</h4>' +
           'It affected <b>' + tx.meta.AffectedNodes.length +
           '</b> nodes in the ledger:<ul class="affected-nodes">';
 
-        tx.meta.AffectedNodes.forEach(function(a) {
-          var action;
-          if (a.DeletedNode) {
-            action = 'deleted';
-            node = a.DeletedNode;
-          } else if (a.ModifiedNode) {
-            action = 'modified';
-            node = a.ModifiedNode;
-          } else if (a.CreatedNode) {
-            action = 'created';
-            node = a.CreatedNode;
-          } else {
-            return;
-          }
+        var created = [];
+        var modified = [];
+        var deleted = [];
 
-          switch(node.LedgerEntryType) {
-            case 'AccountRoot':
-              html += renderAccountRoot(action, node);
-              break;
-            case 'DirectoryNode':
-              html += renderDirectoryNode(action, node);
-              break;
-            case 'Offer':
-              html += renderOfferNode(action, node);
-              break;
-            case 'RippleState':
-              html += renderRippleState(action, node);
-              break;
-            default:
-              html += '<li>It ' + action +
-            ((node.LedgerEntryType === 'Offer' ||
-              node.LedgerEntryType === 'AccountRoot') ? ' an ' : ' a ') +
-            '<type>' + node.LedgerEntryType + '</type> node</li>';
-          }
-
-        });
-
-        meta.html(html + '</ul>');
-
+        // render RippleSate
         function renderRippleState(action, node) {
           var fields = node.FinalFields || node.NewFields;
           var prev = node.PreviousFields;
@@ -259,7 +228,9 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             '<account>' + issuer + '</account>';
 
           if (change) {
-            html += '<ul><li>Balance changed by <b>' + renderNumber(change.toPrecision(12)) +
+            html += '<ul><li>Balance changed by ' +
+              '<b>' + renderNumber(change.toPrecision(12)) +
+              '</b> from <b>' + renderNumber(previousBalance) +
               '</b> to <b>' + renderNumber(finalBalance) +
               '</b> ' + fields.Balance.currency + '</li></ul>';
           }
@@ -268,17 +239,88 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           return html + '</li>';
         }
 
+        // render offer changes
+        function renderOfferChanges(node) {
+          var html = '';
+          var paysCurrency = node.FinalFields.TakerPays.currency || 'XRP';
+          var paysIssuer = node.FinalFields.TakerPays.issuer || '';
+          var getsCurrency = node.FinalFields.TakerGets.currency || 'XRP';
+          var getsIssuer = node.FinalFields.TakerGets.issuer || '';
+
+          var finalPays = toDecimal(node.FinalFields.TakerPays);
+          var finalGets = toDecimal(node.FinalFields.TakerGets);
+          var prevPays = toDecimal(node.PreviousFields.TakerPays);
+          var prevGets = toDecimal(node.PreviousFields.TakerGets);
+
+          var changePays = prevPays - finalPays;
+          var changeGets = prevGets - finalGets;
+
+          html += '<li>TakerPays decreased by <b>' + renderNumber(changePays) +
+            '</b><br/> from <b>' + renderNumber(prevPays) +
+            '</b> to <b>' + renderNumber(finalPays) +
+            '</b> ' + paysCurrency +
+            (paysIssuer ? '.<account>' + paysIssuer + '</account>' : '') +
+            '</li>';
+
+          html += '<li>TakerGets decreased by <b>' + renderNumber(changeGets) +
+            '</b><br/> from <b>' + renderNumber(prevGets) +
+            '</b> to <b>' + renderNumber(finalGets) +
+            '</b> ' + getsCurrency +
+            (getsIssuer ? '.<account>' + getsIssuer + '</account>' : '') +
+            '</li>';
+
+          return html;
+        }
+
+        // render Offer
         function renderOfferNode(action, node) {
           var fields = node.FinalFields || node.NewFields;
           var html = '<li>It ' + action + ' a ' +
             '<b>' + (fields.TakerPays.currency || 'XRP') + '/' +
             (fields.TakerGets.currency || 'XRP') + '</b> ' +
             '<type>Offer</type> ' +
-            'node of <account>' + fields.Account + '</account>';
+            'node of <account>' + fields.Account + '</account><ul>' +
+            '<li>The offer\'s Sequence number is ' + fields.Sequence + '.</li>';
 
-          return html + '</li>';
+          if (action === 'created' &&
+              tx.tx.TransactionType === 'OfferCreate' &&
+              tx.tx.Account === fields.Account &&
+              tx.tx.Sequence === fields.Sequence &&
+              tx.tx.OfferSequence) {
+            html += '<li>This offer replaces offer #' +
+              tx.tx.OfferSequence + '.</li>';
+
+          } else if (action === 'modified') {
+            html += '<li> the offer was partially filled.</li>' +
+              renderOfferChanges(node);
+
+
+          } else if (action === 'deleted' &&
+              (fields.TakerPays === '0' ||
+               fields.TakerPays.value === '0')) {
+            html += '<li>The offer was filled.</li>' +
+              renderOfferChanges(node);
+
+          } else if (action === 'deleted' &&
+                     tx.tx.TransactionType === 'OfferCancel') {
+            html += '<li>The offer was cancelled.</li>';
+
+          } else if (action === 'deleted' &&
+                     tx.tx.TransactionType === 'OfferCreate' &&
+                     tx.tx.Account === fields.Account &&
+                     tx.tx.OfferSequence === fields.Sequence) {
+            html += '<li>This offer was replaced by the new offer #' +
+              tx.tx.Sequence + '.</li>';
+
+          } else if (action === 'deleted') {
+            html += '<li>The offer was partially filled, ' +
+              'then cancelled due to lack of funds.</li>';
+          }
+
+          return html + '</ul></li>';
         }
 
+        // render AccountRoot
         function renderAccountRoot(action, node) {
           var fields = node.FinalFields || node.NewFields;
           var prev = node.PreviousFields;
@@ -302,11 +344,13 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             if (previousBalance < finalBalance) {
               html += '<li>Balance increased by <b>' +
                 renderNumber((finalBalance - previousBalance) / 1000000) +
+                '</b> from <b>' + renderNumber(previousBalance / 1000000) +
                 '</b> to <b>' + renderNumber(finalBalance / 1000000) +
                 '</b> XRP </li>';
             } else if (previousBalance > finalBalance) {
               html += '<li>Balance reduced by <b>' +
                 renderNumber((previousBalance - finalBalance) / 1000000) +
+                '</b> from <b>' + renderNumber(previousBalance / 1000000) +
                 '</b> to <b>' + renderNumber(finalBalance / 1000000) +
                 '</b> XRP </li>';
             }
@@ -317,6 +361,7 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           return html;
         }
 
+        // render DirectoryNode
         function renderDirectoryNode(action, node) {
           var fields = node.FinalFields || node.NewFields;
           var html = '<li>It ' + action + ' a ' +
@@ -327,26 +372,73 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             html += ' owned by <account>' + fields.Owner + '</account>';
           }
 
-          return html + '</li>';
+          return html + '<ul></ul></li>';
         }
+
+        // render nodes
+        function renderNodes(type, nodes) {
+          var html = '';
+
+          if (nodes.length) {
+            html += '<h5>' + type.toUpperCase() +
+              ' NODES:</h5><ul class="nodes">';
+            nodes.forEach(function(node) {
+              switch (node.LedgerEntryType) {
+                case 'AccountRoot':
+                  html += renderAccountRoot(type, node);
+                  break;
+                case 'DirectoryNode':
+                  html += renderDirectoryNode(type, node);
+                  break;
+                case 'Offer':
+                  html += renderOfferNode(type, node);
+                  break;
+                case 'RippleState':
+                  html += renderRippleState(type, node);
+                  break;
+                default:
+                  html += '<li>It ' + type +
+                ' a <type>' + node.LedgerEntryType +
+                    '</type> node<ul></ul></li>';
+              }
+            });
+
+            html += '</ul>';
+          }
+
+          return html;
+        }
+
+        tx.meta.AffectedNodes.forEach(function(a) {
+          if (a.DeletedNode) {
+            deleted.push(a.DeletedNode);
+          } else if (a.ModifiedNode) {
+            modified.push(a.ModifiedNode);
+          } else if (a.CreatedNode) {
+            created.push(a.CreatedNode);
+          } else {
+            console.log('unknown node type');
+            console.log(a);
+          }
+        });
+
+        modified.sort(function(a, b) {
+          return a.LedgerEntryType.localeCompare(b.LedgerEntryType);
+        });
+
+        d += renderNodes('created', created);
+        d += renderNodes('modified', modified);
+        d += renderNodes('deleted', deleted);
+        meta.html(d);
       }
 
+      // render Memos
       function renderMemos(tx) {
         var memos = explainView.append('div')
         .attr('class', 'memos');
         var html;
 
-        if (tx.tx.Memos && tx.tx.Memos.length) {
-          html = 'The transaction contains the following memos:<ul class="list">';
-          tx.tx.Memos.forEach(renderMemo);
-          html += '</ul>';
-        } else {
-          html = 'The transaction has no memos.';
-        }
-
-        memos.html('<h4>MEMOS:</h4>' + html);
-
-        function renderMemo(m, i) {
+        function renderMemo(m) {
           var data = m.Memo.MemoData;
           var type = m.Memo.MemoType;
           var format = m.Memo.MemoFormat;
@@ -366,58 +458,56 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           html += '<li><ul>';
 
           if (type) {
-            html += '<li><label>Type:</label><span>' + type + '</span></li>';
+            html += '<li><label>Type:</label><span>' +
+              type + '</span></li>';
           }
 
           if (format) {
-            html += '<li><label>Format:</label><span>' + format + '</span></li>';
+            html += '<li><label>Format:</label><span>' +
+              format + '</span></li>';
           }
 
           if (data) {
-            html += '<li><label>Data:</label><span>' + data + '</span></li>';
+            html += '<li><label>Data:</label><span>' +
+              data + '</span></li>';
           }
 
           html += '</ul></li>';
         }
-      }
 
-      function renderDescription(tx) {
-        var html = '<h4>DESCRIPTION:</h4>';
+        if (tx.tx.Memos && tx.tx.Memos.length) {
+          html = 'The transaction contains the following memos:' +
+            '<ul class="list">';
+          tx.tx.Memos.forEach(renderMemo);
+          html += '</ul>';
 
-        html += renderType(tx.tx.TransactionType);
-
-        if (tx.tx.TransactionType === 'OfferCreate') {
-          html += renderOfferCreate(tx);
-        } else if (tx.tx.TransactionType === 'OfferCancel') {
-          html += renderOfferCancel(tx);
-        } else if (tx.tx.TransactionType === 'Payment') {
-          html += renderPayment(tx);
-        } else if (tx.tx.TransactionType === 'TrustSet') {
-          html += renderTrustSet(tx);
+        } else {
+          html = 'The transaction has no memos.';
         }
 
-        html += '<br/>The transaction\'s sequence number is ' +
-          '<b>' + tx.tx.Sequence + '</b>';
+        memos.html('<h4>MEMOS:</h4>' + html);
+      }
 
+      // render tx description
+      function renderDescription(tx) {
+        var d = '<h4>DESCRIPTION:</h4>';
 
-        explainView.append('div')
-        .attr('class', 'description')
-        .html(html);
-
-
+        // renderType
         function renderType(type) {
           return 'This is a <type>' + type + '</type> Transaction.<br/>';
         }
 
-        function renderTrustSet(tx) {
-          return 'It establishes <b>' + renderNumber(tx.tx.LimitAmount.value) + '</b>' +
-            ' as the maximum amount of ' + tx.tx.LimitAmount.currency +
+        // renderTrustSet
+        function renderTrustSet() {
+          return 'It establishes <b>' + renderNumber(tx.tx.LimitAmount.value) +
+            '</b> as the maximum amount of ' + tx.tx.LimitAmount.currency +
             ' from <account>' + tx.tx.LimitAmount.issuer + '</account>' +
-            ' that <account>' + tx.tx.Account + '</account> is willing to hold.';
+            ' that <account>' + tx.tx.Account +
+            '</account> is willing to hold.';
         }
 
-        function renderPayment(tx) {
-
+        // renderPayment
+        function renderPayment() {
           var html = 'The payment is from ' +
             '<account>' + tx.tx.Account + '</account> to ' +
             '<account>' + tx.tx.Destination + '</account>.';
@@ -442,28 +532,29 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
             html += '.';
           }
 
+          if (tx.meta.delivered_amount) {
+            html += '<br/>The actual amount delivered was ' +
+            '<amount>' + displayAmount(tx.meta.delivered_amount) + '</amount>';
+          }
+
           return html;
         }
 
-        function renderOfferCreate(tx) {
+        // render OfferCreate
+        function renderOfferCreate() {
           var c1 = tx.tx.TakerPays.currency || 'XRP';
           var c2 = tx.tx.TakerGets.currency || 'XRP';
-          var direction = 'buy';
           var invert = currencyOrder.indexOf(c2) < currencyOrder.indexOf(c1);
           var rate = toDecimal(tx.tx.TakerGets) / toDecimal(tx.tx.TakerPays);
-          var amount;
           var pair;
           var html;
 
           if (invert) {
-            rate = 1/rate;
+            rate = 1 / rate;
             pair = c2 + '/' + c1;
-            amount = tx.tx.TakerPays;
-            direction = 'sell';
 
           } else {
             pair = c1 + '/' + c2;
-            amount = tx.tx.TakerGets;
           }
 
           html = '<account>' + tx.tx.Account + '</account>' +
@@ -477,86 +568,116 @@ var base64Match = new RegExp('^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-
           if (tx.tx.OfferSequence) {
             html += '<br/>The transaction will also cancel ' +
               '<account>' + tx.tx.Account + '</account>\'s existing offer' +
-              ' #<b>'+ tx.tx.OfferSequence + '</b>';
+              ' #<b>' + tx.tx.OfferSequence + '</b>';
           }
 
           if (tx.tx.Expiration) {
             var expiration = moment.unix(tx.tx.Expiration + RIPPLE_EPOCH);
             var tense = expiration.diff(new Date()) > 0 ? 'expires' : 'expired';
             html += '<br/>The offer ' + tense +
-              ' at <date>'+ expiration.format('LTS [on] l') + '</date>' +
+              ' at <date>' + expiration.format('LTS [on] l') + '</date>' +
               ' unless canceled or consumed before then.';
           }
 
           return html;
         }
 
-
-        function renderOfferCancel(tx) {
+        // render OfferCancel
+        function renderOfferCancel() {
           return 'The transaction will cancel ' +
             '<account>' + tx.tx.Account + '</account>' +
             ' offer #<b>' + tx.tx.OfferSequence + '</b>.';
         }
+
+        d += renderType(tx.tx.TransactionType);
+
+        if (tx.tx.TransactionType === 'OfferCreate') {
+          d += renderOfferCreate();
+        } else if (tx.tx.TransactionType === 'OfferCancel') {
+          d += renderOfferCancel();
+        } else if (tx.tx.TransactionType === 'Payment') {
+          d += renderPayment();
+        } else if (tx.tx.TransactionType === 'TrustSet') {
+          d += renderTrustSet();
+        }
+
+        d += '<br/>The transaction\'s sequence number is ' +
+          '<b>' + tx.tx.Sequence + '</b>';
+
+
+        explainView.append('div')
+        .attr('class', 'description')
+        .html(d);
       }
 
-      function toDecimal(amount) {
-        if (typeof amount === 'string') {
-          return Number(amount) / 1000000;
+      // display TX
+      function displayTx() {
+        var tx = scope.tx_json;
+
+        console.log(tx);
+
+        renderStatus(tx);
+        renderDescription(tx);
+        renderMemos(tx);
+        renderFee(tx);
+        renderFlags(tx);
+        renderMeta(tx);
+
+        // add ripple names
+        div.selectAll('account').each(function() {
+          var el = d3.select(this);
+          var account = el.html();
+
+          rippleName(account, function(name) {
+            if (name) {
+              el.html('<t>~</t><name>' +
+                name + '</name> <addr>(' + account + ')</addr>');
+            }
+          });
+        });
+      }
+
+      // load TX
+      function loadTx(hash) {
+        var url = API + '/transactions/' + hash;
+
+        scope.tx_json = null;
+        explainView.html('');
+
+        $http({
+          method: 'get',
+          url: url
+        })
+        .then(function(resp) {
+          explainView.html('');
+          status.style('display', 'none').html('');
+          scope.tx_json = resp.data.transaction;
+          displayTx();
+        },
+        function(err) {
+          status.attr('class', 'alert alert-danger')
+          .style('display', 'block')
+          .html(err.data.message);
+        });
+      }
+
+      scope.tx_json = null;
+      scope.mode = 'explain';
+      scope.$watch('mode', setMode);
+
+      scope.$watch('tx_hash', function() {
+        if (scope.tx_hash) {
+          loadTx(scope.tx_hash);
         } else {
-          return Number(amount.value);
+          explainView.html('');
+          status.style('display', 'none');
         }
-      }
+      });
 
-      function displayAmount(amount, isFee) {
-        if (isFee) {
-          return '<b>' + commas(Number(amount) / 1000000) + '</b> XRP';
-        } else if (typeof amount === 'string') {
-          return '<b>' + renderNumber(Number(amount) / 1000000) + '</b> XRP';
-        } else {
-          return '<b>' + renderNumber(Number(amount.value).toPrecision(8)) + '</b> ' +
-            amount.currency + '.' +
-            '<account>' + amount.issuer + '</account>';
-        }
-      }
-
-      function parseFlags(tx) {
-        var flags = txFlags[tx.tx.TransactionType];
-        var num = tx.tx.Flags;
-        var list = [];
-        var key;
-
-        // flags for all transactions
-        for(key in txFlags.all) {
-          if (num & key) {
-            list.push(txFlags.all[key]);
-          }
-        }
-
-        // type specific flags
-        for(key in flags) {
-          if (num & key) {
-            list.push(flags[key]);
-          }
-        }
-
-        return list;
-      }
-
-
-      function decodeHex(hex) {
-        var str = '';
-        for (var i = 0; i < hex.length; i += 2) {
-            var v = parseInt(hex.substr(i, 2), 16);
-            if (v) str += String.fromCharCode(v);
-        }
-        return str;
-      }
-
-      function renderNumber(d) {
-        var parts = commas(d).split('.');
-        return parts[0] + (parts[1] ?
-          '<decimal>.' + parts[1] + '</decimal>' : '');
-      }
+      scope.reload = function() {
+        console.log('reload');
+        loadTx(scope.tx_hash);
+      };
     }
   };
 }]);
