@@ -60,6 +60,15 @@ function MiniChart(base, counter, markets, gateways) {
     return commas(Number(d.toPrecision(precision || 7)));
   }
 
+  // get issuer name
+  function getName(address, currency) {
+    if (currency === 'XRP') {
+      return '';
+    }
+
+    return gateways.getName(address, currency) || address;
+  }
+
   // show status to the user, or remove it
   function setStatus(string) {
     status.html(string);
@@ -156,11 +165,13 @@ function MiniChart(base, counter, markets, gateways) {
         flipping = false;
 
         if (markets.options.fixed) {
-          header.html('<small>' +
-            gateways.getName(self.base.issuer, self.base.currency) +
-            '</small>' + self.base.currency + '/' +
-            self.counter.currency + '<small>' +
-            gateways.getName(self.counter.issuer, self.counter.currency) +
+          header.html('<small title="' +
+            self.base.issuer + '">' +
+            getName(self.base.issuer, self.base.currency) +
+            '</small><span>' + baseCurrency + '/' +
+            counterCurrency + '</span><small title="' +
+            self.counter.issuer + '">' +
+            getName(self.counter.issuer, self.counter.currency) +
             '</small>');
         }
       });
@@ -589,11 +600,13 @@ function MiniChart(base, counter, markets, gateways) {
 
   if (markets.options.fixed) {
     dropdowns.style('display', 'none');
-    header.html('<small>' +
-      gateways.getName(self.base.issuer, self.base.currency) +
-      '</small>' + baseCurrency + '/' +
-      counterCurrency + '<small>' +
-      gateways.getName(self.counter.issuer, self.counter.currency) +
+    header.html('<small title="' +
+      self.base.issuer + '">' +
+      getName(self.base.issuer, self.base.currency) +
+      '</small><span>' + baseCurrency + '/' +
+      counterCurrency + '</span><small title="' +
+      self.counter.issuer + '">' +
+      getName(self.counter.issuer, self.counter.currency) +
       '</small>');
   }
 
