@@ -25,19 +25,6 @@
             <div class="details"></div>
           </li>
           <li>
-            <label>Issued Value:</label>
-            <div class="stat">
-              <span ng-show="valueRate" ng-bind="issuedValue"></span>
-              <img  ng-hide="issuedValue" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-            <div class="details">
-              <div ng-show="issuedValue && issuedValue != ' '" ng-click="metricDetail='issuedValue'" ng-class="{selected : metricDetail == 'issuedValue' }">
-                Detail
-                <img src="assets/images/triangle.svg"/>
-              </div>
-            </div>
-          </li>
-          <li>
             <label>24hr Payment Volume:</label>
             <div class="stat">
               <span ng-show="valueRate" ng-bind="paymentVolume"></span>
