@@ -28,12 +28,29 @@
   border-bottom:1px solid #ddd;
   padding:3px;
   color:#888;
+
 }
 
- .chartHeader small {
-  margin:5px;
-  color:#aaa;
-  font-weight:normal;
+.chartHeader span {
+  max-width: 30%;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.chartHeader small {
+  margin: 0 3px 2px;
+  font-weight: normal;
+  color: #aaa;
+  max-width: 32%;
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  font-size: .7em;
 }
 
  .chartDetails {
