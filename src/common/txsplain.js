@@ -213,13 +213,15 @@ angular.module('txsplain', [])
           if (finalBalance < 0) {
             account = fields.HighLimit.issuer;
             issuer = fields.LowLimit.issuer;
-            change = previousBalance - finalBalance;
             finalBalance = 0 - finalBalance;
+            previousBalance = 0 - previousBalance;
+
           } else {
             account = fields.LowLimit.issuer;
             issuer = fields.HighLimit.issuer;
-            change = finalBalance - previousBalance;
           }
+
+          change = finalBalance - previousBalance;
 
           var html = '<li>It ' + action + ' a ' +
             '<b>' + fields.Balance.currency + '</b> ' +
