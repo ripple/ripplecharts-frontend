@@ -1,340 +1,479 @@
-var ValueSummary = function (options) {
+/* eslint no-unused-vars: 0 */
+'use strict'
 
-  var self = this;
-  var outer  = options.id ?
-      d3.select("#"+options.id).attr("class","valueSummary") :
-      d3.select("body").append("div").attr("class","valueSummary");
+function ValueSummary(options) {
 
-  var inner = outer.append("div").attr("class","inner");
-  var width = parseInt(outer.style("width"),  10);
-  var height = parseInt(outer.style("height"), 10) || width;
-  var radius = (Math.min(width, height)) / 2;
-  var margin = {top:radius/10, bottom:radius/10, left:radius/10, right:radius/10};
+  var commas = d3.format(',.2f')
+  var outer = options.id ?
+    d3.select('#' + options.id).attr('class', 'valueSummary') :
+    d3.select('body').append('div').attr('class', 'valueSummary')
 
-  inner.style({width:(radius*2)+"px", height:(radius*2)+"px"});
-  radius -= margin.top;
+  var title = outer.append('h5')
+  var inner = outer.append('div').attr('class', 'inner')
+  var width = parseInt(outer.style('width'), 10)
+  var height = parseInt(outer.style('height'), 10) || width
+  var radius = (Math.min(width, height)) / 2
+  var margin = {
+    top: radius / 10,
+    bottom: radius / 10,
+    left: radius / 10,
+    right: radius / 10
+  }
+
+  inner.style({
+    width: (radius * 2) + 'px',
+    height: (radius * 2) + 'px'
+  })
+
+  radius -= margin.top
 
   var chart = inner.append('svg')
-    .attr("width",  radius*2.3)
-    .attr("height", radius*2.3)
-    .append("g")
-    .attr("transform", "translate(" + (radius+margin.left) + "," + (radius+margin.top) + ")");
+    .attr('width', radius * 2.3)
+    .attr('height', radius * 2.3)
+    .append('g')
+    .attr('transform', 'translate(' +
+          (radius + margin.left) + ',' +
+          (radius + margin.top) + ')')
 
-  var toggle = outer.append("label").attr("class","xrpToggle");
-  var hideXRP = true;
-  var currencyOrder = ['XAU', 'XAG', 'BTC', 'LTC', 'XRP', 'EUR', 'USD', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'CNY'];
+  var currencyOrder = [
+    'XAU', 'XAG', 'BTC',
+    'LTC', 'XRP', 'EUR',
+    'USD', 'GBP', 'AUD',
+    'NZD', 'USD', 'CAD',
+    'CHF', 'JPY', 'CNY'
+  ]
 
-  toggle.append("input").attr("type", "checkbox")
-    .property("checked", !hideXRP)
-    .on('click', function(){
-      hideXRP = !d3.select(this).property("checked");
-      self.load(null, exchange, true);
-    });
-
-  toggle.append("b");
-  toggle.append("span").html("include XRP");
-
-  //var color  = d3.scale.category20();
-  var color = function (d) {
-    var currency = "";
-    if (d.data.base) {
-      currency = d.data.base.currency;
-    } else if (d.data.currency) {
-      currency = d.data.currency;
-    }
-
-    var colors = {
-      'XRP'     : '#346aa9',
-      'USD'     : [20,150,30],
-      'BTC'     : [240,150,50],
-      'EUR'     : [220,210,50],
-      'CNY'     : [180,30,35],
-      'JPY'     : [140,80,170],
-      'CAD'     : [130,100,190],
-      'other'   : [100, 150, 200]
-    };
-    var c = colors[currency] || colors.other;
-    var rank = d.data.rank - 1;
-    if (typeof c !== 'string') {
-      c[0] -= Math.floor(c[0] * (rank%3*0.1));
-      c[1] -= Math.floor(c[1] * (rank%3*0.15));
-      c[2] -= Math.floor(c[2] * (rank%3*0.2));
-
-       c = 'rgb('+c[0]+','+c[1]+','+c[2]+')';
-    }
-
-    return c;
+  var sourceLabels = {
+    rcl: 'Ripple Network',
+    'poloniex.com': 'Poloniex',
+    'kraken.com': 'Kraken',
+    'btc38.com': 'BTC38',
+    'jubi.com': 'Jubi'
   }
+
+  var currencyColors = {
+    'XRP': '#346aa9',
+    'USD': [20, 150, 30],
+    'BTC': [240, 150, 50],
+    'EUR': [220, 210, 50],
+    'CNY': [180, 30, 35],
+    'JPY': [140, 80, 170],
+    'CAD': [130, 100, 190],
+    'other': [100, 150, 200]
+  }
+
+  var blues = [
+    '#2a98D0',
+    '#98c8eb',
+    '#1A3964',
+    '#3665B0'
+  ]
 
   var arc = d3.svg.arc()
-      .outerRadius(radius*0.9)
-      .innerRadius(radius*0.55);
+    .outerRadius(radius * 0.9)
+    .innerRadius(radius * 0.6)
 
   var labelArc = d3.svg.arc()
-      .outerRadius(radius*1.15)
-      .innerRadius(radius);
+    .outerRadius(radius * 1.15)
+    .innerRadius(radius)
 
-  //arc paths
-  var path = chart.selectAll("path");
-  var label = inner.selectAll("label");
-  var tooltip = outer.append("div").attr("class","tooltip");
-  var transitioning = false;
-  var gateways = options.gateways;
-  var data = [];
-  var exchange;
-  var current;
-  var total;
+  var path = chart.selectAll('path')
+  var label = inner.selectAll('label')
+  var tooltip = outer.append('div').attr('class', 'tooltip')
+  var transitioning = false
+  var gateways = options.gateways
+  var exchange
+  var total
 
-  //load a specific metric
-  this.load = function (z, ex, xrpToggle) {
+  /**
+   * color
+   */
 
-    if (z && z.components) {
-      total = z.total || 0;
-      data  = [];
-      z.components.forEach(function(d){
-        if (d.converted_amount) data.push(JSON.parse(JSON.stringify(d)));
-      });
-    } else if (!data) return;
+  function color(currency, rank) {
+    var c
+    var r
+    var rgb
 
-    if (!data.length) {
-      tooltip.html("");
-      path.data([]).exit().remove();
-      inner.selectAll("label").data([]).exit().remove();
-      return;
+    if (currency && currency === 'XRP') {
+      return currencyColors.XRP
+
+    } else if (!currency) {
+      return blues[(rank || 0) % 4]
     }
 
-    //indicate we are in the midst of transition
-    transitioning = true;
-    exchange      = ex;
+    c = currencyColors[currency] ||
+      currencyColors.other
+    r = rank ? rank - 1 : 0
 
-    //check for XRP, set the percentages
-    var XRPObj, currencies = {};
-    data.forEach(function(d) {
-      if (d.currency=='XRP') XRPObj = d;
-
-      d.percent = total ? d.converted_amount/total*100 : 0.00;
-    });
-
-    //XRP wont be present for trade volume, so add it at 0
-    if (!XRPObj) data.push({currency:'XRP', converted_amount:0.0});
-
-    //if the XRP toggle is active and XRP should be hidden
-    //adjust the total, set the XRP amount to 0, and
-    //recalculate the percentages
-    else if (xrpToggle && hideXRP) {
-      var adjusted = total - XRPObj.amount;
-      data.forEach(function(d){
-        if (d.currency=='XRP') d.converted_amount = 0;
-        d.percent = adjusted ? d.converted_amount/adjusted*100 : 0.00;
-      });
-
-    //otherwise, reset the converted amount and set percentage
-    } else {
-      XRPObj.converted_amount = XRPObj.amount || 0.0;
-      XRPObj.percent = total ? XRPObj.amount/total*100 : 0.00;
+    rgb = {
+      r: Math.floor(c[0] - c[0] * (r % 3 * 0.1)),
+      g: Math.floor(c[1] - c[1] * (r % 3 * 0.15)),
+      b: Math.floor(c[2] - c[2] * (r % 3 * 0.2))
     }
 
-    //sort by issuer, reversed
-    data.sort(function(a, b){
-      var i1 = a.base ? a.base.currency+a.base.issuer : a.currency+a.issuer || "Z"; //make XRP first
-      var i2 = b.base ? b.base.currency+b.base.issuer : b.currency+b.issuer || "Z"; //make XRP first
-      return i2 ? i2.localeCompare(i1) : 0;
-    });
-
-    //rank based on order of apperance. we could
-    //do by percent, but then the colors would
-    //change between metrics.
-    data.forEach(function(d) {
-      var c = d.currency || d.base.currency;
-      if (currencies[c]) currencies[c]++;
-      else currencies[c] = 1;
-      d.rank = currencies[c];
-    });
-
-    var pie = d3.layout.pie()
-        .sort(null)
-        .startAngle(1.1*Math.PI)
-        .endAngle(3.1*Math.PI)
-        .value(function(d) { return d.converted_amount; });
-
-    //add arcs
-    path = path.data(pie(data));
-    path.enter().append("path")
-    .on('mouseover', function(d, i) {
-      showTooltip(d, i);
-      if (!transitioning) {
-        d3.select(this)
-        .transition()
-        .attr('transform', 'scale(1.05)');
-      }
-    })
-    .on('mouseout', function(){
-      path.classed('fade', false);
-      label.classed('fade', false);
-      if (!transitioning) {
-        d3.select(this)
-        .transition()
-        .attr('transform', 'scale(1)');
-      }
-    })
-    .on('click', function(d) {
-      if (d.data.base) {
-        var co1 = currencyOrder.indexOf(d.data.base.currency);
-        var co2 = currencyOrder.indexOf(d.data.counter.currency);
-        var market;
-
-        if (co2 < co1) {
-          market = d.data.counter.currency +
-            (d.data.counter.issuer ? ':' + d.data.counter.issuer : '') + '/' +
-            d.data.base.currency +
-            (d.data.base.issuer ? ':' + d.data.base.issuer : '');
-        } else {
-          market = d.data.base.currency +
-            (d.data.base.issuer ? ':' + d.data.base.issuer : '') + '/' +
-            d.data.counter.currency +
-            (d.data.counter.issuer ? ':' + d.data.counter.issuer : '');
-        }
-
-        window.location.hash = '#/markets/' + market;
-      }
-    })
-
-    path.classed('pair', function(d) {
-      return d.data.base ? true : false;
-    })
-    .style("fill", function(d, i) { return color(d); })
-    .style("stroke", function(d, i) { return color(d); })
-    .style("stroke-width", ".35px")
-    .transition().duration(750).attrTween("d", arcTween)
-    .attr("id", function(d, i){return "arc_"+i})
-    .each("end", function(){transitioning = false});
-
-    path.exit().remove();
-
-    //show data for the first item,
-    //unless it has no volume
-    current = null;
-    var i = 0;
-    var d = path.data()[i];
-    while (d && !d.data.converted_amount) {
-      i++;
-      d = path.data()[i];
-    }
-
-    //add labels
-    label = label.data(path.data());
-
-    label.enter().append("label");
-
-    label.html(function(d){
-        if (!d.data.currency && !d.data.base) return "";
-        if (!d.data.converted_amount) return "";
-        if (d.data.percent<2) return "";
-
-        var l;
-        var co1;
-        var co2;
-        if (d.data.base) {
-          co1 = currencyOrder.indexOf(d.data.base.currency);
-          co2 = currencyOrder.indexOf(d.data.counter.currency);
-
-          if (co1 < co2) {
-            l = d.data.base.currency+"/"+d.data.counter.currency;
-          } else {
-            l = d.data.counter.currency+"/"+d.data.base.currency;
-          }
-        } else {
-          l = d.data.currency;
-        }
-
-        return l+"<b>"+commas(d.data.percent,0)+"%</b>";
-      })
-      .style("margin-top", function(d){
-        return ((0 - parseInt(d3.select(this).style("height"), 10))/2)+"px";
-      })
-      .style("margin-left", function(d){
-        return ((0 - parseInt(d3.select(this).style("width"), 10))/2)+"px";
-      })
-      .transition().duration(500)
-      .style("top", function(d){
-        return (labelArc.centroid(d)[1]+125)+"px";
-      })
-      .style("left", function(d){
-        return (labelArc.centroid(d)[0]+125)+"px";
-      });
-
-    label.exit().remove();
-
-    toggle.style("display", xrpToggle ? "block" : "none");
+    return 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')'
   }
 
+  /**
+   * prepareTradeVolume
+   */
 
-  //function for determining arc angles.
-  function arcTween(b) {
-    var c = this._current;
-    if (!c) {
-      if (chart.select("path:nth-last-child(2)")[0][0])
-        c = chart.select("path:nth-last-child(2)")[0][0]._current;
-      if (c) c.startAngle = c.endAngle;
-    }
+  function prepareTradeVolume(z) {
+    var data = []
+    z.components.forEach(function(d, i) {
+      data.push({
+        key: sourceLabels[d.source] || d.source,
+        sub: d.base_currency ?
+          d.base_currency + '/' + d.counter_currency : undefined,
+        value: Number(d.base_volume),
+        color: color(null, i),
+        row: d
+      })
+    })
 
-    if (!c) c = {startAngle: 1.1*Math.PI, endAngle: 1.1*Math.PI};
-    var i = d3.interpolate(c, b);
-    this._current = i(0);
-    return function(t) {
-      return arc(i(t));
-    };
+    return data
   }
 
+  /**
+   * prepareRCLTradeVolume
+   */
 
-  function showTooltip(d, i, init) {
+  function prepareRCLTradeVolume(z) {
+    var data = []
+    var keys = {}
+
+    z.components.forEach(function(d) {
+      var row = {
+        value: Number(d.converted_amount),
+        row: d
+      }
+
+      var co1 = currencyOrder.indexOf(d.base.currency)
+      var co2 = currencyOrder.indexOf(d.counter.currency)
+
+      row.sort = d.base.currency
+      row.sub = gateways.getName(d.base.issuer, d.base.currency) ||
+        d.base.issuer
+      row.key = co2 < co1 ?
+        d.counter.currency + '/' + d.base.currency :
+        d.base.currency + '/' + d.counter.currency
+
+      if (co2 < co1) {
+        row.link = '#/markets/' +
+          d.counter.currency +
+          (d.counter.issuer ?
+           ':' + d.counter.issuer : '') + '/' +
+          d.base.currency +
+          (d.base.issuer ?
+           ':' + d.base.issuer : '')
+      } else {
+        row.link = '#/markets/' +
+          d.base.currency +
+          (d.base.issuer ?
+           ':' + d.base.issuer : '') + '/' +
+          d.counter.currency +
+          (d.counter.issuer ?
+           ':' + d.counter.issuer : '')
+      }
+
+      data.push(row)
+    })
+
+    data.sort(function(a, b) {
+      var first = a.row.base.currency
+      var second = b.row.base.currency
+      return second.localeCompare(first)
+    })
+
+    data.forEach(function(d) {
+      var key = d.row.base.currency
+      if (keys[key]) {
+        keys[key]++
+      } else {
+        keys[key] = 1
+      }
+
+      d.rank = keys[key]
+      d.color = color(key, d.rank)
+    })
+
+    return data
+  }
+
+  /**
+   * prepareRCLPaymentVolume
+   */
+
+  function prepareRCLPaymentVolume(z) {
+    var data = []
+    var keys = {}
+    z.components.forEach(function(d) {
+      data.push({
+        key: d.currency,
+        sub: gateways.getName(d.issuer, d.currency) || d.issuer,
+        value: Number(d.converted_amount),
+        color: color(d.currency),
+        row: d
+      })
+    })
+
+    data.sort(function(a, b) {
+      return b.key.localeCompare(a.key)
+    })
+
+    data.forEach(function(d) {
+      if (keys[d.key]) {
+        keys[d.key]++
+      } else {
+        keys[d.key] = 1
+      }
+
+      d.rank = keys[d.key]
+      d.color = color(d.key, d.rank)
+    })
+
+    return data
+  }
+
+  /**
+   * showTooltip
+   */
+
+  function showTooltip(d, init) {
 
     if (!init) {
       path.classed('fade', function(row) {
-        return row !== d;
-      });
+        return row !== d
+      })
 
       label.classed('fade', function(row) {
-        return row !== d;
-      });
+        return row !== d
+      })
     }
 
-    if (current===i) return;
-    current = i;
+    var currency = d.data.row.base ?
+        d.data.row.base.currency : d.data.row.currency || 'XRP'
+    var amount = d.data.row.amount || d.value
 
-    var l;
-    var co1;
-    var co2;
+    tooltip.html('')
 
-    if (d.data.base) {
-        co1 = currencyOrder.indexOf(d.data.base.currency);
-        co2 = currencyOrder.indexOf(d.data.counter.currency);
+    var head = tooltip.append('div')
+      .attr('class', 'title')
+      .html(d.data.key)
 
-      if (co1 < co2) {
-        l = d.data.base.currency+"/"+d.data.counter.currency;
-      } else {
-        l = d.data.counter.currency+"/"+d.data.base.currency;
+    if (d.data.sub) {
+      head.append('small')
+      .html(d.data.sub)
+      .style('color', d.data.color)
+    }
+
+    if (d.value) {
+      tooltip.append('div')
+        .attr('class', 'value')
+        .html('<label>Value:</label> ' +
+              commas(d.value / exchange.rate, 2)
+              + ' <small>' + exchange.currency + '</small>')
+    }
+
+    if (amount &&
+        currency &&
+        exchange.currency !== currency) {
+      tooltip.append('div')
+        .attr('class', 'amount')
+        .html('<label>Amount:</label> '
+              + commas(amount, 2) +
+              ' <small>' + currency + '</small>')
+    }
+
+    if (d.data.row.count) {
+      tooltip.append('div')
+        .attr('class', 'count')
+        .html('<label>Count:</label> ' + d.data.row.count)
+    }
+  }
+
+  /**
+   * arcTween
+   */
+
+  function arcTween(b) {
+    var c = this._current
+    if (!c) {
+      if (chart.select('path:nth-last-child(2)')[0][0]) {
+        c = chart.select('path:nth-last-child(2)')[0][0]._current
       }
-    } else {
-      l = d.data.currency;
+
+      if (c) {
+        c.startAngle = c.endAngle
+      }
     }
 
-    var currency = d.data.base ? d.data.base.currency : d.data.currency;
-    var issuer   = d.data.base ? d.data.base.issuer : d.data.issuer;
-    var gateway  = gateways.getName(issuer, currency) || issuer;
-    var amount   = commas(d.data.amount,2);
-    var value    = currency === exchange.currency || !exchange.rate ? "" : commas(d.value/exchange.rate,2);
-    var count    = d.data.count;
+    if (!c) {
+      c = {
+        startAngle: 1.1 * Math.PI,
+        endAngle: 1.1 * Math.PI
+      }
+    }
 
-    tooltip.html("");
-    tooltip.append("div").attr("class","title").html(l+(gateway ? " &middot <small>"+gateway+"</small>" : ""));
-    if (value) tooltip.append("div").attr("class","value")
-      .html("<label>Value:</label> "+value+" <small>"+exchange.currency+"</small>");
-    tooltip.append("div").attr("class","amount")
-      .html("<label>Amount:</label> "+amount+" <small>"+currency+"</small>");
-    if (count) tooltip.append("div").attr("class","count")
-      .html("<label>Count:</label> "+count);
+    var i = d3.interpolate(c, b)
+    this._current = i(0)
+    return function(t) {
+      return arc(i(t))
+    }
+  }
 
-    tooltip.select(".title small").style("color", color(d));
+  /**
+   * load
+   */
+
+  this.load = function(z, ex) {
+    var data
+
+    title.html(z.label)
+    total = z.total || 0
+
+    if (z.link) {
+      title.append('a')
+        .attr('href', z.link)
+        .html('See Details >')
+    }
+
+    if (!z.components) {
+      return
+    }
+
+    switch (z.key) {
+      case 'totalTradeVolume':
+        data = prepareTradeVolume(z)
+        break
+      case 'tradeVolumeRCL':
+        data = prepareRCLTradeVolume(z)
+        break
+      case 'paymentVolumeRCL':
+        data = prepareRCLPaymentVolume(z)
+        break
+      default:
+        console.log('invalid mode')
+        return
+    }
+
+    if (!data.length) {
+      tooltip.html('')
+      path.data([]).exit().remove()
+      inner.selectAll('label').data([]).exit().remove()
+      return
+    }
+
+    // indicate we are in the midst of transition
+    transitioning = true
+    exchange = ex
+
+    data.forEach(function(d) {
+      d.percent = total ? d.value / total * 100 : 0.00
+    })
+
+    var pie = d3.layout.pie()
+      .sort(null)
+      .startAngle(1.1 * Math.PI)
+      .endAngle(3.1 * Math.PI)
+      .value(function(d) {
+        return d.value
+      })
+
+    // add arcs
+    path = path.data(pie(data))
+    path.enter().append('path')
+    .on('mouseover', function(d) {
+      showTooltip(d)
+      if (!transitioning) {
+        d3.select(this)
+        .transition()
+        .attr('transform', 'scale(1.05)')
+      }
+    })
+    .on('mouseout', function() {
+      path.classed('fade', false)
+      label.classed('fade', false)
+      if (!transitioning) {
+        d3.select(this)
+        .transition()
+        .attr('transform', 'scale(1)')
+      }
+    })
+    .on('click', function(d) {
+      if (d.data.link) {
+        window.location.hash = d.data.link
+      }
+    })
+
+    path.classed('clickable', function(d) {
+      return Boolean(d.data.link)
+    })
+    .style('fill', function(d) {
+      return d.data.color
+    })
+    .style('stroke', function(d) {
+      return d.data.color
+    })
+    .style('stroke-width', '.35px')
+    .transition().duration(750).attrTween('d', arcTween)
+    .attr('id', function(d, i) {
+      return 'arc_' + i
+    })
+    .each('end', function() {
+      transitioning = false
+    })
+
+    path.exit()
+    .transition().duration(400)
+    .style('opacity', 0)
+    .each('end', function() {
+      d3.select(this).remove()
+    })
+
+    // add labels
+    label = label.data(path.data())
+
+    label.enter().append('label')
+
+    label.html(function(d) {
+      if (d.data.percent < 2) {
+        return ''
+      }
+
+      return d.data.key +
+        '<b>' + commas(d.data.percent, 0) + '%</b>'
+    })
+    .style('margin-top', function() {
+      var h = parseInt(d3.select(this).style('height'), 10)
+      return ((0 - h) / 2) + 'px'
+    })
+    .style('margin-left', function() {
+      var w = parseInt(d3.select(this).style('width'), 10)
+      return ((0 - w) / 2) + 'px'
+    })
+    .transition().duration(500)
+    .style('top', function(d) {
+      return (labelArc.centroid(d)[1] + radius + margin.top) + 'px'
+    })
+    .style('left', function(d) {
+      return (labelArc.centroid(d)[0] + radius + margin.left) + 'px'
+    })
+
+    label.exit().remove()
+
+    // show data for the largest item
+    var current
+    path.data().forEach(function(d) {
+      if (!current || current.value < d.value) {
+        current = d
+      }
+    })
+
+    if (current) {
+      showTooltip(current, true)
+    } else {
+      tooltip.html('')
+    }
   }
 }

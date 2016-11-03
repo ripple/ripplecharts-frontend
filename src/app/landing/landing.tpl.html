@@ -9,78 +9,89 @@
       </p>
     </div>
     <div class="row">
-      <div class="col-md-6 stats">
+<div class="col-md-6 stats">
+        <h5>
+          <b>Volume Stats (24 hours)</b>
+          <select class="valueCurrencySelect" ng-model="selectedCurrency"
+                  ng-options="currency for currency in currencies"></select>
+          <span class="valueRateDisplay" ng-bind="valueRatePair"></span>
+          <span class="valueRateDisplay"
+                ng-show="selectedCurrency !== 'XRP'"
+                ng-bind="valueRate"></span>
+        </h5>
+        <ul class="volume-stats">
+          <li ng-class="{selected:selectedMetric === metrics.totalTradeVolume}"
+              ng-click="showMetricDetails('totalTradeVolume')">
+            <div class="status"></div>
+            <label ng-bind-html="metrics.totalTradeVolume.label | trust"></label>
+            <div class="stat">
+              <sign ng-show="metrics.totalTradeVolume.converted"
+                    ng-bind="sign"></sign>
+              <span ng-show="metrics.totalTradeVolume.converted" ng-bind="metrics.totalTradeVolume.converted | number:2"></span>
+              <img  ng-hide="metrics.totalTradeVolume.converted" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+          <li ng-class="{selected:selectedMetric === metrics.tradeVolumeRCL}"
+              ng-click="showMetricDetails('tradeVolumeRCL')">
+            <div class="status"></div>
+            <label ng-bind-html="metrics.tradeVolumeRCL.label | trust"></label>
+            <div class="stat">
+              <sign ng-show="metrics.tradeVolumeRCL.converted"
+                    ng-bind="sign"></sign>
+              <span ng-show="metrics.tradeVolumeRCL.converted" ng-bind="metrics.tradeVolumeRCL.converted | number:2"></span>
+              <img  ng-hide="metrics.tradeVolumeRCL.converted" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+          <li ng-class="{selected:selectedMetric === metrics.paymentVolumeRCL}"
+              ng-click="showMetricDetails('paymentVolumeRCL')">
+            <div class="status"></div>
+            <label ng-bind-html="metrics.paymentVolumeRCL.label | trust"></label>
+            <div class="stat">
+              <sign ng-show="metrics.paymentVolumeRCL.converted"
+                    ng-bind="sign"></sign>
+              <span ng-show="metrics.paymentVolumeRCL.converted" ng-bind="metrics.paymentVolumeRCL.converted | number:2"></span>
+              <img  ng-hide="metrics.paymentVolumeRCL.converted" src="assets/images/rippleThrobber.png" class="loader"/>
+            </div>
+          </li>
+        </ul>
         <h5>
           Ripple Network Stats
-          <select id="valueCurrency" class="valueCurrencySelect"></select>
-          <span class="valueRateDisplay" ng-bind="valueRateDisplay"></span>
         </h5>
         <ul>
           <li>
-            <label>XRP Capitalization:</label>
+            <label>Total XRP</label>
             <div class="stat">
-              <span ng-show="valueRate" ng-bind="xrpCapitalization"></span>
-              <img  ng-hide="xrpCapitalization" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-            <div class="details"></div>
-          </li>
-          <li>
-            <label>24hr Payment Volume:</label>
-            <div class="stat">
-              <span ng-show="valueRate" ng-bind="paymentVolume"></span>
-              <img  ng-hide="paymentVolume" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-            <div class="details">
-              <div ng-show="paymentVolume && paymentVolume != ' '" ng-click="metricDetail='paymentVolume'" ng-class="{selected : metricDetail == 'paymentVolume' }">
-                Detail
-                <img src="assets/images/triangle.svg"/>
-              </div>
+              <span ng-bind="totalXRP | number:2"></span>
+              <img ng-hide="totalXRP"
+                   src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li>
           <li>
-            <label>24hr Trade Volume:</label>
+            <label ng-bind-html="metrics.capitalizationXRP.label | trust"></label>
             <div class="stat">
-              <span ng-show="valueRate" ng-bind="tradeVolume"></span>
-              <img  ng-hide="tradeVolume" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-            <div class="details">
-              <div ng-show="tradeVolume && tradeVolume != ' '" ng-click="metricDetail='tradeVolume'" ng-class="{selected : metricDetail == 'tradeVolume' }">
-                Detail
-                <img src="assets/images/triangle.svg"/>
-              </div>
+              <sign ng-show="metrics.capitalizationXRP.converted"
+                    ng-bind="sign"></sign>
+              <span ng-show="metrics.capitalizationXRP.converted" ng-bind="metrics.capitalizationXRP.converted | number:2"></span>
+              <img  ng-hide="metrics.capitalizationXRP.converted" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li>
           <li>
-            <label>Total XRP:</label>
+            <label>Ledger Number</label>
             <div class="stat">
-              <span ng-bind="totalCoins"></span>
-              <img ng-hide="totalCoins" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-show="ledgerIndex" ng-bind="ledgerIndex | number:0"></span>
+              <img  ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
-            <div class="details"></div>
           </li>
           <li>
-            <label>Ledger #:</label>
+            <label ng-bind-html="metrics.numAccounts.label | trust"></label>
             <div class="stat">
-              <span ng-bind="ledgerIndex"></span>
-              <img ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
+              <span ng-bind="metrics.numAccounts.total | number:0 "></span>
+              <img ng-hide="metrics.numAccounts.total" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
-            <div class="details"></div>
-          </li>
-          <li>
-            <label># of Ripple accounts:</label>
-            <div class="stat">
-              <span ng-bind="totalAccounts"></span>
-              <img ng-hide="totalAccounts" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-            <div class="details"></div>
           </li>
         </ul>
       </div>
       <div class="col-md-6">
-        <h5>
-          <span ng-bind="metricDetailTitle"></span>
-          <a class="explore" href="#/trade-volume" ng-show="metricDetail === 'tradeVolume'">Explore</a>
-        </h5>
         <div id="metricDetail"></div>
       </div>
     </div>
