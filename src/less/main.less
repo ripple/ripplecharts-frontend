@@ -3,12 +3,12 @@
  * stylesheets used throughout the application as this is the only stylesheet in
  * the Grunt configuration that is automatically processed.
  */
-
 @font-face { font-family: "Open Sans Light"; src: url('fonts/OpenSans-Light.ttf'); }
 @font-face { font-family: "Open Sans Light"; font-style:italic; src: url('fonts/OpenSans-LightItalic.ttf'); }
-@font-face { font-family: "Open Sans Light"; font-weight: bold; src: url('fonts/OpenSans-Bold.ttf'); }
-@font-face { font-family: "Open Sans Light"; font-weight: bold; font-style:italic; src: url('fonts/OpenSans-BoldItalic.ttf'); }
+@font-face { font-family: "Open Sans"; font-weight: bold; src: url('fonts/OpenSans-Bold.ttf'); }
+@font-face { font-family: "Open Sans"; font-weight: bold; font-style:italic; src: url('fonts/OpenSans-BoldItalic.ttf'); }
 @font-face { font-family: "Open Sans"; src: url('fonts/OpenSans-Regular.ttf'); }
+
 
 /**
  * First, we include the Twitter Bootstrap LESS files. Only the ones used in the
@@ -41,7 +41,7 @@
 @import 'variables.less';
 
 body {
-  font-family: "Open Sans Light", Helvetica, Arial, sans-serif;
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
   padding:0 !important;
   line-height:inherit;
   width:100%;
@@ -101,7 +101,7 @@ h1, h2, h3, h4 {
   //overflow:hidden;
   background:#000;
   //border-bottom:5px solid #222;
-  height: 59px;
+  height: 50px;
 }
 
 .headerPad {
@@ -124,7 +124,7 @@ h1, h2, h3, h4 {
 }
 
 .header status-check svg {
-  margin: 20px 12px 12px;
+  margin: 16px 12px 6px;
 }
 
 .header status-check circle {
@@ -245,7 +245,7 @@ h1, h2, h3, h4 {
 }
 
 .nav-toggle {
-  margin:12px 10px 10px 20px;
+  margin:10px 10px 10px 20px;
   float:left;
   cursor:pointer;
   color:#ccc;
@@ -262,7 +262,7 @@ h1, h2, h3, h4 {
 
 .nav .top {
   background:#f6f6f6;
-  height:60px;
+  height:47px;
   border-right:1px solid #fdfdfd;
   border-bottom:1px solid #e8e8e8;
 }
@@ -296,7 +296,7 @@ h1, h2, h3, h4 {
 .nav li a {
   font-size:14px;
   border-radius:1px;
-  padding:11px 20px;
+  padding:7px 16px;
   color:#666;
   display:block;
   text-decoration:none;
@@ -352,7 +352,7 @@ h1, h2, h3, h4 {
   width:175px;
   height:30px;
   background-image:url('images/logo.png');
-  margin: 15px 0 15px 15px !important;
+  margin: 10px 0 10px 15px !important;
 
 // Pixel ratio: 2
   @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2) {
@@ -480,8 +480,6 @@ h1, h2, h3, h4 {
   background-repeat: no-repeat;
   background-position: 90% 50%;
   background-size: 10px;
-  font-family: 'Open Sans';
-  //font-weight:bold;
   -webkit-appearance:none;
   -moz-appearance:none!important;
   -o-appearance:none;
@@ -529,7 +527,6 @@ h1, h2, h3, h4 {
 
 .helpbox a {
   color:#999;
-  font-family:"Open Sans";
   text-decoration:underline;
 }
 
@@ -582,7 +579,6 @@ h1, h2, h3, h4 {
 
 .disclaimer {
   font-size:11px;
-  font-family:"Open Sans";
   margin-bottom:20px;
   color:#ccc;
 }
@@ -605,7 +601,6 @@ footer .footerInner {
   text-align:left;
   clear:both;
   padding:10px;
-  font-family:"Open Sans";
 }
 
 footer .footerInner .disclaimer {
@@ -674,9 +669,9 @@ footer .links a:first-child {
 }
 
 
-.landing .valueRateDisplay {
+.valueRateDisplay {
   float: right;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: normal;
   color: #aaa;
   padding-top: 5px;
@@ -756,17 +751,12 @@ footer .links a:first-child {
  * New header
  */
 
-.main {
-  padding-top: 20px;
-}
-
- .mobile_only {
+.mobile_only {
   display: none;
 }
 
 .navbar {
-  font-family: 'Open Sans';
-  margin-top: 5px;
+  margin-top: 8px;
   float: right;
 
 
@@ -779,7 +769,7 @@ footer .links a:first-child {
   }
 
   .sub_wrapper {
-    padding-top: 11px;
+    padding-top: 10px;
     height: auto;
     width: auto;
     position: relative;
@@ -834,7 +824,7 @@ footer .links a:first-child {
       text-align: center;
 
       a {
-        padding: 14px 5px;
+        padding: 5px;
       }
     }
   }
