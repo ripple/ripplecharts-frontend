@@ -1,9 +1,14 @@
 /* global MultiMarket, ValueSummary */
-'use strict';
+'use strict'
 
 angular.module('ripplecharts.landing', [
   'ui.state'
 ])
+.filter('trust', ['$sce', function($sce) {
+  return function(htmlCode) {
+    return $sce.trustAsHtml(htmlCode)
+  }
+}])
 .config(function config($stateProvider) {
   $stateProvider.state('landing', {
     url: '/',
@@ -16,154 +21,123 @@ angular.module('ripplecharts.landing', [
     data: {},
     resolve: {
       gateInit: function(gateways) {
-        return gateways.promise;
+        return gateways.promise
       }
     }
-  });
+  })
 })
 .controller('LandingCtrl', function LandingCtrl($scope, $state, gateways) {
 
-  var api = new ApiHandler(API);
+  var api = new ApiHandler(API)
   var donut = new ValueSummary({
     id: 'metricDetail',
     gateways: gateways
-  });
+  })
 
-  var exchangeRates = {};
+  var exchangeRates = {}
+  var refreshInterval
+
   var valueCurrencies = {
     USD: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B',  // bitstamp
     EUR: 'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq', // gatehub
     JPY: 'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN', // tokoyo jpy
     CNY: 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y', // ripplefox
     XRP: ''
-  };
-
-  var totalAccounts;
-  var paymentVolumeXRP;
-  var tradeVolumeXRP;
-  var valueInterval;
-
-  var formatNumber = d3.format(',g');
-
-  // present amount in human readable format
-  function commas(d, precision) {
-    return formatNumber(Number(d.toFixed(precision || 0)));
   }
 
+  $scope.metrics = {
+    totalTradeVolume: {
+      label: 'Total XRP Trade Volume <small>(All Exchanges)</small>'
+    },
+    tradeVolumeRCL: {
+      label: 'Ripple Network Trade Volume',
+      link: '#/trade-volume'
+    },
+    paymentVolumeRCL: {
+      label: 'Ripple Network Payment Volume'
+    },
+    capitalizationXRP: {
+      label: 'XRP Capitalization'
+    },
+    numAccounts: {
+      label: '# of Ripple Accounts'
+    }
+  }
 
-  // get num accounts
+  for (var key in $scope.metrics) {
+    $scope.metrics[key].key = key
+  }
+
+  $scope.currencies = Object.keys(valueCurrencies)
+  $scope.selectedCurrency = 'USD'
+
+
+  $scope.showMetricDetails = function(name) {
+
+    if (name) {
+      $scope.selectedMetric = $scope.metrics[name]
+    }
+
+    donut.load($scope.selectedMetric, {
+      rate: 1 / $scope.valueRate,
+      currency: $scope.selectedCurrency
+    })
+  }
+
+  /**
+   * getTotalAccounts
+   */
+
   function getTotalAccounts() {
     api.getTotalAccounts(null, function(err, total) {
       if (err) {
-        console.log(err);
+        console.log(err)
       }
 
-      if (total) {
-        totalAccounts = total; // save for new account updates;
-      }
-
-      $scope.totalAccounts = total ? commas(total) : ' ';
-      $scope.$apply();
-    });
+      $scope.metrics.numAccounts.total = total
+      $scope.$apply()
+    })
   }
 
-  // look for new accounts from the websocket feed
+  /**
+   * handleNewAccount
+   */
+
   function handleNewAccount(tx) {
-    var meta = tx.meta;
+    var meta = tx.meta
     if (meta.TransactionResult !== 'tesSUCCESS') {
-      return;
+      return
     }
 
     meta.AffectedNodes.forEach(function(affNode) {
       if (affNode.CreatedNode &&
           affNode.CreatedNode.LedgerEntryType === 'AccountRoot') {
-        $scope.totalAccounts = totalAccounts ? commas(++totalAccounts) : ' ';
-        $scope.$apply();
+        $scope.metrics.numAccounts.total++
+        $scope.$apply()
       }
-    });
-  }
-
-  // display the selected metric on the page, if its ready
-  function showValue(metric) {
-    var ex = {
-      rate: $scope.valueRate,
-      currency: $scope.valueCurrency
-    };
-    var sign;
-    var value;
-    var precision;
-
-    if (typeof $scope.valueRate === 'undefined') {
-      return;
-    }
-
-    if (metric === 'paymentVolume') {
-      if (typeof paymentVolumeXRP === 'undefined') {
-        return;
-      }
-
-      if (metric === $scope.metricDetail) {
-        donut.load(paymentVolumeXRP, ex);
-      }
-
-      value = paymentVolumeXRP.total / $scope.valueRate;
-      precision = 2;
-
-    } else if (metric === 'tradeVolume') {
-      if (typeof tradeVolumeXRP === 'undefined') {
-        return;
-      }
-
-      if (metric === $scope.metricDetail) {
-        donut.load(tradeVolumeXRP, ex);
-      }
-
-      value = tradeVolumeXRP.total / $scope.valueRate;
-      precision = 2;
-
-    } else if (metric === 'xrpCapitalization') {
-      if (!$scope.totalXRP) {
-        return;
-      }
-
-      value = $scope.totalXRP / $scope.valueRate;
-      precision = 0;
-    }
-
-    switch ($scope.valueCurrency) {
-      case 'USD': sign = '$'; break;
-      case 'JPY': sign = '¥'; break;
-      case 'CNY': sign = '¥'; break;
-      case 'EUR': sign = '€'; break;
-      case 'XRP': sign = ''; break;
-      default: sign = '';
-    }
-
-    $scope[metric] = value ? sign + commas(value, precision) : ' ';
-    $scope.$apply();
+    })
   }
 
   // get the exchange rate from the API
   function getExchangeRate(c, callback) {
     api.exchangeRate({
       base: {
-        currency: c.currency,
-        issuer: c.issuer
+        currency: 'XRP'
       },
       counter: {
-        currency: 'XRP'
+        currency: c.currency,
+        issuer: c.issuer
       }
     }, function(err, rate) {
       if (err) {
-        callback(err);
-        return;
+        callback(err)
+        return
       }
 
       // cache for future reference
-      exchangeRates[c.currency + '.' + c.issuer] = rate;
-
-      callback(null, rate);
-    });
+      exchangeRates[c.currency + '.' + c.issuer] = Number(rate)
+      callback(null, rate)
+    })
   }
 
   // set the value rate for the selected
@@ -171,116 +145,220 @@ angular.module('ripplecharts.landing', [
   // API if its not cached or
   // if we are updating the cache
   function setValueRate(currency, useCached, callback) {
-    var issuer = valueCurrencies[currency];
+    var issuer = valueCurrencies[currency]
+    $scope.valueRate = undefined
+    $scope.valueRatePair = ''
+
+    function apply() {
+      $scope.valueRate = exchangeRates[currency + '.' + issuer]
+      $scope.valueRate = $scope.valueRate.toPrecision(4)
+      $scope.valueRatePair = 'XRP/' + currency
+      callback()
+    }
 
     if (currency === 'XRP') {
-      $scope.valueRate = 1;
-      $scope.valueRateDisplay = '';
-      callback();
-      return;
-    }
+      $scope.valueRate = 1
+      $scope.valueRatePair = ''
+      callback()
+      return
 
     // check for cached
-    if (useCached && exchangeRates[currency + '.' + issuer]) {
-      $scope.valueRate = exchangeRates[currency + '.' + issuer];
-      $scope.valueRateDisplay = commas(1 / $scope.valueRate, 4) +
-        ' XRP/' + currency;
-      callback();
-      return;
+    } else if (useCached && exchangeRates[currency + '.' + issuer]) {
+      apply()
+      return
     }
-
 
     getExchangeRate({
       currency: currency,
       issuer: issuer
     }, function(err) {
       if (err) {
-        console.log(err);
-        $scope.valueRate = 0;
-        callback(err);
-        return;
+        console.log(err)
+        callback(err)
+        $scope.$apply()
+        return
       }
 
-      $scope.valueRate = exchangeRates[currency + '.' + issuer] || 0;
-      if ($scope.valueRate) {
-        $scope.valueRateDisplay = commas(1 / $scope.valueRate, 4) +
-          ' XRP/' + currency;
-      }
-      callback();
-    });
+      apply()
+      $scope.$apply()
+    })
   }
 
-  // get values for the various metrics
-  function getValues() {
+  /**
+   * setMetricValue
+   */
 
-    setValueRate($scope.valueCurrency, false, function() {
-      showValue('paymentVolume');
-      showValue('tradeVolume');
-      showValue('xrpCapitalization');
-    });
+  function setMetricValue(metric, value) {
+    if (value) {
+      $scope.metrics[metric].total = value
+    }
 
+    if ($scope.metrics[metric].total && $scope.valueRate) {
+      $scope.metrics[metric].converted =
+        $scope.valueRate * $scope.metrics[metric].total
+    }
+  }
+
+  /**
+   * filterXRPVolume
+   */
+
+  function filterXRPVolume(components) {
+    var total = 0
+    var count = 0
+
+    components.forEach(function(c) {
+      if (c.base.currency === 'XRP' ||
+         c.counter.currency === 'XRP') {
+        total += c.converted_amount
+        count += c.count
+      }
+    })
+
+    return {
+      source: 'rcl',
+      base_volume: total,
+      count: count
+    }
+  }
+
+  /**
+   * getMetricValues
+   */
+
+  function getMetricValues() {
+
+    // get payments
     api.getPaymentVolume({}, function(err, resp) {
-      var data;
-      if (err || !resp || !resp.rows) {
-        console.log(err);
-        data = {total: 0};
+      var total = 0
+      var components
+
+      if (err || !resp || !resp.rows || !resp.rows.length) {
+        console.log(err)
 
       } else {
-        data = resp.rows[0];
+        components = resp.rows[0].components
+        total = resp.rows[0].total
       }
 
-      paymentVolumeXRP = data;
-      showValue('paymentVolume');
-    });
+      $scope.metrics.paymentVolumeRCL.components = components
+      setMetricValue('paymentVolumeRCL', total)
+      if ($scope.selectedMetric === $scope.metrics.paymentVolumeRCL) {
+        $scope.showMetricDetails()
+      }
+      $scope.$apply()
+    })
 
+    // get RCL exchanges
     api.getExchangeVolume({}, function(err, resp) {
-      var data;
-      if (err || !resp || !resp.rows) {
-        console.log(err);
-        data = {total: 0};
+      var total = 0
+      var components
+      var xrpVolume
+
+      if (err || !resp || !resp.rows || !resp.rows.length) {
+        console.log(err)
+
       } else {
-        data = resp.rows[0];
+        components = resp.rows[0].components
+        total = resp.rows[0].total
       }
 
-      tradeVolumeXRP = data;
-      showValue('tradeVolume');
-    });
+      $scope.metrics.tradeVolumeRCL.components = components
+      xrpVolume = filterXRPVolume(components)
+
+      // add RCL XRP volume to total metric
+      if ($scope.metrics.totalTradeVolume.components &&
+          !$scope.metrics.totalTradeVolume.withRCL) {
+        $scope.metrics.totalTradeVolume.components.unshift(xrpVolume)
+        setMetricValue('totalTradeVolume',
+          $scope.metrics.totalTradeVolume.total + xrpVolume.base_volume)
+      }
+
+      setMetricValue('tradeVolumeRCL', total)
+      if ($scope.selectedMetric === $scope.metrics.tradeVolumeRCL) {
+        $scope.showMetricDetails()
+      }
+      $scope.$apply()
+    })
+
+    // get external exchanges
+    api.getExternalMarkets({}, function(err, resp) {
+      var total = 0
+      var components
+      var xrpVolume
+
+      if (err || !resp) {
+        console.log(err)
+
+      } else {
+        components = resp.data.components
+        total = Number(resp.data.total)
+      }
+
+      $scope.metrics.totalTradeVolume.withRCL = false
+      $scope.metrics.totalTradeVolume.components = components
+
+
+      // add RCL XRP volume
+      if ($scope.metrics.tradeVolumeRCL.components) {
+        xrpVolume = filterXRPVolume($scope.metrics.tradeVolumeRCL.components)
+        $scope.metrics.totalTradeVolume.components.unshift(xrpVolume)
+        total += xrpVolume.base_volume
+        $scope.metrics.totalTradeVolume.withRCL = true
+      }
+
+      setMetricValue('totalTradeVolume', total)
+      if ($scope.selectedMetric === $scope.metrics.totalTradeVolume) {
+        $scope.showMetricDetails()
+      }
+      $scope.$apply()
+    })
   }
 
-  $scope.valueCurrency = 'USD';
-  $scope.metricDetail = 'tradeVolume';
-  $scope.metricDetailTitle = 'Trade Volume (last 24 hours)';
+  $scope.$watch('selectedCurrency', function(d) {
+    var name
 
-  // dropdown to change currency for metrics
-  var valueSelect = d3.select('#valueCurrency')
-    .on('change', function() {
-      var currency = this.value;
-      setValueRate(currency, true, function() {
-        $scope.valueCurrency = currency;
-        showValue('paymentVolume');
-        showValue('tradeVolume');
-        showValue('xrpCapitalization');
-      });
-    });
+    switch (d) {
+      case 'USD':
+        $scope.sign = '$'
+        break
+      case 'JPY':
+        $scope.sign = '¥'
+        break
+      case 'CNY':
+        $scope.sign = '¥'
+        break
+      case 'EUR':
+        $scope.sign = '€'
+        break
+      case 'XRP':
+        $scope.sign = ''
+        break
+      default:
+        $scope.sign = ''
+    }
 
-  valueSelect.selectAll('option')
-  .data(d3.keys(valueCurrencies))
-  .enter().append('option')
-  .html(function(d) {
-    return d;
+    for (name in $scope.metrics) {
+      $scope.metrics[name].converted = undefined
+    }
+
+    setValueRate(d, true, function() {
+      for (name in $scope.metrics) {
+        setMetricValue(name)
+      }
+
+      $scope.showMetricDetails()
+    })
   })
-  .attr('selected', function(d) {
-    return d === $scope.valueCurrency.currency;
-  });
 
   // add to new accounts total
-  remote.on('transaction_all', handleNewAccount);
+  remote.on('transaction_all', handleNewAccount)
 
   remote.on('connect', function() {
-    getTotalAccounts();
-  });
+    getTotalAccounts()
+  })
 
-  getTotalAccounts();
+  getTotalAccounts()
 
   // get 'fixed' multimarket charts for
   // the most important markets
@@ -291,9 +369,9 @@ angular.module('ripplecharts.landing', [
     clickable: true,
     updateInterval: 60,
     gateways: gateways
-  });
+  })
 
-  markets.list(9);
+  markets.list(9)
 
   markets.on('chartClick', function(chart) {
     $state.transitionTo('markets.pair', {
@@ -304,64 +382,46 @@ angular.module('ripplecharts.landing', [
       interval: '5m',
       range: '1d',
       type: store.get('chartType') || 'line'
-    });
-  });
+    })
+  })
 
 
   // show the helper text the first time we visit the page
   if (!store.get('returning')) {
     setTimeout(function() {
-      d3.select('#helpButton_new').node().click();
-    }, 100);
+      d3.select('#helpButton_new').node().click()
+    }, 100)
   }
 
-  $scope.$watch('totalCoins', function() {
-    setTimeout(function() {
-      showValue('xrpCapitalization');
-    });
-  });
-
-  $scope.$watch('metricDetail', function() {
-
-    var ex = {
-      rate: $scope.valueRate,
-      currency: $scope.valueCurrency
-    };
-
-    if ($scope.metricDetail === 'paymentVolume') {
-      $scope.metricDetailTitle = 'Payment Volume (last 24 hours)';
-      donut.load(paymentVolumeXRP, ex);
-
-    } else if ($scope.metricDetail === 'tradeVolume') {
-      $scope.metricDetailTitle = 'Trade Volume (last 24 hours)';
-      donut.load(tradeVolumeXRP, ex);
-    }
-  });
+  $scope.$watch('totalXRP', function(d) {
+    setMetricValue('capitalizationXRP', d)
+  })
 
   // stuff to do when leaving the page
   $scope.$on('$destroy', function() {
-    markets.list([]);
+    markets.list([])
 
     if (!store.get('returning') &&
       $scope.showHelp) {
       setTimeout(function() {
-        d3.select('#helpButton_new').node().click();
-      }, 50);
+        d3.select('#helpButton_new').node().click()
+      }, 50)
     }
 
-    store.set('returning', true);
-    clearInterval(valueInterval);
-  });
+    store.set('returning', true)
+    clearInterval(refreshInterval)
+  })
 
   // reload data when coming back online
   $scope.$watch('online', function(online) {
     if (online) {
-      markets.reload();
+      markets.reload()
     }
-  });
+  })
 
   // get value metrics at load time and every 5 minutes
-  getValues();
-  valueInterval = setInterval(getValues, 300000);
-});
+  getMetricValues()
+  refreshInterval = setInterval(getMetricValues, 60 * 5 * 1000)
+  $scope.showMetricDetails('totalTradeVolume')
+})
 
