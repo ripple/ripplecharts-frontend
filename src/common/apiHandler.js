@@ -33,8 +33,10 @@ function ApiHandler(baseURL) {
     var issuer = params.issuer ?
       '&exchange_issuer=' + params.issuer : ''
     var limit = '&limit=' + (params.limit || 1000)
+    var period = params.period ?
+      '&live=' + params.period : ''
 
-    url += start + end + interval + limit + currency + issuer
+    url += start + end + interval + limit + currency + issuer + period
     return d3.json(url, function(err, resp) {
       if (err) {
         var e = err.response ? JSON.parse(err.response) : err
@@ -350,7 +352,12 @@ function ApiHandler(baseURL) {
         callback(e)
 
       } else {
-        callback(null, resp)
+
+        resp.data.components = resp.data.components.filter(function(c) {
+          return c.source !== 'jubi.com'
+        })
+
+        callback(null, resp.data)
       }
     })
   }

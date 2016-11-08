@@ -1,0 +1,44 @@
+<div class="main container external-markets">
+  <div class="helpbox" ng-class="{showHelp : showHelp}">
+  </div>
+  <div class="controls">
+      <span class="label">Show Value in</span>
+      <select class="valueCurrencySelect" ng-model="selectedCurrency"
+        ng-options="currency for currency in currencies"></select>
+      <div class="periodSelect selectList">
+        <span ng-repeat="period in periods"
+              ng-bind="period.name"
+              ng-class="{selected: period.period === selectedPeriod}"
+              ng-click="changePeriod(period.period)"></span>
+      </div>
+  </div>
+  <div class="total">
+    <label>Total XRP Trade Volume</label>
+    <div>
+      <sign ng-show="total"
+            ng-bind="sign"></sign>
+      <span ng-show="total" ng-bind="total | number:2"></span>
+      <small ng-show="total" ng-bind="selectedCurrency"></small>
+      <img  ng-hide="total" src="assets/images/rippleThrobber.png" class="loader"/>
+    </div>
+  </div>
+  <div class="markets">
+    <div ng-repeat="market in markets" class="market">
+      <div class="head">
+        <h4 ng-bind="marketNames[market.key]"></h4>
+        <label class="left">XRP Trade Volume</label>
+        <label class="right">% of Total XRP Traded</label>
+        <div class="marketTotal left">
+          <sign ng-bind="sign"></sign>
+          <span ng-bind="market.total_converted | number:2"></span>
+          <small ng-bind="selectedCurrency"></small>
+        </div>
+        <div class="percent right">
+          <span ng-bind="market.pct | number:1"></span>
+          <small>%</small>
+        </div>
+      </div>
+      <donut data="market" rate="valueRate" currency="selectedCurrency"></donut>
+    </div>
+  </div>
+</div>

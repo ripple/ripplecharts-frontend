@@ -70,12 +70,7 @@ function ValueSummary(options) {
   ]
 
   var arc = d3.svg.arc()
-    .outerRadius(radius * 0.9)
-    .innerRadius(radius * 0.6)
-
   var labelArc = d3.svg.arc()
-    .outerRadius(radius * 1.15)
-    .innerRadius(radius)
 
   var path = chart.selectAll('path')
   var label = inner.selectAll('label')
@@ -114,12 +109,16 @@ function ValueSummary(options) {
     return 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')'
   }
 
+  // make externally accessible
+  this.currencyColor = color
+
   /**
    * prepareTradeVolume
    */
 
   function prepareTradeVolume(z) {
     var data = []
+
     z.components.forEach(function(d, i) {
       data.push({
         key: sourceLabels[d.source] || d.source,
@@ -129,6 +128,30 @@ function ValueSummary(options) {
         color: color(null, i),
         row: d
       })
+    })
+
+    return data
+  }
+
+  /**
+   * prepareData
+   */
+
+  function prepareData(z) {
+    var data = []
+
+    z.components.forEach(function(d, i) {
+      data.push({
+        key: d.key,
+        sub: d.sub,
+        value: d.value,
+        color: d.color,
+        row: d
+      })
+    })
+
+    data.sort(function(a, b) {
+      return b.key.localeCompare(a.key)
     })
 
     return data
@@ -326,8 +349,9 @@ function ValueSummary(options) {
    * load
    */
 
-  this.load = function(z, ex) {
+  this.load = function(z, ex, scale) {
     var data
+    var center
 
     title.html(z.label)
     total = z.total || 0
@@ -353,8 +377,7 @@ function ValueSummary(options) {
         data = prepareRCLPaymentVolume(z)
         break
       default:
-        console.log('invalid mode')
-        return
+        data = prepareData(z)
     }
 
     if (!data.length) {
@@ -363,6 +386,18 @@ function ValueSummary(options) {
       inner.selectAll('label').data([]).exit().remove()
       return
     }
+
+    arc = d3.svg.arc()
+      .outerRadius(radius * 0.9 * (scale || 1))
+      .innerRadius(radius * 0.6 * (scale || 1))
+
+    labelArc = d3.svg.arc()
+    .outerRadius(radius * 1.15 * (scale || 1))
+    .innerRadius(radius * (scale || 1))
+
+    chart.attr('transform', 'translate(' +
+      (radius + margin.left) + ',' +
+      (radius * (scale || 1) + margin.top) + ')')
 
     // indicate we are in the midst of transition
     transitioning = true
@@ -416,7 +451,8 @@ function ValueSummary(options) {
       return d.data.color
     })
     .style('stroke-width', '.35px')
-    .transition().duration(750).attrTween('d', arcTween)
+    .transition().duration(750)
+    .attrTween('d', arcTween)
     .attr('id', function(d, i) {
       return 'arc_' + i
     })
@@ -454,10 +490,12 @@ function ValueSummary(options) {
     })
     .transition().duration(500)
     .style('top', function(d) {
-      return (labelArc.centroid(d)[1] + radius + margin.top) + 'px'
+      var y = radius * (scale || 1) + margin.top
+      return (labelArc.centroid(d)[1] + y) + 'px'
     })
     .style('left', function(d) {
-      return (labelArc.centroid(d)[0] + radius + margin.left) + 'px'
+      var x = radius + margin.left
+      return (labelArc.centroid(d)[0] + x) + 'px'
     })
 
     label.exit().remove()
