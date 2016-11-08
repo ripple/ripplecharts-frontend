@@ -47,7 +47,8 @@ angular.module('ripplecharts.landing', [
 
   $scope.metrics = {
     totalTradeVolume: {
-      label: 'Total XRP Trade Volume <small>(All Exchanges)</small>'
+      label: 'Total XRP Trade Volume <small>(All Exchanges)</small>',
+      link: '#/external-markets'
     },
     tradeVolumeRCL: {
       label: 'Ripple Network Trade Volume',
@@ -291,8 +292,8 @@ angular.module('ripplecharts.landing', [
         console.log(err)
 
       } else {
-        components = resp.data.components
-        total = Number(resp.data.total)
+        components = resp.components
+        total = Number(resp.total)
       }
 
       $scope.metrics.totalTradeVolume.withRCL = false
