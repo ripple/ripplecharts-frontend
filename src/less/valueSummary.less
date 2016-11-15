@@ -73,9 +73,11 @@ donut .tooltip .title {
       border-radius:2px;
       font-size:12px;
       line-height:12px;
-      color:#333;
+      color:#666;
       font-family:Arial;
       transition: opacity .3s ease;
+      z-index: 1;
+      cursor: default;
 
       b {
         display:block;
@@ -91,8 +93,13 @@ donut .tooltip .title {
       z-index:10;
     }
 
+    label.hidden {
+      display: none;
+    }
+
     label.fade {
       opacity: .4;
+      z-index: -1;
     }
   }
 
@@ -160,10 +167,7 @@ donut .tooltip .title {
     .inner {
 
       label {
-        color:#bbb;
-
-        b {
-        }
+        color:#888;
       }
 
       label:hover {
