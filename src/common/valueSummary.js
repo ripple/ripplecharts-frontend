@@ -258,6 +258,17 @@ function ValueSummary(options) {
     return data
   }
 
+  function resizePaths(d) {
+    if (!transitioning) {
+      path.each(function(p) {
+        var scale = p && p === d ? 1.05 : 1
+        d3.select(this)
+        .transition()
+        .attr('transform', 'scale(' + scale + ')')
+      })
+    }
+  }
+
   /**
    * showTooltip
    */
@@ -392,7 +403,7 @@ function ValueSummary(options) {
       .innerRadius(radius * 0.6 * (scale || 1))
 
     labelArc = d3.svg.arc()
-    .outerRadius(radius * 1.15 * (scale || 1))
+    .outerRadius((radius + 20) * (scale || 1))
     .innerRadius(radius * (scale || 1))
 
     chart.attr('transform', 'translate(' +
@@ -420,20 +431,12 @@ function ValueSummary(options) {
     path.enter().append('path')
     .on('mouseover', function(d) {
       showTooltip(d)
-      if (!transitioning) {
-        d3.select(this)
-        .transition()
-        .attr('transform', 'scale(1.05)')
-      }
+      resizePaths(d)
     })
     .on('mouseout', function() {
       path.classed('fade', false)
       label.classed('fade', false)
-      if (!transitioning) {
-        d3.select(this)
-        .transition()
-        .attr('transform', 'scale(1)')
-      }
+      resizePaths()
     })
     .on('click', function(d) {
       if (d.data.link) {
@@ -471,22 +474,30 @@ function ValueSummary(options) {
     label = label.data(path.data())
 
     label.enter().append('label')
+    .on('mouseover', function(d) {
+      showTooltip(d)
+      resizePaths(d)
+    })
+    .on('mouseout', function() {
+      path.classed('fade', false)
+      label.classed('fade', false)
+      resizePaths()
+    })
 
     label.html(function(d) {
-      if (d.data.percent < 2) {
-        return ''
-      }
-
       return d.data.key +
         '<b>' + commas(d.data.percent, 0) + '%</b>'
     })
+    .classed('hidden', function(d) {
+      return d.data.percent < 4
+    })
     .style('margin-top', function() {
       var h = parseInt(d3.select(this).style('height'), 10)
-      return ((0 - h) / 2) + 'px'
+      return h ? ((0 - h) / 2) + 'px' : 0
     })
     .style('margin-left', function() {
       var w = parseInt(d3.select(this).style('width'), 10)
-      return ((0 - w) / 2) + 'px'
+      return w ? ((0 - w) / 2) + 'px' : 0
     })
     .transition().duration(500)
     .style('top', function(d) {
