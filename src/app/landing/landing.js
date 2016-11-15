@@ -285,20 +285,48 @@ angular.module('ripplecharts.landing', [
     // get external exchanges
     api.getExternalMarkets({}, function(err, resp) {
       var total = 0
-      var components
+      var components = {}
       var xrpVolume
 
       if (err || !resp) {
         console.log(err)
-
-      } else {
-        components = resp.components
-        total = Number(resp.total)
+        return
       }
 
-      $scope.metrics.totalTradeVolume.withRCL = false
-      $scope.metrics.totalTradeVolume.components = components
+      resp.components.forEach(function(c) {
+        var amount = Number(c.base_volume)
 
+        if (!amount) {
+          return
+        }
+
+        if (!components[c.source]) {
+          components[c.source] = {
+            source: c.source,
+            base_volume: 0,
+            count: 0,
+            components: []
+          }
+        }
+
+        components[c.source].base_volume += amount
+        components[c.source].count += c.count || 0
+
+        components[c.source].components.push({
+          key: 'XRP/' + c.counter_currency,
+          value: amount,
+          amount: amount,
+          counter_currency: c.counter_currency,
+          count: c.count
+        })
+      })
+
+      $scope.metrics.totalTradeVolume.withRCL = false
+      $scope.metrics.totalTradeVolume.components = []
+      Object.keys(components).map(function(c) {
+        $scope.metrics.totalTradeVolume.components.push(components[c])
+        total += components[c].base_volume
+      })
 
       // add RCL XRP volume
       if ($scope.metrics.tradeVolumeRCL.components) {
