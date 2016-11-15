@@ -595,7 +595,6 @@ function MarketsCtrl($scope, $state, $location, gateways) {
 
   function setParams() {
     if ($state.params.base && $state.params.counter) {
-      console.log($state.params)
       $scope.base = $state.params.base.split(/[+|\.|:]/)
       $scope.base = {
         currency: $scope.base[0],
