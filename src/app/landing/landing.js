@@ -51,7 +51,7 @@ angular.module('ripplecharts.landing', [
       link: '#/external-markets'
     },
     tradeVolumeRCL: {
-      label: 'Ripple Network Trade Volume',
+      label: 'Ripple Network Trade Volume <small>(All Pairs)<small>',
       link: '#/trade-volume'
     },
     paymentVolumeRCL: {
