@@ -1,5 +1,7 @@
 .main {
   text-align:center;
+  margin: auto;
+  padding: 0 15px;
 }
 
 .landing .helpbox {
@@ -243,7 +245,8 @@
 
 
 @media (min-width: 1200px) {
-  #topMarkets {
+  #topMarkets,
+  .main {
     width:1170px;
   }
 
@@ -256,14 +259,20 @@
   }
 }
 
-@media (max-width: 989px) {
+@media (max-width: 995px) {
+
+  .main {
+    width: 100%;
+  }
 
   #topMarkets {
-    width:724px;
+    width: 99%;
+    margin: 0 .5%;
   }
 
   #topMarkets .chart {
-    width:350px ;
+    width: 49%;
+    margin: .5%;
   }
 
   .landing .span6 {
@@ -278,7 +287,8 @@
   }
 
   .landing .stats ul {
-    width: 100%;
+    width: 98%;
+    margin: 10px 0 15px 0;
     display:inline-table;
   }
 
@@ -303,7 +313,6 @@
 
 @media (max-width: 767px) {
   #topMarkets {
-    width: 100%;
     display:inline-block;
   }
 
