@@ -11,8 +11,9 @@ function ValueSummary(options) {
   var title = outer.append('h5')
   var inner = outer.append('div').attr('class', 'inner')
   var width = parseInt(outer.style('width'), 10)
-  var height = parseInt(outer.style('height'), 10) || width
+  var height = (parseInt(outer.style('height'), 10) || width) - 40
   var radius = (Math.min(width, height)) / 2
+
   var margin = {
     top: radius / 10,
     bottom: radius / 10,
