@@ -33,9 +33,17 @@
   font-size:90%;
 }
 
+.landing .stats {
+  padding-bottom: 10px;
+}
+
+.landing .stats .stat-group {
+  float: left;
+}
+
 .landing .stats ul {
   list-style:none;
-  margin:10px 5px 30px 5px;
+  margin:10px 5px 15px 5px;
   display:table;
   width:100%;
   border:1px solid #eee;
@@ -69,7 +77,7 @@
   background: #2A98D0;
 }
 
-.landing .stats label {
+.landing .stat-group label {
   vertical-align:middle;
   display:table-cell;
   text-align:left;
@@ -77,12 +85,12 @@
   border-bottom:1px solid #e5e5e5;
 }
 
-.landing .stats .volume-stats label {
+.landing .stat-group .volume-stats label {
   padding-left: 7px;
   cursor: pointer;
 }
 
-.landing .stats label small {
+.landing .stat-group label small {
   font-size: 85%;
   opacity: .65;
 }
@@ -118,9 +126,14 @@
   border-bottom:none;
 }
 
+.landing .stats .right {
+  float: right;
+  width: 50%;
+  padding: 5px 15px;
+}
+
 .landing #metricDetail {
-  height:320px;
-  margin-top:20px;
+  height: 350px;
 }
 
 #topMarkets {
@@ -181,9 +194,9 @@
   color: #fff;
 }
 
-.dark .landing .stat,
-.dark .stats label,
-.dark .stats .status {
+.dark .landing .stat-group .stat,
+.dark .stat-group label,
+.dark .stat-group .status {
   border-bottom-color:#2a2a2a;
 }
 
@@ -215,7 +228,7 @@
 }
 
 
-.dark .landing .stat small {
+.dark .landing .stat-group small {
   font-weight:bold;
 }
 
@@ -243,7 +256,7 @@
   }
 }
 
-@media (max-width: 979px) {
+@media (max-width: 989px) {
 
   #topMarkets {
     width:724px;
@@ -260,14 +273,23 @@
     margin:0;
   }
 
+  .landing .stat-group {
+    width: 100%;
+  }
+
   .landing .stats ul {
-    width:98%;
+    width: 100%;
     display:inline-table;
   }
 
- .landing h5, .landing #metricDetail {
-    width:98%;
+  .landing h5,
+  .landing .stats .right {
+    width: 100%;
     display:inline-block;
+  }
+
+  .landing .stats .right {
+    margin-bottom: 30px;
   }
 
   .landing .stats label small {
@@ -301,18 +323,6 @@
   .landing .stats ul li {
     margin: 3px 0;
   }
-
-  .landing #metricDetail {
-    padding:10px 0;
-  }
-
-}
-
-@media (max-width: 650px) {
-  #metricDetail .inner {
-    margin-left:-25%;
-  }
-
 }
 
 @media (max-width: 480px) {
@@ -329,6 +339,10 @@
   .landing .col-md-6 {
     padding-right: 5px;
     padding-left: 5px;
+  }
+
+  .landing .stats .right {
+    padding: 5px;
   }
 
   .landing #metricDetail {

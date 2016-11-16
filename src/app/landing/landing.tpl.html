@@ -8,8 +8,8 @@
         code is available <a href="https://github.com/ripple/ripplecharts-frontend" target="_blank">here</a>.
       </p>
     </div>
-    <div class="row">
-<div class="col-md-6 stats">
+    <div class="row stats">
+      <div class="stat-group col-md-6">
         <h5>
           <b>Volume Stats (24 hours)</b>
           <select class="valueCurrencySelect" ng-model="selectedCurrency"
@@ -54,6 +54,11 @@
             </div>
           </li>
         </ul>
+      </div>
+      <div class="right">
+        <div id="metricDetail"></div>
+      </div>
+      <div class="stat-group col-md-6">
         <h5>
           Ripple Network Stats
         </h5>
@@ -90,9 +95,6 @@
             </div>
           </li>
         </ul>
-      </div>
-      <div class="col-md-6">
-        <div id="metricDetail"></div>
       </div>
     </div>
     <h5>Top Markets</h5>
