@@ -273,6 +273,11 @@ angular.module('ripplecharts.landing', [
         $scope.metrics.totalTradeVolume.components.unshift(xrpVolume)
         setMetricValue('totalTradeVolume',
           $scope.metrics.totalTradeVolume.total + xrpVolume.base_volume)
+
+        // sort by volume
+        $scope.metrics.totalTradeVolume.components.sort(function(a, b) {
+          return b.base_volume - a.base_volume
+        })
       }
 
       setMetricValue('tradeVolumeRCL', total)
@@ -335,6 +340,11 @@ angular.module('ripplecharts.landing', [
         total += xrpVolume.base_volume
         $scope.metrics.totalTradeVolume.withRCL = true
       }
+
+      // sort by volume
+      $scope.metrics.totalTradeVolume.components.sort(function(a, b) {
+        return b.base_volume - a.base_volume
+      })
 
       setMetricValue('totalTradeVolume', total)
       if ($scope.selectedMetric === $scope.metrics.totalTradeVolume) {

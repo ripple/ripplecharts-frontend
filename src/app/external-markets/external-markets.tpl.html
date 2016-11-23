@@ -27,7 +27,7 @@
   <div class="markets">
     <div ng-repeat="market in markets" class="market">
       <div class="head">
-        <h4 ng-bind="marketNames[market.key]"></h4>
+        <h4 ng-bind="marketNames[market.key] || market.key"></h4>
         <label class="left">XRP Trade Volume</label>
         <label class="right">% of Total XRP Traded</label>
         <div class="marketTotal left">

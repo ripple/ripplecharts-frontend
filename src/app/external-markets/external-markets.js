@@ -1,10 +1,12 @@
-angular.module( 'ripplecharts.external-markets', [
+'use strict'
+
+angular.module('ripplecharts.external-markets', [
   'ui.state',
   'ui.bootstrap'
 ])
 
-.config(function config( $stateProvider ) {
-  $stateProvider.state( 'external-markets', {
+.config(function($stateProvider) {
+  $stateProvider.state('external-markets', {
     url: '/external-markets',
     views: {
       main: {
@@ -20,15 +22,13 @@ angular.module( 'ripplecharts.external-markets', [
         return gateways.promise
       }
     }
-  });
+  })
 })
-
-.controller( 'ExternalMarketsCtrl', function ExternalMarketsCtrl($scope, gateways) {
-
-  var api = new ApiHandler(API);
+.controller('ExternalMarketsCtrl', function($scope, gateways) {
+  var api = new ApiHandler(API)
   var exchangeRates = {}
-  var refreshInterval;
-  var markets = {};
+  var refreshInterval
+  var markets = {}
 
   var scale = d3.scale.log()
     .range([.5, 1]).clamp(true)
@@ -40,60 +40,6 @@ angular.module( 'ripplecharts.external-markets', [
     CNY: 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y', // ripplefox
     XRP: ''
   }
-
-  $scope.marketNames = {
-    rcl: 'Ripple Network (RCL)',
-    'poloniex.com': 'Poloniex',
-    'kraken.com': 'Kraken',
-    'btc38.com': 'BTC38',
-    'jubi.com': 'Jubi'
-  }
-
-  $scope.currencies = Object.keys(valueCurrencies)
-  $scope.markets = [];
-
-  $scope.periods = [
-    {name: '1 hour', period: 'hour'},
-    {name: '24 hours', period: 'day'},
-    {name: '3 days', period: '3day'},
-    {name: '7 days', period: '7day'},
-    {name: '30 days', period: '30day'}
-  ]
-
-  $scope.selectedPeriod = 'day'
-  $scope.selectedCurrency = 'USD'
-
-  $scope.changePeriod = function(period) {
-    $scope.selectedPeriod = period;
-    getVolumes();
-  }
-
-  $scope.$watch('selectedCurrency', function(d) {
-    var name
-
-    switch (d) {
-      case 'USD':
-        $scope.sign = '$'
-        break
-      case 'JPY':
-        $scope.sign = '¥'
-        break
-      case 'CNY':
-        $scope.sign = '¥'
-        break
-      case 'EUR':
-        $scope.sign = '€'
-        break
-      case 'XRP':
-        $scope.sign = ''
-        break
-      default:
-        $scope.sign = ''
-    }
-
-
-    setValueRate(d, true, updateTotals)
-  })
 
   /**
    * getExchangeRate
@@ -125,7 +71,7 @@ angular.module( 'ripplecharts.external-markets', [
    * setValueRate
    */
 
-  function setValueRate(currency, useCached, callback) {
+  function setValueRate(currency, callback) {
     var issuer = valueCurrencies[currency]
 
     function apply() {
@@ -145,10 +91,10 @@ angular.module( 'ripplecharts.external-markets', [
       return
     }
 
-    $scope.total = undefined;
+    $scope.total = undefined
     $scope.markets.forEach(function(m) {
       m.total_converted = undefined
-    });
+    })
 
     getExchangeRate({
       currency: currency,
@@ -171,42 +117,46 @@ angular.module( 'ripplecharts.external-markets', [
    */
 
   function updateTotals(apply) {
-    var extent
+    var key
 
-    $scope.totalXRP = 0;
+    $scope.totalXRP = 0
 
-    for (var key in markets) {
+    for (key in markets) {
       markets[key].total_converted =
         markets[key].total * $scope.valueRate
       $scope.totalXRP += markets[key].total
     }
 
-    $scope.markets = [];
+    $scope.markets = []
 
-    for (var key in markets) {
+    for (key in markets) {
       markets[key].key = key
       markets[key].pct =
         markets[key].total / $scope.totalXRP * 100
-      $scope.markets.push(markets[key]);
+      $scope.markets.push(markets[key])
     }
 
     scale.domain(d3.extent($scope.markets, function(m) {
-      return m.pct;
-    }));
+      return m.pct
+    }))
 
     $scope.markets.forEach(function(m) {
-      m.scale = scale(m.pct);
-    });
+      m.scale = scale(m.pct)
+    })
 
     $scope.markets.sort(function(a, b) {
-      return b.pct - a.pct;
-    });
+      return b.pct - a.pct
+    })
 
     $scope.total = $scope.totalXRP * $scope.valueRate
     if (apply) {
-      $scope.$apply();
+      $scope.$apply()
     }
   }
+
+  /**
+   * getVolumes
+   */
 
   function getVolumes() {
 
@@ -216,7 +166,6 @@ angular.module( 'ripplecharts.external-markets', [
       var total = 0
       var count = 0
       var components = []
-      var xrpVolume
 
       if (err || !resp || !resp.rows || !resp.rows.length) {
         console.log(err)
@@ -230,7 +179,7 @@ angular.module( 'ripplecharts.external-markets', [
             var sub = gateways.getName(c.issuer, c.currency)
                 || c.issuer
 
-            total += component.converted_amount;
+            total += component.converted_amount
             count += component.count
             components.push({
               key: 'XRP/' + c.currency,
@@ -239,9 +188,9 @@ angular.module( 'ripplecharts.external-markets', [
               sub: sub,
               counter_currency: c.currency,
               count: component.count
-            });
+            })
           }
-        });
+        })
 
         markets.rcl = {
           total: total,
@@ -249,7 +198,7 @@ angular.module( 'ripplecharts.external-markets', [
           components: components
         }
 
-        updateTotals(true);
+        updateTotals(true)
       }
     })
 
@@ -257,9 +206,7 @@ angular.module( 'ripplecharts.external-markets', [
     api.getExternalMarkets({
       period: $scope.selectedPeriod
     }, function(err, resp) {
-      var total = 0
       var list = {}
-      var xrpVolume
 
       if (err || !resp) {
         console.log(err)
@@ -291,20 +238,77 @@ angular.module( 'ripplecharts.external-markets', [
             amount: amount,
             counter_currency: c.counter_currency,
             count: c.count
-          });
+          })
 
         })
 
         for (var key in list) {
-          markets[key] = list[key];
+          markets[key] = list[key]
         }
 
-        updateTotals(true);
+        updateTotals(true)
       }
     })
   }
 
+
+  $scope.marketNames = {
+    rcl: 'Ripple Network (RCL)',
+    'poloniex.com': 'Poloniex',
+    'kraken.com': 'Kraken',
+    'btc38.com': 'BTC38',
+    'jubi.com': 'Jubi',
+    'bittrex.com': 'Bittrex'
+  }
+
+  $scope.currencies = Object.keys(valueCurrencies)
+  $scope.markets = []
+
+  $scope.periods = [
+    {name: '1 hour', period: 'hour'},
+    {name: '24 hours', period: 'day'},
+    {name: '3 days', period: '3day'},
+    {name: '7 days', period: '7day'},
+    {name: '30 days', period: '30day'}
+  ]
+
+  $scope.selectedPeriod = 'day'
+  $scope.selectedCurrency = 'USD'
+
+  $scope.changePeriod = function(period) {
+    $scope.selectedPeriod = period
+    getVolumes()
+  }
+
+  $scope.$on('$destroy', function() {
+    clearInterval(refreshInterval)
+  })
+
+  $scope.$watch('selectedCurrency', function(d) {
+    switch (d) {
+      case 'USD':
+        $scope.sign = '$'
+        break
+      case 'JPY':
+        $scope.sign = '¥'
+        break
+      case 'CNY':
+        $scope.sign = '¥'
+        break
+      case 'EUR':
+        $scope.sign = '€'
+        break
+      case 'XRP':
+        $scope.sign = ''
+        break
+      default:
+        $scope.sign = ''
+    }
+
+    setValueRate(d, updateTotals)
+  })
+
   getVolumes()
   refreshInterval = setInterval(getVolumes, 10 * 60 * 1000)
-});
+})
 
