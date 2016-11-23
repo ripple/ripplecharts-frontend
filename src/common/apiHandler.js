@@ -352,11 +352,6 @@ function ApiHandler(baseURL) {
         callback(e)
 
       } else {
-
-        resp.data.components = resp.data.components.filter(function(c) {
-          return c.source !== 'jubi.com'
-        })
-
         callback(null, resp.data)
       }
     })
