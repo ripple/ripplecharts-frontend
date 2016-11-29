@@ -1,118 +1,119 @@
 
 .sbHolder{
-	position: relative;
-	height:100%;
-	width:100%;
-	outline: none;
-	border-radius: 4px; 
-	-moz-border-radius: 4px; 
-	-webkit-border-radius: 4px;
-	border:2px solid #f0f0f0;
-	font-family: "OpenSans-Light",
-		"Open Sans Light",
-		"HelveticaNeue-Light",
-		"Helvetica Neue Light",
-		"Helvetica Neue",
-		Helvetica,
-		Arial,
-		"Lucida Grande",
-		sans-serif;
-	color:#333;
+  position: relative;
+  height:100%;
+  width:100%;
+  outline: none;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border:2px solid #f0f0f0;
+  font-family: "OpenSans-Light",
+    "Open Sans Light",
+    "Open Sans",
+    "HelveticaNeue-Light",
+    "Helvetica Neue Light",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;
+  color:#333;
 }
 
 .sbSelector{
-	display: block;
-	position: absolute;
-	height: 100%;
-	width: 100%;
-	background-color:white;
-	overflow: hidden;
-	text-indent: 20px;
-	line-height:42px;
+  display: block;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color:white;
+  overflow: hidden;
+  text-indent: 20px;
+  line-height:42px;
 }
 
 .sbSelector:link, .sbSelector:visited, .sbSelector:hover {
-	color: inherit;
-	text-decoration: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 .sbToggle{
-	display: block;
-	z-index:1;
-	position: absolute;
-	right:0;
-	height: 100%;
-	width: 44px;
-	background: url('icons/downward-triangle.svg'),
-		-webkit-gradient(
-			linear,
-			left bottom,
-			left top,
-			color-stop(0, #e9e9e9),
-			color-stop(1, #f8f8f8)) !important;
-	background: url('icons/downward-triangle.svg'),	
-		-moz-linear-gradient(
-			center bottom,
-			#e9e9e9 0%,
-			#f8f8f8 100%)
-		repeat scroll 0% 0% padding-box transparent !important;
-	background-repeat:no-repeat;
-	border-left: 2px solid #eee;
+  display: block;
+  z-index:1;
+  position: absolute;
+  right:0;
+  height: 100%;
+  width: 44px;
+  background: url('icons/downward-triangle.svg'),
+    -webkit-gradient(
+      linear,
+      left bottom,
+      left top,
+      color-stop(0, #e9e9e9),
+      color-stop(1, #f8f8f8)) !important;
+  background: url('icons/downward-triangle.svg'),
+    -moz-linear-gradient(
+      center bottom,
+      #e9e9e9 0%,
+      #f8f8f8 100%)
+    repeat scroll 0% 0% padding-box transparent !important;
+  background-repeat:no-repeat;
+  border-left: 2px solid #eee;
 }
 
 .sbToggleOpen{
-	background: url('icons/downward-triangle.svg'),
-		-webkit-gradient(
-			linear,
-			left bottom,
-			left top,
-			color-stop(0, #e6e6e6),
-			color-stop(1, #f5f5f5));
-	background: url('icons/downward-triangle.svg'),	
-		-moz-linear-gradient(
-			center bottom,
-			#e6e6e6 0%,
-			#f5f5f5 100%)
-		repeat scroll 0% 0% padding-box transparent !important;
+  background: url('icons/downward-triangle.svg'),
+    -webkit-gradient(
+      linear,
+      left bottom,
+      left top,
+      color-stop(0, #e6e6e6),
+      color-stop(1, #f5f5f5));
+  background: url('icons/downward-triangle.svg'),
+    -moz-linear-gradient(
+      center bottom,
+      #e6e6e6 0%,
+      #f5f5f5 100%)
+    repeat scroll 0% 0% padding-box transparent !important;
 }
 
 .sbOptions{
-	z-index: 1;
-	position: absolute;
-	top: 30px;
-	left:-2px;
-	width: 100%;
-	margin: 0;
-	padding: 8px 0;
-	background-color:white;
-	min-height:0px;
-	overflow-y: auto;
-	border-radius: 4px; 
-	-moz-border-radius: 4px; 
-	-webkit-border-radius: 4px;
-	border:2px solid #f0f0f0;
-	text-indent: 10px;
+  z-index: 1;
+  position: absolute;
+  top: 30px;
+  left:-2px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 0;
+  background-color:white;
+  min-height:0px;
+  overflow-y: auto;
+  border-radius: 4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border:2px solid #f0f0f0;
+  text-indent: 10px;
 }
 .sbOptions li{
-	padding: 0 7px;	
+  padding: 0 7px;
 }
 .sbOptions a{
-	display: block;
-	padding: 7px 0 7px 3px;
+  display: block;
+  padding: 7px 0 7px 3px;
 }
 
 .sbOptions a:link, .sbOptions a:visited{
-	color: inherit;
-	text-decoration: none;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
+  color: inherit;
+  text-decoration: none;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
 }
 .sbOptions a:hover, .sbOptions a:focus, .sbOptions a.sbFocus{
-	color: inherit;
-	background-color:#ddd;
+  color: inherit;
+  background-color:#ddd;
 }
 
 .sbOptions li.last a{
-	border-bottom: none;
+  border-bottom: none;
 }
