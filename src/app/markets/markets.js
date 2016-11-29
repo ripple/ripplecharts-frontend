@@ -135,6 +135,7 @@ function MarketsCtrl($scope, $state, $location, gateways) {
   var updateMode = ''
   var dropdownA
   var dropdownB
+  var toCSV
 
   // set up the price chart
   var priceChart = new PriceChart({
@@ -164,33 +165,6 @@ function MarketsCtrl($scope, $state, $location, gateways) {
   var tradeFeed = new TradeFeed({
     id: 'tradeFeed',
     url: API
-  })
-
-  var toCSV = d3.select('#toCSV')
-  .on('click', function() {
-    if (toCSV.attr('disabled')) {
-      return
-    }
-
-    var data = priceChart.getRawData()
-    var list = []
-
-    for (var i = 0; i < data.length; i++) {
-      list.push(JSON.parse(JSON.stringify(data[i])))
-    }
-
-    var csv = jsonToCSV(list)
-    if (Modernizr.prefixed('requestFileSystem', window)) {
-      var blob = new Blob([csv], {'type': 'application/octet-stream'})
-      this.href = window.URL.createObjectURL(blob)
-
-    } else {
-      this.href = 'data:text/csvcharset=utf-8,' + escape(csv)
-    }
-
-    this.download = $scope.base.currency + '_' +
-      $scope.counter.currency + '_historical.csv'
-    this.target = '_blank'
   })
 
   /**
@@ -465,6 +439,39 @@ function MarketsCtrl($scope, $state, $location, gateways) {
     book.getMarket($scope.base, $scope.counter)
     tradeFeed.loadPair($scope.base, $scope.counter)
   }
+
+  /**
+   * downloadCSV
+   */
+
+  function downloadCSV() {
+    if (toCSV.attr('disabled')) {
+      return
+    }
+
+    var interval = getInterval()
+    var range = getRange()
+
+    var csvURL = API + '/exchanges/' + $scope.base.currency +
+        ($scope.base.issuer ? '+' + $scope.base.issuer : '') +
+        '/' + $scope.counter.currency +
+        ($scope.counter.issuer ? '+' + $scope.counter.issuer : '') +
+        '?limit=1000&format=csv' +
+        '&interval=' + interval.multiple + interval.interval
+
+    if (range.name === 'custom') {
+      csvURL += '&start=' + $scope.start
+      csvURL += '&end=' + $scope.end
+    } else {
+      csvURL += '&start=' + moment.utc().format()
+      csvURL += '&end=' + moment.utc(range.offset(moment())).format()
+    }
+
+    d3.select(this).attr('href', csvURL)
+  }
+
+  toCSV = d3.select('#toCSV')
+  .on('click', downloadCSV)
 
   // set up flip button
   d3.select('#flip').on('click', function() {
