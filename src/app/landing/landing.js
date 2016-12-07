@@ -281,7 +281,7 @@ angular.module('ripplecharts.landing', [
       }
 
       setMetricValue('tradeVolumeRCL', total)
-      if ($scope.selectedMetric === $scope.metrics.tradeVolumeRCL) {
+      if ($scope.selectedMetric !== $scope.metrics.paymentVolumeRCL) {
         $scope.showMetricDetails()
       }
       $scope.$apply()
