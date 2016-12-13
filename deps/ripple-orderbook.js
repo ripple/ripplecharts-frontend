@@ -18635,6 +18635,13 @@ var rippleOrderbook =
             legTwoPointer++;
           }
 
+          // calculate quality from leg qualities
+          var legOneQuality = new IOUValue(legOneOffer.quality);
+          var legTwoQuality = new IOUValue(legTwoOffer.quality);
+          autobridgedOffer.quality = legOneQuality.multiply(legTwoQuality).toFixed();
+          autobridgedOffer.BookDirectory = Utils.convertOfferQualityToHexFromText(autobridgedOffer.quality);
+          autobridgedOffer.qualityHex = autobridgedOffer.BookDirectory;
+
           offersAutobridged.push(autobridgedOffer);
         }
 
@@ -18739,7 +18746,6 @@ var rippleOrderbook =
         assert(takerPays instanceof IOUValue, 'Autobridged taker pays is invalid');
 
         var autobridgedOffer = {};
-        var quality = takerPays.divide(takerGets);
 
         autobridgedOffer.TakerGets = {
           value: takerGets.toFixed(),
@@ -18753,15 +18759,9 @@ var rippleOrderbook =
           issuer: this._issuerPays
         };
 
-        autobridgedOffer.quality = quality.toFixed();
-
         autobridgedOffer.taker_gets_funded = autobridgedOffer.TakerGets.value;
         autobridgedOffer.taker_pays_funded = autobridgedOffer.TakerPays.value;
-
         autobridgedOffer.autobridged = true;
-
-        autobridgedOffer.BookDirectory = Utils.convertOfferQualityToHexFromText(autobridgedOffer.quality);
-        autobridgedOffer.qualityHex = autobridgedOffer.BookDirectory;
 
         return autobridgedOffer;
       }
