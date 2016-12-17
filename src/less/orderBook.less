@@ -148,20 +148,81 @@
       border-top: 1px solid #f6f6f6;
     }
 
+
     td.price, td.sum, td.size {
       text-align: right;
     }
 
+    tr.new td {
+      -webkit-animation-name: new-order;
+      -webkit-animation-duration: 2s;
+
+      animation-name: new-order;
+      animation-duration: 2s;
+    }
+
+    tr.more td {
+      -webkit-animation-name: more;
+      -webkit-animation-duration: 2s;
+
+      animation-name: more;
+      animation-duration: 2s;
+    }
+
+    tr.less td {
+      -webkit-animation-name: less;
+      -webkit-animation-duration: 2s;
+
+      animation-name: less;
+      animation-duration: 2s;
+    }
+
+    @-webkit-keyframes new-order {
+      0%   {color: inherit;}
+      10%  {color: #58d; background-color: rgba(20,70,180,.3)}
+      100% {color: inherit;}
+    }
+
+    @keyframes new-order {
+      0%   {color: inherit;}
+      10%  {color: #58d; background-color: rgba(20,70,180,.3)}
+      100% {color: inherit;}
+    }
+
+    @-webkit-keyframes less {
+      0%   {color: inherit;}
+      10%  {color: Red; background-color: rgba(180,0,0,.3)}
+      100% {color: inherit;}
+    }
+
+    @keyframes less {
+      0%   {color: inherit;}
+      10%  {color: Red; background-color: rgba(180,0,0,.3)}
+      100% {color: inherit;}
+    }
+
+    @-webkit-keyframes more {
+      0%   {color: inherit;}
+      10%  {color: Green; background-color: rgba(20,120,20,.3)}
+      100% {color: inherit;}
+    }
+
+    @keyframes more {
+      0%   {color: inherit;}
+      20%  {color: Green; background-color: rgba(20,120,20,.3)}
+      100% {color: inherit;}
+    }
+
     td.sum {
-      color: #555;
+      opacity: .9
     }
 
     td .decimal {
-      color: #777;
+      opacity: .6;
     }
 
     td .insig {
-      color:#ddd;
+      opacity: .4;
     }
 
 
@@ -236,18 +297,6 @@
 
     td {
       border-top: 1px solid #222;
-    }
-
-    td.sum {
-      color: #aaa;
-    }
-
-    td .decimal {
-      color: #777;
-    }
-
-    .insig {
-      color:#333;
     }
   }
 }
