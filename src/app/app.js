@@ -80,7 +80,8 @@ angular.element(document).ready(function() {
     'statusCheck',
     'txsplain',
     'txfeed',
-    'jsonFormatter'
+    'jsonFormatter',
+    'versionsGraph'
   ])
   .config(function myAppConfig($urlRouterProvider) {
     $urlRouterProvider.otherwise('/')

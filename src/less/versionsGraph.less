@@ -1,0 +1,90 @@
+versions-graph {
+  display: inline-block;
+  position: relative;
+
+  .bar {
+    fill-opacity: .7;
+    stroke-opacity: .8;
+  }
+
+  .bar.highlight {
+    stroke-width: 3px;
+    stroke-opacity: 1;
+    fill-opacity: .85;
+  }
+
+  .axis {
+    font-size: 10px;
+  }
+
+  .axis text {
+    fill: #666
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #ccc;
+    shape-rendering: crispEdges;
+  }
+
+  .uptime,
+  .inbound,
+  .outbound {
+    fill: none;
+    stroke: #999;
+    stroke-width: 2.5;
+  }
+
+  .tooltip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    text-align: right;
+    pointer-events: none;
+    background: rgba(255,255,255,.9);
+    padding: 2px 10px 7px 10px;
+    border-radius: 2px;
+    color: #999;
+  }
+
+  .tooltip .version {
+    padding: 2px 0;
+    margin: 3px 0;
+    color: #222;
+    border-bottom: 1px solid #999;
+  }
+
+  .tooltip label {
+    font-size: .9em;
+    margin: 0 5px;
+    color: #444;
+  }
+}
+
+
+.dark versions-graph {
+
+  .axis text {
+    fill: #444;
+  }
+
+  .axis path,
+  .axis line {
+    stroke: #222;
+  }
+
+  .tooltip {
+    background: rgba(0,0,0,.8);
+    color: #777;
+  }
+
+  .tooltip label {
+    color: #444
+  }
+
+  .tooltip .version {
+    color: #999;
+    border-color: #555
+  }
+}
