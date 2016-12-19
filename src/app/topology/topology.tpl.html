@@ -20,22 +20,25 @@
         <span class="switch-label" data-on="Graph" data-off="Map"></span>
         <span class="switch-handle"></span>
       </label>
-      <p><label>Weight by:</label></p>
-      <form class="weight-toggle">
-        <input type="radio" ng-model="weight" value="connections" checked> Connections</input>
-        <input type="radio" ng-model="weight" value="uptime"> Uptime</input>
-      </form>
-      <div class="stable">
-        <p>
-          <label>Current Stable Version:</label>
-          <span ng-bind="stable"></span>
-        </p>
+      <div class="weight-toggle">
+        <label>Weight by:</label>
+        <input type="radio" ng-model="weight" value="connections" checked></input>
+          Connections
+        <input type="radio" ng-model="weight" value="uptime"></input>
+          Uptime
       </div>
     </div>
     <div class="swap topology-graph"></div>
     <div class="swap topology-map"></div>
   </div>
 
+  <div class="versions">
+    <div class="stable">
+        <label>Current Stable Version:</label>
+        <span ng-bind="stable"></span>
+    </div>
+    <versions-graph></versions-graph>
+  </div>
   <div id="topology-table" ng-hide="loading">
     <div class="topologyTableHeader">
       <div>Public Key</div>
