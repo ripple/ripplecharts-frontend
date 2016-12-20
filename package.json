@@ -58,7 +58,8 @@
       "API": true,
       "TradeFeed": true,
       "PriceChart": true,
-      "OrderBook": true
+      "OrderBook": true,
+      "_": true
     }
   }
 }

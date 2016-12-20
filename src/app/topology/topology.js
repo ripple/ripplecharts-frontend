@@ -27,7 +27,7 @@ angular.module('ripplecharts.topology', [
   $scope.weight = store.get('weight-mode') || 'connections'
 
   var t = new Topology($http)
-  var m = new TopologyMap($http, t)
+  var m = new TopologyMap($http)
 
   function versionToColor(stable, version) {
     var v = version.split('-')[1]
@@ -41,10 +41,10 @@ angular.module('ripplecharts.topology', [
       return '#c11'
 
     } else if (comp === 1) {
-      return '#66b'
+      return '#36c'
 
     } else {
-      return '#38b'
+      return '#3a3'
     }
   }
 
@@ -120,6 +120,24 @@ angular.module('ripplecharts.topology', [
     }
 
     if (p1[1] && p2[1]) {
+      na = /b/.test(p1[1])
+      nb = /b/.test(p2[1])
+
+      if (na && !nb) {
+        return -1
+      } else if (nb && !na) {
+        return 1
+      }
+
+      na = /rc/.test(p1[1])
+      nb = /rc/.test(p2[1])
+
+      if (na && !nb) {
+        return -1
+      } else if (nb && !na) {
+        return 1
+      }
+
       na = Number(p1[1].replace(/[^0-9-]+/, ''), 10)
       nb = Number(p2[1].replace(/[^0-9-]+/, ''), 10)
 
