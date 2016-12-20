@@ -92,13 +92,13 @@ angular.module('versionsGraph', [])
 
       if (comp === -1) {
         return '#c11'
-      }
 
-      if (comp === 1) {
-        return '#66b'
-      }
+      } else if (comp === 1) {
+        return '#36c'
 
-      return '#38b'
+      } else {
+        return '#3a3'
+      }
     }
 
     function hideTooltip() {
@@ -111,6 +111,12 @@ angular.module('versionsGraph', [])
     }
 
     function showTooltip() {
+
+      if (!$scope.versions) {
+        hideTooltip()
+        return
+      }
+
       var pos = d3.mouse(this)
       var range = x.range()
       var bandWidth = x.rangeBand()
@@ -244,8 +250,8 @@ angular.module('versionsGraph', [])
       height -= margin.top + margin.bottom
 
       if (old !== width) {
-        svg.style('height', height + margin.top + margin.bottom)
-        svg.style('width', width + margin.top + margin.bottom)
+        svg.style('height', (height + margin.top + margin.bottom) + 'px')
+        svg.style('width', (width + margin.top + margin.bottom) + 'px')
         g.select('.x-axis').attr('transform', 'translate(0,' + height + ')')
 
         y.range([height, 0])
