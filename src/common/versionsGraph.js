@@ -81,25 +81,7 @@ angular.module('versionsGraph', [])
     tooltip.append('div')
     .attr('class', 'uptime')
 
-    function versionToColor(version) {
-      var comp
-
-      if (!$scope.stable || !$scope.semverCompare) {
-        return 'grey'
-      }
-
-      comp = $scope.semverCompare(version, $scope.stable)
-
-      if (comp === -1) {
-        return '#c11'
-
-      } else if (comp === 1) {
-        return '#36c'
-
-      } else {
-        return '#3a3'
-      }
-    }
+    var versionToColor = $scope.color || function() {}
 
     function hideTooltip() {
       tooltip.transition()

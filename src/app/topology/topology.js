@@ -29,15 +29,17 @@ angular.module('ripplecharts.topology', [
   var t = new Topology($http)
   var m = new TopologyMap($http)
 
-  function versionToColor(stable, version) {
-    var v = version.split('-')[1]
-    var s = stable ? stable.split('-')[0] : ''
-    var comp = v && s ? $scope.semverCompare(v, s) : ''
+  function versionToColor(d) {
+    var version = d.replace('rippled-', '')
+    var comp
 
-    if (!v || !stable) {
+    if (!$scope.stable || !$scope.semverCompare) {
       return 'grey'
+    }
 
-    } else if (comp === -1) {
+    comp = $scope.semverCompare(version, $scope.stable)
+
+    if (comp === -1) {
       return '#c11'
 
     } else if (comp === 1) {
@@ -51,12 +53,12 @@ angular.module('ripplecharts.topology', [
   function updateVersionColors() {
     if ($scope.nodes) {
       $scope.nodes.forEach(function(d) {
-        d.new.version_color = versionToColor($scope.stable, d.new.version)
+        d.new.version_color = versionToColor(d.new.version)
       })
     }
 
-    t.color(versionToColor.bind(t, $scope.stable))
-    m.color(versionToColor.bind(m, $scope.stable))
+    t.color(versionToColor)
+    m.color(versionToColor)
   }
 
   function updateVersionGraph(nodes) {
@@ -192,7 +194,7 @@ angular.module('ripplecharts.topology', [
         ])
         t.update(data)
         t.weight(store.get('weight-mode'))
-        t.color(versionToColor.bind(m, $scope.stable))
+        t.color(versionToColor)
 
       } else {
         console.log('no nodes')
@@ -217,7 +219,7 @@ angular.module('ripplecharts.topology', [
 
       m.populate(data.nodes)
       m.weight(store.get('weight-mode'))
-      m.color(versionToColor.bind(m, $scope.stable))
+      m.color(versionToColor)
 
     }).catch(function(e) {
       console.log(e)
@@ -239,6 +241,8 @@ angular.module('ripplecharts.topology', [
 
   fetchAndShowTable(true)
   fetchAndShowMap(true)
+
+  $scope.color = versionToColor
 
   // click to toggle between charts
   $('.switch-input').click(function() {
