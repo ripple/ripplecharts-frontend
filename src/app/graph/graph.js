@@ -13,7 +13,7 @@ angular.module( 'ripplecharts.graph', [
         templateUrl: 'graph/graph.tpl.html'
       }
     },
-    data:{ pageTitle: 'Network Graph' }
+    data:{ pageTitle: 'Account Explorer' }
   })
   .state( 'graph', {
     url: '/graph',
@@ -23,7 +23,7 @@ angular.module( 'ripplecharts.graph', [
         templateUrl: 'graph/graph.tpl.html'
       }
     },
-    data:{ pageTitle: 'Network Graph' }
+    data:{ pageTitle: 'Account Explorer' }
   });
 })
 
