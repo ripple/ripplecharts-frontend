@@ -213,7 +213,7 @@ networkGraph = function (nameService) {
       });
     } catch(e) {
       console.log(e)
-      if (e.name === 'ValidationError') {
+      if (e.message === 'data.address should match format address') {
         $('.loading')
           .text('Please enter a valid ripple address.')
           .css('color','#a00');
@@ -237,7 +237,7 @@ networkGraph = function (nameService) {
         });
       } catch(e) {
         console.log(e)
-        if (e.name === 'ValidationError') {
+        if (e.message === 'data.address should match format address') {
           $('.loading')
             .text('Please enter a valid ripple address.')
             .css('color','#a00');
