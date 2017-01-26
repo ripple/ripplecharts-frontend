@@ -110,7 +110,6 @@ networkGraph = function (nameService) {
     focalNode = REFERENCE_NODE;
   }
 
-
   function gotoThing() {
     var string = $('#focus').val().replace(/\s+/g, '');
     if (string.length < 21) {
@@ -199,24 +198,51 @@ networkGraph = function (nameService) {
       return;
     }
 
-    remote.getTrustlines(address, {
-      ledgerVersion: currentLedger
-    })
-    .then(handleLines.bind(undefined, address))
-    .catch(function(e) {
-      console.log(e);
-    });
+    try {
+      remote.getTrustlines(address, {
+        ledgerVersion: currentLedger
+      })
+      .then(handleLines.bind(undefined, address))
+      .catch(function(e) {
+        console.log(e);
+        if (e.message === 'actNotFound') {
+          $('.loading')
+            .text('Account Not Found')
+            .css('color','#a00');
+        }
+      });
+    } catch(e) {
+      console.log(e)
+      if (e.name === 'ValidationError') {
+        $('.loading')
+          .text('Please enter a valid ripple address.')
+          .css('color','#a00');
+      }
+    }
   }
 
   function serverGetInfo(address) {
 
     if (!nodes[nodeMap[address]] || !nodes[nodeMap[address]].account.index) {
-
-      remote.getAccountInfo(address)
-       .then(handleAccountData.bind(undefined, address))
-       .catch(function(e) {
-        console.log(e);
-      });
+      try {
+        remote.getAccountInfo(address)
+         .then(handleAccountData.bind(undefined, address))
+         .catch(function(e) {
+          console.log(e);
+          if (e.message === 'actNotFound') {
+            $('.loading')
+              .text('Account Not Found')
+              .css('color','#a00');
+          }
+        });
+      } catch(e) {
+        console.log(e)
+        if (e.name === 'ValidationError') {
+          $('.loading')
+            .text('Please enter a valid ripple address.')
+            .css('color','#a00');
+        }
+      }
     }
   }
 
