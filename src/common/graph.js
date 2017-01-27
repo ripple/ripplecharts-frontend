@@ -93,15 +93,13 @@ networkGraph = function (nameService) {
   var transaction_id;
   var rippleName;
   var changingFocus = false;
-
-  var chars = 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz'
   var regX = new RegExp('^r[1-9A-HJ-NP-Za-km-z]{25,34}$')
 
   if (param === "") {
     focalNode = REFERENCE_NODE;
   } else if (param.length < 21) {
     rippleName = param
-  } else if (param.charAt(0) == "r" ) {
+  } else if (isRippleAddress(param)) {
     focalNode = param;
   } else if ("0123456789ABCDEF".indexOf(param.charAt(0)) != -1) {
     transaction_id = param;
@@ -119,7 +117,6 @@ networkGraph = function (nameService) {
    */
 
   function isRippleAddress(d) {
-    console.log(d)
     return regX.test(d)
   }
 
@@ -131,8 +128,9 @@ networkGraph = function (nameService) {
           changeMode('individual');
           refocus(address, true);
         } else {
+          eraseGraph();
           $(".loading")
-            .text('No Address Found.')
+            .text('Ripple Name Not Found.')
             .css("color","#a00");
         }
       });
@@ -149,6 +147,7 @@ networkGraph = function (nameService) {
       refocus(string, true);
 
     } else {
+      eraseGraph();
       $('.loading')
         .text('Please enter a valid ripple address.')
         .css("color","#a00");
@@ -216,26 +215,12 @@ networkGraph = function (nameService) {
       return;
     }
 
-    remote.getTrustlines(address, {
-      ledgerVersion: currentLedger
-    })
-    .then(handleLines.bind(undefined, address))
-    .catch(function(e) {
-      console.log(e);
-      if (e.message === 'actNotFound') {
-        $('.loading')
-          .text('Account Not Found')
-          .css('color','#a00');
-      }
-    });
-  }
-
-  function serverGetInfo(address) {
-
-    if (!nodes[nodeMap[address]] || !nodes[nodeMap[address]].account.index) {
-      remote.getAccountInfo(address)
-       .then(handleAccountData.bind(undefined, address))
-       .catch(function(e) {
+    try {
+      remote.getTrustlines(address, {
+        ledgerVersion: currentLedger
+      })
+      .then(handleLines.bind(undefined, address))
+      .catch(function(e) {
         console.log(e);
         if (e.message === 'actNotFound') {
           $('.loading')
@@ -243,6 +228,46 @@ networkGraph = function (nameService) {
             .css('color','#a00');
         }
       });
+    } catch(e) {
+      console.log(e);
+      if (e.message === 'data.address should match format address') {
+        $('.loading')
+          .text('Please enter a valid ripple address.')
+          .css('color','#a00');
+      } else {
+        $('.loading')
+          .text(e.message)
+          .css('color','#a00');
+      }
+    }
+  }
+
+  function serverGetInfo(address) {
+
+    if (!nodes[nodeMap[address]] || !nodes[nodeMap[address]].account.index) {
+      try {
+        remote.getAccountInfo(address)
+         .then(handleAccountData.bind(undefined, address))
+         .catch(function(e) {
+          console.log(e);
+          if (e.message === 'actNotFound') {
+            $('.loading')
+              .text('Account Not Found')
+              .css('color','#a00');
+          }
+        });
+      } catch(e) {
+        console.log(e);
+        if (e.message === 'data.address should match format address') {
+          $('.loading')
+            .text('Please enter a valid ripple address.')
+            .css('color','#a00');
+        } else {
+        $('.loading')
+          .text(e.message)
+          .css('color','#a00');
+        }
+      }
     }
   }
 
@@ -2177,7 +2202,7 @@ window.onhashchange = function(){
               addNodes(0);
             } else {
               $(".loading")
-                .text('No Address Found.')
+                .text('Ripple Name not found.')
                 .css("color","#a00");
             }
           });
@@ -2200,6 +2225,7 @@ window.onhashchange = function(){
     .then(init)
     .catch(function(e) {
       console.log(e);
+      console.log(e.stack);
     });
   }
 }
