@@ -157,8 +157,9 @@ function PriceChart(options) {
         '<span class="low"><small>L:</small><b>' + low + '</b></span>' +
         '<span><small>C:</small><b>' + close + '</b></span>' +
         '<span class="vwap"><small>VWAP:</small><b>' + vwap + '</b></span>' +
-        '<span class="volume"><small>Vol:</small><b>' + volume + ' ' +
-        baseCurrency + '</b></span>')
+        '<span class="volume"><small>Vol:</small><b>' + volume +
+        ' ' + baseCurrency + '</b></span>' +
+        '<span><small>Ct:</small><b>' + d.count + '</b></span>')
         .style('opacity', 1)
 
       hover.transition().duration(50)
