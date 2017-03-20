@@ -34,13 +34,13 @@
   </div>
 
   <h4 class='domain'>
-    <a ng-if="validator.domain" href='http://{{validator.domain}}' ng-class='validator.domain_state'>
+    <a ng-if="validator.domain" href='http://{{validator.domain}}' ng-class='validator.domain_state' target="_blank">
       {{validator.domain}}
       <span ng-if="validator.domain_state === 'verified'">&#10004</span>
       <b ng-if="validator.domain_state !== 'verified' && validator.domain"
         title="validator.domain_state">X</b>
     </a>
-    <a class="unverified" ng-if="validator.domain_state !== 'verified'" href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification'>
+    <a class="unverified" ng-if="validator.domain_state !== 'verified'" target="_blank"  href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification'>
       unverified
     </a>
     <span class="asterisk" ng-click="showHelp = true">*</span>

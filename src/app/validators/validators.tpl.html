@@ -73,7 +73,7 @@
         <div class="ledgers">{{report.total_ledgers | number}}</div>
         <div class="site">
         <div ng-if="report.domain" class="domain">
-          <a ng-click='$event.stopPropagation()' href='https://{{report.domain}}' ng-class="{verified: report.domain_state === 'verified'}">
+          <a ng-click='$event.stopPropagation()' href='http://{{report.domain}}' ng-class="{verified: report.domain_state === 'verified'}" target="_blank">
             {{report.domain}}
             <small ng-if="report.domain_state === 'verified'">&#10004</small>
             <b ng-if="report.domain_state !== 'verified' && report.domain"
