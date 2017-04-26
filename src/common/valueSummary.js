@@ -51,7 +51,8 @@ function ValueSummary(options) {
     'btc38.com': 'BTC38',
     'jubi.com': 'Jubi',
     'bittrex.com': 'Bittrex',
-    'bitstamp.net': 'Bitstamp'
+    'bitstamp.net': 'Bitstamp',
+    'coincheck.com': 'Coincheck'
   }
 
   var currencyColors = {
@@ -67,12 +68,12 @@ function ValueSummary(options) {
 
   var blues = [
     '#2a98D0',
+    '#1A3964',
     '#98c8eb',
     '#3A69c4',
     '#205097',
     '#3665B0',
-    '#2A4994',
-    '#1A3964'
+    '#2A4994'
   ]
 
   var arc = d3.svg.arc()
@@ -99,7 +100,8 @@ function ValueSummary(options) {
       return currencyColors.XRP
 
     } else if (!currency) {
-      return blues[(rank || 0) % 7]
+      return rank ?
+        blues[((rank || 0) % 6) + 1] : blues[0]
     }
 
     c = currencyColors[currency] ||

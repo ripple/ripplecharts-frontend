@@ -259,7 +259,8 @@ angular.module('ripplecharts.external-markets', [
     'btc38.com': 'BTC38',
     'jubi.com': 'Jubi',
     'bittrex.com': 'Bittrex',
-    'bitstamp.net': 'Bitstamp'
+    'bitstamp.net': 'Bitstamp',
+    'coincheck.com': 'Coincheck'
   }
 
   $scope.currencies = Object.keys(valueCurrencies)
