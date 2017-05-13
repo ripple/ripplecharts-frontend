@@ -93,19 +93,45 @@ h1, h2, h3, h4 {
   position: fixed;
   width: 100%;
   z-index:3;
-  border-bottom:1px solid #444;
-  background:#151515;
+  background:#000;
 }
 
 .header .wrapper {
-  //overflow:hidden;
-  background:#000;
-  //border-bottom:5px solid #222;
   height: 50px;
+  max-width: 1170px;
+  margin: auto;
+  padding: 0 10px;
+}
+
+.header .subheader {
+  background: #434c55;
+  clear: both;
+}
+
+.header .subheader .wrapper {
+  height: 40px;
+  max-width: 1170px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+.header .subheader .sublogo {
+  height: 40px;
+  padding: 10px 0;
+}
+
+.header .subheader .button {
+  float: right;
+  padding: 8px 4px
+}
+
+.header .subheader .button img {
+  height: 25px;
+  width: 30px;
 }
 
 .headerPad {
-  height:50px;
+  height:85px;
 }
 
 .header status-check {
@@ -124,7 +150,7 @@ h1, h2, h3, h4 {
 }
 
 .header status-check svg {
-  margin: 16px 12px 6px;
+  margin: 11px 0 11px 5px;
 }
 
 .header status-check circle {
@@ -132,29 +158,29 @@ h1, h2, h3, h4 {
 }
 
 .header status-check circle.active {
-  fill: #393;
+  fill: #3c3;
 }
 
 .header status-check circle.warning {
-  fill: #c90;
+  fill: #f90;
 }
 
 .header status-check circle.inactive {
-  fill: #c00;
+  fill: #c55;
 }
 
 .header status-check marker.active {
-  border-color: #393 #393 transparent transparent;
+  border-color: #3c3 #3c3 transparent transparent;
   opacity: 1;
 }
 
 .header status-check marker.warning {
-  border-color: #c90 #c90 transparent transparent;
+  border-color: #f90 #f90 transparent transparent;
   opacity: 1;
 }
 
 .header status-check marker.inactive {
-  border-color: #c00 #c00 transparent transparent;
+  border-color: #c55 #c55 transparent transparent;
   opacity: 1;
 }
 
@@ -245,8 +271,8 @@ h1, h2, h3, h4 {
 }
 
 .nav-toggle {
-  margin:10px 10px 10px 20px;
-  float:left;
+  margin:10px;
+  float:right;
   cursor:pointer;
   color:#ccc;
 }
@@ -262,7 +288,7 @@ h1, h2, h3, h4 {
 
 .nav .top {
   background:#f6f6f6;
-  height:47px;
+  height:92px;
   border-right:1px solid #fdfdfd;
   border-bottom:1px solid #e8e8e8;
 }
@@ -338,11 +364,11 @@ h1, h2, h3, h4 {
 }
 
 .nav .page li a:hover {
-  color:#486db4;
+  color:#27a2db;
 }
 
 .nav .page li.active a{
-  color:#3a62ae;
+  color:#27a2db;
   padding-left:40px;
 }
 
@@ -354,11 +380,11 @@ h1, h2, h3, h4 {
 .logo {
   float:left;
   display:inline-block;
-  width:200px;
+  width:104px;
   height:30px;
-  background-image:url('images/logo.png');
-  margin: 10px 0 10px 15px !important;
-  background-size: 200px 30px;
+  background-image:url('images/ripple.png');
+  margin: 10px 0 10px 10px !important;
+  background-size: 104px 30px;
 }
 
 .theme {
@@ -653,6 +679,14 @@ footer .links a:first-child {
 }
 
 @media (max-width: 480px) {
+  .header .wrapper {
+    padding: 0
+  }
+
+  .header .subheader .wrapper {
+    padding: 0 10px;
+  }
+
   .footerPad {
     height:300px;
   }
@@ -768,7 +802,7 @@ footer .links a:first-child {
   }
 
   li.category a:hover,  li.category a:active {
-    color: #346aa9;
+    color: #27a2db;
   }
 
   .sub_wrapper {
@@ -799,7 +833,7 @@ footer .links a:first-child {
       list-style-type: none;
 
       & :hover {
-      color: #346aa9 !important;
+      color: #27a2db !important;
       }
     }
   }
@@ -838,7 +872,7 @@ footer .links a:first-child {
 }
 
 #helpButton_new_mobile {
-    margin: 10px 20px;
+    margin: 10px 15px;
     color: #666;
 }
 

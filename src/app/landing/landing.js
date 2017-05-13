@@ -424,14 +424,6 @@ angular.module('ripplecharts.landing', [
     })
   })
 
-
-  // show the helper text the first time we visit the page
-  if (!store.get('returning')) {
-    setTimeout(function() {
-      d3.select('#helpButton_new').node().click()
-    }, 100)
-  }
-
   $scope.$watch('totalXRP', function(d) {
     setMetricValue('capitalizationXRP', d)
   })
@@ -440,14 +432,6 @@ angular.module('ripplecharts.landing', [
   $scope.$on('$destroy', function() {
     markets.list([])
 
-    if (!store.get('returning') &&
-      $scope.showHelp) {
-      setTimeout(function() {
-        d3.select('#helpButton_new').node().click()
-      }, 50)
-    }
-
-    store.set('returning', true)
     clearInterval(refreshInterval)
   })
 
