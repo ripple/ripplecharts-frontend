@@ -36,6 +36,7 @@ angular.module('ripplecharts.landing', [
 
   var exchangeRates = {}
   var refreshInterval
+  var rateInterval
 
   var valueCurrencies = {
     USD: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B',  // bitstamp
@@ -82,6 +83,20 @@ angular.module('ripplecharts.landing', [
     donut.load($scope.selectedMetric, {
       rate: 1 / $scope.valueRate,
       currency: $scope.selectedCurrency
+    })
+  }
+
+  /**
+   * refreshRate
+   */
+
+  function refreshRate(useCached) {
+    setValueRate($scope.selectedCurrency, useCached, function() {
+      for (name in $scope.metrics) {
+        setMetricValue(name)
+      }
+
+      $scope.showMetricDetails()
     })
   }
 
@@ -381,13 +396,7 @@ angular.module('ripplecharts.landing', [
       $scope.metrics[name].converted = undefined
     }
 
-    setValueRate(d, true, function() {
-      for (name in $scope.metrics) {
-        setMetricValue(name)
-      }
-
-      $scope.showMetricDetails()
-    })
+    refreshRate(true)
   })
 
   // add to new accounts total
@@ -433,6 +442,7 @@ angular.module('ripplecharts.landing', [
     markets.list([])
 
     clearInterval(refreshInterval)
+    clearInterval(rateInterval)
   })
 
   // reload data when coming back online
@@ -445,6 +455,7 @@ angular.module('ripplecharts.landing', [
   // get value metrics at load time and every 5 minutes
   getMetricValues()
   refreshInterval = setInterval(getMetricValues, 60 * 5 * 1000)
+  rateInterval = setInterval(refreshRate, 15 * 1000)
   $scope.showMetricDetails('totalTradeVolume')
 })
 
