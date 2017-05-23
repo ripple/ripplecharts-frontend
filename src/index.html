@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html ng-controller="AppCtrl">
   <head>
-    <title ng-bind="pageTitle">Ripple Charts</title>
+    <title ng-bind="pageTitle">XRP Charts</title>
     <link rel="icon" type="image/png" href="assets/images/favicon.png"/>
     <link href='https://fonts.googleapis.com/css?family=Open+Sans+Light:300,700|Open+Sans:400,400italic,700' rel='stylesheet' type='text/css'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,13 +12,13 @@
     <!-- social media tags -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@ripple">
-    <meta name="twitter:title" content="Ripple Charts">
+    <meta name="twitter:title" content="XRP Charts">
     <meta name="twitter:description" content="Ripple Network Data Visualization.">
     <meta name="twitter:creator" content="@ripple">
     <meta name="twitter:image:src" content="">
-    <meta property="og:title" content="Ripple Charts" />
+    <meta property="og:title" content="XRP Charts" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https:/ripplecharts.com" />
+    <meta property="og:url" content="https:/xrpcharts.ripple.com" />
     <meta property="og:image" content="" />
     <meta property="og:description" content="Ripple Network Data Visualization.">
 
@@ -73,8 +73,8 @@
                       <li ui-route="/trade-volume" ng-class="{active:$uiRoute !== false}">
                         <a href="#/trade-volume" snap-close>Trade Volume</a>
                       </li>
-                      <li ui-route="/external-markets" ng-class="{active:$uiRoute !== false}">
-                        <a href="#/external-markets" snap-close>External Markets</a>
+                      <li ui-route="/xrp-markets" ng-class="{active:$uiRoute !== false}">
+                        <a href="#/xrp-markets" snap-close>XRP Markets</a>
                       </li>
                     </ul>
                 </div>
@@ -107,9 +107,6 @@
                 <ul class="subnav">
                   <li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
                     <a href="#/graph" snap-close>Account Explorer</a>
-                  </li>
-                  <li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
-                    <a href="#/accounts" snap-close>Accounts Created</a>
                   </li>
                 </ul>
               </div>
@@ -168,8 +165,8 @@
             <li ui-route="/trade-volume" ng-class="{active:$uiRoute !== false}">
               <a href="#/trade-volume" snap-close>Trade Volume</a>
             </li>
-            <li ui-route="/external-markets" ng-class="{active:$uiRoute !== false}">
-              <a href="#/external-markets" snap-close>External Markets</a>
+            <li ui-route="/xrp-markets" ng-class="{active:$uiRoute !== false}">
+              <a href="#/xrp-markets" snap-close>XRP Markets</a>
             </li>
           </ul>
         </li>
@@ -203,9 +200,6 @@
             <li ui-route="/graph(/.+)?" ng-class="{active:$uiRoute !== false}">
               <a href="#/graph" snap-close>Account Explorer</a>
             </li>
-            <li ui-route="/accounts" ng-class="{active:$uiRoute !== false}">
-              <a href="#/accounts" snap-close>Accounts Created</a>
-            </li>
           </ul>
         </li>
         <li class="category">
@@ -227,7 +221,7 @@
             Information is provided "as is" and solely as an informative resource.
             XRP Charts is not a trading advisor. Data may be delayed or incorrect.
             Ripple reserves the right not to include
-            transactions in Ripple Charts that it believes are not bona fide, e.g., wash sales
+            transactions in XRP Charts that it believes are not bona fide, e.g., wash sales
             where there is no change in beneficial ownership.
           </div>
           <div class="links">

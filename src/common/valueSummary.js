@@ -52,7 +52,10 @@ function ValueSummary(options) {
     'jubi.com': 'Jubi',
     'bittrex.com': 'Bittrex',
     'bitstamp.net': 'Bitstamp',
-    'coincheck.com': 'Coincheck'
+    'coincheck.com': 'Coincheck',
+    'coinone.co.kr': 'Coinone',
+    'bitfinex.com': 'Bitfinex',
+    'bitso.com': 'Bitso'
   }
 
   var currencyColors = {

@@ -1,21 +1,21 @@
 'use strict'
 
-angular.module('ripplecharts.external-markets', [
+angular.module('ripplecharts.xrp-markets', [
   'ui.state',
   'ui.bootstrap'
 ])
 
 .config(function($stateProvider) {
-  $stateProvider.state('external-markets', {
-    url: '/external-markets',
+  $stateProvider.state('xrp-markets', {
+    url: '/xrp-markets',
     views: {
       main: {
-        controller: 'ExternalMarketsCtrl',
-        templateUrl: 'external-markets/external-markets.tpl.html'
+        controller: 'XrpMarketsCtrl',
+        templateUrl: 'xrp-markets/xrp-markets.tpl.html'
       }
     },
     data: {
-      pageTitle: 'External Markets'
+      pageTitle: 'XRP Markets'
     },
     resolve: {
       gateInit: function(gateways) {
@@ -24,7 +24,7 @@ angular.module('ripplecharts.external-markets', [
     }
   })
 })
-.controller('ExternalMarketsCtrl', function($scope, gateways) {
+.controller('XrpMarketsCtrl', function($scope, gateways) {
   var api = new ApiHandler(API)
   var exchangeRates = {}
   var refreshInterval
@@ -253,14 +253,17 @@ angular.module('ripplecharts.external-markets', [
 
 
   $scope.marketNames = {
-    rcl: 'Ripple Network (RCL)',
+    rcl: 'XRP Ledger',
     'poloniex.com': 'Poloniex',
     'kraken.com': 'Kraken',
     'btc38.com': 'BTC38',
     'jubi.com': 'Jubi',
     'bittrex.com': 'Bittrex',
     'bitstamp.net': 'Bitstamp',
-    'coincheck.com': 'Coincheck'
+    'coincheck.com': 'Coincheck',
+    'coinone.co.kr': 'Coinone',
+    'bitfinex.com': 'Bitfinex',
+    'bitso.com': 'Bitso'
   }
 
   $scope.currencies = Object.keys(valueCurrencies)

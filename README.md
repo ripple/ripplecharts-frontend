@@ -1,6 +1,6 @@
 [![CircleCI](https://circleci.com/gh/ripple/ripplecharts-frontend.svg?style=svg)](https://circleci.com/gh/ripple/ripplecharts-frontend)
 
-# Ripple Charts
+# XRP Charts
 
 This is the frontend for ripplecharts.com data visualization using angular.js and D3
 
@@ -15,7 +15,7 @@ This is the frontend for ripplecharts.com data visualization using angular.js an
 
         $ sudo npm install -g grunt-cli
 
-3. Install the Ripple Charts frontend.
+3. Install the XRP Charts frontend.
 
         $ git clone https://github.com/ripple/ripplecharts-frontend
         $ cd ripplecharts-frontend

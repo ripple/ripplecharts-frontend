@@ -68,7 +68,7 @@ angular.element(document).ready(function() {
     'ripplecharts.topology',
     'ripplecharts.validators',
     'ripplecharts.validator',
-    'ripplecharts.external-markets',
+    'ripplecharts.xrp-markets',
     'ui.state',
     'ui.route',
     'snap',
@@ -151,10 +151,10 @@ angular.element(document).ready(function() {
       }
 
       if (angular.isDefined(toState.data.pageTitle)) {
-        $scope.pageTitle = toState.data.pageTitle + ' | Ripple Charts'
+        $scope.pageTitle = toState.data.pageTitle + ' | XRP Charts'
 
       } else {
-        $scope.pageTitle = 'Ripple Charts'
+        $scope.pageTitle = 'XRP Charts'
       }
     })
 

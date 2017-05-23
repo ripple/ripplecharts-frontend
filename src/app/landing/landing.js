@@ -48,17 +48,17 @@ angular.module('ripplecharts.landing', [
   $scope.metrics = {
     totalTradeVolume: {
       label: 'Total XRP Trade Volume <small>(All Exchanges)</small>',
-      link: '#/external-markets'
+      link: '#/xrp-markets'
     },
     tradeVolumeRCL: {
-      label: 'Ripple Network Trade Volume <small>(All Pairs)<small>',
+      label: 'XRP Ledger Trade Volume <small>(All Pairs)<small>',
       link: '#/trade-volume'
     },
     paymentVolumeRCL: {
-      label: 'Ripple Network Payment Volume'
+      label: 'XRP Ledger Payment Volume'
     },
     capitalizationXRP: {
-      label: 'XRP Capitalization'
+      label: 'Market Capitalization'
     },
     numAccounts: {
       label: '# of Ripple Accounts'
@@ -394,10 +394,10 @@ angular.module('ripplecharts.landing', [
   remote.on('transaction_all', handleNewAccount)
 
   remote.on('connect', function() {
-    getTotalAccounts()
+    //getTotalAccounts()
   })
 
-  getTotalAccounts()
+  //getTotalAccounts()
 
   // get 'fixed' multimarket charts for
   // the most important markets

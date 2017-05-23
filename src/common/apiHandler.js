@@ -365,7 +365,9 @@ function ApiHandler(baseURL) {
       (params.counter.issuer ? '+' + params.counter.issuer : '')
     var date = params.date ?
       '?date=' + formatTime(params.date) : ''
-    url += base + counter + date
+    var live = params.date ? '' : '?live=true'
+
+    url += base + counter + date + live
 
     return d3.json(url, function(err, resp) {
       if (err) {

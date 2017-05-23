@@ -60,7 +60,7 @@
       </div>
       <div class="stat-group col-md-6">
         <h5>
-          Ripple Network Stats
+          XRP Ledger Stats
         </h5>
         <ul>
           <li>
@@ -85,13 +85,6 @@
             <div class="stat">
               <span ng-show="ledgerIndex" ng-bind="ledgerIndex | number:0"></span>
               <img  ng-hide="ledgerIndex" src="assets/images/rippleThrobber.png" class="loader"/>
-            </div>
-          </li>
-          <li>
-            <label ng-bind-html="metrics.numAccounts.label | trust"></label>
-            <div class="stat">
-              <span ng-bind="metrics.numAccounts.total | number:0 "></span>
-              <img ng-hide="metrics.numAccounts.total" src="assets/images/rippleThrobber.png" class="loader"/>
             </div>
           </li>
         </ul>
