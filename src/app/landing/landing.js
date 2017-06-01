@@ -81,10 +81,12 @@ angular.module('ripplecharts.landing', [
       $scope.selectedMetric = $scope.metrics[name]
     }
 
-    donut.load($scope.selectedMetric, {
-      rate: 1 / $scope.valueRate,
-      currency: $scope.selectedCurrency
-    })
+    if ($scope.valueRate) {
+      donut.load($scope.selectedMetric, {
+        rate: 1 / $scope.valueRate.period,
+        currency: $scope.selectedCurrency
+      })
+    }
   }
 
 
