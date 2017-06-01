@@ -53,16 +53,23 @@ angular.module('ripplecharts.xrp-markets', [
       counter: {
         currency: c.currency,
         issuer: c.issuer
-      }
+      },
+      period: c.period
     }, function(err, rate) {
       if (err) {
         callback(err)
         return
       }
 
+      var key = c.currency + '.' + c.issuer
+
+      if (!exchangeRates[key]) {
+        exchangeRates[key] = {}
+      }
+
       // cache for future reference
-      exchangeRates[c.currency + '.' + c.issuer] = Number(rate)
-      callback(null, rate)
+      exchangeRates[key][c.period] = Number(rate)
+      callback(null, exchangeRates[key][c.period])
     })
   }
 
@@ -73,10 +80,13 @@ angular.module('ripplecharts.xrp-markets', [
 
   function setValueRate(currency, callback) {
     var issuer = valueCurrencies[currency]
-
+    var key = currency + '.' + issuer
     function apply() {
-      $scope.valueRate = exchangeRates[currency + '.' + issuer]
-      $scope.valueRate = $scope.valueRate.toPrecision(4)
+      if (exchangeRates[key] &&
+          exchangeRates[key][$scope.selectedPeriod]) {
+        $scope.valueRate = exchangeRates[key][$scope.selectedPeriod]
+        $scope.valueRate = $scope.valueRate.toPrecision(4)
+      }
       callback()
     }
 
@@ -86,7 +96,8 @@ angular.module('ripplecharts.xrp-markets', [
       return
 
     // check for cached
-    } else if (exchangeRates[currency + '.' + issuer]) {
+    } else if (exchangeRates[key] &&
+               exchangeRates[key][$scope.selectedPeriod]) {
       apply()
       return
     }
@@ -98,7 +109,8 @@ angular.module('ripplecharts.xrp-markets', [
 
     getExchangeRate({
       currency: currency,
-      issuer: issuer
+      issuer: issuer,
+      period: $scope.selectedPeriod
     }, function(err) {
 
       if (err) {
@@ -282,7 +294,9 @@ angular.module('ripplecharts.xrp-markets', [
 
   $scope.changePeriod = function(period) {
     $scope.selectedPeriod = period
-    getVolumes()
+    setValueRate($scope.selectedCurrency, function() {
+      getVolumes()
+    })
   }
 
   $scope.$on('$destroy', function() {

@@ -39,10 +39,10 @@ function ApiHandler(baseURL) {
     url += start + end + interval + limit + currency + issuer + period
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         resp.rows.forEach(function(row) {
@@ -65,10 +65,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp)
@@ -87,10 +87,10 @@ function ApiHandler(baseURL) {
     url += '?' + limit + marker + descending
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp)
@@ -109,10 +109,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         var markets = []
@@ -177,10 +177,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        error(e)
+        error({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else if (params.reduce === false) {
         load(resp.exchanges.map(function(d) {
@@ -235,10 +235,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        error(e)
+        error({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         load(resp)
@@ -265,10 +265,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        error(e)
+        error({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         load(resp)
@@ -286,10 +286,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp ? (resp.count || 0) : 0)
@@ -312,10 +312,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp)
@@ -346,10 +346,10 @@ function ApiHandler(baseURL) {
     url += period
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp.data)
@@ -363,18 +363,25 @@ function ApiHandler(baseURL) {
       (params.base.issuer ? '+' + params.base.issuer : '')
     var counter = '/' + params.counter.currency +
       (params.counter.issuer ? '+' + params.counter.issuer : '')
-    var date = params.date ?
-      '?date=' + formatTime(params.date) : ''
-    var live = params.date ? '' : '?live=true'
+    var qs = []
+    if (params.date) {
+      qs.push('date=' + formatTime(params.date))
+    } else if (!params.period) {
+      qs.push('live=true')
+    }
 
-    url += base + counter + date + live
+    if (params.period) {
+      qs.push('period=' + params.period)
+    }
+
+    url += base + counter + (qs.length ? '?' + qs.join('&') : '')
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp.rate || 0)
@@ -396,10 +403,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         resp.accounts.forEach(function(a) {
@@ -420,10 +427,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp.reports)
@@ -436,10 +443,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp)
@@ -453,10 +460,10 @@ function ApiHandler(baseURL) {
 
     return d3.json(url, function(err, resp) {
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
 
       } else {
         callback(null, resp.reports)
@@ -479,10 +486,10 @@ function ApiHandler(baseURL) {
       clearTimeout(timeout)
 
       if (err) {
-        var e = err.response ? JSON.parse(err.response) : err
-        e.status = err.status
-        e.text = err.statusText || 'Unable to load data'
-        callback(e)
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
       } else {
         callback(null, resp)
       }

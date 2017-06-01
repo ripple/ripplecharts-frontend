@@ -17,7 +17,7 @@
           <span class="valueRateDisplay" ng-bind="valueRatePair"></span>
           <span class="valueRateDisplay"
                 ng-show="selectedCurrency !== 'XRP'"
-                ng-bind="valueRate"></span>
+                ng-bind="valueRate.live | number:4"></span>
         </h5>
         <ul class="volume-stats">
           <li ng-class="{selected:selectedMetric === metrics.totalTradeVolume}"

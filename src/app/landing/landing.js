@@ -59,7 +59,8 @@ angular.module('ripplecharts.landing', [
       label: 'XRP Ledger Payment Volume'
     },
     capitalizationXRP: {
-      label: 'Market Capitalization'
+      label: 'Market Capitalization',
+      live: true
     },
     numAccounts: {
       label: '# of Ripple Accounts'
@@ -86,94 +87,75 @@ angular.module('ripplecharts.landing', [
     })
   }
 
-  /**
-   * refreshRate
-   */
-
-  function refreshRate(useCached) {
-    setValueRate($scope.selectedCurrency, useCached, function() {
-      for (name in $scope.metrics) {
-        setMetricValue(name)
-      }
-
-      $scope.showMetricDetails()
-    })
-  }
 
   /**
-   * getTotalAccounts
+   * getExchangeRates
    */
 
-  function getTotalAccounts() {
-    api.getTotalAccounts(null, function(err, total) {
-      if (err) {
-        console.log(err)
-      }
-
-      $scope.metrics.numAccounts.total = total
-      $scope.$apply()
-    })
-  }
-
-  /**
-   * handleNewAccount
-   */
-
-  function handleNewAccount(tx) {
-    var meta = tx.meta
-    if (meta.TransactionResult !== 'tesSUCCESS') {
-      return
+  function getExchangeRates(c, callback) {
+    function getRate(live) {
+      return new Promise(function(resolve, reject) {
+        api.exchangeRate({
+          base: {
+            currency: 'XRP'
+          },
+          counter: {
+            currency: c.currency,
+            issuer: c.issuer
+          },
+          period: live ? '' : 'day',
+          live: live
+        },
+        function(err, rate) {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(rate)
+          }
+        })
+      })
     }
 
-    meta.AffectedNodes.forEach(function(affNode) {
-      if (affNode.CreatedNode &&
-          affNode.CreatedNode.LedgerEntryType === 'AccountRoot') {
-        $scope.metrics.numAccounts.total++
-        $scope.$apply()
-      }
-    })
-  }
-
-  // get the exchange rate from the API
-  function getExchangeRate(c, callback) {
-    api.exchangeRate({
-      base: {
-        currency: 'XRP'
-      },
-      counter: {
-        currency: c.currency,
-        issuer: c.issuer
-      }
-    }, function(err, rate) {
-      if (err) {
-        callback(err)
-        return
+    Promise.all([
+      getRate(true),
+      getRate()
+    ])
+    .then(function(rates) {
+      exchangeRates[c.currency + '.' + c.issuer] = {
+        live: rates[0],
+        period: rates[1]
       }
 
-      // cache for future reference
-      exchangeRates[c.currency + '.' + c.issuer] = Number(rate)
-      callback(null, rate)
+      callback(null, exchangeRates[c.currency + '.' + c.issuer])
     })
+    .catch(callback)
   }
+
+  /**
+   * setValueRates
+   */
 
   // set the value rate for the selected
   // currency, retreiving it from the
   // API if its not cached or
   // if we are updating the cache
-  function setValueRate(currency, useCached, callback) {
+  function setValueRates(currency, useCached, callback) {
     var issuer = valueCurrencies[currency]
     $scope.valueRate = undefined
     $scope.valueRatePair = ''
 
     function apply() {
       $scope.valueRate = exchangeRates[currency + '.' + issuer]
-      $scope.valueRate = $scope.valueRate.toPrecision(4)
       $scope.valueRatePair = 'XRP/' + currency
       callback()
     }
 
     if (currency === 'XRP') {
-      $scope.valueRate = 1
+      $scope.valueRate = {
+        live: 1,
+        period: 1
+      }
+
       $scope.valueRatePair = ''
       callback()
       return
@@ -184,7 +166,7 @@ angular.module('ripplecharts.landing', [
       return
     }
 
-    getExchangeRate({
+    getExchangeRates({
       currency: currency,
       issuer: issuer
     }, function(err) {
@@ -209,10 +191,68 @@ angular.module('ripplecharts.landing', [
       $scope.metrics[metric].total = value
     }
 
-    if ($scope.metrics[metric].total && $scope.valueRate) {
-      $scope.metrics[metric].converted =
-        $scope.valueRate * $scope.metrics[metric].total
+    if (!$scope.valueRate) {
+      return
     }
+
+    var rate = $scope.metrics[metric].live ?
+      $scope.valueRate.live : $scope.valueRate.period
+
+    if ($scope.metrics[metric].total && rate) {
+      $scope.metrics[metric].converted =
+        rate * $scope.metrics[metric].total
+    }
+  }
+
+  /**
+   * refreshRate
+   */
+
+  function refreshRate(useCached) {
+    setValueRates($scope.selectedCurrency, useCached, function() {
+      for (var k in $scope.metrics) {
+        setMetricValue(k)
+      }
+
+      $scope.showMetricDetails()
+    })
+  }
+
+  /**
+   * getTotalAccounts
+   */
+
+  /*
+  NOTE: currently unused
+  function getTotalAccounts() {
+    api.getTotalAccounts(null, function(err, total) {
+      if (err) {
+        console.log(err)
+      }
+
+      $scope.metrics.numAccounts.total = total
+      $scope.$apply()
+    })
+  }
+  */
+
+  /**
+   * handleNewAccount
+   */
+
+  function handleNewAccount(tx) {
+    var meta = tx.meta
+    if (meta.TransactionResult !== 'tesSUCCESS') {
+      return
+    }
+
+    meta.AffectedNodes.forEach(function(affNode) {
+      if (affNode.CreatedNode &&
+          affNode.CreatedNode.LedgerEntryType === 'AccountRoot') {
+        $scope.metrics.numAccounts.total++
+        $scope.$apply()
+      }
+    })
   }
 
   /**
@@ -403,10 +443,10 @@ angular.module('ripplecharts.landing', [
   remote.on('transaction_all', handleNewAccount)
 
   remote.on('connect', function() {
-    //getTotalAccounts()
+    // getTotalAccounts()
   })
 
-  //getTotalAccounts()
+  // getTotalAccounts()
 
   // get 'fixed' multimarket charts for
   // the most important markets
