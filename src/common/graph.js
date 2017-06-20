@@ -1095,6 +1095,7 @@ networkGraph = function (nameService) {
     return 14 + Math.pow(Math.log(Math.abs(bal) + 1), 3) / 2000;
   }
 
+  // //disable force graph
   // var force = d3.layout.force()
   //   .size([(window.innerWidth > 0) ? window.innerWidth : screen.width, 710]) //w
   //   .linkDistance(80)
