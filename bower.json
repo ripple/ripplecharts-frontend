@@ -23,7 +23,7 @@
     "smooth-div-scroll": "https://github.com/tkahn/Smooth-Div-Scroll.git",
     "ddslick": "https://github.com/prashantchaudhary/ddslick.git",
     "json-formatter": "~0.4.2",
-    "lodash": "3.0.1"
+    "lodash": "4.0.0"
   },
   "resolutions": {
     "angular": "1.2.15"
