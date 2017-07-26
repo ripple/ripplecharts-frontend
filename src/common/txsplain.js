@@ -597,6 +597,36 @@ angular.module('txsplain', [])
             ' offer #<b>' + tx.tx.OfferSequence + '</b>.'
         }
 
+        // renderEscrowCreate
+        function renderEscrowCreate() {
+          var html = ''
+          if (tx.tx.Destination && tx.tx.Destination !== tx.tx.Account) {
+            html = 'The escrow is from <account>' + tx.tx.Account +
+              '</account> to <account>' + tx.tx.Destination + '</account><br/>'
+          }
+          html += 'It escrowed ' +
+            '<amount>' + displayAmount(tx.tx.Amount) + '</amount>'
+          if (tx.tx.Condition)
+            html += '<br/>Condition: ' + tx.tx.Condition
+          if (tx.tx.CancelAfter) {
+            html += '<br/>It can be cancelled after <date>' +
+              moment((RIPPLE_EPOCH + tx.tx.CancelAfter)*1000).format('LLL') +
+              '</date>.'
+          }
+          if (tx.tx.FinishAfter) {
+            html += '<br/>It can be finished after <date>' +
+              moment((RIPPLE_EPOCH + tx.tx.FinishAfter)*1000).format('LLL') +
+              '</date>.'
+          }
+          return html
+        }
+
+        // renderEscrowFinish
+        function renderEscrowFinish() {
+          return tx.tx.Fulfillment ?
+            'Fulfillment: ' + tx.tx.Fulfillment : '';
+        }
+
         d += renderType(tx.tx.TransactionType)
 
         if (tx.tx.TransactionType === 'OfferCreate') {
@@ -607,6 +637,10 @@ angular.module('txsplain', [])
           d += renderPayment()
         } else if (tx.tx.TransactionType === 'TrustSet') {
           d += renderTrustSet()
+        } else if (tx.tx.TransactionType === 'EscrowCreate') {
+          d += renderEscrowCreate()
+        } else if (tx.tx.TransactionType === 'EscrowFinish') {
+          d += renderEscrowFinish()
         }
 
         d += '<br/>The transaction\'s sequence number is ' +
