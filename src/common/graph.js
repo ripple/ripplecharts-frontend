@@ -484,7 +484,9 @@ networkGraph = function (nameService) {
       return;
     }
 
-    if (tx.tx.TransactionType !== 'Payment') {
+    if (tx.tx.TransactionType !== 'Payment' &&
+      tx.tx.TransactionType !== 'EscrowCreate') {
+
       $('.loading').html('Transaction type: <b>' + tx.tx.TransactionType + '</b>');
       return;
     }
@@ -779,6 +781,9 @@ networkGraph = function (nameService) {
     div.append((tx.meta ? "<b>Result:</b> "+(tx.meta.TransactionResult=="tesSUCCESS"?"<span>":"<span style='color:#900;'>")+tx.meta.TransactionResult+"</span><br/>" : "")+
       (xrpExpense||xrpExpense===0 ? "<b>XRP change:</b> "+commas(xrpExpense.before) + " XRP &rarr; "+commas(xrpExpense.after)+" XRP ("+(xrpExpense.after>=xrpExpense.before?"+":"&ndash;")+commas(Math.round(1000000*Math.abs(xrpExpense.before-xrpExpense.after))/1000000)+" XRP)<br/>" : "")+
       "<b>Date:</b> "+moment(tx.date).format('lll')+"<br/>"+
+      (tx.tx.CancelAfter ?"<b>Cancel After:</b> "+moment((UNIX_RIPPLE_TIME + tx.tx.CancelAfter)*1000).format('lll')+"<br/>" : "")+
+      (tx.tx.FinishAfter ?"<b>Finish After:</b> "+moment((UNIX_RIPPLE_TIME + tx.tx.FinishAfter)*1000).format('lll')+"<br/>" : "")+
+      (tx.tx.Condition ? "<b>Condition:</b> <tt>"+tx.tx.Condition+"</tt><br/>" : "")+
       (tx.tx.InvoiceID ? "<b>Invoice ID:</b> <tt>"+tx.tx.InvoiceID+"</tt><br/>" : "")+
       (tx.tx.DestinationTag ? "<b>Destination tag:</b> "+tx.tx.DestinationTag+"<br/>" : "")+
       "<b>Hash:</b> <tt>"+tx.hash+"</tt><br/>"+
@@ -806,6 +811,33 @@ networkGraph = function (nameService) {
 
   var displayingTransactionInPlace = false;
 
+  function getEscrowBalances(origin, marker) {
+    const request = {
+      command: 'account_objects',
+      account: origin,
+      ledger_index: 'validated',
+      limit: 400,
+      marker: marker
+    }
+
+    remote.connection.request(request).then(function(response) {
+      var escrow = response.account_objects.filter(function(obj){
+        return obj.LedgerEntryType === 'Escrow'
+      })
+      if (escrow.length) {
+        if (marker)
+          nodes[nodeMap[origin]].escrowBalances = (nodes[nodeMap[origin]].escrowBalances || []).concat(escrow); 
+        else
+          nodes[nodeMap[origin]].escrowBalances = escrow;
+      }
+      if (response.marker)
+        getEscrowBalances(origin, response.marker)
+      else if (origin == focalNode) {
+        updateInformation(origin);
+      }
+    })
+  }
+
   function addConnections(origin, trustLines) {
     var transactionMode = (mode === "transaction") || displayingTransactionInPlace;
     $(".loading").css("display","none");
@@ -817,6 +849,7 @@ networkGraph = function (nameService) {
 
     nodes[nodeMap[origin]].trustLines = trustLines;
     nodes[nodeMap[origin]].balances = getBalances(origin);
+    getEscrowBalances(origin);
 
     if (origin == focalNode) {
       updateInformation(origin);
@@ -1146,6 +1179,7 @@ networkGraph = function (nameService) {
       } else {
         serverGetLines(address);
       }
+      getEscrowBalances(address);
       updateInformation(address);
     }
   }
@@ -1617,6 +1651,7 @@ function refocus(focus, erase, noExpand) {
   fadeLinks(focalNode);
   colorRogueNodes();
   serverGetInfo(focalNode);
+  getEscrowBalances(focus);
   updateInformation(focus);
   getNextTransactionPage();
 }
@@ -1665,6 +1700,8 @@ function updateInformation(address) {
 
   var currencies = [];
   var balances = getBalances(address);
+  var tr, tl;
+
   for (var currency in balances) {
     currencies.push(currency);
   }
@@ -1674,18 +1711,53 @@ function updateInformation(address) {
   if (!trustLines) {
     trustLines = [];
   }
-
+  var node = nodes[nodeMap[address]];
+  var escrowBalances = node && node.escrowBalances || [];
+  var numberofsubrows = escrowBalances.length ? escrowBalances.length + 1 : 0;
 
   $('#balanceTable').html("");
-  $('#balanceTable').append(
-    '<tr class="toprow">'+
+  tr = $(
+    '<tr class="toprow" style="cursor:'+(escrowBalances.length ? 'pointer' : 'auto')+'" sublistid="escrow'+
+          '" numberofsubrows="'+numberofsubrows+'">'+
       '<td class="circlecell"><svg width="22" height="22">'+
         '<circle cx="11" cy="11" r="11" style="fill:'+COLOR_TABLE['XRP'][0][1]+';"></circle>'+
       '</svg></td>'+
       '<td class="light small mediumgray" style="width:35px;">XRP</td>'+
       '<td class="bold amount" id="xrpBalance">'+commas(nodes[nodeMap[address]].account.xrpBalance)+'</td>'+
-      '<td class="light expander">&nbsp;</td>'+
+      '<td class="light expander">'+(escrowBalances.length ? '<span id="escrowExpander">+</span>' : '&nbsp;')+'</td>'+
     '</tr>');
+  if (escrowBalances.length) tr.click(rowClick);
+  $('#balanceTable').append(tr);
+  if (escrowBalances.length) {
+    var escrowTotal = escrowBalances.reduce(function(acum, escrowNode) {
+      return acum + +escrowNode.Amount;
+    }, 0)/1000000;
+    $('#balanceTable').append(
+      '<tr class="innertablecontainer" id="escrow">'+
+      '<td colspan=4>'+
+      '<div id="escrowInner">'+
+      '<table class="innertable" style="table-layout:fixed;" id="escrowInnerTable">'+
+      '</table></div></td></tr>');
+    $('#escrowInnerTable').append(
+      '<tr>'+
+        '<th class="light midsize mediumgray" style="width:50%;">In Escrow</th>'+
+        '<td class="bold amount center" style="width:50%;"><span title="'+
+          commas(escrowTotal)+'">'+roundNumber(escrowTotal)+'</span></td>'+
+      '</tr><tr>'+
+        '<th class="light midsize mediumgray" style="width:50%;">Address</th>'+
+        '<td class="light midsize mediumgray" style="width:50%;">&nbsp;</td>'+
+    '</tr>');
+    for (var i=0; i<escrowBalances.length; i++) {
+      tl = escrowBalances[i];
+      tr = $('<tr/>').append($('<th class="light address"/>').append(clickableAccountSpan(tl.Destination)));
+      tr.append(
+        '<td style="width:50%;" class="bold amount center"><span title="'+
+        commas(tl.Amount/1000000)+'">'+roundNumber(tl.Amount/1000000)+
+        '</span></td>'
+      );
+      $('#escrowInnerTable').append(tr);
+    }
+  }
 
   function sortHelper (a,b) {
     return Math.abs(b.balance)-Math.abs(a.balance);
@@ -1698,7 +1770,6 @@ function updateInformation(address) {
   for (var i=0; i<currencies.length; i++) {
     var cur = currencies[i];
     var trustLinesForCur = [];
-    var tr, tl;
 
     for (var j=0; j<trustLines.length; j++) {
       var trustLine = trustLines[j];
@@ -1769,7 +1840,11 @@ var txAltText = {
   "offeroutfailed"   :"Failed to make offer to give...",
   "offerinfailed"    :"Failed to accept offer and get...",
   "canceloffer":"Canceled offer",
-  "accountset":"Edited account properties"
+  "accountset":"Edited account properties",
+  "escrowcreate"     :"Escrow created",
+  "escrowcreatefailed"     :"Failed escrow",
+  "escrowcancel"     :"Escrow cancelled",
+  "escrowfinish"     :"Escrow finished"
 };
 
 function showTransactionWithHash(hash) {
@@ -1892,6 +1967,15 @@ function updateTransactions(address) {
         transactionType = "canceloffer";
       } else if (tx.TransactionType == "AccountSet") {
         transactionType = "accountset";
+      } else if (tx.TransactionType === "EscrowCreate") {
+        amount = tx.Amount
+        transactionType = "escrowcreate"
+        if (tx.Destination && tx.Destination !== tx.Account)
+          counterparty = tx.Destination
+      } else if (tx.TransactionType === "EscrowCancel") {
+        transactionType = "escrowcancel"
+      } else if (tx.TransactionType === "EscrowFinish") {
+        transactionType = "escrowfinish"
       } else {
         console.log("Could not interpret transaction: "+tx.transactionType);
       }
@@ -1927,7 +2011,8 @@ function updateTransactions(address) {
 
       if (transactionType=='send' ||
           transactionType=='receive' ||
-          transactionType=='intermediate') {
+          transactionType=='intermediate' ||
+          transactionType=='escrowcreate') {
 
         div.on('contextmenu', makeMenuClick(obj)).on('click', makeClick(obj));
 
