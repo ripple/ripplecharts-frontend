@@ -117,6 +117,37 @@ angular.module('txsplain', [])
     return str
   }
 
+  function getBalanceChange(node) {
+    var fields = node.FinalFields || node.NewFields
+    var prev = node.PreviousFields
+    var account = fields && fields.Account
+
+    if (fields && prev) {
+      var previousBalance = Number(prev.Balance)
+      var finalBalance = Number(fields.Balance)
+      if (account && previousBalance !== finalBalance) {
+        return {account: account, change: finalBalance - previousBalance}
+      }
+    }
+  }
+
+  function getBalanceChanges(meta) {
+    return meta.AffectedNodes.map(function(node) {
+        return node.ModifiedNode ? getBalanceChange(node.ModifiedNode) : false
+      }).filter(function(change) {
+        return change && change.change
+      })
+  }
+
+  function getEscrowDeletedNode(tx) {
+    return tx.meta.AffectedNodes.map(function(node) {
+        return node.DeletedNode &&
+          node.DeletedNode.LedgerEntryType == 'Escrow' ? node.DeletedNode : false
+      }).filter(function(node) {
+        return node
+      })[0]
+  }
+
   return {
     restrict: 'AE',
     template: '<div class="contents">' +
@@ -623,8 +654,50 @@ angular.module('txsplain', [])
 
         // renderEscrowFinish
         function renderEscrowFinish() {
-          return tx.tx.Fulfillment ?
-            'Fulfillment: ' + tx.tx.Fulfillment : '';
+          var deleted = getEscrowDeletedNode(tx)
+          if (!deleted)
+            return ''
+          var html = 'The escrow completion was triggered by <account>' +
+            tx.tx.Account + '</account>' +
+            '<br/>The escrowed amount of <amount>' +
+            displayAmount(deleted.FinalFields.Amount) + '</amount> ' +
+            'was delivered to <account>' + deleted.FinalFields.Destination +
+            '</account>'
+          if (tx.tx.Account === deleted.FinalFields.Destination) {
+              html += ' (' + displayAmount(String(Number(deleted.FinalFields.Amount) - Number(tx.tx.Fee))) +
+              ' after transactions costs)'
+          }
+          html += '<br/>The escrow was created by transaction '+
+            '<a href="#" onclick="location.hash=\'#/transactions/' +
+            deleted.FinalFields.PreviousTxnID + '\'; return false;">' +
+            deleted.FinalFields.PreviousTxnID + '</a> by <account>' +
+            tx.tx.Owner + '</account>'
+          html += tx.tx.Fulfillment ?
+            '<br/>Fulfillment: ' + tx.tx.Fulfillment : ''
+          return html
+        }
+
+        // renderEscrowCancel
+        function renderEscrowCancel() {
+          var deleted = getEscrowDeletedNode(tx)
+          if (!deleted)
+            return ''
+          var html = 'The escrow cancellation was triggered by <account>' +
+            tx.tx.Account + '</account>' +
+            '<br/>The escrowed amount of <amount>' +
+            displayAmount(deleted.FinalFields.Amount) + '</amount> ' +
+            'was returned to <account>' + tx.tx.Owner +
+            '</account>'
+          if (tx.tx.Account === tx.tx.Owner) {
+            html += ' (' + displayAmount(String(Number(deleted.FinalFields.Amount) - Number(tx.tx.Fee))) +
+            ' after transactions costs)'
+          }
+          html += '<br/>The escrow was created by transaction '+
+            '<a href="#" onclick="location.hash=\'#/transactions/' +
+            deleted.FinalFields.PreviousTxnID + '\'; return false;">' +
+            deleted.FinalFields.PreviousTxnID + '</a> by <account>' +
+            tx.tx.Owner + '</account>'
+          return html
         }
 
         d += renderType(tx.tx.TransactionType)
@@ -641,6 +714,8 @@ angular.module('txsplain', [])
           d += renderEscrowCreate()
         } else if (tx.tx.TransactionType === 'EscrowFinish') {
           d += renderEscrowFinish()
+        } else if (tx.tx.TransactionType === 'EscrowCancel') {
+          d += renderEscrowCancel()
         }
 
         d += '<br/>The transaction\'s sequence number is ' +
