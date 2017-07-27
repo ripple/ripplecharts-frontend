@@ -1726,7 +1726,6 @@ function updateInformation(address) {
       '<td class="bold amount" id="xrpBalance">'+commas(nodes[nodeMap[address]].account.xrpBalance)+'</td>'+
       '<td class="light expander">'+(escrowBalances.length ? '<span id="escrowExpander">+</span>' : '&nbsp;')+'</td>'+
     '</tr>');
-  // debugger
   if (escrowBalances.length) tr.click(rowClick);
   $('#balanceTable').append(tr);
   if (escrowBalances.length) {

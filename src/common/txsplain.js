@@ -117,6 +117,28 @@ angular.module('txsplain', [])
     return str
   }
 
+  function getBalanceChange(node) {
+    var fields = node.FinalFields || node.NewFields
+    var prev = node.PreviousFields
+    var account = fields && fields.Account
+
+    if (fields && prev) {
+      var previousBalance = Number(prev.Balance)
+      var finalBalance = Number(fields.Balance)
+      if (account && previousBalance !== finalBalance) {
+        return {account: account, change: finalBalance - previousBalance}
+      }
+    }
+  }
+
+  function getBalanceChanges(meta) {
+    return meta.AffectedNodes.map(function(node) {
+        return node.ModifiedNode ? getBalanceChange(node.ModifiedNode) : false
+      }).filter(function(change) {
+        return change && change.change
+      })
+  }
+
   return {
     restrict: 'AE',
     template: '<div class="contents">' +
@@ -623,8 +645,26 @@ angular.module('txsplain', [])
 
         // renderEscrowFinish
         function renderEscrowFinish() {
-          return tx.tx.Fulfillment ?
-            'Fulfillment: ' + tx.tx.Fulfillment : '';
+          var html = ''
+          getBalanceChanges(tx.meta).forEach(function(change) {
+              html += '<br/><amount>' +
+                displayAmount(String(change.change)) + '</amount>' +
+                ' was delivered to <account>' + change.account + '</account>'
+          })
+          html += tx.tx.Fulfillment ?
+            '<br/>Fulfillment: ' + tx.tx.Fulfillment : ''
+          return html
+        }
+
+        // renderEscrowCancel
+        function renderEscrowCancel() {
+          var html = ''
+          getBalanceChanges(tx.meta).forEach(function(change) {
+              html += '<br/><amount>' +
+                displayAmount(String(change.change)) + '</amount>' +
+                ' was returned to <account>' + change.account + '</account>'
+          })
+          return html
         }
 
         d += renderType(tx.tx.TransactionType)
@@ -641,6 +681,8 @@ angular.module('txsplain', [])
           d += renderEscrowCreate()
         } else if (tx.tx.TransactionType === 'EscrowFinish') {
           d += renderEscrowFinish()
+        } else if (tx.tx.TransactionType === 'EscrowCancel') {
+          d += renderEscrowCancel()
         }
 
         d += '<br/>The transaction\'s sequence number is ' +
