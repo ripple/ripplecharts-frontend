@@ -497,7 +497,7 @@ angular.module('txsplain', [])
       }
 
       // render tx description
-      function renderDescription(tx) {
+      function renderDescription(tx, relatedTx) {
         var d = '<h4>DESCRIPTION:</h4>'
 
         // renderType
@@ -597,6 +597,48 @@ angular.module('txsplain', [])
             ' offer #<b>' + tx.tx.OfferSequence + '</b>.'
         }
 
+        // renderEscrowCreate
+        function renderEscrowCreate() {
+          var html = ''
+          if (tx.tx.Destination && tx.tx.Destination !== tx.tx.Account) {
+            html = 'The escrow is from <account>' + tx.tx.Account +
+              '</account> to <account>' + tx.tx.Destination + '</account><br/>'
+          }
+          html += 'It escrowed ' +
+            '<amount>' + displayAmount(tx.tx.Amount) + '</amount>'
+          if (tx.tx.Condition)
+            html += '<br/>Condition: ' + tx.tx.Condition
+          if (tx.tx.CancelAfter) {
+            html += '<br/>It can be cancelled after <date>' +
+              moment((RIPPLE_EPOCH + tx.tx.CancelAfter)*1000).format('LLL') +
+              '</date>.'
+          }
+          if (tx.tx.FinishAfter) {
+            html += '<br/>It can be finished after <date>' +
+              moment((RIPPLE_EPOCH + tx.tx.FinishAfter)*1000).format('LLL') +
+              '</date>.'
+          }
+          return html
+        }
+
+        // renderEscrowFinish
+        function renderEscrowFinish() {
+          var html = relatedTx ? '<br/><amount>' +
+            displayAmount(relatedTx.tx.Amount) + '</amount>' +
+            ' was delivered to <account>' + relatedTx.tx.Destination +
+            '</account>' : ''
+          html += tx.tx.Fulfillment ?
+            '<br/>Fulfillment: ' + tx.tx.Fulfillment : ''
+          return html
+        }
+
+        // renderEscrowCancel
+        function renderEscrowCancel() {
+          return relatedTx ? '<br/><amount>' +
+            displayAmount(relatedTx.tx.Amount) + '</amount>' +
+            ' was returned to <account>' + tx.tx.Owner + '</account>' : ''
+        }
+
         d += renderType(tx.tx.TransactionType)
 
         if (tx.tx.TransactionType === 'OfferCreate') {
@@ -607,6 +649,12 @@ angular.module('txsplain', [])
           d += renderPayment()
         } else if (tx.tx.TransactionType === 'TrustSet') {
           d += renderTrustSet()
+        } else if (tx.tx.TransactionType === 'EscrowCreate') {
+          d += renderEscrowCreate()
+        } else if (tx.tx.TransactionType === 'EscrowFinish') {
+          d += renderEscrowFinish()
+        } else if (tx.tx.TransactionType === 'EscrowCancel') {
+          d += renderEscrowCancel()
         }
 
         d += '<br/>The transaction\'s sequence number is ' +
@@ -621,9 +669,10 @@ angular.module('txsplain', [])
       // display TX
       function displayTx() {
         var tx = scope.tx_json
+        var relatedTx = scope.tx_json_related
 
         renderStatus(tx)
-        renderDescription(tx)
+        renderDescription(tx, relatedTx)
         renderMemos(tx)
         renderFee(tx)
         renderFlags(tx)
@@ -648,6 +697,7 @@ angular.module('txsplain', [])
         var url = API + '/transactions/' + hash
 
         scope.tx_json = null
+        scope.tx_json_related = null
         explainView.html('')
 
         $http({
@@ -658,6 +708,8 @@ angular.module('txsplain', [])
           explainView.html('')
           status.style('display', 'none').html('')
           scope.tx_json = resp.data.transaction
+          if (scope.tx_json.tx.Owner && scope.tx_json.tx.OfferSequence)
+            loadRelatedTx(scope.tx_json.tx.Owner, scope.tx_json.tx.OfferSequence)
           displayTx()
         },
         function(err) {
@@ -667,7 +719,22 @@ angular.module('txsplain', [])
         })
       }
 
+      function loadRelatedTx(owner, sequence) {
+        var url = API + '/accounts/' + owner + '/transactions/' + sequence;
+
+        $http({
+          method: 'get',
+          url: url
+        })
+        .then(function(resp) {
+          explainView.html('')
+          scope.tx_json_related = resp.data.transaction
+          displayTx()
+        });
+      }
+
       scope.tx_json = null
+      scope.tx_json_related = null
       scope.mode = 'explain'
       scope.$watch('mode', setMode)
 
