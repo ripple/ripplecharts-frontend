@@ -54,8 +54,6 @@
 }
 
 .landing .stats li {
-  line-height:27px;
-  font-size: 13px;
   display:table-row;
   color:#999;
 }
@@ -84,6 +82,8 @@
   display:table-cell;
   text-align:left;
   padding:5px 12px;
+  line-height: 27px;
+  font-size: 12px;
   border-bottom:1px solid #e5e5e5;
 }
 
@@ -358,7 +358,10 @@
     zoom :.85;
   }
 
-  .landing .stats ul, .landing h5, .landing .helpbox {
+  .landing .stats li label,
+  .landing .stats li .stat,
+  .landing h5,
+  .landing .helpbox {
     zoom: .75;
   }
 }

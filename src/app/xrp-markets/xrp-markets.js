@@ -204,7 +204,7 @@ angular.module('ripplecharts.xrp-markets', [
           }
         })
 
-        markets.rcl = {
+        markets['XRP Ledger'] = {
           total: total,
           count: count,
           components: components
@@ -225,57 +225,53 @@ angular.module('ripplecharts.xrp-markets', [
 
       } else {
 
+        // remove existing markets except RCL
+        markets = {
+          'XRP Ledger': markets['XRP Ledger']
+        }
+
         resp.components.forEach(function(c) {
           var amount = Number(c.base_volume)
+          var key = capitalize(c.source)
 
-          if (!amount) {
-            delete markets[c.source]
-            return
-          }
+          if (amount) {
 
-          if (!list[c.source]) {
-            list[c.source] = {
-              total: 0,
-              count: 0,
-              components: []
+            if (!markets[key]) {
+              markets[key] = {
+                total: 0,
+                count: 0,
+                components: []
+              }
             }
+
+            markets[key].total += amount
+            markets[key].count += c.count || 0
+
+            markets[key].components.push({
+              key: 'XRP/' + c.counter_currency,
+              value: amount,
+              amount: amount,
+              counter_currency: c.counter_currency,
+              count: c.count
+            })
           }
-
-          list[c.source].total += amount
-          list[c.source].count += c.count || 0
-
-          list[c.source].components.push({
-            key: 'XRP/' + c.counter_currency,
-            value: amount,
-            amount: amount,
-            counter_currency: c.counter_currency,
-            count: c.count
-          })
-
         })
-
-        for (var key in list) {
-          markets[key] = list[key]
-        }
 
         updateTotals(true)
       }
     })
   }
 
+  /**
+   * Capitalize
+   */
+
+  function capitalize(d) {
+    return d.charAt(0).toUpperCase() + d.slice(1);
+  }
 
   $scope.marketNames = {
-    rcl: 'XRP Ledger',
-    'poloniex.com': 'Poloniex',
-    'kraken.com': 'Kraken',
-    'btc38.com': 'BTC38',
-    'jubi.com': 'Jubi',
-    'bittrex.com': 'Bittrex',
-    'bitstamp.net': 'Bitstamp',
-    'coincheck.com': 'Coincheck',
-    'coinone.co.kr': 'Coinone',
-    'bitfinex.com': 'Bitfinex',
-    'bitso.com': 'Bitso'
+    rcl: 'XRP Ledger'
   }
 
   $scope.currencies = Object.keys(valueCurrencies)

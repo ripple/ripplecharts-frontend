@@ -28,11 +28,9 @@ angular.module( 'ripplecharts.transactions', [
             function TransactionsCtrl($scope, $state, $location, $interval) {
   var timer;
 
-  $scope.$watch(function() {
-    return $location.url();
-  }, function(url) {
+  $scope.$on('$stateChangeSuccess', function () {
     $scope.tx_hash = $scope.input_tx_hash = $state.params.tx_hash;
-  });
+  })
 
   $scope.$watch('tx_hash', handleTransition);
 

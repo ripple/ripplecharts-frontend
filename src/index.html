@@ -24,6 +24,10 @@
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+
+    <link href="assets/icons/apple-touch-icon.png" rel="apple-touch-icon" />
+    <link href="assets/icons/android-icon.png" rel="icon" sizes=”192×192″ />
+
     <script>
       <%= maintenance ? "window.location = '"+maintenance+"';" : "" %>
       var API = "<%= api %>";
@@ -185,7 +189,7 @@
               <a href="#/metrics" snap-close>Metrics</a>
             </li>
             <li ui-route="/Topology" ng-class="{active:$uiRoute !== false}">
-              <a href="#/nodes" snap-close>Topology</a>
+              <a href="#/topology" snap-close>Topology</a>
             </li>
             <li ui-route="/validators" ng-class="{active:$uiRoute !== false}">
               <a href="#/validators" snap-close>Validators</a>

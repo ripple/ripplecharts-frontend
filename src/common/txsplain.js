@@ -533,7 +533,10 @@ angular.module('txsplain', [])
 
         // renderType
         function renderType(type) {
-          return 'This is a <type>' + type + '</type> Transaction.<br/>'
+          var article = ['o','e'].indexOf(type[0].toLowerCase()) === -1 ?
+            'a' : 'an'
+          return 'This is ' + article + ' <type>' +
+            type + '</type> transaction.<br/>'
         }
 
         // renderTrustSet
@@ -657,7 +660,7 @@ angular.module('txsplain', [])
           var deleted = getEscrowDeletedNode(tx)
           if (!deleted)
             return ''
-          var html = 'The escrow completion was triggered by <account>' +
+          var html = 'Completion was triggered by <account>' +
             tx.tx.Account + '</account>' +
             '<br/>The escrowed amount of <amount>' +
             displayAmount(deleted.FinalFields.Amount) + '</amount> ' +
@@ -667,11 +670,11 @@ angular.module('txsplain', [])
               html += ' (' + displayAmount(String(Number(deleted.FinalFields.Amount) - Number(tx.tx.Fee))) +
               ' after transactions costs)'
           }
-          html += '<br/>The escrow was created by transaction '+
-            '<a href="#" onclick="location.hash=\'#/transactions/' +
-            deleted.FinalFields.PreviousTxnID + '\'; return false;">' +
-            deleted.FinalFields.PreviousTxnID + '</a> by <account>' +
-            tx.tx.Owner + '</account>'
+          html += '<br/>The escrow was created by <account>' +
+            tx.tx.Owner + '</account> with transaction '+
+            '<a href="#/transactions/' +
+            deleted.FinalFields.PreviousTxnID + '">' +
+            deleted.FinalFields.PreviousTxnID + '</a>'
           html += tx.tx.Fulfillment ?
             '<br/>Fulfillment: ' + tx.tx.Fulfillment : ''
           return html
@@ -682,7 +685,7 @@ angular.module('txsplain', [])
           var deleted = getEscrowDeletedNode(tx)
           if (!deleted)
             return ''
-          var html = 'The escrow cancellation was triggered by <account>' +
+          var html = 'Cancellation was triggered by <account>' +
             tx.tx.Account + '</account>' +
             '<br/>The escrowed amount of <amount>' +
             displayAmount(deleted.FinalFields.Amount) + '</amount> ' +
@@ -692,11 +695,11 @@ angular.module('txsplain', [])
             html += ' (' + displayAmount(String(Number(deleted.FinalFields.Amount) - Number(tx.tx.Fee))) +
             ' after transactions costs)'
           }
-          html += '<br/>The escrow was created by transaction '+
-            '<a href="#" onclick="location.hash=\'#/transactions/' +
-            deleted.FinalFields.PreviousTxnID + '\'; return false;">' +
-            deleted.FinalFields.PreviousTxnID + '</a> by <account>' +
-            tx.tx.Owner + '</account>'
+          html += '<br/>The escrow was created by <account>' +
+            tx.tx.Owner + '</account> with transaction '+
+            '<a href="#/transactions/' +
+            deleted.FinalFields.PreviousTxnID + '">' +
+            deleted.FinalFields.PreviousTxnID + '</a>'
           return html
         }
 

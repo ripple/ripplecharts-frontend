@@ -26,7 +26,7 @@ module.exports = function(grunt) {
    */
 
   var userConfig = require('./build.config.js');
-  var env = process.env.NODE_ENV || 'development';
+  var env = process.env.NODE_ENV || 'production';
   var deploymentConfig = require('./deployment.environments.json')[env];
   var maintenance = deploymentConfig.maintenance ? 'maintenance.html' : null;
 

@@ -45,22 +45,13 @@ function ValueSummary(options) {
   ]
 
   var sourceLabels = {
-    rcl: 'Ripple Network',
-    'poloniex.com': 'Poloniex',
-    'kraken.com': 'Kraken',
-    'btc38.com': 'BTC38',
-    'jubi.com': 'Jubi',
-    'bittrex.com': 'Bittrex',
-    'bitstamp.net': 'Bitstamp',
-    'coincheck.com': 'Coincheck',
-    'coinone.co.kr': 'Coinone',
-    'bitfinex.com': 'Bitfinex',
-    'bitso.com': 'Bitso'
+    rcl: 'Ripple Network'
   }
 
   var currencyColors = {
     'XRP': '#346aa9',
     'USD': [20, 150, 30],
+    'USDT': [20, 150, 30],
     'BTC': [240, 150, 50],
     'EUR': [220, 210, 50],
     'CNY': [180, 30, 35],
@@ -89,6 +80,14 @@ function ValueSummary(options) {
   var gateways = options.gateways
   var exchange
   var total
+
+  /**
+   * Capitalize
+   */
+
+  function capitalize(d) {
+    return d.charAt(0).toUpperCase() + d.slice(1);
+  }
 
   /**
    * color
@@ -132,7 +131,7 @@ function ValueSummary(options) {
 
     z.components.forEach(function(d, i) {
       data.push({
-        key: sourceLabels[d.source] || d.source,
+        key: sourceLabels[d.source] || capitalize(d.source),
         sub: d.base_currency ?
           d.base_currency + '/' + d.counter_currency : undefined,
         value: Number(d.base_volume),
