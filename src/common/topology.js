@@ -274,8 +274,14 @@ function Topology($http) {
         return n.id === e.target
       })[0]
 
-      if (!sourceNode || !targetNode) {
-        console.log(e, data.nodes)
+      if (!sourceNode) {
+        console.log('missing node: ' + e.source)
+        return
+      }
+
+      if (!targetNode) {
+        console.log('missing node: ' + e.target)
+        return
       }
 
       edges.push({

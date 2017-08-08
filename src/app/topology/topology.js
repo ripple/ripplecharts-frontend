@@ -225,7 +225,7 @@ angular.module('ripplecharts.topology', [
       console.log(e)
       console.log(e.stack)
       $scope.loading = false
-      $scope.status = e.toString()
+      $scope.status = e.message || e.toString()
     })
   }
 
