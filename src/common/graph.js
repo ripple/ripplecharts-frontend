@@ -2012,6 +2012,8 @@ function updateTransactions(address) {
       if (transactionType=='send' ||
           transactionType=='receive' ||
           transactionType=='intermediate' ||
+          transactionType=='escrowcancel' ||
+          transactionType=='escrowfinish' ||
           transactionType=='escrowcreate') {
 
         div.on('contextmenu', makeMenuClick(obj)).on('click', makeClick(obj));
