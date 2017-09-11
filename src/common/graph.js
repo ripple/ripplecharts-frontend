@@ -485,6 +485,8 @@ networkGraph = function (nameService) {
     }
 
     if (tx.tx.TransactionType !== 'Payment' &&
+      tx.tx.TransactionType !== 'EscrowCancel' &&
+      tx.tx.TransactionType !== 'EscrowFinish' &&
       tx.tx.TransactionType !== 'EscrowCreate') {
 
       $('.loading').html('Transaction type: <b>' + tx.tx.TransactionType + '</b>');
@@ -492,7 +494,7 @@ networkGraph = function (nameService) {
     }
 
     var amount = tx.meta.DeliveredAmount || tx.tx.Amount || tx.tx.LimitAmount;
-    var currency = amount.currency || 'XRP';
+    var currency = amount && amount.currency || 'XRP';
 
     eraseGraph();
     txx = tx;
@@ -510,8 +512,8 @@ networkGraph = function (nameService) {
 
     } else {
       $("select#currency").selectbox("change", "___", "SSGSGS");
-      $("#otherCurrency").attr("value",currency);
-      $('#otherCurrency').css('font-style','inherit').css('color','inherit');
+      $("#otherCurrency").attr("value", currency);
+      $('#otherCurrency').css('font-style', 'inherit').css('color', 'inherit');
       changeCurrency("___");
     }
 
@@ -812,7 +814,7 @@ networkGraph = function (nameService) {
   var displayingTransactionInPlace = false;
 
   function getEscrowBalances(origin, marker) {
-    const request = {
+    var request = {
       command: 'account_objects',
       account: origin,
       ledger_index: 'validated',
@@ -1850,10 +1852,19 @@ var txAltText = {
 function showTransactionWithHash(hash) {
   changingFocus = true;
   //window.location.hash = hash;
-  changeMode("transaction",transactionMap[hash]);
+  changeMode("transaction", transactionMap[hash]);
 }
 
 var transactionMap = {};
+
+function getEscrowDeletedNode(tx) {
+  return tx.meta.AffectedNodes.map(function(node) {
+      return node.DeletedNode &&
+        node.DeletedNode.LedgerEntryType == 'Escrow' ? node.DeletedNode : false
+    }).filter(function(node) {
+      return node
+    })[0]
+}
 
 function updateTransactions(address) {
   $('#transactionTable').html("");
@@ -1871,6 +1882,7 @@ function updateTransactions(address) {
       var secondAmount = null;
       var secondCurrency = null;
       var secondAissuer = null;
+      var iconAdditionalClass = '';
 
       if (tx.TransactionType == "Payment") {
         amount = meta.DeliveredAmount || tx.Amount;
@@ -1970,14 +1982,22 @@ function updateTransactions(address) {
       } else if (tx.TransactionType === "EscrowCreate") {
         amount = tx.Amount
         transactionType = "escrowcreate"
-        if (tx.Destination && tx.Destination !== tx.Account)
+        if (tx.Destination && tx.Destination !== tx.Account) {
           counterparty = tx.Destination
+          iconAdditionalClass = 'other'
+        }
       } else if (tx.TransactionType === "EscrowCancel") {
         transactionType = "escrowcancel"
       } else if (tx.TransactionType === "EscrowFinish") {
         transactionType = "escrowfinish"
       } else {
         console.log("Could not interpret transaction: "+tx.transactionType);
+      }
+      if (transactionType === 'escrowfinish' || transactionType === 'escrowcancel') {
+        var deleted = getEscrowDeletedNode(obj)
+        if (deleted && deleted.FinalFields.Destination !== deleted.FinalFields.Account) {
+          iconAdditionalClass = 'other'
+        }
       }
 
       if (amount) {
@@ -2007,7 +2027,7 @@ function updateTransactions(address) {
       var result =  meta.TransactionResult == "tesSUCCESS" ? "" : "["+meta.TransactionResult+"] ";
       var tr = $('<tr hash="'+obj.hash+'"/>');
       var td = $('<td style="width:10%;"/>');
-      var div = $('<div class="'+transactionType+success+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div>');
+      var div = $('<div class="'+transactionType+success+iconAdditionalClass+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div>');
 
       if (transactionType=='send' ||
           transactionType=='receive' ||
