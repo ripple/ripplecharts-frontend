@@ -637,7 +637,12 @@ angular.module('txsplain', [])
           if (tx.tx.Destination && tx.tx.Destination !== tx.tx.Account) {
             html = 'The escrow is from <account>' + tx.tx.Account +
               '</account> to <account>' + tx.tx.Destination + '</account><br/>'
+          } else {
+            html = 'The escrow was created by <account>' +
+              tx.tx.Account + '</account> <br/>' +
+              'and the funds will be returned to the same account.<br/>'
           }
+
           html += 'It escrowed ' +
             '<amount>' + displayAmount(tx.tx.Amount) + '</amount>'
           if (tx.tx.Condition)

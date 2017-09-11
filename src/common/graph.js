@@ -828,7 +828,7 @@ networkGraph = function (nameService) {
       })
       if (escrow.length) {
         if (marker)
-          nodes[nodeMap[origin]].escrowBalances = (nodes[nodeMap[origin]].escrowBalances || []).concat(escrow); 
+          nodes[nodeMap[origin]].escrowBalances = (nodes[nodeMap[origin]].escrowBalances || []).concat(escrow);
         else
           nodes[nodeMap[origin]].escrowBalances = escrow;
       }
@@ -1984,7 +1984,7 @@ function updateTransactions(address) {
         transactionType = "escrowcreate"
         if (tx.Destination && tx.Destination !== tx.Account) {
           counterparty = tx.Destination
-          iconAdditionalClass = 'other'
+          iconAdditionalClass = '-send'
         }
       } else if (tx.TransactionType === "EscrowCancel") {
         transactionType = "escrowcancel"
@@ -1996,7 +1996,7 @@ function updateTransactions(address) {
       if (transactionType === 'escrowfinish' || transactionType === 'escrowcancel') {
         var deleted = getEscrowDeletedNode(obj)
         if (deleted && deleted.FinalFields.Destination !== deleted.FinalFields.Account) {
-          iconAdditionalClass = 'other'
+          iconAdditionalClass = '-send'
         }
       }
 
@@ -2027,7 +2027,14 @@ function updateTransactions(address) {
       var result =  meta.TransactionResult == "tesSUCCESS" ? "" : "["+meta.TransactionResult+"] ";
       var tr = $('<tr hash="'+obj.hash+'"/>');
       var td = $('<td style="width:10%;"/>');
-      var div = $('<div class="'+transactionType+success+iconAdditionalClass+' icon" title="'+result+txAltText[transactionType+success]+'">&nbsp;</div>');
+      var div = $('<div class="' +
+        transactionType +
+        iconAdditionalClass +
+        success +
+        ' icon" title="' +
+        result +
+        txAltText[transactionType + success] +
+        '">&nbsp;</div>');
 
       if (transactionType=='send' ||
           transactionType=='receive' ||
