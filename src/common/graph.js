@@ -600,8 +600,8 @@ networkGraph = function (nameService) {
     zoomLevel = 1;
     translationX = 0;
     translationY = 0;
-    panAndZoom();
-    $("#zoomInButton").attr("disabled","disabled");
+    // panAndZoom();
+    // $("#zoomInButton").attr("disabled","disabled");
 
     svg.select("g#nodeGroup").selectAll("circle.node").data([]).exit().remove();
     svg.select("g#linkGroup").selectAll("line")       .data([]).exit().remove();
@@ -951,19 +951,19 @@ networkGraph = function (nameService) {
 
 
             if (trustLine.limit !== 0) {
-              link={};
-              link.source = nodes[nodeMap[ origin ]];
-              link.target = node;
-              link.value  = trustLine.limit;
-              goon(link);
+              // link={};
+              // link.source = nodes[nodeMap[ origin ]];
+              // link.target = node;
+              // link.value  = trustLine.limit;
+              // goon(link);
             }
 
             if (trustLine.limit_peer !== 0) {
-              link = {};
-              link.target = nodes[nodeMap[ origin ]];
-              link.source = node;
-              link.value  = trustLine.limit_peer;
-              goon(link);
+              // link = {};
+              // link.target = nodes[nodeMap[ origin ]];
+              // link.source = node;
+              // link.value  = trustLine.limit_peer;
+              // goon(link);
             }
           }
 
@@ -1027,7 +1027,7 @@ networkGraph = function (nameService) {
   function redraw() {
     translationX += d3.event.dx;
     translationY += d3.event.dy;
-    panAndZoom();
+    // panAndZoom();
   }
 
 
@@ -1040,7 +1040,7 @@ networkGraph = function (nameService) {
     panOffset[0] -= (w/8 * zoomLevel);
     panOffset[1] -= (hh/8 * zoomLevel);
     zoomLevel *= 0.75;
-    panAndZoom();
+    // panAndZoom();
   }
 
   function zoomIn() {
@@ -1053,7 +1053,7 @@ networkGraph = function (nameService) {
     translationY -= (hh/8 * zoomLevel);
     panOffset[0] += (w/8 * zoomLevel);
     panOffset[1] += (hh/8 * zoomLevel);
-    panAndZoom();
+    // panAndZoom();
   }
 
   function panAndZoom() {
@@ -1109,10 +1109,10 @@ networkGraph = function (nameService) {
   }
 
 
-  var haloGroup = svg.append("g").attr("id","haloGroup");
-  var linkGroup = svg.append("g").attr("id","linkGroup");
-  var arrowheadGroup = svg.append("g").attr("id","arrowheadGroup");
-  var nodeGroup = svg.append("g").attr("id","nodeGroup");
+  // var haloGroup = svg.append("g").attr("id","haloGroup");
+  // var linkGroup = svg.append("g").attr("id","linkGroup");
+  // var arrowheadGroup = svg.append("g").attr("id","arrowheadGroup");
+  // var nodeGroup = svg.append("g").attr("id","nodeGroup");
 
   function nodeRadius(accountNode) {
     var bal = currentCurrencyBalance(accountNode);
@@ -1130,17 +1130,18 @@ networkGraph = function (nameService) {
     return 14 + Math.pow(Math.log(Math.abs(bal) + 1), 3) / 2000;
   }
 
-  var force = d3.layout.force()
-    .size([(window.innerWidth > 0) ? window.innerWidth : screen.width, 710]) //w
-    .linkDistance(80)
-    .linkStrength(function(d) {
-      if (currentCurrency == "XRP" || currentCurrency == d.currency) {
-        return d.strength * 0.25;
-      } else {
-        return 0;
-      }
-    }).friction(0.5)
-    .charge(-1500).nodes([]).links([]).start();
+  // //disable force graph
+  // var force = d3.layout.force()
+  //   .size([(window.innerWidth > 0) ? window.innerWidth : screen.width, 710]) //w
+  //   .linkDistance(80)
+  //   .linkStrength(function(d) {
+  //     if (currentCurrency == "XRP" || currentCurrency == d.currency) {
+  //       return d.strength * 0.25;
+  //     } else {
+  //       return 0;
+  //     }
+  //   }).friction(0.5)
+  //   .charge(-1500).nodes([]).links([]).start();
 
 
 
@@ -1221,15 +1222,15 @@ networkGraph = function (nameService) {
   function lightenAddress(address) {
     if (typeof degreeMap[address] != "undefined") {
       var colorDegree = Math.min(degreeMap[address], 3);
-      var cur = findCur(force.nodes()[nodeMap[address]]);
-      nodeGroup.select("#_"+address).style("fill", "url(#gradient"+cur+(colorDegree+1)+")").style("stroke-width", 2).style("stroke", "#fc0" );
+      // var cur = findCur(force.nodes()[nodeMap[address]]);
+      // nodeGroup.select("#_"+address).style("fill", "url(#gradient"+cur+(colorDegree+1)+")").style("stroke-width", 2).style("stroke", "#fc0" );
     }
   }
   function darkenAddress(address) {
     if (typeof degreeMap[address] != "undefined") {
       var colorDegree = Math.min(degreeMap[address], 3);
-      var cur = findCur(force.nodes()[nodeMap[address]]);
-      nodeGroup.select("#_"+address).style("fill", "url(#gradient"+cur+(colorDegree)+")").style("stroke-width", (colorDegree===0?5:0.5)).style("stroke", function(d){var cur = findCur(d); return borderColor(cur,colorDegree);} );
+      // var cur = findCur(force.nodes()[nodeMap[address]]);
+      // nodeGroup.select("#_"+address).style("fill", "url(#gradient"+cur+(colorDegree)+")").style("stroke-width", (colorDegree===0?5:0.5)).style("stroke", function(d){var cur = findCur(d); return borderColor(cur,colorDegree);} );
     }
   }
 
@@ -1492,15 +1493,15 @@ networkGraph = function (nameService) {
 var lastNodeTouched = "";
 
 function stopExpandResume(d) {
-  force.stop();
+  // force.stop();
   $('#focus').val(d.account.Account);
   expandNode(d.account.Account);
-  setTimeout(force.resume,500);
+  // setTimeout(force.resume,500);
 }
 
 function addNodes(degree) {
 
-  force.nodes(nodes).links(le_links);
+  // force.nodes(nodes).links(le_links);
   var timer;
   var colorDegree = Math.min(degree, 3);
   var node = svg.select("g#nodeGroup").selectAll("circle.node").data(nodes)
@@ -1519,15 +1520,15 @@ function addNodes(degree) {
     .on("click", stopExpandResume );
   colorNodes(node, colorDegree);
   node.append("svg:title").text( function(d) { return d.account.Account;} );
-  node.call(force.drag);
+  // node.call(force.drag);
 
 
 
-  var link = svg.select("g#linkGroup").selectAll("line.static").data(force.links())
-    .enter().append("svg:line")
-    .attr("class","static")
-    .style("opacity",function(d) { return d.opacity ? d.opacity:1})
-    .attr("stroke-width", linkOrNot);
+  // var link = svg.select("g#linkGroup").selectAll("line.static").data(force.links())
+    // .enter().append("svg:line")
+    // .attr("class","static")
+    // .style("opacity",function(d) { return d.opacity ? d.opacity:1})
+    // .attr("stroke-width", linkOrNot);
 
 
   function arrowheadPath(radius, theta) {
@@ -1539,13 +1540,13 @@ function addNodes(degree) {
       rCosTheta+" "+(-rSinTheta)+" z";
   }
 
-  var arrowhead = svg.select("g#arrowheadGroup")
-  .selectAll("path.arrowhead")
-  .data(force.links())
-  .enter().append("svg:path")
-  .attr("class", "arrowhead");
+  // var arrowhead = svg.select("g#arrowheadGroup")
+  // .selectAll("path.arrowhead")
+  // .data(force.links())
+  // .enter().append("svg:path")
+  // .attr("class", "arrowhead");
 
-  arrowhead = setArrowheads(arrowhead);
+  // arrowhead = setArrowheads(arrowhead);
 
   function euclidean(pointA, pointB) {
     return Math.sqrt(Math.pow(pointA.x-pointB.x,2)
@@ -1595,31 +1596,31 @@ function addNodes(degree) {
     .attr("cy", function(d) { return d.y; })
     .attr("r", function(d){ return HALO_MARGIN+nodeRadius(d);} );
 
-  force.start();
+  // force.start();
 
 
 
 
 
-  force.on("tick", function(e) {
-    var node = svg.selectAll("circle.node");
-    var halo = svg.selectAll("circle.halo");
-    var arrowhead = svg.selectAll("path.arrowhead");
-    var link = svg.selectAll("line");
-    node.attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
-    link.attr("x1", function(d) {return d.source.x;})
-      .attr("y1", function(d) {return d.source.y;})
-      .attr("x2", function(d) {return d.target.x;})
-      .attr("y2", function(d) {return d.target.y;});
-    halo.attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
-    setArrowheads(arrowhead);
-  });
+  // force.on("tick", function(e) {
+  //   var node = svg.selectAll("circle.node");
+  //   var halo = svg.selectAll("circle.halo");
+  //   var arrowhead = svg.selectAll("path.arrowhead");
+  //   var link = svg.selectAll("line");
+  //   node.attr("cx", function(d) { return d.x; })
+  //     .attr("cy", function(d) { return d.y; });
+  //   link.attr("x1", function(d) {return d.source.x;})
+  //     .attr("y1", function(d) {return d.source.y;})
+  //     .attr("x2", function(d) {return d.target.x;})
+  //     .attr("y2", function(d) {return d.target.y;});
+  //   halo.attr("cx", function(d) { return d.x; })
+  //     .attr("cy", function(d) { return d.y; });
+  //   setArrowheads(arrowhead);
+  // });
 
-  force.drag().on("dragstart", function(){
-    d3.event.sourceEvent.stopPropagation(); // silence other listeners
-  });
+  // force.drag().on("dragstart", function(){
+  //   d3.event.sourceEvent.stopPropagation(); // silence other listeners
+  // });
 }
 
 function refocus(focus, erase, noExpand) {
@@ -2166,7 +2167,7 @@ function changeCurrency(newCurrency) {
     updated.attr("r", nodeRadius );
     svg.select("g#haloGroup").selectAll("circle.halo").attr("r", function(d){return HALO_MARGIN+nodeRadius(d);} );
     svg.select("g#linkGroup").selectAll("line.static").attr("stroke-width", linkOrNot);
-    force.start();
+    // force.start();
   }
 }
 
@@ -2243,8 +2244,8 @@ window.onhashchange = function(){
     changeMode('individual',senderAddress);
   });
 
-  $('#zoomInButton').click(zoomIn);
-  $('#zoomOutButton').click(zoomOut);
+  // $('#zoomInButton').click(zoomIn);
+  // $('#zoomOutButton').click(zoomOut);
   $('#currency').change(function(){
     changeCurrency(this.value);
   });
@@ -2257,18 +2258,18 @@ window.onhashchange = function(){
     //translationX = parseInt(svg.style("width"),10)/4;
     //translationY = parseInt(svg.style("height"),10)/4;
     translationX = translationY = 0;
-    panAndZoom();
+    // panAndZoom();
   }
 
   addResizeListener($('#visualization').get(0), resizeGraph);
 
-  this.suspend = function() {
-    force.nodes([]).links([]).stop();
-    svg.html('');
-    clearInterval(requestRepetitionInterval);
-    remote.connection.removeListener('transaction', handleTransaction);
-    remote.removeListener('ledger', handleLedger);
-  }
+  // this.suspend = function() {
+  //   force.nodes([]).links([]).stop();
+  //   svg.html('');
+  //   clearInterval(requestRepetitionInterval);
+  //   remote.connection.removeListener('transaction', handleTransaction);
+  //   remote.removeListener('ledger', handleLedger);
+  // }
 
   remote.connection.on('transaction', handleTransaction);
   remote.on('ledger', handleLedger);
