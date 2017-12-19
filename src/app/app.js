@@ -232,6 +232,8 @@ angular.element(document).ready(function() {
       if (last && moment().diff(last) > 6000) {
         $scope.connectionStatus = 'disconnected'
         last = null
+        remote.connect()
+        console.log('stale connection')
       }
     }
 
@@ -240,7 +242,6 @@ angular.element(document).ready(function() {
         $scope.connectionStatus = 'connected'
         $scope.ledgerLabel = 'Ledger #'
         $scope.ledgerIndex = d.ledgerVersion
-        $scope.totalXRP = parseFloat(d.totalDrops) / 1000000.0
         $scope.$apply()
       }
     }

@@ -60,6 +60,22 @@ function ApiHandler(baseURL) {
     })
   }
 
+  this.getXRPstats = function(callback) {
+    var url = self.url + '/network/xrp_distribution?descending=true&limit=1'
+
+    return d3.json(url, function(err, resp) {
+      if (err) {
+        callback({
+          status: err.status,
+          text: err.statusText || 'Unable to load data'
+        })
+
+      } else {
+        callback(null, resp.rows[0])
+      }
+    })
+  }
+
   this.getTx = function(hash, callback) {
     var url = self.url + '/transactions/' + hash
 
