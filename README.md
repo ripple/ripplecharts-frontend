@@ -4,7 +4,7 @@
 
 This is the frontend for ripplecharts.com data visualization using angular.js and D3
 
-##Installation Instructions:
+## Installation Instructions:
 
 1. Install [node.js and npm](http://nodejs.org/).
 2. Install [bower](http://bower.io/)
