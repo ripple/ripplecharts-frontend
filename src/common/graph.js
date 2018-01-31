@@ -1715,14 +1715,9 @@ function updateInformation(address) {
   }
   var node = nodes[nodeMap[address]];
   var escrowBalances = node && node.escrowBalances || [];
-  var numberofsubrows = escrowBalances.length ? escrowBalances.length + 2 : 0;
-  var available = Number(nodes[nodeMap[address]].account.xrpBalance)
-  var escrowTotal = escrowBalances.reduce(function(acum, escrowNode) {
-    return acum + +escrowNode.Amount
-  }, 0)/1000000;
-  var xrp = available + escrowTotal
+  var numberofsubrows = escrowBalances.length ? escrowBalances.length + 1 : 0;
 
-  $('#balanceTable').html("")
+  $('#balanceTable').html("");
   tr = $(
     '<tr class="toprow" style="cursor:'+(escrowBalances.length ? 'pointer' : 'auto')+'" sublistid="escrow'+
           '" numberofsubrows="'+numberofsubrows+'">'+
@@ -1730,24 +1725,21 @@ function updateInformation(address) {
         '<circle cx="11" cy="11" r="11" style="fill:'+COLOR_TABLE['XRP'][0][1]+';"></circle>'+
       '</svg></td>'+
       '<td class="light small mediumgray" style="width:35px;">XRP</td>'+
-      '<td class="bold amount" id="xrpBalance">'+commas(xrp)+'</td>'+
+      '<td class="bold amount" id="xrpBalance">'+commas(nodes[nodeMap[address]].account.xrpBalance)+'</td>'+
       '<td class="light expander">'+(escrowBalances.length ? '<span id="escrowExpander">+</span>' : '&nbsp;')+'</td>'+
-    '</tr>')
-  if (escrowBalances.length) tr.click(rowClick)
-  $('#balanceTable').append(tr)
+    '</tr>');
+  if (escrowBalances.length) tr.click(rowClick);
+  $('#balanceTable').append(tr);
   if (escrowBalances.length) {
+    var escrowTotal = escrowBalances.reduce(function(acum, escrowNode) {
+      return acum + +escrowNode.Amount;
+    }, 0)/1000000;
     $('#balanceTable').append(
       '<tr class="innertablecontainer" id="escrow">'+
       '<td colspan=4>'+
       '<div id="escrowInner">'+
       '<table class="innertable" style="table-layout:fixed;" id="escrowInnerTable">'+
-      '</table></div></td></tr>')
-    $('#escrowInnerTable').append(
-      '<tr>'+
-        '<th class="light midsize mediumgray" style="width:50%;">Available</th>'+
-        '<td class="bold amount center" style="width:50%;"><span title="'+
-          commas(available)+'">'+roundNumber(available)+'</span></td>'+
-    '</tr>')
+      '</table></div></td></tr>');
     $('#escrowInnerTable').append(
       '<tr>'+
         '<th class="light midsize mediumgray" style="width:50%;">In Escrow</th>'+
@@ -1756,7 +1748,7 @@ function updateInformation(address) {
       '</tr><tr>'+
         '<th class="light midsize mediumgray" style="width:50%;">Address</th>'+
         '<td class="light midsize mediumgray" style="width:50%;">&nbsp;</td>'+
-    '</tr>')
+    '</tr>');
     for (var i=0; i<escrowBalances.length; i++) {
       tl = escrowBalances[i];
       tr = $('<tr/>').append($('<th class="light address"/>').append(clickableAccountSpan(tl.Destination)));
