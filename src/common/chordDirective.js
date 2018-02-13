@@ -8,7 +8,7 @@ function ($window, matrixFactory, rippleName) {
     var height;
     var width;
     var dims = []; // USABLE DIMENSIONS
-    var currencyOrder = ['XAU', 'XAG', 'BTC', 'LTC', 'XRP', 'EUR', 'USD', 'GBP', 'AUD', 'NZD', 'USD', 'CAD', 'CHF', 'JPY', 'CNY'];
+    var currencyOrder = ['XAU', 'XAG', 'BTC', 'LTC', 'XRP', 'EUR', 'USD', 'GBP', 'AUD', 'NZD', 'CAD', 'CHF', 'JPY', 'CNY'];
     var xrpRates = {
       XRP : 1
     };

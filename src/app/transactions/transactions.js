@@ -29,13 +29,14 @@ angular.module( 'ripplecharts.transactions', [
   var timer;
 
   $scope.$on('$stateChangeSuccess', function () {
-    $scope.tx_hash = $scope.input_tx_hash = $state.params.tx_hash;
+    $scope.tx_hash = $scope.input_tx_hash = $state.params.tx_hash ?
+      $state.params.tx_hash.toUpperCase() : undefined
   })
 
   $scope.$watch('tx_hash', handleTransition);
 
   $scope.load = function() {
-    $scope.tx_hash = $scope.input_tx_hash;
+    $scope.tx_hash = $scope.input_tx_hash.toUpperCase()
   };
 
   $scope.toggleFeed = function () {
