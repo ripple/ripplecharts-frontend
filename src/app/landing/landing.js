@@ -495,7 +495,7 @@ angular.module('ripplecharts.landing', [
   })
 
   api.getXRPstats(function(err, resp) {
-    $scope.totalXRP = resp ? resp.available : undefined
+    $scope.totalXRP = resp ? resp.total : undefined
     $scope.$apply()
   })
 
