@@ -494,10 +494,12 @@ angular.module('ripplecharts.landing', [
     }
   })
 
+  /*
   api.getXRPstats(function(err, resp) {
     $scope.totalXRP = resp ? resp.total : undefined
     $scope.$apply()
   })
+  */
 
   // get value metrics at load time and every 5 minutes
   getMetricValues()

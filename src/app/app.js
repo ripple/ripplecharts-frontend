@@ -239,6 +239,7 @@ angular.element(document).ready(function() {
 
     function handleLedger(d) {
       if (d) {
+        $scope.totalXRP = Number(d.totalDrops) / 1000000
         $scope.connectionStatus = 'connected'
         $scope.ledgerLabel = 'Ledger #'
         $scope.ledgerIndex = d.ledgerVersion
