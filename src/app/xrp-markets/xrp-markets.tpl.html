@@ -19,9 +19,9 @@
     <div>
       <sign ng-show="total"
             ng-bind="sign"></sign>
-      <span ng-show="total" ng-bind="total | number:2"></span>
+      <span ng-show="total || total===0" ng-bind="total | number:2"></span>
       <small ng-show="total" ng-bind="selectedCurrency"></small>
-      <img  ng-hide="total" src="assets/images/rippleThrobber.png" class="loader"/>
+      <img  ng-hide="total || total===0" src="assets/images/rippleThrobber.png" class="loader"/>
     </div>
   </div>
   <div class="markets">

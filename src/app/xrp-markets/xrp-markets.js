@@ -36,7 +36,7 @@ angular.module('ripplecharts.xrp-markets', [
   var valueCurrencies = {
     USD: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B',  // bitstamp
     EUR: 'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq', // gatehub
-    JPY: 'r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN', // tokoyo jpy
+    JPY: 'rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS', // mr exchange
     CNY: 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y', // ripplefox
     XRP: ''
   }
@@ -83,7 +83,7 @@ angular.module('ripplecharts.xrp-markets', [
     var key = currency + '.' + issuer
     function apply() {
       if (exchangeRates[key] &&
-          exchangeRates[key][$scope.selectedPeriod]) {
+          exchangeRates[key][$scope.selectedPeriod] !== undefined) {
         $scope.valueRate = exchangeRates[key][$scope.selectedPeriod]
         $scope.valueRate = $scope.valueRate.toPrecision(4)
       }
