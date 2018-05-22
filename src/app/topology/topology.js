@@ -30,12 +30,12 @@ angular.module('ripplecharts.topology', [
   var m = new TopologyMap($http)
 
   function versionToColor(d) {
-    var version = d.replace('rippled-', '')
-    var comp
-
-    if (!$scope.stable || !$scope.semverCompare) {
+    if (!d || !$scope.stable || !$scope.semverCompare) {
       return 'grey'
     }
+
+    var version = d.replace('rippled-', '')
+    var comp
 
     comp = $scope.semverCompare(version, $scope.stable)
 
