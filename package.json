@@ -12,7 +12,7 @@
     "type": "git",
     "url": ""
   },
-  "scripts" : {
+  "scripts": {
     "lint": "if ! [ -f eslintrc ]; then curl -o eslintrc 'https://raw.githubusercontent.com/ripple/javascript-style-guide/es6/eslintrc' >> eslintrc; fi; eslint -c eslintrc --rule {no-var:0} $(git diff --name-only | grep '.js$' ; git diff --name-only --cached | grep '.js$' ; git clean --dry-run | awk '{print $3;}' | grep '.js$')"
   },
   "devDependencies": {
@@ -53,5 +53,8 @@
       "OrderBook": true,
       "_": true
     }
+  },
+  "dependencies": {
+    "xss": "^1.0.3"
   }
 }

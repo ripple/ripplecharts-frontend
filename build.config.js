@@ -95,7 +95,8 @@ module.exports = {
       'deps/onResize.js',
       'deps/ripple.js',
       'deps/ripple-orderbook.js',
-      'deps/offersExercisedListener.js'
+      'deps/offersExercisedListener.js',
+      'node_modules/xss/dist/xss.js'
     ],
     css: [
       'vendor/angular-snap/angular-snap.css',

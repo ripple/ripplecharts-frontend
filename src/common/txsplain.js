@@ -483,15 +483,15 @@ angular.module('txsplain', [])
           var format = m.Memo.MemoFormat
 
           if (hexMatch.test(type)) {
-            type = decodeHex(type) + ' <small>(decoded hex)</small>'
+            type = filterXSS(decodeHex(type)) + ' <small>(decoded hex)</small>'
           }
 
           if (hexMatch.test(format)) {
-            format = decodeHex(format) + ' <small>(decoded hex)</small>'
+            format = filterXSS(decodeHex(format)) + ' <small>(decoded hex)</small>'
           }
 
           if (hexMatch.test(data)) {
-            data = decodeHex(data) + ' <small>(decoded hex)</small>'
+            data = filterXSS(decodeHex(data)) + ' <small>(decoded hex)</small>';
           }
 
           html += '<li><ul>'
