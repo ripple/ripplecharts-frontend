@@ -45,7 +45,7 @@ function ValueSummary(options) {
   ]
 
   var sourceLabels = {
-    rcl: 'Ripple Network'
+    rcl: 'XRP Ledger'
   }
 
   var currencyColors = {

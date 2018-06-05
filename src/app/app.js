@@ -57,7 +57,7 @@ angular.element(document).ready(function() {
   var bannerPads
   var started = false
 
-  // connect to the ripple network
+  // connect to the network
   // with global remote variable
   remote = new ripple.RippleAPI(Options.ripple)
 

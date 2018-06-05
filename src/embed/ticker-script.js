@@ -67,13 +67,13 @@ if (!TICKER_CSS) {
 
 var BLANK_PNG = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
-// connect to the ripple network;
+// connect to the network;
 var remote = new ripple.RippleAPI({
   server: 'wss://s1.ripple.com:443'
 });
 remote.connect()
 .then(function() {
-  console.log('connected to the ripple network');
+  console.log('connected to the network');
 })
 .catch(function(e) {
   console.log(e.stack);

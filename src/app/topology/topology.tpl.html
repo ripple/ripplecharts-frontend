@@ -1,5 +1,5 @@
 <div id="topology">
-  <h2>Ripple Network Topology</h2>
+  <h2>Network Topology</h2>
   <h4 ng-hide="loading">
     <label>Total Nodes: </label>
     <span class="nNodes" ng-bind="nodes.length"></span>
@@ -8,9 +8,9 @@
   <h4>{{status}}</h4>
 
   <div class="helpbox" ng-class="{showHelp : showHelp}">
-    <h5>Ripple Network Topology</h5>
+    <h5>Network Topology</h5>
       <p>
-        The Ripple Network topology graph shows the active rippled nodes and the connections between them. Every three seconds a snapshot is taken of the network topology, which records the status on each node in the network and its connections to other nodes. Each node is a rippled and the links between the nodes are tcp connections. A node's size corresponds to the number of connections it has and its color indicates the software version. Blue nodes <svg height="10" width="10"><circle r="4" cx="5" cy="5" class="blue"></circle></svg> represent use of the current stable version of the software, red nodes <svg height="10" width="10"><circle r="4" cx="5" cy="5" class="red"></circle></svg> represent earlier versions and purple nodes <svg height="10" width="10"><circle r="4" cx="5" cy="5" class="purple"></circle></svg> represent versions newer than the current stable version.
+        The network topology graph shows the active rippled nodes and the connections between them. Every three seconds a snapshot is taken of the network topology, which records the status on each node in the network and its connections to other nodes. Each node is a rippled and the links between the nodes are tcp connections. A node's size corresponds to the number of connections it has and its color indicates the software version. Blue nodes <svg height="10" width="10"><circle r="4" cx="5" cy="5" class="blue"></circle></svg> represent use of the current stable version of the software, red nodes <svg height="10" width="10"><circle r="4" cx="5" cy="5" class="red"></circle></svg> represent earlier versions and purple nodes <svg height="10" width="10"><circle r="4" cx="5" cy="5" class="purple"></circle></svg> represent versions newer than the current stable version.
       </p>
   </div>
   <div class="visualization">
