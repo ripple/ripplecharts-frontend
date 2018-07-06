@@ -451,7 +451,7 @@ function TopologyMap($http) {
   })
 
   self.fetch = function() {
-    var url = API + '/network/topology/nodes?verbose=true'
+    var url = API + '/network/topology/nodes?verbose=true&limit=10000'
     return new Promise(function(resolve, reject) {
       $http
       .get(url)
