@@ -175,23 +175,9 @@ angular.element(document).ready(function() {
   angular.module('ripplecharts', [
     'templates-app',
     'templates-common',
-    'ripplecharts.landing',
-    'ripplecharts.markets',
-    'ripplecharts.manage-currencies',
-    'ripplecharts.manage-gateways',
-    'ripplecharts.multimarkets',
-    'ripplecharts.activeAccounts',
-    'ripplecharts.trade-volume',
     'ripplecharts.graph',
     'ripplecharts.accounts',
     'ripplecharts.transactions',
-    'ripplecharts.value',
-    'ripplecharts.history',
-    'ripplecharts.metrics',
-    'ripplecharts.topology',
-    'ripplecharts.validators',
-    'ripplecharts.validator',
-    'ripplecharts.xrp-markets',
     'ui.state',
     'ui.route',
     'snap',
@@ -207,7 +193,7 @@ angular.element(document).ready(function() {
     'versionsGraph'
   ])
   .config(function myAppConfig($urlRouterProvider) {
-    $urlRouterProvider.otherwise('/')
+    $urlRouterProvider.otherwise('/graph')
   })
   .run(function($window, $rootScope) {
     if (typeof navigator.onLine !== 'undefined') {
