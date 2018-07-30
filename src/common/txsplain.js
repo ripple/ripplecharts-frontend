@@ -55,6 +55,7 @@ angular.module('txsplain', [])
   // var PATHSTEP_ORDERBOOK = 0x10
   // var PATHSTEP_ISSUER = 0x20
   var RIPPLE_EPOCH = 946684800
+  var DATE_FORMAT = 'LLL [UTC]'
 
   function renderNumber(d) {
     var parts = commas(d).split('.')
@@ -216,7 +217,7 @@ angular.module('txsplain', [])
         .attr('class', 'status')
         .html(statusText + ', and validated in ledger ' +
         '<ledger_index>' + tx.ledger_index + '</ledger_index>' +
-        ' on <date>' + moment.utc(tx.date).format('LLL') + '<date>.')
+        ' on <date>' + moment.utc(tx.date).format(DATE_FORMAT) + '<date>.')
 
       }
 
@@ -614,10 +615,10 @@ angular.module('txsplain', [])
           }
 
           if (tx.tx.Expiration) {
-            var expiration = moment.unix(tx.tx.Expiration + RIPPLE_EPOCH)
+            var expiration = moment.unix(tx.tx.Expiration + RIPPLE_EPOCH).utc();
             var tense = expiration.diff(new Date()) > 0 ? 'expires' : 'expired'
             html += '<br/>The offer ' + tense +
-              ' at <date>' + expiration.format('LTS [on] l') + '</date>' +
+              ' at <date>' + expiration.format('LTS [UTC on] l') + '</date>' +
               ' unless canceled or consumed before then.'
           }
 
@@ -649,12 +650,12 @@ angular.module('txsplain', [])
             html += '<br/>Condition: ' + tx.tx.Condition
           if (tx.tx.CancelAfter) {
             html += '<br/>It can be cancelled after <date>' +
-              moment((RIPPLE_EPOCH + tx.tx.CancelAfter)*1000).format('LLL') +
+              moment((RIPPLE_EPOCH + tx.tx.CancelAfter)*1000).utc().format(DATE_FORMAT) +
               '</date>.'
           }
           if (tx.tx.FinishAfter) {
             html += '<br/>It can be finished after <date>' +
-              moment((RIPPLE_EPOCH + tx.tx.FinishAfter)*1000).format('LLL') +
+              moment((RIPPLE_EPOCH + tx.tx.FinishAfter)*1000).utc().format(DATE_FORMAT) +
               '</date>.'
           }
           return html

@@ -36,7 +36,6 @@ angular.module('ripplecharts.xrp-markets', [
   var valueCurrencies = {
     USD: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B',  // bitstamp
     EUR: 'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq', // gatehub
-    JPY: 'rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS', // mr exchange
     CNY: 'rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y', // ripplefox
     XRP: ''
   }
