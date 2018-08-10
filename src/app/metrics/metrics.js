@@ -39,7 +39,7 @@ angular.module( 'ripplecharts.metrics', [
       }
   });
 
-  url = base + 'metric/transaction_count?limit=1000' + range;
+  url = base + 'metric/transaction_count?limit=1000&interval=week' + range;
   txCountChart.loading = true;
   txCountChart.fadeOut();
   d3.json(url, function(err, resp) {

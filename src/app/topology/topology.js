@@ -67,8 +67,9 @@ angular.module('ripplecharts.topology', [
     var version
 
     nodes.forEach(function(d) {
-      version = d.version.replace('rippled-', '')
+      version = (d.version || 'unknown').replace('rippled-', '')
 
+      if (!d.version) console.log(version, d);
       if (!versions[version]) {
         data.push(versions[version] = {
           version: version,
