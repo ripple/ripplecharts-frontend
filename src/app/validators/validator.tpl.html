@@ -34,17 +34,12 @@
   </div>
 
   <h4 class='domain'>
-    <a ng-if="validator.domain" href='http://{{validator.domain}}' ng-class='validator.domain_state' target="_blank">
+    <a ng-if="validator.domain" href='http://{{validator.domain}}' target="_blank">
       {{validator.domain}}
-      <span ng-if="validator.domain_state === 'verified'">&#10004</span>
-      <b ng-if="validator.domain_state !== 'verified' && validator.domain"
-        title="validator.domain_state">X</b>
     </a>
-    <a class="unverified" ng-if="validator.domain_state !== 'verified'" target="_blank"  href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification'>
-      unverified
-    </a>
-    <span class="asterisk" ng-click="showHelp = true">*</span>
-    - <span class="pubkey">{{validator.pubkey}}</span>
+    <span class="asterisk" ng-show="validator.domain" ng-click="showHelp = true">*</span>
+    <span ng-show="validator.domain" class="dash"> - </span>
+    <span class="pubkey">{{validator.pubkey}}</span>
   </h4>
   <h4>{{status}}</h4>
 
@@ -53,8 +48,9 @@
       <tr>
         <th></th>
         <th>Date</th>
+        <th>Chain</th>
         <th>
-          Agreement
+          Agreement Score
           <button type="button" class="tooltip-btn btn btn-default"
             data-toggle="tooltip"
             tooltip-placement="top"
@@ -62,24 +58,20 @@
             tooltip="The percentage of ledgers that passed consensus that were validated by the validator">?
           </button>
         </th>
-        <th>
-          Disagreement
-          <button type="button" class="tooltip-btn btn btn-default"
-            data-toggle="tooltip"
-            tooltip-placement="top"
-            data-container="row"
-            tooltip="The percentage of ledgers validated by the validator that did not pass consensus">?
-          </button>
-        </th>
         <th>Total Validations</th>
+        <th>Missed</th>
       </tr>
     </thead>
     <tr ng-repeat="report in reports" class='report'>
       <td></td>
       <td>{{report.date}}</td>
-      <td>{{report.main_net_agreement}}</td>
-      <td>{{report.main_net_disagreement}}</td>
-      <td>{{report.total_ledgers | number}}</td>
+      <td>{{report.chain}}</td>
+      <td class="score" ng-class="{imperfect: report.score !== '1.0000'}">
+        {{report.score}}
+        <span class="asterisk" ng-show="report.incomplete" title="incomplete data">*</span>
+      </td>
+      <td>{{report.total | number}}</td>
+      <td class="missed">{{(report.missed ? report.missed : null) | number}}</td>
     </tr>
   </table>
 </div>

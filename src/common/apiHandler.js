@@ -439,7 +439,7 @@ function ApiHandler(baseURL) {
   }
 
   this.getValidators = function(callback) {
-    var url = self.url + '/network/validator_reports'
+    var url = self.url + '/network/validators'
 
     return d3.json(url, function(err, resp) {
       if (err) {
@@ -449,7 +449,7 @@ function ApiHandler(baseURL) {
         })
 
       } else {
-        callback(null, resp.reports)
+        callback(null, resp.validators)
       }
     })
   }

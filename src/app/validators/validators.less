@@ -91,10 +91,13 @@
         text-align: left;
       }
 
-      .pubkey {
+      .pubkey a {
+        display: block;
         font-size: 11px;
-        color: #889;
         text-align: left;
+        width: 100px;
+        text-overflow: ellipsis;
+        overflow: hidden;
       }
 
       .site {
@@ -103,25 +106,24 @@
 
       .domain a,
       .domain a:visited {
-        color: #da6265;
-      }
-
-      .domain .verified,
-      .domain .verified:visited {
         color: #5ac88f;
       }
 
-      .domain a small,
-      .domain a b {
-        margin: 0 5px;
+      .unl.yes {
+        color: green;
       }
 
-      .unverified,
-      .unverified:visited {
-        color: #777;
-        opacity: .5;
-        font-style: italic;
+      .score.imperfect,
+      .missed {
+        color: #933;
       }
+    }
+  }
+
+  .table {
+    .score.imperfect,
+    .missed {
+      color: #933;
     }
   }
 
@@ -142,28 +144,54 @@
         background:none;
       }
 
-      .report .site {
-        float:right;
-        padding:0px;
+      .report .domain,
+      .report .pubkey {
+        border-bottom:1px solid rgba(150,150,150,.3);
+        padding-top:10px;
+        height: 30px;
       }
 
       .report div {
-        display:block !important;
-        float:left;
-        min-width:50px;
+        display:inline-block !important;
+        min-width:70px;
         padding:4px 10px;
         border:none;
       }
 
       .report .pubkey {
-        float:none;
-        border-bottom:1px solid rgba(150,150,150,.3);
-        padding-top:10px;
-        background:rgba(200,200,200,0.1);
+        float:right;
+        width: 35%;
+
+        a {
+          width: 100%;
+        }
+      }
+
+      .report .domain {
+        float:left;
+        width: 65%;
       }
     }
   }
+
+
+  @media (max-width: 500px) {
+    h4.domain {
+      .dash {
+        display: none;
+      }
+
+      .pubkey {
+        font-size: 11px;
+      }
+    }
+
+    table.table {
+      font-size: 11px;
+    }
+  }
 }
+
 
 
 .dark .validations .validatorsTable .validatorsHeader {

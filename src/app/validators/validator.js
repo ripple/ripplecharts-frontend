@@ -62,9 +62,8 @@ angular.module('ripplecharts.validator', [
       reports.forEach(function(v) {
         v.date = moment.utc(v.date)
         .format('dddd, MMMM D YYYY')
-        var disagreement = v.total_ledgers - v.main_net_ledgers
-        disagreement /= v.total_ledgers
-        v.main_net_disagreement = disagreement.toFixed(5)
+        v.total = Number(v.total);
+        v.missed = Number(v.missed);
       })
     }
 
