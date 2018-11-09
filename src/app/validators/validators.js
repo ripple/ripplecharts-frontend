@@ -34,13 +34,7 @@ angular.module( 'ripplecharts.validators', [
 
     if (validators && validators.length) {
       $scope.date = moment.utc(validators[0].date)
-        .format('dddd, MMMM D YYYY') + ' UTC';
-
-      validators.forEach(function(v) {
-        var disagreement = v.total_ledgers - v.main_net_ledgers;
-        disagreement /= v.total_ledgers;
-        v.main_net_disagreement = disagreement.toFixed(5);
-      });
+        .format('llll') + ' UTC';
     }
 
     $scope.reports = validators;

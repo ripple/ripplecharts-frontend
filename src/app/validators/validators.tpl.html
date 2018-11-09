@@ -42,46 +42,44 @@
       <div class='validatorsHeader'>
           <div>Validation Public Key</div>
           <div>
-            Agreement
-            <button type="button" class="tooltip-btn btn btn-default"
-              data-toggle="tooltip"
-              tooltip-placement="top"
-              data-container="row"
-              tooltip="The percentage of ledgers that passed consensus that were validated by the validator">?
-            </button>
-          </div>
-          <div>
-            Disagreement
-            <button type="button" class="tooltip-btn btn btn-default"
-              data-toggle="tooltip"
-              tooltip-placement="top"
-              data-container="row"
-              tooltip="The percentage of ledgers validated by the validator that did not pass consensus">?
-            </button>
-          </div>
-          <div>Total Validations</div>
-          <div>
             Domain
             <span class="asterisk" ng-click="showHelp = true">*</span>
           </div>
+          <div></div>
+          <div>UNL</div>
+          <div>
+            Agreement Score (24h)
+            <button type="button" class="tooltip-btn btn btn-default"
+              data-toggle="tooltip"
+              tooltip-placement="top"
+              data-container="row"
+              tooltip="The percentage of ledgers that passed consensus that were validated by the validator over the last 24 hours">?
+            </button>
+          </div>
+          <div>Total Validations</div>
+          <div>Missed</div>
       </div>
 
       <div ng-repeat="report in reports" class='report'>
-        <div class="pubkey"><a ng-click='$event.stopPropagation()' ng-href="#/validators/{{report.validation_public_key}}">{{report.validation_public_key}}</a></div>
-        <div class="agreement">{{report.main_net_agreement}}</div>
-        <div class="disagreement">{{report.main_net_disagreement}}</div>
-        <div class="ledgers">{{report.total_ledgers | number}}</div>
-        <div class="site">
-        <div ng-if="report.domain" class="domain">
-          <a ng-click='$event.stopPropagation()' href='http://{{report.domain}}' ng-class="{verified: report.domain_state === 'verified'}" target="_blank">
-            {{report.domain}}
-            <small ng-if="report.domain_state === 'verified'">&#10004</small>
-            <b ng-if="report.domain_state !== 'verified' && report.domain"
-              title="report.domain_state">X</b>
+        <div class="pubkey">
+          <a ng-click='$event.stopPropagation()' ng-href="#/validators/{{report.validation_public_key}}" title="{{report.validation_public_key}}">
+            {{report.validation_public_key}}
           </a>
         </div>
-        <div ng-if="!report.domain"><a ng-click='$event.stopPropagation()' href='https://ripple.com/build/rippled-apis/rippled-setup/#domain-verification' class='unverified'>unverified</a></div>
+        <div class="domain">
+          <a ng-if="report.domain" ng-click='$event.stopPropagation()' href='http://{{report.domain}}' target="_blank">
+            {{report.domain}}
+          </a>
         </div>
+        <div class="chain">{{report.chain}}</div>
+        <div class="unl" ng-class="{yes: report.unl}">{{report.unl ? 'yes' : 'no'}}</div>
+        <div class="score" ng-class="{imperfect: report.agreement_24h.score !== '1.0000'}">
+          {{report.agreement_24h.score}}
+          <span class="asterisk" ng-show="report.agreement_24h.incomplete" title="incomplete data">*</span>
+        </div>
+        <div class="total">{{(report.agreement_24h.total - report.agreement_24h.missed) | number}}</div>
+        <div class="missed">{{(report.agreement_24h.missed !== 0 ? report.agreement_24h.missed : null) | number}}</div>
+        <div class="site">
       </div>
     </div>
 
