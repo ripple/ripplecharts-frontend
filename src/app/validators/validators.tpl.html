@@ -40,24 +40,34 @@
     <div class='validatorsTable'>
 
       <div class='validatorsHeader'>
-          <div>Validation Public Key</div>
-          <div>
+          <div class="column">Validation Public Key</div>
+          <div class="column">
             Domain
             <span class="asterisk" ng-click="showHelp = true">*</span>
           </div>
-          <div></div>
-          <div>UNL</div>
-          <div>
-            Agreement Score (24h)
-            <button type="button" class="tooltip-btn btn btn-default"
+          <div class="column"></div>
+          <div class="column">
+            UNL
+            <button
+              type="button"
+              class="tooltip-btn btn btn-default"
               data-toggle="tooltip"
               tooltip-placement="top"
-              data-container="row"
+              tooltip="Included in the recommended UNL at vl.ripple.com">?
+            </button>
+        </div>
+          <div class="column">
+            Agreement Score (24h)
+            <button
+              type="button"
+              class="tooltip-btn btn btn-default"
+              data-toggle="tooltip"
+              tooltip-placement="top"
               tooltip="The percentage of ledgers that passed consensus that were validated by the validator over the last 24 hours">?
             </button>
           </div>
-          <div>Total Validations</div>
-          <div>Missed</div>
+          <div class="column">Total Validations</div>
+          <div class="column">Missed</div>
       </div>
 
       <div ng-repeat="report in reports" class='report'>
