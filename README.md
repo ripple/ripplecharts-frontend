@@ -2,7 +2,7 @@
 
 # XRP Charts
 
-This is the frontend for ripplecharts.com data visualization using angular.js and D3
+This is the frontend for xrpcharts.ripple.com data visualization using angular.js and D3
 
 ##Installation Instructions:
 
