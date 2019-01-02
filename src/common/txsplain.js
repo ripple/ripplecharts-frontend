@@ -108,6 +108,9 @@ angular.module('txsplain', [])
     return list
   }
 
+function escapeHTML(d) {
+    return d.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
   function decodeHex(hex) {
     var str = ''
@@ -115,7 +118,8 @@ angular.module('txsplain', [])
       var v = parseInt(hex.substr(i, 2), 16)
       str += v ? String.fromCharCode(v) : ''
     }
-    return str
+
+    return filterXSS(str, { whiteList: [] });
   }
 
   function getBalanceChange(node) {
@@ -484,15 +488,15 @@ angular.module('txsplain', [])
           var format = m.Memo.MemoFormat
 
           if (hexMatch.test(type)) {
-            type = filterXSS(decodeHex(type)) + ' <small>(decoded hex)</small>'
+            type = decodeHex(type) + ' <small>(decoded hex)</small>'
           }
 
           if (hexMatch.test(format)) {
-            format = filterXSS(decodeHex(format)) + ' <small>(decoded hex)</small>'
+            format = decodeHex(format) + ' <small>(decoded hex)</small>'
           }
 
           if (hexMatch.test(data)) {
-            data = filterXSS(decodeHex(data)) + ' <small>(decoded hex)</small>';
+            data = decodeHex(data) + ' <small>(decoded hex)</small>';
           }
 
           html += '<li><ul>'
