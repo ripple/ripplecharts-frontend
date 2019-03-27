@@ -47,7 +47,11 @@ angular.module('txsplain', [])
     },
     OfferCancel: {},
     SetRegularKey: {},
-    SetFee: {}
+    SetFee: {},
+    EnableAmendment: {
+      0x00010000: 'tfGotMajority',
+      0x00020000: 'tfLostMajority'
+    }
   }
 
   // var PATHSTEP_RIPPLING = 0x01
@@ -533,10 +537,12 @@ angular.module('txsplain', [])
 
         // renderType
         function renderType(type) {
-          var article = ['o','e'].indexOf(type[0].toLowerCase()) === -1 ?
+          var article = ['a','o','e'].indexOf(type[0].toLowerCase()) === -1 ?
             'a' : 'an'
+          var txword = (['SetFee', 'EnableAmendment'].indexOf(type) === -1) ?
+            'transaction' : 'pseudo-transaction'
           return 'This is ' + article + ' <type>' +
-            type + '</type> transaction.<br/>'
+            type + '</type> ' + txword + '.<br/>'
         }
 
         // renderTrustSet
@@ -614,7 +620,7 @@ angular.module('txsplain', [])
           }
 
           if (tx.tx.Expiration) {
-            var expiration = moment.unix(tx.tx.Expiration + RIPPLE_EPOCH)
+            var expiration = moment.unix(tx.tx.Expiration + RIPPLE_EPOCH).utc()
             var tense = expiration.diff(new Date()) > 0 ? 'expires' : 'expired'
             html += '<br/>The offer ' + tense +
               ' at <date>' + expiration.format('LTS [on] l') + '</date>' +
@@ -708,6 +714,27 @@ angular.module('txsplain', [])
           return html
         }
 
+        // renderEnableAmendment
+        function renderEnableAmendment() {
+          if (tx.tx.Flags & 0x00010000) {
+            //
+            if (tx.meta.AffectedNodes[0].ModifiedNode.FinalFields.Majorities[0].Majority.Amendment === tx.tx.Amendment) {
+              // close time is where we expect it in the metadata. use that.
+              var close_time = tx.meta.AffectedNodes[0].ModifiedNode.FinalFields.Majorities[0].Majority.CloseTime
+              var expected_date = moment.unix(close_time + RIPPLE_EPOCH).utc().add(14, 'days')
+            } else {
+              var expected_date = moment.utc(tx.date, "UTC").add(14, 'days')
+            }
+            var amendmentStatus = ' had support increase to 80+% of validators as of this ledger version. If it maintains support, it is expected to become on approximately <date>' + expected_date.format('LLL') + '</date>.'
+          } else if (tx.tx.Flags & 0x00020000) {
+            var amendmentStatus = ' had support decrease to less than 80% of validators as of this ledger version.'
+          } else {
+            var amendmentStatus = ' became enabled in this ledger version.'
+          }
+          return 'The amendment with ID <amendment_id>' + tx.tx.Amendment +
+                '</amendment_id>' + amendmentStatus
+        }
+
         d += renderType(tx.tx.TransactionType)
 
         if (tx.tx.TransactionType === 'OfferCreate') {
@@ -724,10 +751,12 @@ angular.module('txsplain', [])
           d += renderEscrowFinish()
         } else if (tx.tx.TransactionType === 'EscrowCancel') {
           d += renderEscrowCancel()
+        } else if (tx.tx.TransactionType === 'EnableAmendment') {
+          d += renderEnableAmendment()
         }
 
         d += '<br/>The transaction\'s sequence number is ' +
-          '<b>' + tx.tx.Sequence + '</b>'
+          '<b>' + tx.tx.Sequence + '</b>.'
 
 
         explainView.append('div')
