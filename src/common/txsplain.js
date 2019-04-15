@@ -722,15 +722,26 @@ function escapeHTML(d) {
         // renderEnableAmendment
         function renderEnableAmendment() {
           if (tx.tx.Flags & 0x00010000) {
-            //
-            if (tx.meta.AffectedNodes[0].ModifiedNode.FinalFields.Majorities[0].Majority.Amendment === tx.tx.Amendment) {
-              // close time is where we expect it in the metadata. use that.
-              var close_time = tx.meta.AffectedNodes[0].ModifiedNode.FinalFields.Majorities[0].Majority.CloseTime
-              var expected_date = moment.unix(close_time + RIPPLE_EPOCH).utc().add(14, 'days')
-            } else {
-              var expected_date = moment.utc(tx.date, "UTC").add(14, 'days')
+            var expected_date = null;
+
+            try {
+              var majorities = tx.meta.AffectedNodes[0].ModifiedNode.FinalFields.Majorities;
+              majorities.forEach(function(d) {
+                if (d.Majority.Amendment === tx.tx.Amendment) {
+                  expected_date = moment.unix(d.Majority.CloseTime + RIPPLE_EPOCH).utc().add(14, 'days')
+                }
+              });
+
+            } catch(e) {
+              console.log(e);
             }
-            var amendmentStatus = ' had support increase to 80+% of validators as of this ledger version. If it maintains support, it is expected to become on approximately <date>' + expected_date.format('LLL') + '</date>.'
+
+            if (!expected_date) {
+              expected_date = moment.utc(tx.date).add(14, 'days');
+            }
+
+            var amendmentStatus = ' had support increase to over 80% of validators as of this ledger version. If it maintains support, it is expected to become on approximately <date>' + expected_date.format(DATE_FORMAT) + '</date>.'
+
           } else if (tx.tx.Flags & 0x00020000) {
             var amendmentStatus = ' had support decrease to less than 80% of validators as of this ledger version.'
           } else {
