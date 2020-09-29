@@ -632,6 +632,16 @@ function MarketsCtrl($scope, $state, $location, gateways) {
         {currency: 'USD', issuer: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B'}
     }
 
+    // Allow only [^0-9a-zA-Z_]
+    $scope.base = {
+      currency: $scope.base.currency.replace(/\W/g, ''),
+      issuer: $scope.base.issuer.replace(/\W/g, '')
+    }
+    $scope.counter = {
+      currency: $scope.counter.currency.replace(/\W/g, ''),
+      issuer: $scope.counter.issuer.replace(/\W/g, ''),
+    }
+
     $scope.range = $state.params.range ||
       store.session.get('range') ||
       store.get('range') ||

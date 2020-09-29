@@ -112,10 +112,6 @@ angular.module('txsplain', [])
     return list
   }
 
-function escapeHTML(d) {
-    return d.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
   function decodeHex(hex) {
     var str = ''
     for (var i = 0; i < hex.length; i += 2) {
