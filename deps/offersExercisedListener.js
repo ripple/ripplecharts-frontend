@@ -28,7 +28,7 @@
  *  Available options include:
  *  {
  *    base: {currency: 'XRP'},
- *    trade: {currency: 'USD', issuer: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B'},
+ *    counter: {currency: 'USD', issuer: 'rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B'},
  *
  *    reduce: true/false, // optional, defaults to false if timeIncrement
         is not set
