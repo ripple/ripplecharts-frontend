@@ -1,3 +1,8 @@
+# This project has been deprecated.
+## Instead, see [XRPL Explorer](https://livenet.xrpl.org/) ([source code](https://github.com/ripple/explorer)).
+
+<hr>
+
 [![CircleCI](https://circleci.com/gh/ripple/ripplecharts-frontend.svg?style=svg)](https://circleci.com/gh/ripple/ripplecharts-frontend)
 
 # XRP Charts
